@@ -31,7 +31,7 @@ namespace GorillaInfoWatch.Tabs
             StringBuilder str = new();
             str.AppendLine("- Config -".AlignCenter(Constants.Width)).AppendLine();
 
-            str.AppendItem(Config.RefreshRate.ToDetailedString(), 0, ItemHandler);
+            str.AppendItem(Config.RefreshRate.ToDetailedString(0, 10), 0, ItemHandler);
 
             SetText(str);
         }
