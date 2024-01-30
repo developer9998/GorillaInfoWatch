@@ -54,8 +54,8 @@ namespace GorillaInfoWatch.Tabs
                 .Append(Mathf.FloorToInt(Rig.playerColor.b * 9f)).Append("</color>]")
                 .AppendLine().AppendLine();
 
-            str.AppendItem(Line.muteButton.isOn ? "Unmute" : "Mute", 0, ItemHandler).AppendLine();
-            str.AppendItem(Line.reportButton.isOn ? "Reported" : "Report", 1, ItemHandler).AppendLine();
+            str.AppendItem(Line.muteButton.isOn ? "Unmute" : "Mute", 0, ItemHandler);
+            str.AppendItem(Line.reportButton.isOn ? "Reported" : "Report", 1, ItemHandler);
             str.AppendItem(string.Concat("Volume: [", AsciiUtils.Bar(10, Mathf.RoundToInt(Speaker.volume * 10)), "]"), 2, ItemHandler);
 
             if (Line.reportButton.isOn)

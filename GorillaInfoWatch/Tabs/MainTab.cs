@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Tabs
                 for (int i = 0; i < EntryCollection.Count; i++)
                 {
                     int index = i + (PageHandler.PageNumber() * PageHandler.EntriesPerPage);
-                    str.AppendItem(EntryCollection[i].Name, index, PageHandler).AppendLine();
+                    str.AppendItem(EntryCollection[i].Name, index, PageHandler);
                 }
 
                 str.Append(string.Concat(Enumerable.Repeat("\n", PageHandler.EntriesPerPage - EntryCollection.Count))).AppendLine();

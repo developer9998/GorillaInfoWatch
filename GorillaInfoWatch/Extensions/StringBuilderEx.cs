@@ -47,6 +47,6 @@ namespace GorillaInfoWatch.Extensions
 
         public static StringBuilder AppendBar(this StringBuilder str, int count, int length) => str.Append(AsciiUtils.Bar(length, count));
 
-        public static StringBuilder AppendItem(this StringBuilder str, string text, int index, ItemHandler itemHandler) => str.Append(itemHandler.CurrentEntry == index ? " > " : "   ").Append(text);
+        public static StringBuilder AppendItem(this StringBuilder str, string text, int index, ItemHandler itemHandler) => str.Append(itemHandler.CurrentEntry == index ? " > " : "   ").Append(text).AppendLine();
     }
 }
