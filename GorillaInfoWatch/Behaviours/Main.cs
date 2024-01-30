@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Behaviours
         private TabManager TabManager;
 
         private GameObject Watch, Menu;
-        private AudioClip Click;
+        private AudioClip SmallClick, BigClick;
 
         private MenuDisplayInfo DisplayInfo;
         private float RefreshTime;
@@ -68,7 +68,8 @@ namespace GorillaInfoWatch.Behaviours
 
             #endregion
 
-            Click = await assetLoader.LoadAsset<AudioClip>("Click");
+            SmallClick = await assetLoader.LoadAsset<AudioClip>("Click");
+            BigClick = await assetLoader.LoadAsset<AudioClip>("ClickLarge");
 
             #endregion
 
@@ -117,7 +118,11 @@ namespace GorillaInfoWatch.Behaviours
             AudioSource handSource = isLeftHand 
                 ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer 
                 : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
-            handSource.PlayOneShot(Click, 0.8f);
+            AudioClip handClip = (button.Type == ButtonType.Enter || button.Type == ButtonType.Back)
+                ? BigClick
+                : SmallClick;
+
+            handSource.PlayOneShot(handClip, 0.8f);
         }
 
         public void SetText(string text)

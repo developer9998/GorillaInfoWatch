@@ -17,6 +17,11 @@ namespace GorillaInfoWatch.Tools
 
         public static void Error(object message) => Log(LogLevel.Error, message);
 
-        private static void Log(LogLevel level, object message) => Logger.Log(level, message);
+        private static void Log(LogLevel level, object message)
+        {
+#if DEBUG
+            Logger.Log(level, message);
+#endif
+        }
     }
 }

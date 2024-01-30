@@ -1,11 +1,13 @@
 ﻿using Photon.Realtime;
+using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace GorillaInfoWatch.Utilities
 {
     public static class ScoreboardUtils
     {
-        public static GorillaPlayerScoreboardLine FindLine(Player player) => Object.FindObjectsOfType<GorillaPlayerScoreboardLine>().FirstOrDefault(line => line.linePlayer.UserId == player.UserId);
+        private static List<GorillaPlayerScoreboardLine> Lines => GorillaScoreboardTotalUpdater.allScoreboardLines;
+        
+        public static GorillaPlayerScoreboardLine FindLine(Player player) => Lines.FirstOrDefault(line => line.linePlayer != null && line.linePlayer.UserId == player.UserId);
     }
 }
