@@ -1,5 +1,5 @@
 ﻿using GorillaInfoWatch.Interfaces;
-using GorillaInfoWatch.Tabs;
+using GorillaInfoWatch.Windows;
 using System;
 
 namespace GorillaInfoWatch.Models

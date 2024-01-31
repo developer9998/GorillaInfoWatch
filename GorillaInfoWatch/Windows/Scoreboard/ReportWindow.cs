@@ -4,7 +4,7 @@ using Photon.Realtime;
 using System;
 using System.Text;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows.Scoreboard
 {
     public class ReportWindow : Window
     {

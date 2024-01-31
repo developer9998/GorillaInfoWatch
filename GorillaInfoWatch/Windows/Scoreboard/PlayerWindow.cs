@@ -6,7 +6,7 @@ using Photon.Realtime;
 using System.Text;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows.Scoreboard
 {
     public class PlayerWindow : Window
     {

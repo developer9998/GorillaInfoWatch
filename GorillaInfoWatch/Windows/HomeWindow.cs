@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows
 {
     public class HomeWindow : Window
     {
@@ -35,7 +35,7 @@ namespace GorillaInfoWatch.Tabs
                 List<IEntry> EntryCollection = PageHandler.GetItemsAtEntry();
                 for (int i = 0; i < EntryCollection.Count; i++)
                 {
-                    int index = i + (PageHandler.PageNumber() * PageHandler.EntriesPerPage);
+                    int index = i + PageHandler.PageNumber() * PageHandler.EntriesPerPage;
                     str.AppendItem(EntryCollection[i].Name, index, PageHandler);
                 }
 

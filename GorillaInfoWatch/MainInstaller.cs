@@ -1,8 +1,9 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Tabs;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Windows;
+using GorillaInfoWatch.Windows.Scoreboard;
 using GorillaLocomotion;
 using System;
 using Zenject;

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows
 {
     public class ModStatusEntry : IEntry
     {
@@ -55,7 +55,7 @@ namespace GorillaInfoWatch.Tabs
                 List<PluginInfo> PluginCollection = PageHandler.GetItemsAtEntry();
                 for (int i = 0; i < PluginCollection.Count; i++)
                 {
-                    int index = i + (PageHandler.PageNumber() * PageHandler.EntriesPerPage);
+                    int index = i + PageHandler.PageNumber() * PageHandler.EntriesPerPage;
                     str.AppendItem(string.Concat(PluginCollection[i].Metadata.Name, " [", PluginCollection[i].Instance.enabled ? "<color=lime>E</color>" : "<color=red>D</color>", "]"), index, PageHandler);
                 }
 

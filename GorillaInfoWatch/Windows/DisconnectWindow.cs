@@ -3,7 +3,7 @@ using GorillaInfoWatch.Models;
 using GorillaNetworking;
 using System;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows
 {
     public class DisconnectEntry : IEntry
     {

@@ -1,7 +1,7 @@
 ﻿using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Tabs;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Windows;
 using System;
 using System.Collections.Generic;
 using UnityEngine;

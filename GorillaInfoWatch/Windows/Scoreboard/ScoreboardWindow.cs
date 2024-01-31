@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows.Scoreboard
 {
     public class ScoreboardEntry : IEntry
     {
@@ -45,7 +45,7 @@ namespace GorillaInfoWatch.Tabs
                 List<Player> EntryCollection = PageHandler.GetItemsAtEntry();
                 for (int i = 0; i < EntryCollection.Count; i++)
                 {
-                    int index = i + (PageHandler.PageNumber() * PageHandler.EntriesPerPage);
+                    int index = i + PageHandler.PageNumber() * PageHandler.EntriesPerPage;
                     VRRig rig = GorillaGameManager.StaticFindRigForPlayer(EntryCollection[i]);
                     if (rig)
                     {

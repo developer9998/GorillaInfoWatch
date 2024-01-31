@@ -6,7 +6,7 @@ using System;
 using System.Text;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Tabs
+namespace GorillaInfoWatch.Windows
 {
     public class SettingsEntry : IEntry
     {
