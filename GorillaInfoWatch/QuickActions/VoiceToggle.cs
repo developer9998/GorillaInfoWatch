@@ -12,11 +12,11 @@ namespace GorillaInfoWatch.QuickActions
         public string Name => "Toggle Voice Chat";
         public ActionType Type => ActionType.Toggle;
 
-        public bool InitialState => PlayerPrefs.GetString("voiceChatOn", "TRUE") != "TRUE";
+        public bool InitialState => PlayerPrefs.GetString("voiceChatOn", "TRUE") == "TRUE";
 
         public Action<bool> OnActivate => (bool active) =>
         {
-            GorillaComputer.instance.voiceChatOn = active ? "FALSE" : "TRUE";
+            GorillaComputer.instance.voiceChatOn = active ? "TRUE" : "FALSE";
             PlayerPrefs.SetString("voiceChatOn", GorillaComputer.instance.voiceChatOn);
 
             AccessTools.Method(typeof(GorillaTagger).Assembly.GetType("RigContainer"), "RefreshAllRigVoices").Invoke(null, null);
