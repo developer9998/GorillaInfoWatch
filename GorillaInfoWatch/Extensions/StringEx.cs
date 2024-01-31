@@ -1,8 +1,5 @@
-﻿using BepInEx.Configuration;
-using System;
-using System.Linq;
+﻿using System.Linq;
 using UnityEngine;
-using GorillaInfoWatch.Utilities;
 
 namespace GorillaInfoWatch.Extensions
 {

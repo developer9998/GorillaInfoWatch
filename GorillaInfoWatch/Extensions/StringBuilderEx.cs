@@ -1,10 +1,7 @@
-﻿using BepInEx.Configuration;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Utilities;
 using System.Text;
 using UnityEngine;
-using System;
-using GorillaInfoWatch.Models;
-using UnityEngine.UIElements;
 
 namespace GorillaInfoWatch.Extensions
 {
@@ -32,7 +29,7 @@ namespace GorillaInfoWatch.Extensions
 
             return str;
         }
-        
+
         public static StringBuilder AppendLines(this StringBuilder str, int numOfLines)
         {
             str.Repeat("\n", numOfLines);

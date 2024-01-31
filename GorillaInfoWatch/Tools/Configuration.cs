@@ -1,8 +1,5 @@
 ﻿using BepInEx.Configuration;
 using Bepinject;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GorillaInfoWatch.Tools
 {

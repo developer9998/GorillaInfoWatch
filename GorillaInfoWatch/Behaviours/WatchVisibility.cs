@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Behaviours
     public class WatchVisibility : MonoBehaviour
     {
         private List<Renderer> Renderers = new();
-        private List<Graphic> Graphics = new(); 
+        private List<Graphic> Graphics = new();
 
         private bool IsVisible = true;
 

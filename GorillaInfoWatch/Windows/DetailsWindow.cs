@@ -2,7 +2,6 @@
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using GorillaNetworking;
-using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -84,7 +83,7 @@ namespace GorillaInfoWatch.Tabs
 
                             str.Append("Master: ").AppendLine(PhotonNetwork.MasterClient.NickName);
                             str.Append("Visibility: ").AppendLine(PhotonNetwork.CurrentRoom.IsVisible ? "Public" : "Private");
-                            
+
                         }
                         break;
                     case 3:

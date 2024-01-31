@@ -38,7 +38,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (Initialized) return;
             Initialized = true;
-            
+
             Configuration = configuration;
 
             WindowFactory = windowFactory;
@@ -120,8 +120,8 @@ namespace GorillaInfoWatch.Behaviours
             if (!button || WindowManager.Tab == null) return;
             WindowManager.Tab.OnButtonPress(button.Type);
 
-            AudioSource handSource = isLeftHand 
-                ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer 
+            AudioSource handSource = isLeftHand
+                ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                 : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
             AudioClip handClip = (button.Type == ButtonType.Enter || button.Type == ButtonType.Back)
                 ? BigClick
@@ -149,7 +149,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 RefreshTime = Time.time;
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Logging.Error(string.Concat("SetWindow threw an exception: ", exception.ToString()));
             }
@@ -167,7 +167,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 Logging.Info(string.Concat("Created new tab of type ", nameof(type)));
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Logging.Error(string.Concat("GetTab threw an exception: ", exception.ToString()));
             }
