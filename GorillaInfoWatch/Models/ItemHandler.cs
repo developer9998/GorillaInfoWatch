@@ -16,7 +16,7 @@ namespace GorillaInfoWatch.Models
                 case ButtonType.Up:
                     Change(-1);
                     return true;
-                case ButtonType.Right:
+                case ButtonType.Down:
                     Change(1);
                     return true;
                 default:
