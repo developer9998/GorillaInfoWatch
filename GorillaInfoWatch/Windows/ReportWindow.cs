@@ -6,14 +6,14 @@ using System.Text;
 
 namespace GorillaInfoWatch.Tabs
 {
-    public class ReportTab : Tab
+    public class ReportWindow : Window
     {
         private ItemHandler ItemHandler;
 
         private Player Player;
         private GorillaPlayerScoreboardLine Line;
 
-        public override void OnTabDisplayed(object[] Parameters)
+        public override void OnWindowDisplayed(object[] Parameters)
         {
             Player = (Player)Parameters[0];
             Line = (GorillaPlayerScoreboardLine)Parameters[1];
@@ -56,11 +56,11 @@ namespace GorillaInfoWatch.Tabs
                     };
                     Line.PressButton(false, GorillaPlayerLineButton.ButtonType.Report);
                     Line.PressButton(false, reportType);
-                    DisplayTab<PlayerTab>();
+                    DisplayWindow<PlayerWindow>();
                     OnScreenRefresh();
                     break;
                 case ButtonType.Back:
-                    DisplayTab<PlayerTab>();
+                    DisplayWindow<PlayerWindow>();
                     break;
             }
         }

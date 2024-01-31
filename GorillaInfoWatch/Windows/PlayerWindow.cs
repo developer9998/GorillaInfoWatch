@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Tabs
 {
-    public class PlayerTab : Tab
+    public class PlayerWindow : Window
     {
         private ItemHandler ItemHandler;
 
@@ -20,7 +20,7 @@ namespace GorillaInfoWatch.Tabs
         private AudioSource Speaker;
         private GorillaPlayerScoreboardLine Line;
 
-        public override void OnTabDisplayed(object[] Parameters)
+        public override void OnWindowDisplayed(object[] Parameters)
         {
             if (Parameters != null)
             {
@@ -38,7 +38,7 @@ namespace GorillaInfoWatch.Tabs
         {
             if (!PhotonNetwork.InRoom || !Utils.PlayerInRoom(Player.ActorNumber) || !Line)
             {
-                DisplayTab<ScoreboardTab>();
+                DisplayWindow<ScoreboardWindow>();
                 return;
             }
 
@@ -100,14 +100,14 @@ namespace GorillaInfoWatch.Tabs
                             Line.PressButton(Line.muteButton.isOn, GorillaPlayerLineButton.ButtonType.Mute);
                             break;
                         case 1:
-                            if (!Line.reportButton.isOn) DisplayTab(typeof(ReportTab), new object[] { Player, Line });
+                            if (!Line.reportButton.isOn) DisplayWindow(typeof(ReportWindow), new object[] { Player, Line });
                             return;
                     }
                     break;
                 case ButtonType.Back:
                     Player = null;
                     Rig = null;
-                    DisplayTab<ScoreboardTab>();
+                    DisplayWindow<ScoreboardWindow>();
                     return;
                 default:
                     return;

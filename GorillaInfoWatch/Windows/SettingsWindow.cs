@@ -12,15 +12,15 @@ namespace GorillaInfoWatch.Tabs
     public class ConfigEntry : IEntry
     {
         public string Name => "Configuration";
-        public Type EntryType => typeof(ConfigTab);
+        public Type Window => typeof(SettingsWindow);
     }
 
-    public class ConfigTab : Tab
+    public class SettingsWindow : Window
     {
         private readonly ItemHandler ItemHandler;
         private readonly Configuration Config;
 
-        public ConfigTab(Configuration config)
+        public SettingsWindow(Configuration config)
         {
             ItemHandler = new ItemHandler(1);
             Config = config;
@@ -36,9 +36,9 @@ namespace GorillaInfoWatch.Tabs
             SetText(str);
         }
 
-        private void OnModfied(int index, bool increase)
+        private void OnEntryAdjusted(int entry, bool increase)
         {
-            switch (index)
+            switch (entry)
             {
                 case 0:
                     int increment = increase ? 2 : -2;
@@ -55,16 +55,15 @@ namespace GorillaInfoWatch.Tabs
                 return;
             }
 
-            switch (type)
+            if (type == ButtonType.Left || type == ButtonType.Right)
             {
-                case ButtonType.Left:
-                case ButtonType.Right:
-                    OnModfied(ItemHandler.CurrentEntry, type == ButtonType.Right);
-                    OnScreenRefresh();
-                    break;
-                case ButtonType.Back:
-                    DisplayTab<MainTab>();
-                    break;
+                OnEntryAdjusted(ItemHandler.CurrentEntry, type == ButtonType.Right);
+                OnScreenRefresh();
+            }
+
+            if (type == ButtonType.Back)
+            {
+                DisplayWindow<HomeWindow>();
             }
         }
     }

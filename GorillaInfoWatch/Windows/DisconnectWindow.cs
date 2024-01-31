@@ -8,14 +8,14 @@ namespace GorillaInfoWatch.Tabs
     public class DisconnectEntry : IEntry
     {
         public string Name => "Disconnect";
-        public Type EntryType => typeof(DisconnectTab);
+        public Type Window => typeof(DisconnectWindow);
     }
 
-    public class DisconnectTab : Tab
+    public class DisconnectWindow : Window
     {
         public override ExecutionType ExecutionType => ExecutionType.Callable;
 
-        public override void OnTabDisplayed(object[] Parameters)
+        public override void OnWindowDisplayed(object[] Parameters)
         {
             PhotonNetworkController.Instance.AttemptDisconnect();
         }

@@ -4,5 +4,8 @@ using Zenject;
 
 namespace GorillaInfoWatch.Models
 {
-    public class TabPlaceholderFactory : PlaceholderFactory<Type, ITab> { }
+    public class WindowPlaceholderFactory : PlaceholderFactory<Type, IWindow>
+    {
+
+    }
 }

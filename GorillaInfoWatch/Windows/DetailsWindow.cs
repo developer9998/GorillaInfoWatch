@@ -16,15 +16,15 @@ namespace GorillaInfoWatch.Tabs
     public class DetailsEntry : IEntry
     {
         public string Name => "Details";
-        public Type EntryType => typeof(DetailsTab);
+        public Type Window => typeof(DetailsWindow);
     }
 
-    public class DetailsTab : Tab
+    public class DetailsWindow : Window
     {
         private readonly ItemHandler ItemHandler;
         private readonly TextInfo TextInfo;
 
-        public DetailsTab()
+        public DetailsWindow()
         {
             ItemHandler = new ItemHandler(4);
             TextInfo = new CultureInfo("en-US", false).TextInfo;
@@ -183,7 +183,7 @@ namespace GorillaInfoWatch.Tabs
                     ItemHandler.Change(1);
                     break;
                 case ButtonType.Back:
-                    DisplayTab<MainTab>();
+                    DisplayWindow<HomeWindow>();
                     return;
                 default:
                     return;

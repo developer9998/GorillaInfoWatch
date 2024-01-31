@@ -8,7 +8,7 @@ using System.Text;
 
 namespace GorillaInfoWatch.Tabs
 {
-    public class MainTab : Tab
+    public class HomeWindow : Window
     {
         private PageHandler<IEntry> PageHandler = new();
 
@@ -57,7 +57,7 @@ namespace GorillaInfoWatch.Tabs
             switch (type)
             {
                 case ButtonType.Enter:
-                    DisplayTab(PageHandler.Items[PageHandler.CurrentEntry].EntryType);
+                    DisplayWindow(PageHandler.Items[PageHandler.CurrentEntry].Window);
                     return;
             }
         }

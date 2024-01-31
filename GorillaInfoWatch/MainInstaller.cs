@@ -18,10 +18,10 @@ namespace GorillaInfoWatch
             Container.BindInterfacesAndSelfTo<Configuration>().AsSingle();
 
             Container
-                .BindFactory<Type, ITab, TabPlaceholderFactory>()
-                .FromFactory<TabFactory>();
+                .BindFactory<Type, IWindow, WindowPlaceholderFactory>()
+                .FromFactory<WindowFactory>();
 
-            Container.Bind<MainTab>().AsSingle();
+            Container.Bind<HomeWindow>().AsSingle();
             Container.Bind<IEntry>().To<ScoreboardEntry>().AsSingle();
             Container.Bind<IEntry>().To<DetailsEntry>().AsSingle();
             Container.Bind<IEntry>().To<DisconnectEntry>().AsSingle();

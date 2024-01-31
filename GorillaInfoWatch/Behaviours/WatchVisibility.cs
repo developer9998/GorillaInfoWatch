@@ -13,6 +13,9 @@ namespace GorillaInfoWatch.Behaviours
 
         private bool IsVisible = true;
 
+        private bool InRoom => PhotonNetwork.InRoom;
+        private bool GamemodeExists => GameMode.ActiveGameMode;
+
         public void Start()
         {
             Renderers = GetComponentsInChildren<Renderer>(true).ToList();
@@ -32,7 +35,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void FixedUpdate()
         {
-            SetVisibility(!(PhotonNetwork.InRoom && GameMode.ActiveGameMode && GameMode.ActiveGameMode.GetType() == typeof(GorillaHuntManager)));
+            SetVisibility(!InRoom || InRoom && !GamemodeExists || InRoom && GamemodeExists && GameMode.ActiveGameMode.GetType() != typeof(GorillaHuntManager));
         }
     }
 }

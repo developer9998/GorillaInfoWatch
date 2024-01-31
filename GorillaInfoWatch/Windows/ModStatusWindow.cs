@@ -14,15 +14,15 @@ namespace GorillaInfoWatch.Tabs
     public class ModStatusEntry : IEntry
     {
         public string Name => "Mod Status";
-        public Type EntryType => typeof(ModStatusTab);
+        public Type Window => typeof(ModStatusWindow);
     }
 
-    public class ModStatusTab : Tab
+    public class ModStatusWindow : Window
     {
         private readonly List<PluginInfo> PluginList;
         private readonly PageHandler<PluginInfo> PageHandler = new();
 
-        public ModStatusTab()
+        public ModStatusWindow()
         {
             PluginList = new();
 
@@ -82,7 +82,7 @@ namespace GorillaInfoWatch.Tabs
                     OnScreenRefresh();
                     break;
                 case ButtonType.Back:
-                    DisplayTab<MainTab>();
+                    DisplayWindow<HomeWindow>();
                     break;
             }
         }

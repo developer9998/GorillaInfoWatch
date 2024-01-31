@@ -14,36 +14,41 @@ namespace GorillaInfoWatch.Behaviours
     {
         private bool Initialized;
 
+        // Tools
         private Configuration Configuration;
-        private TabPlaceholderFactory TabFactory;
-        private MainTab InitialTab;
 
-        private TabManager TabManager;
+        // Windows
+        private HomeWindow HomeWindow;
+        private WindowManager WindowManager;
+        private WindowPlaceholderFactory WindowFactory;
 
+        // Assets
         private GameObject Watch, Menu;
         private AudioClip SmallClick, BigClick;
 
+        // Display
         private MenuDisplayInfo DisplayInfo;
         private float RefreshTime;
 
-        private readonly Dictionary<Type, ITab> TabCache = new();
+        // Cache
+        private readonly Dictionary<Type, IWindow> WindowCache = new();
 
         [Inject]
-        public async void Construct(AssetLoader assetLoader, TabPlaceholderFactory tabFactory, MainTab initialTab, List<IEntry> entries, Configuration configuration)
+        public async void Construct(AssetLoader assetLoader, WindowPlaceholderFactory windowFactory, HomeWindow homeWindow, List<IEntry> entries, Configuration configuration)
         {
             if (Initialized) return;
             Initialized = true;
             
             Configuration = configuration;
 
-            TabFactory = tabFactory;
+            WindowFactory = windowFactory;
 
-            InitialTab = initialTab;
-            TabCache.Add(typeof(MainTab), InitialTab);
+            HomeWindow = homeWindow;
+            WindowCache.Add(typeof(HomeWindow), HomeWindow);
 
-            TabManager = new TabManager();
-            TabManager.OnTextChanged += SetText;
-            TabManager.OnNewTabRequested += SetTab;
+            WindowManager = new WindowManager();
+            WindowManager.OnTextChanged += SetText;
+            WindowManager.OnNewTabRequested += SetWindow;
 
             #region Initialize assets 
 
@@ -92,8 +97,8 @@ namespace GorillaInfoWatch.Behaviours
             WatchTrigger watchTrigger = Watch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
             watchTrigger.Menu = Menu;
 
-            TabManager.SetTab(InitialTab, null);
-            InitialTab.SetEntries(entries);
+            WindowManager.SetWindow(HomeWindow, null);
+            HomeWindow.SetEntries(entries);
         }
 
         public void Initialize()
@@ -103,17 +108,17 @@ namespace GorillaInfoWatch.Behaviours
 
         public void Update()
         {
-            if (Configuration != null && Configuration.RefreshRate.Value != 0 && TabManager != null && TabManager.Tab != null && Time.time > (RefreshTime + (1f / Configuration.RefreshRate.Value)))
+            if (Configuration != null && Configuration.RefreshRate.Value != 0 && WindowManager != null && WindowManager.Tab != null && Time.time > (RefreshTime + (1f / Configuration.RefreshRate.Value)))
             {
                 RefreshTime = Time.time;
-                TabManager.Tab.OnScreenRefresh();
+                WindowManager.Tab.OnScreenRefresh();
             }
         }
 
         public void PressButton(WatchButton button, bool isLeftHand)
         {
-            if (!button || TabManager.Tab == null) return;
-            TabManager.Tab.OnButtonPress(button.Type);
+            if (!button || WindowManager.Tab == null) return;
+            WindowManager.Tab.OnButtonPress(button.Type);
 
             AudioSource handSource = isLeftHand 
                 ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer 
@@ -133,32 +138,32 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void SetTab(Type type, object[] Parameters)
+        public void SetWindow(Type origin, Type type, object[] Parameters)
         {
             try
             {
-                ITab tab = GetTab(type);
-                if (tab != null)
-                {
-                    TabManager.SetTab(tab, Parameters);
-                    RefreshTime = Time.time;
-                }
+                IWindow tab = GetTab(type);
+                tab.CallerWindow = origin;
+
+                WindowManager.SetWindow(tab, Parameters);
+
+                RefreshTime = Time.time;
             }
             catch(Exception exception)
             {
-                Logging.Error(string.Concat("SetTab threw an exception: ", exception.ToString()));
+                Logging.Error(string.Concat("SetWindow threw an exception: ", exception.ToString()));
             }
         }
 
-        private ITab GetTab(Type type)
+        private IWindow GetTab(Type type)
         {
-            if (TabCache.TryGetValue(type, out ITab view)) return view;
+            if (WindowCache.TryGetValue(type, out IWindow view)) return view;
 
-            ITab newTab = null;
+            IWindow newTab = null;
             try
             {
-                newTab = TabFactory.Create(type);
-                TabCache.Add(type, newTab);
+                newTab = WindowFactory.Create(type);
+                WindowCache.Add(type, newTab);
 
                 Logging.Info(string.Concat("Created new tab of type ", nameof(type)));
             }

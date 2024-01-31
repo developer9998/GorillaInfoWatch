@@ -14,14 +14,14 @@ namespace GorillaInfoWatch.Tabs
     public class ScoreboardEntry : IEntry
     {
         public string Name => "Scoreboard";
-        public Type EntryType => typeof(ScoreboardTab);
+        public Type Window => typeof(ScoreboardWindow);
     }
 
-    public class ScoreboardTab : Tab
+    public class ScoreboardWindow : Window
     {
         private readonly PageHandler<Player> PageHandler = new();
 
-        public ScoreboardTab()
+        public ScoreboardWindow()
         {
             PageHandler = new()
             {
@@ -72,12 +72,12 @@ namespace GorillaInfoWatch.Tabs
                     if (!player.IsLocal)
                     {
                         VRRig rig = GorillaGameManager.StaticFindRigForPlayer(player);
-                        DisplayTab(typeof(PlayerTab), new object[] { player, rig });
+                        DisplayWindow(typeof(PlayerWindow), new object[] { player, rig });
                     }
                     OnScreenRefresh();
                     break;
                 case ButtonType.Back:
-                    DisplayTab<MainTab>();
+                    DisplayWindow<HomeWindow>();
                     break;
             }
         }
