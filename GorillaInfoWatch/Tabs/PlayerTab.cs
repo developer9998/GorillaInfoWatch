@@ -68,14 +68,14 @@ namespace GorillaInfoWatch.Tabs
 
         public override void OnButtonPress(ButtonType type)
         {
+            if (ItemHandler.HandleButton(type))
+            {
+                OnScreenRefresh();
+                return;
+            }
+
             switch (type)
             {
-                case ButtonType.Down:
-                    ItemHandler.Change(1);
-                    break;
-                case ButtonType.Up:
-                    ItemHandler.Change(-1);
-                    break;
                 case ButtonType.Left:
                     switch (ItemHandler.CurrentEntry)
                     {

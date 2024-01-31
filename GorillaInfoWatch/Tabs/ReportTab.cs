@@ -38,14 +38,14 @@ namespace GorillaInfoWatch.Tabs
 
         public override void OnButtonPress(ButtonType type)
         {
+            if (ItemHandler.HandleButton(type))
+            {
+                OnScreenRefresh();
+                return;
+            }
+
             switch (type)
             {
-                case ButtonType.Down:
-                    ItemHandler.Change(1);
-                    break;
-                case ButtonType.Up:
-                    ItemHandler.Change(-1);
-                    break;
                 case ButtonType.Enter:
                     GorillaPlayerLineButton.ButtonType reportType = ItemHandler.CurrentEntry switch
                     {
@@ -57,14 +57,12 @@ namespace GorillaInfoWatch.Tabs
                     Line.PressButton(false, GorillaPlayerLineButton.ButtonType.Report);
                     Line.PressButton(false, reportType);
                     DisplayTab<PlayerTab>();
-                    return;
+                    OnScreenRefresh();
+                    break;
                 case ButtonType.Back:
                     DisplayTab<PlayerTab>();
-                    return;
-                default:
-                    return;
+                    break;
             }
-            OnScreenRefresh();
         }
     }
 }

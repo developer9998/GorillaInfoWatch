@@ -68,29 +68,23 @@ namespace GorillaInfoWatch.Tabs
 
         public override void OnButtonPress(ButtonType type)
         {
-            if (type == ButtonType.Back)
+            if (PageHandler.HandleButton(type))
             {
-                DisplayTab<MainTab>();
+                OnScreenRefresh();
                 return;
             }
 
             switch (type)
             {
-                case ButtonType.Down:
-                    PageHandler.Change(1);
-                    break;
-                case ButtonType.Up:
-                    PageHandler.Change(-1);
-                    break;
                 case ButtonType.Enter:
                     PluginInfo plugin = PageHandler.Items[PageHandler.CurrentEntry];
                     plugin.Instance.enabled ^= true;
+                    OnScreenRefresh();
                     break;
-                default:
-                    return;
+                case ButtonType.Back:
+                    DisplayTab<MainTab>();
+                    break;
             }
-
-            OnScreenRefresh();
         }
     }
 }
