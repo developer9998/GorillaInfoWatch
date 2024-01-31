@@ -26,7 +26,7 @@ namespace GorillaInfoWatch
             Container.Bind<IEntry>().To<DetailsEntry>().AsSingle();
             Container.Bind<IEntry>().To<DisconnectEntry>().AsSingle();
             Container.Bind<IEntry>().To<ModStatusEntry>().AsSingle();
-            Container.Bind<IEntry>().To<ConfigEntry>().AsSingle();
+            Container.Bind<IEntry>().To<SettingsEntry>().AsSingle();
         }
     }
 }

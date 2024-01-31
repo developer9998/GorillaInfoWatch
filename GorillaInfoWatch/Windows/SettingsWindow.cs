@@ -9,9 +9,9 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Tabs
 {
-    public class ConfigEntry : IEntry
+    public class SettingsEntry : IEntry
     {
-        public string Name => "Configuration";
+        public string Name => "Settings";
         public Type Window => typeof(SettingsWindow);
     }
 
