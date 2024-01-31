@@ -1,10 +1,10 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.QuickActions;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Windows;
 using GorillaInfoWatch.Windows.Scoreboard;
-using GorillaInfoWatch.QuickActions;
 using GorillaLocomotion;
 using System;
 using Zenject;

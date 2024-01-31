@@ -1,9 +1,8 @@
 ﻿using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using GorillaNetworking;
-using UnityEngine;
-using HarmonyLib;
 using System;
+using UnityEngine;
 
 namespace GorillaInfoWatch.QuickActions
 {

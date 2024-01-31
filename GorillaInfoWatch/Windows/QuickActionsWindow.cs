@@ -27,7 +27,7 @@ namespace GorillaInfoWatch.Windows
                 Items = quickActions
             }; // love you dane!! youre so cute :3
 
-            QuickActionActivity = quickActions.ToDictionary(key => key, value => value.InitialState);   
+            QuickActionActivity = quickActions.ToDictionary(key => key, value => value.InitialState);
         }
 
         public override void OnScreenRefresh()
@@ -42,7 +42,7 @@ namespace GorillaInfoWatch.Windows
                 for (int i = 0; i < EntryCollection.Count; i++)
                 {
                     int index = i + PageHandler.PageNumber() * PageHandler.EntriesPerPage;
-                    str.AppendItem(EntryCollection[i].Type == ActionType.Static ? EntryCollection[i].Name : string.Concat(EntryCollection[i].Name, " [", QuickActionActivity[EntryCollection[i]]  ? "<color=lime>E</color>" : "<color=red>D</color>", "]"), index, PageHandler);
+                    str.AppendItem(EntryCollection[i].Type == ActionType.Static ? EntryCollection[i].Name : string.Concat(EntryCollection[i].Name, " [", QuickActionActivity[EntryCollection[i]] ? "<color=lime>E</color>" : "<color=red>D</color>", "]"), index, PageHandler);
                 }
 
                 str.Append(string.Concat(Enumerable.Repeat("\n", PageHandler.EntriesPerPage - EntryCollection.Count))).AppendLine();
