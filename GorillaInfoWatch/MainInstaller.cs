@@ -4,6 +4,7 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Windows;
 using GorillaInfoWatch.Windows.Scoreboard;
+using GorillaInfoWatch.QuickActions;
 using GorillaLocomotion;
 using System;
 using Zenject;
@@ -23,11 +24,17 @@ namespace GorillaInfoWatch
                 .FromFactory<WindowFactory>();
 
             Container.Bind<HomeWindow>().AsSingle();
+
             Container.Bind<IEntry>().To<ScoreboardEntry>().AsSingle();
             Container.Bind<IEntry>().To<DetailsEntry>().AsSingle();
-            Container.Bind<IEntry>().To<DisconnectEntry>().AsSingle();
             Container.Bind<IEntry>().To<ModStatusEntry>().AsSingle();
+            Container.Bind<IEntry>().To<QuickActionsEntry>().AsSingle();
             Container.Bind<IEntry>().To<SettingsEntry>().AsSingle();
+
+            Container.Bind<IQuickAction>().To<Disconnect>().AsSingle();
+            Container.Bind<IQuickAction>().To<Quit>().AsSingle();
+            Container.Bind<IQuickAction>().To<VoiceToggle>().AsSingle(); // :3
+            Container.Bind<IQuickAction>().To<ParticleToggle>().AsSingle();
         }
     }
 }

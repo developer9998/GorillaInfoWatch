@@ -48,8 +48,8 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                     int index = i + PageHandler.PageNumber() * PageHandler.EntriesPerPage;
                     VRRig rig = GorillaGameManager.StaticFindRigForPlayer(EntryCollection[i]);
                     if (rig)
-                    {
-                        str.AppendItem(string.Concat(EntryCollection[i].NickName, " [<color=#", ColorUtility.ToHtmlStringRGB(rig.playerColor), ">██</color>]"), index, PageHandler);
+                    { // ◀⚟
+                        str.AppendItem(string.Concat("<color=#", ColorUtility.ToHtmlStringRGB(rig.playerColor), ">██</color> ", EntryCollection[i].NickName, " ", rig.GetComponent<GorillaSpeakerLoudness>().IsSpeaking ? "◀⚟" : "  "), index, PageHandler);
                     }
                 }
             }

@@ -6,7 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Interfaces\QuickAction.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Content\watchbundle" />
+    <None Remove="Models\NewFile1.txt" />
+    <None Remove="QuickActions\NewFile1.txt" />
   </ItemGroup>
 
   <ItemGroup>

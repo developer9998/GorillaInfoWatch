@@ -1,7 +1,6 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -27,7 +26,7 @@ namespace GorillaInfoWatch.Windows
         {
             StringBuilder str = new();
 
-            string header = string.Concat("- ", Constants.Name, " | ", DateTime.Now.ToString("h:mm tt"), " -");
+            string header = string.Concat("- ", Constants.Name, " | ", Constants.Version, " -");
             str.AppendLine(header.AlignCenter(Constants.Width)).AppendLine("A mod by Dev and Luna".AlignCenter(34)).AppendLine();
 
             if (PageHandler.Items.Count > 0)

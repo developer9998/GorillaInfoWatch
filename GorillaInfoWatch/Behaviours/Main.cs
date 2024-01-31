@@ -81,7 +81,7 @@ namespace GorillaInfoWatch.Behaviours
             DisplayInfo = new MenuDisplayInfo()
             {
                 Text = Menu.transform.Find("Canvas/Text (Legacy)").GetComponent<Text>(),
-                Background = Menu.transform.Find("Canvas/Panel").GetComponent<Image>()
+                Background = Menu.transform.Find("Canvas/Background").GetComponent<Image>()
             };
 
             Transform buttonContainer = Menu.transform.Find("Buttons");
