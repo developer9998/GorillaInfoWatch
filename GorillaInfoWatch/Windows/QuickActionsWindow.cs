@@ -66,8 +66,10 @@ namespace GorillaInfoWatch.Windows
                     IQuickAction QuickAction = PageHandler.Items[PageHandler.CurrentEntry];
                     QuickActionActivity[QuickAction] = QuickAction.Type == ActionType.Static ? true : !QuickActionActivity[QuickAction];
                     QuickAction?.OnActivate?.Invoke(QuickActionActivity[QuickAction]);
-
                     OnScreenRefresh();
+                    break;
+                case ButtonType.Back:
+                    DisplayWindow<HomeWindow>();
                     break;
             }
         }
