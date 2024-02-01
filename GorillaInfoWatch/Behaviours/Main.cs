@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Behaviours
 
         // Assets
         private GameObject Watch, Menu;
-        private AudioClip SmallClick, BigClick;
+        private AudioClip Click;
 
         // Display
         private MenuDisplayInfo DisplayInfo;
@@ -73,8 +73,7 @@ namespace GorillaInfoWatch.Behaviours
 
             #endregion
 
-            SmallClick = await assetLoader.LoadAsset<AudioClip>("Click");
-            BigClick = await assetLoader.LoadAsset<AudioClip>("ClickLarge");
+            Click = await assetLoader.LoadAsset<AudioClip>("Click");
 
             #endregion
 
@@ -93,6 +92,7 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             Watch.AddComponent<TimeDisplay>().Text = Watch.transform.Find("Hand Menu/Canvas/Time").GetComponent<Text>();
+            Menu.AddComponent<TimeDisplay>().Text = Menu.transform.Find("Canvas/Upper Text").GetComponent<Text>();
 
             WatchTrigger watchTrigger = Watch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
             watchTrigger.Menu = Menu;
@@ -123,11 +123,8 @@ namespace GorillaInfoWatch.Behaviours
             AudioSource handSource = isLeftHand
                 ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                 : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
-            AudioClip handClip = (button.Type == ButtonType.Enter || button.Type == ButtonType.Back)
-                ? BigClick
-                : SmallClick;
 
-            handSource.PlayOneShot(handClip, 0.8f);
+            handSource.PlayOneShot(Click, 0.7f);
         }
 
         public void SetText(string text)

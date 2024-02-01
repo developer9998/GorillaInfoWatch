@@ -10,9 +10,9 @@ namespace GorillaInfoWatch.QuickActions
     {
         public string Name => "Set Voice Chat";
 
-        public Action<bool> Function => (bool active) =>
+        public Action Function => () =>
         {
-            GorillaComputer.instance.voiceChatOn = !active ? "TRUE" : "FALSE";
+            GorillaComputer.instance.voiceChatOn = GorillaComputer.instance.voiceChatOn == "TRUE" ? "FALSE" : "TRUE";
             PlayerPrefs.SetString("voiceChatOn", GorillaComputer.instance.voiceChatOn);
 
             AccessTools.Method(typeof(GorillaTagger).Assembly.GetType("RigContainer"), "RefreshAllRigVoices").Invoke(null, null);

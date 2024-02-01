@@ -8,6 +8,6 @@ namespace GorillaInfoWatch.QuickActions
     {
         public string Name => "Disconnect";
 
-        public Action<bool> Function => (bool active) => PhotonNetworkController.Instance.AttemptDisconnect();
+        public Action Function => () => PhotonNetworkController.Instance.AttemptDisconnect();
     }
 }

@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 Menu.SetActive(!Menu.activeSelf);
 
-                //AudioSource.PlayOneShot(AudioSource.clip, 0.3f);
+                AudioSource.PlayOneShot(AudioSource.clip, 0.6f);
             }
         }
     }

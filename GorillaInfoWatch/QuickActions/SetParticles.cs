@@ -9,9 +9,9 @@ namespace GorillaInfoWatch.QuickActions
     {
         public string Name => "Set Particles";
 
-        public Action<bool> Function => (bool active) =>
+        public Action Function => () =>
         {
-            GorillaComputer.instance.disableParticles = active;
+            GorillaComputer.instance.disableParticles ^= true;
             PlayerPrefs.SetString("disableParticles", GorillaComputer.instance.disableParticles.ToString().ToUpper());
             GorillaTagger.Instance.ShowCosmeticParticles(!GorillaComputer.instance.disableParticles);
         };

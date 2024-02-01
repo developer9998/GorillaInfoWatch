@@ -17,7 +17,6 @@ namespace GorillaInfoWatch.Windows
     public class QuickActionsWindow : Window
     {
         private readonly PageHandler<IQuickAction> PageHandler = new();
-        private readonly Dictionary<IQuickAction, bool> QuickActionActivity;
 
         public QuickActionsWindow(List<IQuickAction> quickActions)
         {
@@ -26,8 +25,6 @@ namespace GorillaInfoWatch.Windows
                 EntriesPerPage = 10,
                 Items = quickActions
             }; // love you dane!! youre so cute :3 (lunakitty)
-
-            QuickActionActivity = quickActions.ToDictionary(key => key, value => false);
         }
 
         public override void OnScreenRefresh()
@@ -63,8 +60,7 @@ namespace GorillaInfoWatch.Windows
             {
                 case ButtonType.Enter:
                     IQuickAction QuickAction = PageHandler.Items[PageHandler.CurrentEntry];
-                    QuickActionActivity[QuickAction] = !QuickActionActivity[QuickAction];
-                    QuickAction.Function?.Invoke(QuickActionActivity[QuickAction]);
+                    QuickAction.Function?.Invoke();
                     OnScreenRefresh();
                     break;
                 case ButtonType.Back:

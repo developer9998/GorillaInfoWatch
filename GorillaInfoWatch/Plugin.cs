@@ -10,6 +10,7 @@ namespace GorillaInfoWatch
     {
         public Plugin()
         {
+            new DataManager();
             new Logging(Logger);
             new Harmony(Constants.Guid).PatchAll(typeof(Plugin).Assembly);
 

@@ -16,6 +16,7 @@ namespace GorillaInfoWatch
         public override void InstallBindings()
         {
             Container.BindInterfacesAndSelfTo<Main>().FromNewComponentOn((InjectContext ctx) => UnityEngine.Object.FindObjectOfType<Player>().gameObject).AsSingle();
+
             Container.BindInterfacesAndSelfTo<AssetLoader>().AsSingle();
             Container.BindInterfacesAndSelfTo<Configuration>().AsSingle();
 
