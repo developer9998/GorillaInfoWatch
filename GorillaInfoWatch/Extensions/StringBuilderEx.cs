@@ -39,7 +39,7 @@ namespace GorillaInfoWatch.Extensions
 
         public static StringBuilder AppendSize(this StringBuilder str, string text, int size)
         {
-            str.Append($"<size={size}%>").Append(text).Append("</size>");
+            str.Append($"<size={size}>").Append(text).Append("</size>");
             return str;
         }
 
