@@ -72,7 +72,7 @@ namespace GorillaInfoWatch.Windows
                         break;
                     case 2:
                         str.AppendLine("== Session ==".AlignCenter(Constants.Width)).AppendLine();
-                        str.Append("Playtime: ").AppendLine((new DateTime() + TimeSpan.FromSeconds(Time.realtimeSinceStartup)).ToString("h:m:s"));
+                        str.Append("Playtime: ").AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"h\:mm\:ss"));
                         break;
                     case 3:
                         str.AppendLine("== Room ==".AlignCenter(Constants.Width)).AppendLine();
