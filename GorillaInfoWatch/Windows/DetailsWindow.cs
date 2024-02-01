@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Windows
 
         public DetailsWindow()
         {
-            ItemHandler = new ItemHandler(4);
+            ItemHandler = new ItemHandler(5);
             TextInfo = new CultureInfo("en-US", false).TextInfo;
         }
 
@@ -160,6 +160,10 @@ namespace GorillaInfoWatch.Windows
                                 }
                             }
                         }
+                        break;
+                    case 4:
+                        str.AppendLine("< Session >".AlignCenter(Constants.Width)).AppendLine();
+                        str.Append("Playtime: ").AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"hh\:mm\:ss"));
                         break;
                 }
             }
