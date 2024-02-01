@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Windows
             {
                 EntriesPerPage = 10,
                 Items = quickActions
-            }; // love you dane!! youre so cute :3
+            }; // love you dane!! youre so cute :3 (lunakitty)
 
             QuickActionActivity = quickActions.ToDictionary(key => key, value => value.InitialState);
         }
@@ -45,8 +45,7 @@ namespace GorillaInfoWatch.Windows
                     str.AppendItem(EntryCollection[i].Type == ActionType.Static ? EntryCollection[i].Name : string.Concat(EntryCollection[i].Name, " [", QuickActionActivity[EntryCollection[i]] ? "<color=lime>E</color>" : "<color=red>D</color>", "]"), index, PageHandler);
                 }
 
-                str.Append(string.Concat(Enumerable.Repeat("\n", PageHandler.EntriesPerPage - EntryCollection.Count))).AppendLine();
-                str.Append(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()));
+                str.AppendFooter(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()), EntryCollection.Count, PageHandler.EntriesPerPage);
             }
 
             SetText(str.ToString());

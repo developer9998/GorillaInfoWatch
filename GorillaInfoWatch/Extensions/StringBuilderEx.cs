@@ -1,5 +1,6 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Utilities;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -45,5 +46,7 @@ namespace GorillaInfoWatch.Extensions
         public static StringBuilder AppendBar(this StringBuilder str, int count, int length) => str.Append(AsciiUtils.Bar(length, count));
 
         public static StringBuilder AppendItem(this StringBuilder str, string text, int index, ItemHandler itemHandler) => str.Append(itemHandler.CurrentEntry == index ? " > " : "   ").Append(text).AppendLine();
+
+        public static StringBuilder AppendFooter(this StringBuilder str, string text, int count, int length) => str.Append(string.Concat(Enumerable.Repeat("\n", length - count))).AppendLine().Append(text);
     }
 }

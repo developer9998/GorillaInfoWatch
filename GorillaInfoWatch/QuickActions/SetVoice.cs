@@ -7,9 +7,9 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.QuickActions
 {
-    public class VoiceToggle : IQuickAction
+    public class SetVoice : IQuickAction
     {
-        public string Name => "Toggle Voice Chat";
+        public string Name => "Set Voice Chat";
         public ActionType Type => ActionType.Toggle;
 
         public bool InitialState => PlayerPrefs.GetString("voiceChatOn", "TRUE") == "TRUE";

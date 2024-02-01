@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.QuickActions
 {
-    public class ParticleToggle : IQuickAction
+    public class SetParticles : IQuickAction
     {
-        public string Name => "Toggle Particles";
+        public string Name => "Set Particles";
         public ActionType Type => ActionType.Toggle;
 
         public bool InitialState => PlayerPrefs.GetString("disableParticles", "FALSE") == "FALSE";

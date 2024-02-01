@@ -59,8 +59,7 @@ namespace GorillaInfoWatch.Windows
                     str.AppendItem(string.Concat(PluginCollection[i].Metadata.Name, " [", PluginCollection[i].Instance.enabled ? "<color=lime>E</color>" : "<color=red>D</color>", "]"), index, PageHandler);
                 }
 
-                str.Append(string.Concat(Enumerable.Repeat("\n", PageHandler.EntriesPerPage - PluginCollection.Count))).AppendLine();
-                str.Append(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()));
+                str.AppendFooter(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()), PluginCollection.Count, PageHandler.EntriesPerPage);
             }
 
             SetText(str);

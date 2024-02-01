@@ -38,8 +38,7 @@ namespace GorillaInfoWatch.Windows
                     str.AppendItem(EntryCollection[i].Name, index, PageHandler);
                 }
 
-                str.Append(string.Concat(Enumerable.Repeat("\n", PageHandler.EntriesPerPage - EntryCollection.Count))).AppendLine();
-                str.Append(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()));
+                str.AppendFooter(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()), EntryCollection.Count, PageHandler.EntriesPerPage);
             }
 
             SetText(str.ToString());

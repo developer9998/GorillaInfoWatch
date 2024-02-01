@@ -33,8 +33,8 @@ namespace GorillaInfoWatch
 
             Container.Bind<IQuickAction>().To<Disconnect>().AsSingle();
             Container.Bind<IQuickAction>().To<Quit>().AsSingle();
-            Container.Bind<IQuickAction>().To<VoiceToggle>().AsSingle(); // :3
-            Container.Bind<IQuickAction>().To<ParticleToggle>().AsSingle();
+            Container.Bind<IQuickAction>().To<SetVoice>().AsSingle(); // :3 (lunakitty)
+            Container.Bind<IQuickAction>().To<SetParticles>().AsSingle();
         }
     }
 }
