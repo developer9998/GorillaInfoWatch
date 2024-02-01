@@ -39,7 +39,7 @@ namespace GorillaInfoWatch.Windows
                 switch (ItemHandler.CurrentEntry)
                 {
                     case 0:
-                        str.AppendLine("< General >".AlignCenter(Constants.Width)).AppendLine();
+                        str.AppendLine("== General ==".AlignCenter(Constants.Width)).AppendLine();
 
                         str.Append("Version: ").AppendLine(GorillaComputer.instance.version);
                         str.Append("Player Count: ").AppendLine(PhotonNetwork.CountOfPlayers.ToString()).AppendLine();
@@ -54,7 +54,7 @@ namespace GorillaInfoWatch.Windows
                         str.Append("Ping: ").Append(PhotonNetwork.GetPing().ToString());
                         break;
                     case 1:
-                        str.AppendLine("< Preferences >".AlignCenter(Constants.Width)).AppendLine();
+                        str.AppendLine("== Preferences ==".AlignCenter(Constants.Width)).AppendLine();
 
                         str.Append("Name: ").AppendLine(GorillaComputer.instance.savedName);
                         str.Append("Colour: [")
@@ -71,7 +71,11 @@ namespace GorillaInfoWatch.Windows
 
                         break;
                     case 2:
-                        str.AppendLine("< Room >".AlignCenter(Constants.Width)).AppendLine();
+                        str.AppendLine("== Session ==".AlignCenter(Constants.Width)).AppendLine();
+                        str.Append("Playtime: ").AppendLine((new DateTime() + TimeSpan.FromSeconds(Time.realtimeSinceStartup)).ToString("h:m:s"));
+                        break;
+                    case 3:
+                        str.AppendLine("== Room ==".AlignCenter(Constants.Width)).AppendLine();
                         if (!PhotonNetwork.InRoom)
                         {
                             str.AppendLine("<color=red>It is required to be in a room to use the Room section.</color>");
@@ -86,8 +90,8 @@ namespace GorillaInfoWatch.Windows
 
                         }
                         break;
-                    case 3:
-                        str.AppendLine("< Gamemode >".AlignCenter(Constants.Width)).AppendLine();
+                    case 4:
+                        str.AppendLine("== Gamemode ==".AlignCenter(Constants.Width)).AppendLine();
                         if (!PhotonNetwork.InRoom)
                         {
                             str.AppendLine("<color=red>It is required to be in a room to use the Gamemode section.</color>");
@@ -160,10 +164,6 @@ namespace GorillaInfoWatch.Windows
                                 }
                             }
                         }
-                        break;
-                    case 4:
-                        str.AppendLine("< Session >".AlignCenter(Constants.Width)).AppendLine();
-                        str.Append("Playtime: ").AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"hh\:mm\:ss"));
                         break;
                 }
             }

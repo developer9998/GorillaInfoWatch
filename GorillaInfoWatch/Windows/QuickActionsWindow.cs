@@ -16,8 +16,8 @@ namespace GorillaInfoWatch.Windows
 
     public class QuickActionsWindow : Window
     {
-        private PageHandler<IQuickAction> PageHandler = new();
-        private Dictionary<IQuickAction, bool> QuickActionActivity;
+        private readonly PageHandler<IQuickAction> PageHandler = new();
+        private readonly Dictionary<IQuickAction, bool> QuickActionActivity;
 
         public QuickActionsWindow(List<IQuickAction> quickActions)
         {
@@ -27,7 +27,7 @@ namespace GorillaInfoWatch.Windows
                 Items = quickActions
             }; // love you dane!! youre so cute :3 (lunakitty)
 
-            QuickActionActivity = quickActions.ToDictionary(key => key, value => value.InitialState);
+            QuickActionActivity = quickActions.ToDictionary(key => key, value => false);
         }
 
         public override void OnScreenRefresh()
@@ -42,7 +42,7 @@ namespace GorillaInfoWatch.Windows
                 for (int i = 0; i < EntryCollection.Count; i++)
                 {
                     int index = i + PageHandler.PageNumber() * PageHandler.EntriesPerPage;
-                    str.AppendItem(EntryCollection[i].Type == ActionType.Static ? EntryCollection[i].Name : string.Concat(EntryCollection[i].Name, " [", QuickActionActivity[EntryCollection[i]] ? "<color=lime>E</color>" : "<color=red>D</color>", "]"), index, PageHandler);
+                    str.AppendItem(EntryCollection[i].Name, index, PageHandler);
                 }
 
                 str.AppendFooter(string.Concat(" Page ", PageHandler.PageNumber() + 1, "/", PageHandler.PageCount()), EntryCollection.Count, PageHandler.EntriesPerPage);
@@ -63,8 +63,8 @@ namespace GorillaInfoWatch.Windows
             {
                 case ButtonType.Enter:
                     IQuickAction QuickAction = PageHandler.Items[PageHandler.CurrentEntry];
-                    QuickActionActivity[QuickAction] = QuickAction.Type == ActionType.Static ? true : !QuickActionActivity[QuickAction];
-                    QuickAction?.OnActivate?.Invoke(QuickActionActivity[QuickAction]);
+                    QuickActionActivity[QuickAction] = !QuickActionActivity[QuickAction];
+                    QuickAction.Function?.Invoke(QuickActionActivity[QuickAction]);
                     OnScreenRefresh();
                     break;
                 case ButtonType.Back:
