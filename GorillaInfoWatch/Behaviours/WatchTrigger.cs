@@ -12,6 +12,8 @@ namespace GorillaInfoWatch.Behaviours
         private readonly float Debounce = 0.4f;
         private float TouchTime;
 
+        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
+
         public void Start()
         {
             AudioSource = GetComponent<AudioSource>();
@@ -20,8 +22,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnTriggerEnter(Collider other)
         {
-            bool isFacingUp = Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
-            if (isFacingUp && other.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) && !handIndicator.isLeftHand && Time.time > (TouchTime + Debounce))
+            if (IsFacingUp && other.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) && !handIndicator.isLeftHand && Time.time > (TouchTime + Debounce))
             {
                 TouchTime = Time.time;
                 GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);

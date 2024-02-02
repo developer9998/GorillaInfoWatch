@@ -33,6 +33,10 @@ namespace GorillaInfoWatch.Behaviours
         // Cache
         private readonly Dictionary<Type, IWindow> WindowCache = new();
 
+        private bool MenuActive => Menu && Menu.activeSelf;
+        private bool ConfigCheck => Configuration != null && Configuration.RefreshRate.Value != 0;
+        private bool WindowCheck => WindowManager != null && WindowManager.Tab != null && Time.unscaledTime > (RefreshTime + (1f / Configuration.RefreshRate.Value));
+
         [Inject]
         public async void Construct(AssetLoader assetLoader, WindowPlaceholderFactory windowFactory, HomeWindow homeWindow, List<IEntry> entries, Configuration configuration)
         {
@@ -106,11 +110,11 @@ namespace GorillaInfoWatch.Behaviours
 
         }
 
-        public void Update()
+        public void FixedUpdate()
         {
-            if (Configuration != null && Configuration.RefreshRate.Value != 0 && WindowManager != null && WindowManager.Tab != null && Time.time > (RefreshTime + (1f / Configuration.RefreshRate.Value)))
+            if (MenuActive && ConfigCheck && WindowCheck)
             {
-                RefreshTime = Time.time;
+                RefreshTime = Time.unscaledTime;
                 WindowManager.Tab.OnScreenRefresh();
             }
         }

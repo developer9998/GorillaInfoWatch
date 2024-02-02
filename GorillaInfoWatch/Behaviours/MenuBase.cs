@@ -9,6 +9,8 @@ namespace GorillaInfoWatch.Behaviours
         private Transform Head;
         private Quaternion Rotation;
 
+        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
+
         public void Start()
         {
             Head = Player.Instance.headCollider.transform;
@@ -24,8 +26,7 @@ namespace GorillaInfoWatch.Behaviours
         public void LateUpdate()
         {
             // Turn off the menu if we're not looking at it, or if our hand is facing down
-            bool isFacingUp = Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
-            if (!isFacingUp) gameObject.SetActive(false);
+            if (!IsFacingUp) gameObject.SetActive(false);
         }
 
         private void CalculateRotation()
