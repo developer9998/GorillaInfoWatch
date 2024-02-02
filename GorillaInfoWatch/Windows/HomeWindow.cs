@@ -2,6 +2,8 @@
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace GorillaInfoWatch.Windows
@@ -12,6 +14,9 @@ namespace GorillaInfoWatch.Windows
 
         public void SetEntries(List<IEntry> entries)
         {
+            entries = entries.Where(entry => entry.GetType().Assembly == typeof(Plugin).Assembly).ToList();
+            entries.AddRange(entries.Where(entry => entry.GetType().Assembly != typeof(Plugin).Assembly));
+
             PageHandler = new PageHandler<IEntry>()
             {
                 Items = entries,
