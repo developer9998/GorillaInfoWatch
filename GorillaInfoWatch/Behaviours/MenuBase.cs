@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Behaviours
         public void LateUpdate()
         {
             // Turn off the menu if we're not looking at it, or if our hand is facing down
-            bool isFacingUp = Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
+            bool isFacingUp = Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
             if (!isFacingUp) gameObject.SetActive(false);
         }
 

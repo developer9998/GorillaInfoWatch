@@ -124,7 +124,7 @@ namespace GorillaInfoWatch.Behaviours
                 ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                 : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-            handSource.PlayOneShot(Click, 0.7f);
+            handSource.PlayOneShot(Click, 0.9f);
         }
 
         public void SetText(string text)

@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Behaviours
 
         private AudioSource AudioSource;
 
-        private readonly float Debounce = 0.5f;
+        private readonly float Debounce = 0.4f;
         private float TouchTime;
 
         public void Start()
@@ -20,15 +20,15 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnTriggerEnter(Collider other)
         {
-            bool isFacingUp = Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.85f;
+            bool isFacingUp = Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
             if (isFacingUp && other.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) && !handIndicator.isLeftHand && Time.time > (TouchTime + Debounce))
             {
                 TouchTime = Time.time;
-                GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.tapHapticStrength, GorillaTagger.Instance.tapHapticDuration);
+                GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 
                 Menu.SetActive(!Menu.activeSelf);
 
-                AudioSource.PlayOneShot(AudioSource.clip, 0.6f);
+                AudioSource.PlayOneShot(AudioSource.clip, 0.32f);
             }
         }
     }

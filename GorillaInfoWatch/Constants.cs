@@ -17,13 +17,13 @@
         /// <summary>
         /// The version of the mod utilizing semantic versioning (major.minor.patch)
         /// </summary>
-        public const string Version = "1.0.0.0";
+        public const string Version = "1.0.0.1";
 
         // Logic
 
         /// <summary>
         /// The maximum width of text which can fit on the menu
         /// </summary>
-        public const int Width = 34;
+        public const int Width = 38;
     }
 }
