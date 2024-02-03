@@ -46,7 +46,7 @@ namespace GorillaInfoWatch
 
             // Player Functions (a set of actions ran based on when a player joins/leaves with set parameters)
             Container.Bind<IPlayerFunction>().To<Volume>().AsSingle();
-            Container.Bind<IPlayerFunction>().To<Favourites>().AsSingle();
+            Container.Bind<IPlayerFunction>().To<Favourite>().AsSingle();
         }
     }
 }
