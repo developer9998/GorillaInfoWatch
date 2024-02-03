@@ -1,9 +1,8 @@
-﻿using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Utilities;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
 using Photon.Voice.PUN;
-using UnityEngine;
 
 namespace GorillaInfoWatch.Patches
 {
@@ -16,16 +15,27 @@ namespace GorillaInfoWatch.Patches
             => Events = new Events();
 
         public static void AddPatch(Player player, VRRig vrrig)
-            => Events.TriggerRigAdded(player, vrrig);
+        {
+            PhotonView photonView = RigCacheUtils.GetField<PhotonView>(player);
+            PhotonVoiceView voiceView = RigCacheUtils.GetField<PhotonVoiceView>(player);
+
+            Events.TriggerRigAdded(new(player, vrrig, photonView, voiceView));
+        }
 
         public static void RemovePatch(Player player, VRRig vrrig)
-            => Events.TriggerRigRemoved(player, vrrig);
+        {
+            PhotonView photonView = RigCacheUtils.GetField<PhotonView>(player);
+            PhotonVoiceView voiceView = RigCacheUtils.GetField<PhotonVoiceView>(player);
 
-        // I didn't want to hardcode it here but I felt like I really didn't have a choice sooo
+            Events.TriggerRigRemoved(new(player, vrrig, photonView, voiceView));
+        }
+
         public static void NetworkFinalizePatch(PhotonView photonView, PhotonVoiceView voiceView)
         {
-            AudioSource speaker = voiceView.SpeakerInUse.GetComponent<AudioSource>();
-            speaker.volume = DataManager.GetItem(string.Concat(photonView.Owner.UserId, "_volume"), 1f, Models.DataType.Stored);
+            Player player = photonView.Owner;
+            VRRig vrrig = RigCacheUtils.GetField<VRRig>(player);
+
+            Events.TriggerRigAdded(new(player, vrrig, photonView, voiceView));
         }
     }
 }

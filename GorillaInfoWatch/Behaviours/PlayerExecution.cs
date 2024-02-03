@@ -1,6 +1,6 @@
 ﻿using GorillaInfoWatch.Interfaces;
+using GorillaInfoWatch.Models;
 using Photon.Pun;
-using Photon.Realtime;
 using System.Collections.Generic;
 using Zenject;
 
@@ -18,25 +18,25 @@ namespace GorillaInfoWatch.Behaviours
 
         public void Initialize()
         {
-            Events.RigAdded += (Player Player, VRRig Rig) =>
+            Events.RigAdded += (PlayerArgs args) =>
             {
                 foreach (IPlayerFunction function in PlayerFunctions)
                 {
                     try
                     {
-                        function.OnPlayerJoin?.Invoke(Player, Rig);
+                        function.OnPlayerJoin?.Invoke(args);
                     }
                     catch { }
                 }
             };
 
-            Events.RigRemoved += (Player Player, VRRig Rig) =>
+            Events.RigRemoved += (PlayerArgs args) =>
             {
                 foreach (IPlayerFunction function in PlayerFunctions)
                 {
                     try
                     {
-                        function.OnPlayerLeave?.Invoke(Player, Rig);
+                        function.OnPlayerLeave?.Invoke(args);
                     }
                     catch { }
                 }

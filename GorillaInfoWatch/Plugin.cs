@@ -19,7 +19,7 @@ namespace GorillaInfoWatch
             new DataManager();
             new Logging(Logger);
 
-            Harmony harmony = new Harmony(Constants.Guid);
+            Harmony harmony = new(Constants.Guid);
             harmony.PatchAll(typeof(Plugin).Assembly);
 
             Type rigCacheType = GTAssembly.GetType("VRRigCache");

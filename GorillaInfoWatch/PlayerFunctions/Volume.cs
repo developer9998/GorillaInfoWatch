@@ -1,6 +1,6 @@
-﻿using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Interfaces;
-using Photon.Realtime;
+﻿using GorillaInfoWatch.Interfaces;
+using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using System;
 using UnityEngine;
 
@@ -8,12 +8,22 @@ namespace GorillaInfoWatch.PlayerFunctions
 {
     public class Volume : IPlayerFunction
     {
-        public Action<Player, VRRig> OnPlayerJoin => null;
-
-        public Action<Player, VRRig> OnPlayerLeave => (Player Player, VRRig Rig) =>
+        public Action<PlayerArgs> OnPlayerJoin => (PlayerArgs Arguments) =>
         {
-            AudioSource Speaker = Rig.GetField<AudioSource>("voiceAudio");
-            Speaker.volume = 1f;
+            if (Arguments.VoiceView)
+            {
+                AudioSource Speaker = Arguments.VoiceView.SpeakerInUse.GetComponent<AudioSource>();
+                Speaker.volume = DataManager.GetItem(string.Concat(Arguments.Player.UserId, "_volume"), 1f, DataType.Stored);
+            }
+        };
+
+        public Action<PlayerArgs> OnPlayerLeave => (PlayerArgs Arguments) =>
+        {
+            if (Arguments.VoiceView)
+            {
+                AudioSource Speaker = Arguments.VoiceView.SpeakerInUse.GetComponent<AudioSource>();
+                Speaker.volume = 1f;
+            }
         };
     }
 }

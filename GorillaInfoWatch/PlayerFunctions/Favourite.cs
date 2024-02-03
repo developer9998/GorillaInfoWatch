@@ -1,22 +1,21 @@
 ﻿using GorillaInfoWatch.Interfaces;
-using System;
-using Photon.Realtime;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
+using System;
 using UnityEngine;
 
 namespace GorillaInfoWatch.PlayerFunctions
 {
     public class Favourite : IPlayerFunction
     {
-        public Action<Player, VRRig> OnPlayerJoin => (Player Player, VRRig Rig) =>
+        public Action<PlayerArgs> OnPlayerJoin => (PlayerArgs Arguments) =>
         {
-            Rig.playerText.color = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? new Color32(110, 183, 183, 255) : Color.white;
+            Arguments.Rig.playerText.color = DataManager.GetItem(string.Concat(Arguments.Player.UserId, "fav"), false, DataType.Stored) ? new Color32(110, 183, 183, 255) : Color.white;
         };
 
-        public Action<Player, VRRig> OnPlayerLeave => (Player Player, VRRig Rig) =>
+        public Action<PlayerArgs> OnPlayerLeave => (PlayerArgs Arguments) =>
         {
-            Rig.playerText.color = Color.white;
+            Arguments.Rig.playerText.color = Color.white;
         };
     }
 }
