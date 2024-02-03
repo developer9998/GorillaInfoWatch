@@ -1,5 +1,6 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
 using Photon.Pun;
 using Photon.Realtime;
@@ -30,7 +31,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                 Line = ScoreboardUtils.FindLine(Player);
                 Speaker = Rig.GetField<AudioSource>("voiceAudio");
 
-                ItemHandler = new ItemHandler(3);
+                ItemHandler = new ItemHandler(4);
             }
         }
 
@@ -49,14 +50,15 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                 .Append(Player.NickName).AppendLine();
             str.Append("Colour: [<color=#")
                 .Append(ColorUtility.ToHtmlStringRGB(Rig.playerColor)).Append(">")
-                .Append(Mathf.FloorToInt(Rig.playerColor.r * 9f)).Append(", ")
-                .Append(Mathf.FloorToInt(Rig.playerColor.g * 9f)).Append(", ")
-                .Append(Mathf.FloorToInt(Rig.playerColor.b * 9f)).Append("</color>]")
+                .Append(Mathf.RoundToInt(Rig.playerColor.r * 9f)).Append(", ")
+                .Append(Mathf.RoundToInt(Rig.playerColor.g * 9f)).Append(", ")
+                .Append(Mathf.RoundToInt(Rig.playerColor.b * 9f)).Append("</color>]")
                 .AppendLine().AppendLine();
 
             str.AppendItem(Line.muteButton.isOn ? "Unmute" : "Mute", 0, ItemHandler);
             str.AppendItem(Line.reportButton.isOn ? "Reported" : "Report", 1, ItemHandler);
-            str.AppendItem(string.Concat("Volume: [", AsciiUtils.Bar(10, Mathf.RoundToInt(Speaker.volume * 10)), "]"), 2, ItemHandler);
+            str.AppendItem(DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? "Unfavourite" : "Favourite", 2, ItemHandler);
+            str.AppendItem(string.Concat("Volume: [", AsciiUtils.Bar(10, Mathf.RoundToInt(Speaker.volume * 10)), "]"), 3, ItemHandler);
 
             if (Line.reportButton.isOn)
             {
@@ -79,16 +81,18 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                 case ButtonType.Left:
                     switch (ItemHandler.CurrentEntry)
                     {
-                        case 2:
+                        case 3:
                             Speaker.volume = Mathf.Clamp(Speaker.volume - 0.2f, 0f, 1f);
+                            DataManager.AddItem(string.Concat(Player.UserId, "_volume"), Speaker.volume, DataType.Stored);
                             break;
                     }
                     break;
                 case ButtonType.Right:
                     switch (ItemHandler.CurrentEntry)
                     {
-                        case 2:
+                        case 3:
                             Speaker.volume = Mathf.Clamp(Speaker.volume + 0.2f, 0f, 1f);
+                            DataManager.AddItem(string.Concat(Player.UserId, "_volume"), Speaker.volume, DataType.Stored);
                             break;
                     }
                     break;
@@ -102,6 +106,10 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                         case 1:
                             if (!Line.reportButton.isOn) DisplayWindow(typeof(ReportWindow), new object[] { Player, Line });
                             return;
+                        case 2:
+                            DataManager.AddItem(string.Concat(Player.UserId, "fav"), !DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored), DataType.Stored);
+                            Rig.playerText.color = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? new Color32(107, 166, 166, 255) : Color.white;
+                            break;
                     }
                     break;
                 case ButtonType.Back:

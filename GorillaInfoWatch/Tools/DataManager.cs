@@ -1,7 +1,9 @@
-﻿using GorillaNetworking;
+﻿using GorillaInfoWatch.Models;
+using GorillaNetworking;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using Newtonsoft.Json;
 
 namespace GorillaInfoWatch.Tools
 {
@@ -9,39 +11,42 @@ namespace GorillaInfoWatch.Tools
     {
         private static string BasePath => Path.Combine(Application.persistentDataPath, "GorillaInfoWatchData.txt");
 
-        private static Dictionary<string, object> Data = new();
+        private static readonly Dictionary<string, object> SessionData = new();
+        private static Dictionary<string, object> StoredData = new();
 
         public DataManager()
         {
             if (File.Exists(BasePath))
             {
-                Data = JsonUtility.FromJson<Dictionary<string, object>>(File.ReadAllText(BasePath));
+                StoredData = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(BasePath));
             }
             else
             {
-                string contents = JsonUtility.ToJson(Data, true);
-                File.WriteAllText(BasePath, contents);
+                File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
             }
         }
 
-        public static void AddItem(string key, object value)
+        public static void AddItem(string key, object value, DataType dataType = DataType.Session)
         {
-            Data.AddOrUpdate(key, value);
+            Dictionary<string, object> dictionary = dataType == DataType.Session ? SessionData : StoredData;
+            dictionary.AddOrUpdate(key, value);
 
-            string contents = JsonUtility.ToJson(Data, true);
-            File.WriteAllText(BasePath, contents);
+            if (dataType == DataType.Stored)
+            {
+                File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
+            }
         }
 
-        public static T GetItem<T>(string key)
+        public static T GetItem<T>(string key, T defaultValue, DataType dataType = DataType.Session)
         {
-            if (Data.TryGetValue(key, out object value))
+            Dictionary<string, object> dictionary = dataType == DataType.Session ? SessionData : StoredData;
+
+            if (dictionary.TryGetValue(key, out object value))
             {
                 return (T)value;
             }
-            else
-            {
-                return default;
-            }
+
+            return defaultValue;
         }
     }
 }

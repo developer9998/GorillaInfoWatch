@@ -1,6 +1,7 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using Photon.Pun;
 using Photon.Realtime;
@@ -72,7 +73,12 @@ namespace GorillaInfoWatch.Windows
                         break;
                     case 2:
                         str.AppendLine("== Session ==".AlignCenter(Constants.Width)).AppendLine();
-                        str.Append("Playtime: ").AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"h\:mm\:ss"));
+
+                        str.Append("Playtime: ")
+                            .AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"h\:mm\:ss"))
+                            .AppendLine();
+
+                        str.Append("Tags: ").AppendLine(DataManager.GetItem("Tags", 0).ToString());
                         break;
                     case 3:
                         str.AppendLine("== Room ==".AlignCenter(Constants.Width)).AppendLine();

@@ -1,9 +1,13 @@
-﻿using GorillaInfoWatch.Interfaces;
+﻿using ExitGames.Client.Photon;
+using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Windows;
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Zenject;
@@ -107,7 +111,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void Initialize()
         {
-
+            PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
         }
 
         public void FixedUpdate()
@@ -174,6 +178,20 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             return newTab;
+        }
+
+        private void OnEventReceived(EventData photonEvent)
+        {
+            if (photonEvent.Code == GorillaTagManager.ReportInfectionTagEvent) // The game doesn't use this constant, rather it's hardcoded into the event for some reason
+            {
+                object[] data = (object[])photonEvent.CustomData;
+                Player taggingPlayer = GameMode.ParticipatingPlayers.FirstOrDefault(player => player.UserId == (string)data[0]);
+
+                if (taggingPlayer != null && taggingPlayer.IsLocal)
+                {
+                    DataManager.AddItem("Tags", DataManager.GetItem("Tags", 0) + 1);
+                }
+            }
         }
     }
 }
