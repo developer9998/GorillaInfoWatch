@@ -48,5 +48,20 @@ namespace GorillaInfoWatch.Tools
 
             return defaultValue;
         }
+
+        public static void RemoveItem(string key, DataType dataType = DataType.Session)
+        {
+            Dictionary<string, object> dictionary = dataType == DataType.Session ? SessionData : StoredData;
+
+            if (dictionary.ContainsKey(key))
+            {
+                dictionary.Remove(key);
+
+                if (dataType == DataType.Stored)
+                {
+                    File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
+                }
+            }
+        }
     }
 }
