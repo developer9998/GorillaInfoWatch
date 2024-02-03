@@ -27,7 +27,7 @@ namespace GorillaInfoWatch
             harmony.Patch(AccessTools.Method(rigCacheType, "AddRigToGorillaParent"), postfix: new HarmonyMethod(RigPatchType, nameof(RigPatches.AddPatch)));
             harmony.Patch(AccessTools.Method(rigCacheType, "RemoveRigFromGorillaParent"), postfix: new HarmonyMethod(RigPatchType, nameof(RigPatches.RemovePatch)));
 
-            Type rigContainerType = GTAssembly.GetType("VRRigCache");
+            Type rigContainerType = GTAssembly.GetType("RigContainer");
             harmony.Patch(AccessTools.Method(rigContainerType, "InitializeNetwork"), postfix: new HarmonyMethod(RigPatchType, nameof(RigPatches.NetworkFinalizePatch)));
 
             Zenjector.Install<MainInstaller>().OnProject().WithConfig(Config).WithLog(Logger);
