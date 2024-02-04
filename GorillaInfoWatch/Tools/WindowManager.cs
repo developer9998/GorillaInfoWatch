@@ -11,8 +11,8 @@ namespace GorillaInfoWatch.Tools
     public class WindowManager
     {
         public event Action<string> OnTextChanged;
-        public event Action<Color> OnMenuColourRequested;
-        public event Action<Type, Type, object[]> OnNewTabRequested;
+        public event Action<Color> OnBackgroundChanged;
+        public event Action<Type, Type, object[]> OnWindowChanged;
 
         public IWindow Tab;
 
@@ -48,7 +48,7 @@ namespace GorillaInfoWatch.Tools
         }
 
         private void OnWindowTextChanged(string text) => OnTextChanged?.Invoke(text);
-        private void OnMenuColourRequest(Color colour) => OnMenuColourRequested?.Invoke(colour);
-        private void OnWindowSwitchRequest(Type origin, Type type, object[] parameters) => OnNewTabRequested?.Invoke(origin, type, parameters);
+        private void OnMenuColourRequest(Color colour) => OnBackgroundChanged?.Invoke(colour);
+        private void OnWindowSwitchRequest(Type origin, Type type, object[] parameters) => OnWindowChanged?.Invoke(origin, type, parameters);
     }
 }

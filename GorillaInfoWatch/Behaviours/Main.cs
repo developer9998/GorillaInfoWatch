@@ -57,8 +57,8 @@ namespace GorillaInfoWatch.Behaviours
 
             WindowManager = new WindowManager();
             WindowManager.OnTextChanged += SetText;
-            WindowManager.OnNewTabRequested += SetWindow;
-            WindowManager.OnMenuColourRequested += SetMenuColour;
+            WindowManager.OnWindowChanged += SetWindow;
+            WindowManager.OnBackgroundChanged += SetBackground;
 
             #region Initialize assets 
 
@@ -93,7 +93,7 @@ namespace GorillaInfoWatch.Behaviours
                 Background = Menu.transform.Find("Canvas/Background").GetComponent<Image>()
             };
 
-            SetMenuColour(PresetUtils.Parse(configuration.MenuColour.Value));
+            SetBackground(PresetUtils.Parse(configuration.MenuColour.Value));
 
             Transform buttonContainer = Menu.transform.Find("Buttons");
             for (int i = 0; i < buttonContainer.childCount; i++)
@@ -147,12 +147,12 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void SetMenuColour(Color colour)
+        public void SetBackground(Color colour)
         {
             if (DisplayInfo != null && DisplayInfo.Background)
             {
                 colour.a = 178f / 255f;
-                DisplayInfo.Background.color = colour;
+                DisplayInfo.SetBackground(colour);
             }
         }
 

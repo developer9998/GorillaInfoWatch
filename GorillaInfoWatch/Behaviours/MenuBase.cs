@@ -1,6 +1,7 @@
 ﻿using GorillaExtensions;
 using GorillaLocomotion;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -14,27 +15,21 @@ namespace GorillaInfoWatch.Behaviours
         public void Start()
         {
             Head = Player.Instance.headCollider.transform;
+
+            RenderPipelineManager.beginCameraRendering += (ScriptableRenderContext arg1, Camera arg2) => ApplyRotation();
         }
 
-        public void Update()
+        public void ApplyRotation()
         {
-            CalculateRotation();
-
-            transform.rotation = Rotation;
+            Vector3 forward = transform.position - Head.position;
+            Quaternion rotation = Quaternion.LookRotation(forward, Vector3.up);
+            transform.eulerAngles = new Quaternion(0f, rotation.y, 0f, rotation.w).eulerAngles;
         }
 
         public void LateUpdate()
         {
             // Turn off the menu if we're not looking at it, or if our hand is facing down
             if (!IsFacingUp) gameObject.SetActive(false);
-        }
-
-        private void CalculateRotation()
-        {
-            Vector3 forward = transform.position - Head.position;
-            Vector3 eulerAngles = Quaternion.LookRotation(forward, Vector3.up).eulerAngles.WithZ(0);
-            Quaternion rotation = Quaternion.Euler(eulerAngles);
-            Rotation = new Quaternion(0f, rotation.y, 0f, rotation.w);
         }
     }
 }

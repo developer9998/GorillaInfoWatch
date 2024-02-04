@@ -43,14 +43,14 @@ namespace GorillaInfoWatch.Windows
                     Config.MenuColour,
                     delegate()
                     {
-                         main.SetMenuColour(PresetUtils.Parse(Config.MenuColour.Value));
+                         main.SetBackground(PresetUtils.Parse(Config.MenuColour.Value));
                     }
                 },
                 { 
                     Config.FavouriteColour,
                     delegate()
                     {
-                        ScoreboardUtils.GetActiveLines().DoIf(sL => sL != null && sL.playerVRRig, sL => sL.playerVRRig.playerText.color = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white);
+                        ScoreboardUtils.GetActiveLines().DoIf(sL => sL.playerVRRig && sL.playerVRRig.playerText && sL.linePlayer != null && sL.linePlayer.InRoom(), sL => sL.playerVRRig.playerText.color = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white);
                         ScoreboardUtils.RedrawLines();
                     }
                 }
@@ -85,7 +85,8 @@ namespace GorillaInfoWatch.Windows
                 str.AppendSize(isAdjustable ? "- Use the arrow keys to adjust the entry" : "- Use the enter key to set the entry", 4).AppendLine();
                 str.AppendSize("- Press the back key to finalize the entry", 4).AppendLines(2);
 
-                str.Append("Value: ").Append(currentEntry.SettingType == typeof(int) ? string.Concat(currentEntry.BoxedValue.ToString(), " ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : currentEntry.BoxedValue.ToString()).AppendLine();
+                str.Append(currentEntry.Definition.Key).Append(": ").Append(currentEntry.SettingType == typeof(int) ? string.Concat(currentEntry.BoxedValue.ToString(), " ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : currentEntry.BoxedValue.ToString()).AppendLines(2);
+                str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 4).AppendLine();
             }
 
             SetText(str);
@@ -98,7 +99,7 @@ namespace GorillaInfoWatch.Windows
             ConfigEntryBase currentEntry = Entries.Keys.ToArray()[ItemHandler.CurrentEntry];
             if (currentEntry.SettingType == typeof(int))
             {
-                currentEntry.BoxedValue = (int)currentEntry.BoxedValue + increment;
+                currentEntry.BoxedValue = Mathf.Clamp((int)currentEntry.BoxedValue + increment, 0, 10);
 
                 Config.Sync(currentEntry);
                 Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
@@ -107,7 +108,7 @@ namespace GorillaInfoWatch.Windows
             }
             else if (currentEntry.SettingType == typeof(float))
             {
-                currentEntry.BoxedValue = (float)currentEntry.BoxedValue + increment;
+                currentEntry.BoxedValue = Mathf.Clamp((float)currentEntry.BoxedValue + increment, 0, 10);
 
                 Config.Sync(currentEntry);
                 Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
@@ -156,10 +157,9 @@ namespace GorillaInfoWatch.Windows
                         {
                             currentEntry.BoxedValue = !(bool)currentEntry.BoxedValue;
 
+                            Config.Sync(currentEntry);
+                            Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
                         }
-
-                        Config.Sync(currentEntry);
-                        Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
 
                         OnScreenRefresh();
                     }

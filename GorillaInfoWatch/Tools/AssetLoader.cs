@@ -19,11 +19,11 @@ namespace GorillaInfoWatch.Tools
             var taskCompletionSource = new TaskCompletionSource<AssetBundle>();
 
             Stream str = typeof(Plugin).Assembly.GetManifestResourceStream("GorillaInfoWatch.Content.watchbundle");
-            var request = AssetBundle.LoadFromStreamAsync(str);
+            AssetBundleCreateRequest request = AssetBundle.LoadFromStreamAsync(str);
 
             request.completed += operation =>
             {
-                var outRequest = operation as AssetBundleCreateRequest;
+                AssetBundleCreateRequest outRequest = operation as AssetBundleCreateRequest;
                 taskCompletionSource.SetResult(outRequest.assetBundle);
             };
 
@@ -44,11 +44,11 @@ namespace GorillaInfoWatch.Tools
             }
 
             var taskCompletionSource = new TaskCompletionSource<T>();
-            var request = _storedBundle.LoadAssetAsync<T>(name);
+            AssetBundleRequest request = _storedBundle.LoadAssetAsync<T>(name);
 
             request.completed += operation =>
             {
-                var outRequest = operation as AssetBundleRequest;
+                AssetBundleRequest outRequest = operation as AssetBundleRequest;
                 if (outRequest.asset == null)
                 {
                     taskCompletionSource.SetResult(null);
