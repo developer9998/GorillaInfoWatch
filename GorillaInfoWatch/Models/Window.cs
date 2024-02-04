@@ -1,6 +1,8 @@
 ﻿using GorillaInfoWatch.Interfaces;
+using GorillaInfoWatch.Utilities;
 using GorillaInfoWatch.Windows;
 using System;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
@@ -12,6 +14,8 @@ namespace GorillaInfoWatch.Models
 
         public event Action<string> OnTextChanged;
 
+        public event Action<Color> OnMenuColourRequest;
+
         public event Action<Type, Type, object[]> OnWindowSwitchRequest;
 
         public void SetText(object text)
@@ -19,6 +23,9 @@ namespace GorillaInfoWatch.Models
             Text = text.ToString();
             OnTextChanged?.Invoke(Text);
         }
+
+        public void SetMenuColour(PresetColourTypes type) => SetMenuColour(PresetUtils.Parse(type));
+        public void SetMenuColour(Color colour) => OnMenuColourRequest?.Invoke(colour);
 
         public void ReturnHome() => DisplayWindow(typeof(HomeWindow));
         public void ReturnWindow() => DisplayWindow(CallerWindow);

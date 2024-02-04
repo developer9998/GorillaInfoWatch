@@ -1,6 +1,7 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Utilities;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -49,7 +50,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                     VRRig rig = GorillaGameManager.StaticFindRigForPlayer(EntryCollection[i]);
                     if (rig)
                     { // ◀⚟
-                        str.AppendItem(string.Concat("<color=#", ColorUtility.ToHtmlStringRGB(rig.playerColor), ">██</color> ", EntryCollection[i].NickName, " ", rig.GetComponent<GorillaSpeakerLoudness>().IsSpeaking ? "◀⚟" : "  "), index, PageHandler);
+                        str.AppendItem(string.Concat("<color=#", ColorUtility.ToHtmlStringRGB(rig.playerColor), ">██</color> ", EntryCollection[i].NickName, " ", rig.GetComponent<GorillaSpeakerLoudness>().IsSpeaking ? "◀⚟" : (RigCacheUtils.GetField<bool>(EntryCollection[i]) ? "◀×" : "  ")), index, PageHandler);
                     }
                 }
             }

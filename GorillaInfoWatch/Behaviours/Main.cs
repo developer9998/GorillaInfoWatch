@@ -2,6 +2,7 @@
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
 using GorillaInfoWatch.Windows;
 using Photon.Pun;
 using Photon.Realtime;
@@ -57,6 +58,7 @@ namespace GorillaInfoWatch.Behaviours
             WindowManager = new WindowManager();
             WindowManager.OnTextChanged += SetText;
             WindowManager.OnNewTabRequested += SetWindow;
+            WindowManager.OnMenuColourRequested += SetMenuColour;
 
             #region Initialize assets 
 
@@ -90,6 +92,8 @@ namespace GorillaInfoWatch.Behaviours
                 Text = Menu.transform.Find("Canvas/Text (Legacy)").GetComponent<Text>(),
                 Background = Menu.transform.Find("Canvas/Background").GetComponent<Image>()
             };
+
+            SetMenuColour(PresetUtils.Parse(configuration.MenuColour.Value));
 
             Transform buttonContainer = Menu.transform.Find("Buttons");
             for (int i = 0; i < buttonContainer.childCount; i++)
@@ -140,6 +144,15 @@ namespace GorillaInfoWatch.Behaviours
             if (DisplayInfo != null && DisplayInfo.Text)
             {
                 DisplayInfo.SetText(text);
+            }
+        }
+
+        public void SetMenuColour(Color colour)
+        {
+            if (DisplayInfo != null && DisplayInfo.Background)
+            {
+                colour.a = 178f / 255f;
+                DisplayInfo.Background.color = colour;
             }
         }
 

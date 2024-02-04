@@ -1,4 +1,5 @@
-﻿using Photon.Realtime;
+﻿using HarmonyLib;
+using Photon.Realtime;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,23 +9,13 @@ namespace GorillaInfoWatch.Utilities
     {
         private static List<GorillaScoreBoard> Scoreboards => GorillaScoreboardTotalUpdater.allScoreboards;
 
+        public static List<GorillaPlayerScoreboardLine> GetActiveLines()
+            => Scoreboards.FirstOrDefault(sB => sB.gameObject.activeInHierarchy && sB.linesParent.activeInHierarchy).lines ?? null;
+
         public static GorillaPlayerScoreboardLine FindLine(Player player)
-        {
-            if (Scoreboards != null || Scoreboards.Count > 0)
-            {
-                GorillaPlayerScoreboardLine lineCandidate = null;
-                foreach (GorillaScoreBoard sB in Scoreboards)
-                {
-                    if (!sB.isActiveAndEnabled) continue;
+            => GetActiveLines().FirstOrDefault(line => line.linePlayer != null && line.linePlayer.UserId == player.UserId);
 
-                    lineCandidate = sB.lines.FirstOrDefault(line => line.linePlayer != null && line.linePlayer.UserId == player.UserId);
-                    if (lineCandidate != null) break;
-                }
-
-                return lineCandidate;
-            }
-
-            return null;
-        }
+        public static void RedrawLines()
+            => Scoreboards.Do(sB => sB.RedrawPlayerLines());
     }
 }

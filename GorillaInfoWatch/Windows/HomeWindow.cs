@@ -30,7 +30,7 @@ namespace GorillaInfoWatch.Windows
             StringBuilder str = new();
 
             string header = string.Concat("- ", Constants.Name, " | ", Constants.Version, " -");
-            str.AppendLine(header.AlignCenter(Constants.Width)).AppendLine("A mod by Dev and Luna".AlignCenter(34)).AppendLine();
+            str.AppendLine(header.AlignCenter(Constants.Width)).AppendLine("A mod by Dev and Luna".AlignCenter(Constants.Width)).AppendLine();
 
             if (PageHandler.Items.Count > 0)
             {

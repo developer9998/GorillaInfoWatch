@@ -35,6 +35,8 @@ namespace GorillaInfoWatch.Utilities
             "VRRig" => "Rig",
             "PhotonVoiceView" => "Voice",
             "PhotonView" => "photonView",
+            "Boolean" => "Muted",
+            "bool" => "Muted",
             _ => throw new IndexOutOfRangeException(type.FullName)
         };
     }

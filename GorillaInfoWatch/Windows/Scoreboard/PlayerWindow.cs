@@ -11,15 +11,21 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 {
     public class PlayerWindow : Window
     {
-        private ItemHandler ItemHandler;
+        private readonly ItemHandler ItemHandler;
+        private readonly Configuration Config;
 
-        // Player
         private Player Player;
 
-        // Behaviour
         private VRRig Rig;
         private AudioSource Speaker;
         private GorillaPlayerScoreboardLine Line;
+
+        public PlayerWindow(Configuration configuration)
+        {
+            Config = configuration;
+
+            ItemHandler = new ItemHandler(4);
+        }
 
         public override void OnWindowDisplayed(object[] Parameters)
         {
@@ -31,7 +37,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                 Line = ScoreboardUtils.FindLine(Player);
                 Speaker = Rig.GetField<AudioSource>("voiceAudio");
 
-                ItemHandler = new ItemHandler(4);
+                ItemHandler.CurrentEntry = 0;
             }
         }
 
@@ -108,7 +114,9 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                             return;
                         case 2:
                             DataManager.AddItem(string.Concat(Player.UserId, "fav"), !DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored), DataType.Stored);
-                            Rig.playerText.color = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? new Color32(107, 166, 166, 255) : Color.white;
+
+                            Rig.playerText.color = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white;
+                            ScoreboardUtils.RedrawLines();
                             break;
                     }
                     break;

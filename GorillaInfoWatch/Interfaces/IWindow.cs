@@ -1,5 +1,6 @@
 ﻿using GorillaInfoWatch.Models;
 using System;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Interfaces
 {
@@ -21,6 +22,7 @@ namespace GorillaInfoWatch.Interfaces
         ExecutionType ExecutionType { get; }
 
         event Action<string> OnTextChanged;
+        event Action<Color> OnMenuColourRequest;
 
         event Action<Type, Type, object[]> OnWindowSwitchRequest;
 

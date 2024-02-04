@@ -1,6 +1,7 @@
 ﻿using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using System;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Tools
 {
@@ -10,6 +11,7 @@ namespace GorillaInfoWatch.Tools
     public class WindowManager
     {
         public event Action<string> OnTextChanged;
+        public event Action<Color> OnMenuColourRequested;
         public event Action<Type, Type, object[]> OnNewTabRequested;
 
         public IWindow Tab;
@@ -26,10 +28,12 @@ namespace GorillaInfoWatch.Tools
                 if (Tab != null)
                 {
                     Tab.OnTextChanged -= OnWindowTextChanged;
+                    Tab.OnMenuColourRequest -= OnMenuColourRequest;
                     Tab.OnWindowSwitchRequest -= OnWindowSwitchRequest;
                 }
 
                 tab.OnTextChanged += OnWindowTextChanged;
+                tab.OnMenuColourRequest += OnMenuColourRequest;
                 tab.OnWindowSwitchRequest += OnWindowSwitchRequest;
 
                 tab.OnWindowDisplayed(Parameters);
@@ -44,6 +48,7 @@ namespace GorillaInfoWatch.Tools
         }
 
         private void OnWindowTextChanged(string text) => OnTextChanged?.Invoke(text);
+        private void OnMenuColourRequest(Color colour) => OnMenuColourRequested?.Invoke(colour);
         private void OnWindowSwitchRequest(Type origin, Type type, object[] parameters) => OnNewTabRequested?.Invoke(origin, type, parameters);
     }
 }

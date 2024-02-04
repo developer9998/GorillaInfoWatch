@@ -1,8 +1,14 @@
-﻿using GorillaInfoWatch.Extensions;
+﻿using BepInEx.Configuration;
+using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Interfaces;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
+using HarmonyLib;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -19,10 +25,38 @@ namespace GorillaInfoWatch.Windows
         private readonly ItemHandler ItemHandler;
         private readonly Configuration Config;
 
-        public SettingsWindow(Configuration config)
+        private readonly Dictionary<ConfigEntryBase, Action> Entries;
+
+        private bool IsEditing;
+
+        public SettingsWindow(Configuration config, Main main)
         {
-            ItemHandler = new ItemHandler(1);
             Config = config;
+
+            Entries = new Dictionary<ConfigEntryBase, Action>()
+            {
+                {
+                    Config.RefreshRate,
+                    null
+                },
+                {
+                    Config.MenuColour,
+                    delegate()
+                    {
+                         main.SetMenuColour(PresetUtils.Parse(Config.MenuColour.Value));
+                    }
+                },
+                { 
+                    Config.FavouriteColour,
+                    delegate()
+                    {
+                        ScoreboardUtils.GetActiveLines().DoIf(sL => sL != null && sL.playerVRRig, sL => sL.playerVRRig.playerText.color = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white);
+                        ScoreboardUtils.RedrawLines();
+                    }
+                }
+            };
+
+            ItemHandler = new ItemHandler(Entries.Count);
         }
 
         public override void OnScreenRefresh()
@@ -30,39 +64,117 @@ namespace GorillaInfoWatch.Windows
             StringBuilder str = new();
             str.AppendLine("- Config -".AlignCenter(Constants.Width)).AppendLine();
 
-            str.AppendItem(Config.RefreshRate.ToDetailedString(0, 10), 0, ItemHandler);
+            ConfigEntryBase currentEntry = Entries.Keys.ToArray()[ItemHandler.CurrentEntry];
+
+            if (!IsEditing)
+            {
+                str.AppendSize("- Use the arrow keys to navigate through entries", 4).AppendLine();
+                str.AppendSize("- Press the enter key to modify the current entry", 4).AppendLines(2);
+
+                str.Append(currentEntry.Definition.Key).Append(": ").Append(currentEntry.SettingType == typeof(int) ? string.Concat(currentEntry.BoxedValue.ToString(), " ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : currentEntry.BoxedValue.ToString()).AppendLines(2);
+
+                str.Append("Section: ").Append(currentEntry.Definition.Section).AppendLine();
+                str.Append("Default Value: ").Append(currentEntry.DefaultValue.ToString()).AppendLines(2);
+
+                str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 4).AppendLine();
+
+            }
+            else
+            {
+                bool isAdjustable = currentEntry.SettingType == typeof(int) || currentEntry.SettingType.IsEnum;
+                str.AppendSize(isAdjustable ? "- Use the arrow keys to adjust the entry" : "- Use the enter key to set the entry", 4).AppendLine();
+                str.AppendSize("- Press the back key to finalize the entry", 4).AppendLines(2);
+
+                str.Append("Value: ").Append(currentEntry.SettingType == typeof(int) ? string.Concat(currentEntry.BoxedValue.ToString(), " ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : currentEntry.BoxedValue.ToString()).AppendLine();
+            }
 
             SetText(str);
         }
 
-        private void OnEntryAdjusted(int entry, bool increase)
+        private void OnEntryAdjusted(bool increase)
         {
-            switch (entry)
+            int increment = increase ? 1 : -1;
+
+            ConfigEntryBase currentEntry = Entries.Keys.ToArray()[ItemHandler.CurrentEntry];
+            if (currentEntry.SettingType == typeof(int))
             {
-                case 0:
-                    int increment = increase ? 2 : -2;
-                    Config.RefreshRate.Value = Mathf.Clamp(Config.RefreshRate.Value + increment, 0, 10);
-                    break;
+                currentEntry.BoxedValue = (int)currentEntry.BoxedValue + increment;
+
+                Config.Sync(currentEntry);
+                Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
+
+                OnScreenRefresh();
+            }
+            else if (currentEntry.SettingType == typeof(float))
+            {
+                currentEntry.BoxedValue = (float)currentEntry.BoxedValue + increment;
+
+                Config.Sync(currentEntry);
+                Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
+
+                OnScreenRefresh();
+            }
+            else if (currentEntry.SettingType.IsEnum)
+            {
+                int enumLength = Enum.GetNames(currentEntry.SettingType).Length;
+
+                currentEntry.BoxedValue = Mathf.Clamp((int)currentEntry.BoxedValue + increment, 0, enumLength - 1);
+
+                Config.Sync(currentEntry);
+                Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
+
+                OnScreenRefresh();
             }
         }
 
         public override void OnButtonPress(ButtonType type)
         {
-            if (ItemHandler.HandleButton(type))
+            if (!IsEditing && ItemHandler.HandleButton(type))
             {
                 OnScreenRefresh();
                 return;
             }
 
-            if (type == ButtonType.Left || type == ButtonType.Right)
+            if (IsEditing && (type == ButtonType.Left || type == ButtonType.Right))
             {
-                OnEntryAdjusted(ItemHandler.CurrentEntry, type == ButtonType.Right);
+                OnEntryAdjusted(type == ButtonType.Right);
                 OnScreenRefresh();
             }
 
-            if (type == ButtonType.Back)
+            switch (type)
             {
-                DisplayWindow<HomeWindow>();
+                case ButtonType.Enter:
+                    if (!IsEditing)
+                    {
+                        IsEditing = true;
+                        OnScreenRefresh();
+                    }
+                    else
+                    {
+                        ConfigEntryBase currentEntry = Entries.Keys.ToArray()[ItemHandler.CurrentEntry];
+                        if (currentEntry.SettingType == typeof(bool))
+                        {
+                            currentEntry.BoxedValue = !(bool)currentEntry.BoxedValue;
+
+                        }
+
+                        Config.Sync(currentEntry);
+                        Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
+
+                        OnScreenRefresh();
+                    }
+                    break;
+                case ButtonType.Back:
+                    if (!IsEditing)
+                    {
+                        DisplayWindow<HomeWindow>();
+                    }
+                    else
+                    {
+                        IsEditing = false;
+                        OnScreenRefresh();
+                    }
+                    break;
             }
         }
     }
