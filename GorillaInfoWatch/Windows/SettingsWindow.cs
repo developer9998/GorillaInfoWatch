@@ -41,14 +41,14 @@ namespace GorillaInfoWatch.Windows
                 },
                 {
                     Config.MenuColour,
-                    delegate()
+                    () =>
                     {
                          main.SetBackground(PresetUtils.Parse(Config.MenuColour.Value));
                     }
                 },
                 { 
                     Config.FavouriteColour,
-                    delegate()
+                    () =>
                     {
                         ScoreboardUtils.GetActiveLines().DoIf(sL => sL.playerVRRig && sL.playerVRRig.playerText && sL.linePlayer != null && sL.linePlayer.InRoom(), sL => sL.playerVRRig.playerText.color = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white);
                         ScoreboardUtils.RedrawLines();
