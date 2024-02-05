@@ -28,10 +28,10 @@ namespace GorillaInfoWatch.Tools
             FavouriteColour = File.Bind("Customization", "Favourite Colour", PresetColourTypes.Yellow, "The colour used to serve as a unique identifier for those who you have favourited");
 
             // 100 hour clock gives me a headache and perhaps an aneurysm
-            TwFourHour = File.Bind("Data", "24-Hour Time", false, "Determines whether the mod uses the 24-hour clock system");
+            TwFourHour = File.Bind("Data", "24-Hour Time", false, "Determines whether the mod uses the 24-hour clock system, rather than 12-hour");
 
-            ActivationVolume = File.Bind("Data", "Activation Volume", 1f, "The volume of the activation indicator when opening/closing the menu");
-            ButtonVolume = File.Bind("Data", "Button Volume", 1f, "The volume of the button indicator when pressing a menu button");
+            ActivationVolume = File.Bind("Data", "Activation Volume", 1f, "The volume of the activation sound indicator when opening/closing the menu");
+            ButtonVolume = File.Bind("Data", "Button Volume", 1f, "The volume of the button sound indicator when pressing a menu button");
         }
 
         public void Sync(ConfigEntryBase seperatedEntryBase)

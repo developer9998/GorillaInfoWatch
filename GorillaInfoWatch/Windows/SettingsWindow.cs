@@ -129,6 +129,7 @@ namespace GorillaInfoWatch.Windows
             {
                 float increment = increase ? 0.1f : -0.1f;
                 currentEntry.BoxedValue = Mathf.Clamp01((float)currentEntry.BoxedValue + increment);
+                currentEntry.BoxedValue = Mathf.Round((float)currentEntry.BoxedValue * 10) / 10;
 
                 Config.Sync(currentEntry);
                 Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
