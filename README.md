@@ -6,7 +6,7 @@ GorillaInfoWatch is a mod which implements a customized watch into [Gorilla Tag]
 - YouTube: https://www.youtube.com/@developer9998
 
 ## Requirements
-- [Beinject](https://github.com/Auros/Bepinject/releases/download/1.0.1/Bepinject-Auros.zip)
+- [Bepinject](https://github.com/Auros/Bepinject/releases/download/1.0.1/Bepinject-Auros.zip)
 - [Extenject](https://github.com/Auros/Bepinject/releases/download/1.0.1/Extenject.zip)
 - [Newtonsoft.Json](https://github.com/legoandmars/Newtonsoft.Json/releases/download/12.0.3/Newtonsoft.Json-12.0.3.zip)
 
