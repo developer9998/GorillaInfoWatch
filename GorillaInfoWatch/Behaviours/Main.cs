@@ -103,11 +103,17 @@ namespace GorillaInfoWatch.Behaviours
                 button.Type = (ButtonType)Enum.Parse(typeof(ButtonType), button.name);
             }
 
-            Watch.AddComponent<TimeDisplay>().Text = Watch.transform.Find("Hand Menu/Canvas/Time").GetComponent<Text>();
-            Menu.AddComponent<TimeDisplay>().Text = Menu.transform.Find("Canvas/Upper Text").GetComponent<Text>();
+            TimeDisplay watchTime = Watch.AddComponent<TimeDisplay>();
+            watchTime.Text = Watch.transform.Find("Hand Menu/Canvas/Time").GetComponent<Text>();
+            watchTime.Config = Configuration;
+
+            TimeDisplay menuTime = Menu.AddComponent<TimeDisplay>();
+            menuTime.Text = Menu.transform.Find("Canvas/Upper Text").GetComponent<Text>();
+            menuTime.Config = Configuration;
 
             WatchTrigger watchTrigger = Watch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
             watchTrigger.Menu = Menu;
+            watchTrigger.Config = Configuration;
 
             WindowManager.SetWindow(HomeWindow, null);
             HomeWindow.SetEntries(entries);
@@ -136,7 +142,7 @@ namespace GorillaInfoWatch.Behaviours
                 ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                 : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-            handSource.PlayOneShot(Click, 0.9f);
+            handSource.PlayOneShot(Click, 0.9f * Configuration.ButtonVolume.Value);
         }
 
         public void SetText(string text)

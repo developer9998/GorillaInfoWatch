@@ -53,6 +53,18 @@ namespace GorillaInfoWatch.Windows
                         ScoreboardUtils.GetActiveLines().DoIf(sL => sL.playerVRRig && sL.playerVRRig.playerText && sL.linePlayer != null && sL.linePlayer.InRoom(), sL => sL.playerVRRig.playerText.color = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white);
                         ScoreboardUtils.RedrawLines();
                     }
+                },
+                {
+                    Config.TwFourHour,
+                    null
+                },
+                {
+                    Config.ActivationVolume,
+                    null
+                },
+                {
+                    Config.ButtonVolume,
+                    null
                 }
             };
 
@@ -71,13 +83,16 @@ namespace GorillaInfoWatch.Windows
                 str.AppendSize("- Use the arrow keys to navigate through entries", 4).AppendLine();
                 str.AppendSize("- Press the enter key to modify the current entry", 4).AppendLines(2);
 
-                str.Append(currentEntry.Definition.Key).Append(": ").Append(currentEntry.SettingType == typeof(int) ? string.Concat(currentEntry.BoxedValue.ToString(), " ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : currentEntry.BoxedValue.ToString()).AppendLines(2);
+                str.Append(currentEntry.Definition.Key)
+                   .Append(": ").Append(currentEntry.BoxedValue.ToString())
+                   .Append(currentEntry.SettingType == typeof(int) ? string.Concat(" ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : "")
+                   .Append(currentEntry.SettingType == typeof(float) ? string.Concat(" ", AsciiUtils.Bar(10, Mathf.RoundToInt((float)currentEntry.BoxedValue * 10))) : "")
+                   .AppendLines(2);
 
                 str.Append("Section: ").Append(currentEntry.Definition.Section).AppendLine();
                 str.Append("Default Value: ").Append(currentEntry.DefaultValue.ToString()).AppendLines(2);
 
                 str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 4).AppendLine();
-
             }
             else
             {
@@ -85,7 +100,12 @@ namespace GorillaInfoWatch.Windows
                 str.AppendSize(isAdjustable ? "- Use the arrow keys to adjust the entry" : "- Use the enter key to set the entry", 4).AppendLine();
                 str.AppendSize("- Press the back key to finalize the entry", 4).AppendLines(2);
 
-                str.Append(currentEntry.Definition.Key).Append(": ").Append(currentEntry.SettingType == typeof(int) ? string.Concat(currentEntry.BoxedValue.ToString(), " ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : currentEntry.BoxedValue.ToString()).AppendLines(2);
+                str.Append(currentEntry.Definition.Key)
+                    .Append(": ").Append(currentEntry.BoxedValue.ToString())
+                    .Append(currentEntry.SettingType == typeof(int) ? string.Concat(" ", AsciiUtils.Bar(10, (int)currentEntry.BoxedValue)) : "")
+                    .Append(currentEntry.SettingType == typeof(float) ? string.Concat(" ", AsciiUtils.Bar(10, Mathf.RoundToInt((float)currentEntry.BoxedValue * 10))) : "")
+                    .AppendLines(2);
+
                 str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 4).AppendLine();
             }
 
@@ -94,11 +114,10 @@ namespace GorillaInfoWatch.Windows
 
         private void OnEntryAdjusted(bool increase)
         {
-            int increment = increase ? 1 : -1;
-
             ConfigEntryBase currentEntry = Entries.Keys.ToArray()[ItemHandler.CurrentEntry];
             if (currentEntry.SettingType == typeof(int))
             {
+                int increment = increase ? 1 : -1;
                 currentEntry.BoxedValue = Mathf.Clamp((int)currentEntry.BoxedValue + increment, 0, 10);
 
                 Config.Sync(currentEntry);
@@ -108,7 +127,8 @@ namespace GorillaInfoWatch.Windows
             }
             else if (currentEntry.SettingType == typeof(float))
             {
-                currentEntry.BoxedValue = Mathf.Clamp((float)currentEntry.BoxedValue + increment, 0, 10);
+                float increment = increase ? 0.1f : -0.1f;
+                currentEntry.BoxedValue = Mathf.Clamp01((float)currentEntry.BoxedValue + increment);
 
                 Config.Sync(currentEntry);
                 Entries.Values.ToArray()[ItemHandler.CurrentEntry]?.Invoke();
@@ -117,6 +137,7 @@ namespace GorillaInfoWatch.Windows
             }
             else if (currentEntry.SettingType.IsEnum)
             {
+                int increment = increase ? 1 : -1;
                 int enumLength = Enum.GetNames(currentEntry.SettingType).Length;
 
                 currentEntry.BoxedValue = Mathf.Clamp((int)currentEntry.BoxedValue + increment, 0, enumLength - 1);

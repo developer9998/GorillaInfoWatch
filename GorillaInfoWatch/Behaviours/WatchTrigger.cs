@@ -1,4 +1,5 @@
-﻿using GorillaLocomotion;
+﻿using GorillaInfoWatch.Tools;
+using GorillaLocomotion;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours
@@ -6,6 +7,7 @@ namespace GorillaInfoWatch.Behaviours
     public class WatchTrigger : MonoBehaviour
     {
         public GameObject Menu;
+        public Configuration Config;
 
         private AudioSource AudioSource;
 
@@ -29,7 +31,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 Menu.SetActive(!Menu.activeSelf);
 
-                AudioSource.PlayOneShot(AudioSource.clip, 0.32f);
+                AudioSource.PlayOneShot(AudioSource.clip, 0.32f * Config.ActivationVolume.Value);
             }
         }
     }
