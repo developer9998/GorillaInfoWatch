@@ -1,5 +1,4 @@
-﻿using GorillaExtensions;
-using GorillaLocomotion;
+﻿using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -8,7 +7,6 @@ namespace GorillaInfoWatch.Behaviours
     public class MenuBase : MonoBehaviour
     {
         private Transform Head;
-        private Quaternion Rotation;
 
         private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
 

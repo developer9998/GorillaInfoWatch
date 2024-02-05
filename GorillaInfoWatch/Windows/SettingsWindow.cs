@@ -36,17 +36,13 @@ namespace GorillaInfoWatch.Windows
             Entries = new Dictionary<ConfigEntryBase, Action>()
             {
                 {
-                    Config.RefreshRate,
-                    null
-                },
-                {
                     Config.MenuColour,
                     () =>
                     {
                          main.SetBackground(PresetUtils.Parse(Config.MenuColour.Value));
                     }
                 },
-                { 
+                {
                     Config.FavouriteColour,
                     () =>
                     {
@@ -56,6 +52,10 @@ namespace GorillaInfoWatch.Windows
                 },
                 {
                     Config.TwFourHour,
+                    null
+                },
+                {
+                    Config.RefreshRate,
                     null
                 },
                 {

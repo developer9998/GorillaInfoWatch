@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Behaviours
                     {
                         function.OnPlayerJoin?.Invoke(args);
                     }
-                    catch(Exception exception)
+                    catch (Exception exception)
                     {
                         Logging.Error(string.Concat(function.GetType().Name, ".OnPlayerJoin threw an exception: ", exception.ToString()));
                     }
