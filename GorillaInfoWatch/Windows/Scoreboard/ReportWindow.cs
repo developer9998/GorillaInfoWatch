@@ -33,7 +33,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
             StringBuilder str = new();
             str.AppendLine($"- Report -".AlignCenter(Constants.Width)).AppendLine();
 
-            str.Append("Reporting ").AppendLine(Player.NickName).AppendLine();
+            str.Append("Reporting ").AppendLine(Player.NickName.GetFilteredName()).AppendLine();
             str.AppendItem("Cheating", 0, ItemHandler);
             str.AppendItem("Toxicity", 1, ItemHandler);
             str.AppendItem("Hate Speech", 2, ItemHandler);

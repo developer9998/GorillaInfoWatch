@@ -53,7 +53,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
             str.AppendLine($"- Player -".AlignCenter(Constants.Width)).AppendLine();
 
             str.Append("Name: ")
-                .Append(Player.NickName).AppendLine();
+                .Append(Player.NickName.GetFilteredName()).AppendLine();
             str.Append("Colour: [<color=#")
                 .Append(ColorUtility.ToHtmlStringRGB(Rig.playerColor)).Append(">")
                 .Append(Mathf.RoundToInt(Rig.playerColor.r * 9f)).Append(", ")
