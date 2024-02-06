@@ -4,7 +4,7 @@ using Photon.Voice.PUN;
 
 namespace GorillaInfoWatch.Models
 {
-    public class PlayerArgs
+    public class PlayerInfo
     {
         public Player Player { get; }
 
@@ -12,13 +12,13 @@ namespace GorillaInfoWatch.Models
         public PhotonView View { get; }
         public PhotonVoiceView VoiceView { get; }
 
-        public PlayerArgs(Player player, VRRig rig)
+        public PlayerInfo(Player player, VRRig rig)
         {
             Player = player;
             Rig = rig;
         }
 
-        public PlayerArgs(Player player, VRRig rig, PhotonView view, PhotonVoiceView voiceView) : this(player, rig)
+        public PlayerInfo(Player player, VRRig rig, PhotonView view, PhotonVoiceView voiceView) : this(player, rig)
         {
             View = view;
             VoiceView = voiceView;

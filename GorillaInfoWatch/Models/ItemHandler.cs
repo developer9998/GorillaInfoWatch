@@ -9,14 +9,14 @@ namespace GorillaInfoWatch.Models
         public ItemHandler() { }
         public ItemHandler(int entryCount) => EntryCount = entryCount;
 
-        public bool HandleButton(ButtonType button)
+        public bool HandleButton(InputType button)
         {
             switch (button)
             {
-                case ButtonType.Up:
+                case InputType.Up:
                     Change(-1);
                     return true;
-                case ButtonType.Down:
+                case InputType.Down:
                     Change(1);
                     return true;
                 default:

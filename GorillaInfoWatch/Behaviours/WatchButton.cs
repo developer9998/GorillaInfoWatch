@@ -6,7 +6,7 @@ namespace GorillaInfoWatch.Behaviours
     public class WatchButton : MonoBehaviour
     {
         public Main Main;
-        public ButtonType Type;
+        public InputType Type;
 
         private Color IdleColour, PressedColour;
 

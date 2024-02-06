@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
             SetText(str.ToString());
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             if (ItemHandler.HandleButton(type))
             {
@@ -84,7 +84,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 
             switch (type)
             {
-                case ButtonType.Left:
+                case InputType.Left:
                     switch (ItemHandler.CurrentEntry)
                     {
                         case 3:
@@ -93,7 +93,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                             break;
                     }
                     break;
-                case ButtonType.Right:
+                case InputType.Right:
                     switch (ItemHandler.CurrentEntry)
                     {
                         case 3:
@@ -102,7 +102,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                             break;
                     }
                     break;
-                case ButtonType.Enter:
+                case InputType.Enter:
                     switch (ItemHandler.CurrentEntry)
                     {
                         case 0:
@@ -120,7 +120,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                             break;
                     }
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     Player = null;
                     Rig = null;
                     DisplayWindow<ScoreboardWindow>();

@@ -4,26 +4,28 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Utilities
 {
-    public class PresetUtils
+    public static class PresetUtils
     {
-        public static Color Parse(PresetColourTypes type)
+        public static Color Parse(PresetColours type)
         {
+            if (type == PresetColours.Personalized) return GorillaTagger.Instance.offlineVRRig.playerColor;
+
             string html = type switch
             {
-                PresetColourTypes.Black => "000000",
-                PresetColourTypes.Grey => "7F7F7F",
-                PresetColourTypes.White => "FFFFFF",
-                PresetColourTypes.Red => "FF0000",
-                PresetColourTypes.Orange => "FF9000",
-                PresetColourTypes.Yellow => "FFFF00",
-                PresetColourTypes.Lime => "90FF00",
-                PresetColourTypes.Green => "00FF00",
-                PresetColourTypes.Mint => "00FF90",
-                PresetColourTypes.Teal => "00FFFF",
-                PresetColourTypes.Cyan => "0090FF",
-                PresetColourTypes.Blue => "0000FF",
-                PresetColourTypes.Purple => "9000FF",
-                PresetColourTypes.Pink => "FF00FF",
+                PresetColours.Black => "000000",
+                PresetColours.Grey => "7F7F7F",
+                PresetColours.White => "FFFFFF",
+                PresetColours.Red => "FF0000",
+                PresetColours.Orange => "FF9000",
+                PresetColours.Yellow => "FFFF00",
+                PresetColours.Lime => "90FF00",
+                PresetColours.Green => "00FF00",
+                PresetColours.Mint => "00FF90",
+                PresetColours.Teal => "00FFFF",
+                PresetColours.Cyan => "0090FF",
+                PresetColours.Blue => "0000FF",
+                PresetColours.Purple => "9000FF",
+                PresetColours.Pink => "FF00FF",
                 _ => throw new NotImplementedException()
             };
 

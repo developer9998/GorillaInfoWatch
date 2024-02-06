@@ -47,7 +47,7 @@ namespace GorillaInfoWatch.Windows
             SetText(str.ToString());
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             if (PageHandler.HandleButton(type))
             {
@@ -57,12 +57,12 @@ namespace GorillaInfoWatch.Windows
 
             switch (type)
             {
-                case ButtonType.Enter:
+                case InputType.Enter:
                     IQuickAction QuickAction = PageHandler.Items[PageHandler.CurrentEntry];
                     QuickAction.Function?.Invoke();
                     OnScreenRefresh();
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     DisplayWindow<HomeWindow>();
                     break;
             }

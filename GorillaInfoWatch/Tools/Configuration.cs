@@ -11,7 +11,7 @@ namespace GorillaInfoWatch.Tools
         private readonly ConfigFile File;
 
         // Customization
-        public ConfigEntry<PresetColourTypes> MenuColour, FavouriteColour;
+        public ConfigEntry<PresetColours> MenuColour, FavouriteColour;
 
         // Data
         public ConfigEntry<bool> TwFourHour;
@@ -22,8 +22,8 @@ namespace GorillaInfoWatch.Tools
         {
             File = config.Config;
 
-            MenuColour = File.Bind("Customization", "Menu Colour", PresetColourTypes.Black, "The colour used to serve as the default background colour of the menu");
-            FavouriteColour = File.Bind("Customization", "Favourite Colour", PresetColourTypes.Yellow, "The colour used to serve as a unique identifier for those who you have favourited");
+            MenuColour = File.Bind("Customization", "Menu Colour", PresetColours.Black, "The colour used to serve as the default background colour of the menu");
+            FavouriteColour = File.Bind("Customization", "Favourite Colour", PresetColours.Yellow, "The colour used to serve as a unique identifier for those who you have favourited");
 
             // 100 hour clock gives me a headache and perhaps an aneurysm
             TwFourHour = File.Bind("Data", "24-Hour Time", false, "Determines whether the mod uses the 24-hour clock system, rather than 12-hour");

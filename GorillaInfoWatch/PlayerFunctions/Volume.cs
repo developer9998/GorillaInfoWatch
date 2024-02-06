@@ -8,7 +8,7 @@ namespace GorillaInfoWatch.PlayerFunctions
 {
     public class Volume : IPlayerFunction
     {
-        public Action<PlayerArgs> OnPlayerJoin => (PlayerArgs Arguments) =>
+        public Action<PlayerInfo> OnPlayerJoin => (PlayerInfo Arguments) =>
         {
             if (Arguments.VoiceView)
             {
@@ -17,7 +17,7 @@ namespace GorillaInfoWatch.PlayerFunctions
             }
         };
 
-        public Action<PlayerArgs> OnPlayerLeave => (PlayerArgs Arguments) =>
+        public Action<PlayerInfo> OnPlayerLeave => (PlayerInfo Arguments) =>
         {
             if (Arguments.VoiceView)
             {

@@ -34,7 +34,7 @@ namespace GorillaInfoWatch.Behaviours
         private AudioClip Click;
 
         // Display
-        private MenuDisplayInfo DisplayInfo;
+        private MenuInfo DisplayInfo;
         private float RefreshTime;
 
         // Animation
@@ -94,7 +94,7 @@ namespace GorillaInfoWatch.Behaviours
 
             #endregion
 
-            DisplayInfo = new MenuDisplayInfo()
+            DisplayInfo = new MenuInfo()
             {
                 Text = Menu.transform.Find("Canvas/Text (Legacy)").GetComponent<Text>(),
                 Background = Menu.transform.Find("Canvas/Background").GetComponent<Image>()
@@ -107,7 +107,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 WatchButton button = buttonContainer.GetChild(i).gameObject.AddComponent<WatchButton>();
                 button.Main = this;
-                button.Type = (ButtonType)Enum.Parse(typeof(ButtonType), button.name);
+                button.Type = (InputType)Enum.Parse(typeof(InputType), button.name);
             }
 
             TimeDisplay watchTime = Watch.AddComponent<TimeDisplay>();

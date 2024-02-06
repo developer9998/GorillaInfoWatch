@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Models
     {
         public string Text { get; set; }
         public Type CallerWindow { get; set; }
-        public virtual ExecutionType ExecutionType { get; }
+        public virtual WindowExecutionType ExecutionType { get; }
 
         public event Action<string> OnTextChanged;
 
@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Models
             OnTextChanged?.Invoke(Text);
         }
 
-        public void SetMenuColour(PresetColourTypes type) => SetMenuColour(PresetUtils.Parse(type));
+        public void SetMenuColour(PresetColours type) => SetMenuColour(PresetUtils.Parse(type));
         public void SetMenuColour(Color colour) => OnMenuColourRequest?.Invoke(colour);
 
         public void ReturnHome() => DisplayWindow(typeof(HomeWindow));
@@ -41,7 +41,7 @@ namespace GorillaInfoWatch.Models
 
         }
 
-        public virtual void OnButtonPress(ButtonType type)
+        public virtual void OnButtonPress(InputType type)
         {
 
         }

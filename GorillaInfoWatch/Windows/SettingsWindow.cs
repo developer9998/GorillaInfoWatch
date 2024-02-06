@@ -150,7 +150,7 @@ namespace GorillaInfoWatch.Windows
             }
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             if (!IsEditing && ItemHandler.HandleButton(type))
             {
@@ -158,15 +158,15 @@ namespace GorillaInfoWatch.Windows
                 return;
             }
 
-            if (IsEditing && (type == ButtonType.Left || type == ButtonType.Right))
+            if (IsEditing && (type == InputType.Left || type == InputType.Right))
             {
-                OnEntryAdjusted(type == ButtonType.Right);
+                OnEntryAdjusted(type == InputType.Right);
                 OnScreenRefresh();
             }
 
             switch (type)
             {
-                case ButtonType.Enter:
+                case InputType.Enter:
                     if (!IsEditing)
                     {
                         IsEditing = true;
@@ -186,7 +186,7 @@ namespace GorillaInfoWatch.Windows
                         OnScreenRefresh();
                     }
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     if (!IsEditing)
                     {
                         DisplayWindow<HomeWindow>();

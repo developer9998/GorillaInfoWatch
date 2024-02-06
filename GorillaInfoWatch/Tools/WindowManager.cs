@@ -23,7 +23,7 @@ namespace GorillaInfoWatch.Tools
         {
             Logging.Info(string.Concat("Setting tab ", nameof(tab), " of type ", tab.ExecutionType));
 
-            if (tab.ExecutionType == ExecutionType.Viewable)
+            if (tab.ExecutionType == WindowExecutionType.Viewable)
             {
                 if (Tab != null)
                 {

@@ -64,7 +64,7 @@ namespace GorillaInfoWatch.Windows
             SetText(str);
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             if (PageHandler.HandleButton(type))
             {
@@ -74,12 +74,12 @@ namespace GorillaInfoWatch.Windows
 
             switch (type)
             {
-                case ButtonType.Enter:
+                case InputType.Enter:
                     PluginInfo plugin = PageHandler.Items[PageHandler.CurrentEntry];
                     plugin.Instance.enabled ^= true;
                     OnScreenRefresh();
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     DisplayWindow<HomeWindow>();
                     break;
             }

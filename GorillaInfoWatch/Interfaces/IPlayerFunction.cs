@@ -5,7 +5,7 @@ namespace GorillaInfoWatch.Interfaces
 {
     public interface IPlayerFunction
     {
-        Action<PlayerArgs> OnPlayerJoin { get; }
-        Action<PlayerArgs> OnPlayerLeave { get; }
+        Action<PlayerInfo> OnPlayerJoin { get; }
+        Action<PlayerInfo> OnPlayerLeave { get; }
     }
 }

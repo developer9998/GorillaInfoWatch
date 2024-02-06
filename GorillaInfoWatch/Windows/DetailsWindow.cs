@@ -181,17 +181,17 @@ namespace GorillaInfoWatch.Windows
             SetText(str);
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             switch (type)
             {
-                case ButtonType.Left:
+                case InputType.Left:
                     ItemHandler.Change(-1);
                     break;
-                case ButtonType.Right:
+                case InputType.Right:
                     ItemHandler.Change(1);
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     DisplayWindow<HomeWindow>();
                     return;
                 default:

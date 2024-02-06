@@ -2,7 +2,7 @@
 
 namespace GorillaInfoWatch.Models
 {
-    public class MenuDisplayInfo
+    public class MenuInfo
     {
         public Text Text;
         public Image Background;

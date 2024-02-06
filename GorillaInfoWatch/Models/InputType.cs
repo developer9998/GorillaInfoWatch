@@ -1,6 +1,6 @@
 ﻿namespace GorillaInfoWatch.Models
 {
-    public enum ButtonType
+    public enum InputType
     {
         Up,
         Down,

@@ -20,7 +20,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void Initialize()
         {
-            Events.RigAdded += (PlayerArgs args) =>
+            Events.RigAdded += (PlayerInfo args) =>
             {
                 foreach (IPlayerFunction function in PlayerFunctions)
                 {
@@ -35,7 +35,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
             };
 
-            Events.RigRemoved += (PlayerArgs args) =>
+            Events.RigRemoved += (PlayerInfo args) =>
             {
                 foreach (IPlayerFunction function in PlayerFunctions)
                 {

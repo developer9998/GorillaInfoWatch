@@ -1,7 +1,8 @@
 ﻿namespace GorillaInfoWatch.Models
 {
-    public enum PresetColourTypes
+    public enum PresetColours
     {
+        Personalized,
         Black,
         Grey,
         White,

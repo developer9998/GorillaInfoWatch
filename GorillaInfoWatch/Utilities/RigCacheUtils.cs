@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace GorillaInfoWatch.Utilities
 {
-    public class RigCacheUtils
+    public static class RigCacheUtils
     {
         private static Assembly GTAssembly => typeof(GorillaTagger).Assembly;
 

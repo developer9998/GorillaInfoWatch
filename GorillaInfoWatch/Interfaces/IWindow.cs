@@ -19,7 +19,7 @@ namespace GorillaInfoWatch.Interfaces
         /// <summary>
         /// The type of execution the window uses when displayed
         /// </summary>
-        ExecutionType ExecutionType { get; }
+        WindowExecutionType ExecutionType { get; }
 
         event Action<string> OnTextChanged;
         event Action<Color> OnMenuColourRequest;
@@ -28,6 +28,6 @@ namespace GorillaInfoWatch.Interfaces
 
         void OnWindowDisplayed(object[] Parameters);
         void OnScreenRefresh();
-        void OnButtonPress(ButtonType type);
+        void OnButtonPress(InputType type);
     }
 }

@@ -16,12 +16,12 @@ namespace GorillaInfoWatch.PlayerFunctions
             Config = configuration;
         }
 
-        public Action<PlayerArgs> OnPlayerJoin => (PlayerArgs Arguments) =>
+        public Action<PlayerInfo> OnPlayerJoin => (PlayerInfo Arguments) =>
         {
             Arguments.Rig.playerText.color = DataManager.GetItem(string.Concat(Arguments.Player.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white;
         };
 
-        public Action<PlayerArgs> OnPlayerLeave => (PlayerArgs Arguments) =>
+        public Action<PlayerInfo> OnPlayerLeave => (PlayerInfo Arguments) =>
         {
             Arguments.Rig.playerText.color = Color.white;
         };

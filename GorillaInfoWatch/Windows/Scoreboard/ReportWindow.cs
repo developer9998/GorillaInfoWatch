@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
             SetText(str.ToString());
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             if (ItemHandler.HandleButton(type))
             {
@@ -46,7 +46,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 
             switch (type)
             {
-                case ButtonType.Enter:
+                case InputType.Enter:
                     GorillaPlayerLineButton.ButtonType reportType = ItemHandler.CurrentEntry switch
                     {
                         0 => GorillaPlayerLineButton.ButtonType.Cheating,
@@ -59,7 +59,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                     DisplayWindow<PlayerWindow>();
                     OnScreenRefresh();
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     DisplayWindow<PlayerWindow>();
                     break;
             }

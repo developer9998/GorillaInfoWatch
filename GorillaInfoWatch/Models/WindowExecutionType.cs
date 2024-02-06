@@ -3,7 +3,7 @@
     /// <summary>
     /// An enum representing how a tab is executed
     /// </summary>
-    public enum ExecutionType
+    public enum WindowExecutionType
     {
         /// <summary>
         /// The tab will activate and display on the watch

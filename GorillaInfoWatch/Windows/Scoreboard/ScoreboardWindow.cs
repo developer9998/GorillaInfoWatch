@@ -58,7 +58,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
             SetText(str);
         }
 
-        public override void OnButtonPress(ButtonType type)
+        public override void OnButtonPress(InputType type)
         {
             if (PageHandler.HandleButton(type))
             {
@@ -68,7 +68,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 
             switch (type)
             {
-                case ButtonType.Enter:
+                case InputType.Enter:
                     Player player = PageHandler.Items[PageHandler.CurrentEntry];
                     if (!player.IsLocal)
                     {
@@ -77,7 +77,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                     }
                     OnScreenRefresh();
                     break;
-                case ButtonType.Back:
+                case InputType.Back:
                     DisplayWindow<HomeWindow>();
                     break;
             }

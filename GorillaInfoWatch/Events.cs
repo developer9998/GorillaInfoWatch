@@ -5,9 +5,9 @@ namespace GorillaInfoWatch
 {
     public class Events
     {
-        public static event Action<PlayerArgs> RigAdded, RigRemoved;
+        public static event Action<PlayerInfo> RigAdded, RigRemoved;
 
-        public virtual void TriggerRigAdded(PlayerArgs args) => RigAdded?.Invoke(args);
-        public virtual void TriggerRigRemoved(PlayerArgs args) => RigRemoved?.Invoke(args);
+        public virtual void TriggerRigAdded(PlayerInfo args) => RigAdded?.Invoke(args);
+        public virtual void TriggerRigRemoved(PlayerInfo args) => RigRemoved?.Invoke(args);
     }
 }
