@@ -14,7 +14,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void LateUpdate()
         {
-            string format = Config.TwFourHour.Value ? "H:mm tt" : "h:mm tt";
+            string format = Config.TwFourHour.Value ? "H:mm" : "h:mm tt";
             Text.text = Now.ToString(format);
         }
     }
