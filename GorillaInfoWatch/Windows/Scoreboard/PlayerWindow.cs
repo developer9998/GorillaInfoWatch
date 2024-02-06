@@ -43,7 +43,7 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 
         public override void OnScreenRefresh()
         {
-            if (!PhotonNetwork.InRoom || !Utils.PlayerInRoom(Player.ActorNumber) || !Line)
+            if (!PhotonNetwork.InRoom || !Player.InRoom() || !Line)
             {
                 DisplayWindow<ScoreboardWindow>();
                 return;

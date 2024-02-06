@@ -1,5 +1,6 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Text;
@@ -23,6 +24,12 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 
         public override void OnScreenRefresh()
         {
+            if (!PhotonNetwork.InRoom || !Player.InRoom() || !Line)
+            {
+                DisplayWindow<ScoreboardWindow>();
+                return;
+            }
+
             StringBuilder str = new();
             str.AppendLine($"- Report -".AlignCenter(Constants.Width)).AppendLine();
 
