@@ -18,10 +18,10 @@ namespace GorillaInfoWatch.Behaviours
         public void Update()
         {
             if (Tweens.Count == 0) return;
-            
+
             List<TweenInfo> completedTweens = new();
 
-            foreach(KeyValuePair<long, TweenInfo> tweenData in Tweens)
+            foreach (KeyValuePair<long, TweenInfo> tweenData in Tweens)
             {
                 float tweenID = tweenData.Key;
                 TweenInfo tweenInfo = tweenData.Value;
@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (duration <= 0)
                 {
-                    tweenInfo.OnCompleted?.Invoke(tweenInfo.End); 
+                    tweenInfo.OnCompleted?.Invoke(tweenInfo.End);
 
                     completedTweens.Add(tweenInfo);
                 }
