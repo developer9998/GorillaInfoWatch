@@ -20,6 +20,7 @@ namespace GorillaInfoWatch
         public override void InstallBindings()
         {
             Container.BindInterfacesAndSelfTo<Main>().FromNewComponentOn(Player).AsSingle();
+            Container.BindInterfacesAndSelfTo<TweenExecution>().FromNewComponentOn(Player).AsSingle();
             Container.BindInterfacesAndSelfTo<PlayerExecution>().FromNewComponentOn(Player).AsSingle();
 
             Container.BindInterfacesAndSelfTo<AssetLoader>().AsSingle();
@@ -40,6 +41,7 @@ namespace GorillaInfoWatch
 
             // Quick Actions (a simple action which can be ran at a click of a button)
             Container.Bind<IQuickAction>().To<Disconnect>().AsSingle();
+            Container.Bind<IQuickAction>().To<Rejoin>().AsSingle();
             Container.Bind<IQuickAction>().To<Quit>().AsSingle();
             Container.Bind<IQuickAction>().To<SetVoice>().AsSingle(); // :3 (lunakitty)
             Container.Bind<IQuickAction>().To<SetParticles>().AsSingle();

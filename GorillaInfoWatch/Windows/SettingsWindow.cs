@@ -80,8 +80,8 @@ namespace GorillaInfoWatch.Windows
 
             if (!IsEditing)
             {
-                str.AppendSize("- Use the arrow keys to navigate through entries", 4).AppendLine();
-                str.AppendSize("- Press the enter key to modify the current entry", 4).AppendLines(2);
+                str.AppendSize("- Use the arrow keys to navigate through entries", 10).AppendLine();
+                str.AppendSize("- Press the enter key to modify the current entry", 10).AppendLines(2);
 
                 str.Append(currentEntry.Definition.Key)
                    .Append(": ").Append(currentEntry.BoxedValue.ToString())
@@ -92,13 +92,13 @@ namespace GorillaInfoWatch.Windows
                 str.Append("Section: ").Append(currentEntry.Definition.Section).AppendLine();
                 str.Append("Default Value: ").Append(currentEntry.DefaultValue.ToString()).AppendLines(2);
 
-                str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 4).AppendLine();
+                str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 10).AppendLine();
             }
             else
             {
                 bool isAdjustable = currentEntry.SettingType == typeof(int) || currentEntry.SettingType.IsEnum;
-                str.AppendSize(isAdjustable ? "- Use the arrow keys to adjust the entry" : "- Use the enter key to set the entry", 4).AppendLine();
-                str.AppendSize("- Press the back key to finalize the entry", 4).AppendLines(2);
+                str.AppendSize(isAdjustable ? "- Use the arrow keys to adjust the entry" : "- Use the enter key to set the entry", 10).AppendLine();
+                str.AppendSize("- Press the back key to finalize the entry", 10).AppendLines(2);
 
                 str.Append(currentEntry.Definition.Key)
                     .Append(": ").Append(currentEntry.BoxedValue.ToString())
@@ -106,7 +106,7 @@ namespace GorillaInfoWatch.Windows
                     .Append(currentEntry.SettingType == typeof(float) ? string.Concat(" ", AsciiUtils.Bar(10, Mathf.RoundToInt((float)currentEntry.BoxedValue * 10))) : "")
                     .AppendLines(2);
 
-                str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 4).AppendLine();
+                str.AppendSize(string.Concat("<i>\"", currentEntry.Description.Description, "\"</i>"), 10).AppendLine();
             }
 
             SetText(str);

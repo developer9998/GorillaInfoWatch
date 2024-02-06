@@ -25,5 +25,12 @@
         /// The maximum width of text which can fit on the menu
         /// </summary>
         public const int Width = 38;
+
+        // Appearance
+
+        /// <summary>
+        /// The default font size of the menu text
+        /// </summary>
+        public const float FontSize = 16f;
     }
 }

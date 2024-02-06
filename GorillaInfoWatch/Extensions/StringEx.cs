@@ -20,8 +20,8 @@ namespace GorillaInfoWatch.Extensions
             return result.Length > width ? result[..(width + 1)] : result;
         }
 
-        public static string AlignCenter(this string str, int width, int fontScale) => AlignCenter(str, Mathf.FloorToInt(width * (10f / fontScale)));
+        public static string AlignCenter(this string str, int width, int fontScale) => AlignCenter(str, Mathf.FloorToInt(width * (Constants.FontSize / fontScale)));
 
-        public static string AlignRight(this string str, int width, int fontScale) => AlignRight(str, Mathf.FloorToInt(width * (10f / fontScale)));
+        public static string AlignRight(this string str, int width, int fontScale) => AlignRight(str, Mathf.FloorToInt(width * (Constants.FontSize / fontScale)));
     }
 }

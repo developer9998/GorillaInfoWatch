@@ -19,6 +19,8 @@ namespace GorillaInfoWatch.Behaviours
     {
         private bool Initialized;
 
+        private TweenExecution TweenExecution;
+
         // Tools
         private Configuration Configuration;
 
@@ -35,6 +37,9 @@ namespace GorillaInfoWatch.Behaviours
         private MenuDisplayInfo DisplayInfo;
         private float RefreshTime;
 
+        // Animation
+        private TweenInfo BackgroundTween;
+
         // Cache
         private readonly Dictionary<Type, IWindow> WindowCache = new();
 
@@ -43,10 +48,12 @@ namespace GorillaInfoWatch.Behaviours
         private bool WindowCheck => WindowManager != null && WindowManager.Tab != null && Time.unscaledTime > (RefreshTime + (1f / Configuration.RefreshRate.Value));
 
         [Inject]
-        public async void Construct(AssetLoader assetLoader, WindowPlaceholderFactory windowFactory, HomeWindow homeWindow, List<IEntry> entries, Configuration configuration)
+        public async void Construct(AssetLoader assetLoader, WindowPlaceholderFactory windowFactory, HomeWindow homeWindow, List<IEntry> entries, Configuration configuration, TweenExecution tweenExecution)
         {
             if (Initialized) return;
             Initialized = true;
+
+            TweenExecution = tweenExecution;
 
             Configuration = configuration;
 
@@ -114,6 +121,7 @@ namespace GorillaInfoWatch.Behaviours
             WatchTrigger watchTrigger = Watch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
             watchTrigger.Menu = Menu;
             watchTrigger.Config = Configuration;
+            watchTrigger.TweenExecution = TweenExecution;
 
             WindowManager.SetWindow(HomeWindow, null);
             HomeWindow.SetEntries(entries);
@@ -149,16 +157,21 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (DisplayInfo != null && DisplayInfo.Text)
             {
-                DisplayInfo.SetText(text);
+                DisplayInfo.Text.text = text;
             }
         }
 
         public void SetBackground(Color colour)
         {
+            colour.a = 178f / 255f;
             if (DisplayInfo != null && DisplayInfo.Background)
             {
-                colour.a = 178f / 255f;
-                DisplayInfo.SetBackground(colour);
+                Color initialColour = DisplayInfo.Background.color;
+
+                if (BackgroundTween != null) TweenExecution.CancelTween(BackgroundTween);
+                BackgroundTween = TweenExecution.ApplyTween(0f, 1f, 0.25f, AnimationCurves.EaseType.EaseOutCubic);
+                BackgroundTween.OnUpdated = (float value) => DisplayInfo.Background.color = Color.Lerp(initialColour, colour, value);
+                BackgroundTween.OnCompleted = (float value) => DisplayInfo.Background.color = colour;
             }
         }
 
