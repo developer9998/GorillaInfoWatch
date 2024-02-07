@@ -1,5 +1,7 @@
 # GorillaInfoWatch
-GorillaInfoWatch is a mod which implements a customized watch into [Gorilla Tag](https://store.steampowered.com/app/1533390/Gorilla_Tag/). The watch displays a window through a menu, and comes with quick actions, simple customization, and easy usage. From simple accessibility to unique features this mod has everything you need when it comes to casual play or modding.
+GorillaInfoWatch is a mod which implements a customized watch into [Gorilla Tag](https://store.steampowered.com/app/1533390/Gorilla_Tag/). The watch displays a window through a menu, and comes with quick actions, simple customization, and easy usage. 
+
+From simple accessibility to unique features this mod has everything you need when it comes to casual play or modding.
 
 ## Links
 - Discord: https://discord.gg/dev9998
