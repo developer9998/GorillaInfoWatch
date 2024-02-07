@@ -8,7 +8,7 @@ namespace GorillaInfoWatch.Extensions
 {
     public static class StringEx
     {
-        private static Dictionary<string, string> FilteredDictionary = new();
+        private static readonly Dictionary<string, string> FilteredDictionary = new();
 
         public static string GetFilteredName(this string str)
         {
@@ -16,7 +16,7 @@ namespace GorillaInfoWatch.Extensions
 
             if (GorillaComputer.instance.CheckAutoBanListForName(str))
             {
-                text = new string(Array.FindAll(text.ToCharArray().Select(c => char.ToUpper(c)).ToArray(), (char c) => char.IsLetterOrDigit(c)));
+                text = new string(Array.FindAll(str.ToCharArray(), (char c) => char.IsLetterOrDigit(c)));
                 if (text.Length > 12) text = text[..11];
             }
             else
@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Extensions
             }
 
             FilteredDictionary.Add(str, text);
-            return text;
+            return text.ToUpper();
         }
 
         public static string AlignRight(this string str, int width)

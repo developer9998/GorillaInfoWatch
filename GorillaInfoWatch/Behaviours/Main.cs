@@ -19,8 +19,6 @@ namespace GorillaInfoWatch.Behaviours
     {
         private bool Initialized;
 
-        private TweenExecution TweenExecution;
-
         // Tools
         private Configuration Configuration;
 
@@ -38,6 +36,7 @@ namespace GorillaInfoWatch.Behaviours
         private float RefreshTime;
 
         // Animation
+        private TweenExecution TweenExecution;
         private TweenInfo BackgroundTween;
 
         // Cache
