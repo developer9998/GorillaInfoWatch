@@ -115,7 +115,10 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                         case 2:
                             DataManager.AddItem(string.Concat(Player.UserId, "fav"), !DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored), DataType.Stored);
 
-                            Rig.playerText.color = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white;
+                            bool isRecognised = DataManager.GetItem(string.Concat(Player.UserId, "rec"), false);
+                            bool isFriend = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored);
+                            Rig.playerText.color = isFriend ? PresetUtils.Parse(Config.FavouriteColour.Value) : (isRecognised ? PresetUtils.Parse(Config.VerifiedColour.Value) : Color.white);
+
                             ScoreboardUtils.RedrawLines();
                             break;
                     }

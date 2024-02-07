@@ -1,9 +1,13 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaNetworking;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Net.Http;
 using UnityEngine;
+using HarmonyLib;
 
 namespace GorillaInfoWatch.Tools
 {
@@ -23,6 +27,25 @@ namespace GorillaInfoWatch.Tools
             else
             {
                 File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
+            }
+
+            LoadRecognisedPlayers();
+        }
+
+        private async void LoadRecognisedPlayers()
+        {
+            try
+            {
+                HttpClient client = new();
+                string rawResult = await client.GetStringAsync("https://raw.githubusercontent.com/developer9998/GorillaInfoWatch/main/RecognisedPlayers.txt");
+                string base64Result = Encoding.UTF8.GetString(Convert.FromBase64String(rawResult));
+
+                base64Result.Split('\n').Do(playerId => AddItem(string.Concat(playerId, "rec"), true));
+                Logging.Info("Collected list of recognised players");
+            }
+            catch (Exception exception)
+            {
+                Logging.Error(string.Concat("LoadRecognisedPlayers threw an exception: ", exception.ToString()));
             }
         }
 

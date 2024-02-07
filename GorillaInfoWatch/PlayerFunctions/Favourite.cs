@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.PlayerFunctions
 {
     public class Favourite : IPlayerFunction
     {
-        private Configuration Config;
+        private readonly Configuration Config;
 
         public Favourite(Configuration configuration)
         {
@@ -18,7 +18,9 @@ namespace GorillaInfoWatch.PlayerFunctions
 
         public Action<PlayerInfo> OnPlayerJoin => (PlayerInfo Arguments) =>
         {
-            Arguments.Rig.playerText.color = DataManager.GetItem(string.Concat(Arguments.Player.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white;
+            bool isRecognised = DataManager.GetItem(string.Concat(Arguments.Player.UserId, "rec"), false);
+            bool isFriend = DataManager.GetItem(string.Concat(Arguments.Player.UserId, "fav"), false, DataType.Stored);
+            Arguments.Rig.playerText.color = isFriend ? PresetUtils.Parse(Config.FavouriteColour.Value) : (isRecognised ? PresetUtils.Parse(Config.VerifiedColour.Value) : Color.white);
         };
 
         public Action<PlayerInfo> OnPlayerLeave => (PlayerInfo Arguments) =>

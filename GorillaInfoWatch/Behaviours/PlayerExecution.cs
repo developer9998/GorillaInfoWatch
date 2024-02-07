@@ -50,5 +50,13 @@ namespace GorillaInfoWatch.Behaviours
                 }
             };
         }
+
+        public override void OnLeftRoom()
+        {
+            base.OnLeftRoom();
+
+            PlayerInfo info = new(PhotonNetwork.LocalPlayer, GorillaTagger.Instance.offlineVRRig);
+            new Events().TriggerRigRemoved(info);
+        }
     }
 }

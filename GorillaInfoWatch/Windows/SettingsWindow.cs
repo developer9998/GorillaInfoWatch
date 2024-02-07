@@ -46,7 +46,25 @@ namespace GorillaInfoWatch.Windows
                     Config.FavouriteColour,
                     () =>
                     {
-                        ScoreboardUtils.GetActiveLines().DoIf(sL => sL.playerVRRig && sL.playerVRRig.playerText && sL.linePlayer != null && sL.linePlayer.InRoom(), sL => sL.playerVRRig.playerText.color = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored) ? PresetUtils.Parse(Config.FavouriteColour.Value) : Color.white);
+                        ScoreboardUtils.GetActiveLines().DoIf(sL => sL.playerVRRig && sL.playerVRRig.playerText && sL.linePlayer != null && sL.linePlayer.InRoom(), sL =>
+                        {
+                            bool isRecognised = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "rec"), false);
+                            bool isFriend = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored);
+                            sL.playerVRRig.playerText.color = isFriend ? PresetUtils.Parse(Config.FavouriteColour.Value) : (isRecognised ? PresetUtils.Parse(Config.VerifiedColour.Value) : Color.white);
+                        });
+                        ScoreboardUtils.RedrawLines();
+                    }
+                },
+                {
+                    Config.VerifiedColour,
+                    () =>
+                    {
+                        ScoreboardUtils.GetActiveLines().DoIf(sL => sL.playerVRRig && sL.playerVRRig.playerText && sL.linePlayer != null && sL.linePlayer.InRoom(), sL =>
+                        {
+                            bool isRecognised = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "rec"), false);
+                            bool isFriend = DataManager.GetItem(string.Concat(sL.linePlayer.UserId, "fav"), false, DataType.Stored);
+                            sL.playerVRRig.playerText.color = isFriend ? PresetUtils.Parse(Config.FavouriteColour.Value) : (isRecognised ? PresetUtils.Parse(Config.VerifiedColour.Value) : Color.white);
+                        });
                         ScoreboardUtils.RedrawLines();
                     }
                 },
