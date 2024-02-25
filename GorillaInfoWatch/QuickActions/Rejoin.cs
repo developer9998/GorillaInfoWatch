@@ -18,7 +18,6 @@ namespace GorillaInfoWatch.QuickActions
             {
                 string roomID = PhotonNetwork.CurrentRoom.Name;
 
-                isRejoining = true;
                 PhotonNetworkController.Instance.AttemptDisconnect();
 
                 while (!PhotonNetwork.IsConnectedAndReady)
@@ -26,6 +25,7 @@ namespace GorillaInfoWatch.QuickActions
                     await Task.Yield();
                 }
 
+                PhotonNetwork.RejoinRoom(roomID);
                 PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(roomID);
                 isRejoining = false;
             }

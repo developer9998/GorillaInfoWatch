@@ -63,7 +63,6 @@ namespace GorillaInfoWatch.Windows.Scoreboard
 
             str.AppendItem(Line.muteButton.isOn ? "Unmute" : "Mute", 0, ItemHandler);
             str.AppendItem(Line.reportButton.isOn ? "Reported" : "Report", 1, ItemHandler);
-            str.AppendItem(DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored) ? "Unfavourite" : "Favourite", 2, ItemHandler);
             str.AppendItem(string.Concat("Volume: [", AsciiUtils.Bar(10, Mathf.RoundToInt(Speaker.volume * 10)), "]"), 3, ItemHandler);
 
             if (Line.reportButton.isOn)
@@ -112,15 +111,6 @@ namespace GorillaInfoWatch.Windows.Scoreboard
                         case 1:
                             if (!Line.reportButton.isOn) DisplayWindow(typeof(ReportWindow), new object[] { Player, Line });
                             return;
-                        case 2:
-                            DataManager.AddItem(string.Concat(Player.UserId, "fav"), !DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored), DataType.Stored);
-
-                            bool isRecognised = DataManager.GetItem(string.Concat(Player.UserId, "rec"), false);
-                            bool isFriend = DataManager.GetItem(string.Concat(Player.UserId, "fav"), false, DataType.Stored);
-                            Rig.playerText.color = isFriend ? PresetUtils.Parse(Config.FavouriteColour.Value) : (isRecognised ? PresetUtils.Parse(Config.VerifiedColour.Value) : Color.white);
-
-                            ScoreboardUtils.RedrawLines();
-                            break;
                     }
                     break;
                 case InputType.Back:

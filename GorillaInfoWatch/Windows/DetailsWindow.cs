@@ -68,7 +68,7 @@ namespace GorillaInfoWatch.Windows
                             .Append(" (").Append(GorillaComputer.instance.GetField<int>("turnValue")).Append(")").AppendLine();
                         str.Append("Microphone: ").AppendLine(TextInfo.ToTitleCase(GorillaComputer.instance.pttType.ToLower()));
                         str.Append("Queue: ").AppendLine(TextInfo.ToTitleCase(GorillaComputer.instance.currentQueue.ToLower()));
-                        str.Append("Gamemode: ").AppendLine(TextInfo.ToTitleCase(GorillaComputer.instance.currentGameMode.ToLower()));
+                        str.Append("Gamemode: ").AppendLine(TextInfo.ToTitleCase(GorillaComputer.instance.currentGameMode.Value.ToLower()));
 
                         break;
                     case 2:
