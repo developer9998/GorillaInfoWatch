@@ -18,7 +18,7 @@ namespace GorillaInfoWatch.QuickActions
             {
                 string roomID = PhotonNetwork.CurrentRoom.Name;
 
-                PhotonNetworkController.Instance.AttemptDisconnect();
+                await NetworkSystem.Instance.ReturnToSinglePlayer();
 
                 while (!PhotonNetwork.IsConnectedAndReady)
                 {

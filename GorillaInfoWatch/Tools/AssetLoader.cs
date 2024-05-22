@@ -12,7 +12,7 @@ namespace GorillaInfoWatch.Tools
         private AssetBundle _storedBundle;
 
         private Task _loadingTask = null;
-        private readonly Dictionary<string, Object> _assetCache = new();
+        private readonly Dictionary<string, Object> _assetCache = [];
 
         private async Task LoadBundle()
         {

@@ -17,20 +17,8 @@
         /// <summary>
         /// The version of the mod utilizing semantic versioning (major.minor.patch)
         /// </summary>
-        public const string Version = "1.0.0.2";
+        public const string Version = "1.0.0";
 
-        // Logic
-
-        /// <summary>
-        /// The maximum width of text which can fit on the menu
-        /// </summary>
-        public const int Width = 38;
-
-        // Appearance
-
-        /// <summary>
-        /// The default font size of the menu text
-        /// </summary>
-        public const float FontSize = 16f;
+        public const int EntriesPerScene = 10;
     }
 }

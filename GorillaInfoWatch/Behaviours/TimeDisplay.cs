@@ -1,21 +1,23 @@
-﻿using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Interfaces;
+using GorillaInfoWatch.Models;
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class TimeDisplay : MonoBehaviour
+    public class TimeDisplay : MonoBehaviour, IRelations
     {
-        public Text Text;
-        public Configuration Config;
+        public Relations Relations { get; set; }
+
+        public TMP_Text Text;
 
         private DateTime Now => DateTime.Now;
 
         public void LateUpdate()
         {
-            string format = Config.TwFourHour.Value ? "H:mm" : "h:mm tt";
-            Text.text = Now.ToString(format);
+            Text.text = Now.ToString("h:mm tt");
         }
     }
 }

@@ -14,12 +14,12 @@ namespace GorillaInfoWatch.Utilities
 
         private static object CacheInstance => AccessTools.Property(RigCacheType, "Instance").GetValue(RigCacheType, null);
 
-        public static T GetField<T>(Player player)
+        public static T GetProperty<T>(Player player)
         {
             if (CacheInstance == null) return default;
 
-            object[] parameters = new object[] { player, null };
-            bool method = (bool)AccessTools.Method(RigCacheType, "TryGetVrrig").Invoke(CacheInstance, parameters);
+            object[] parameters = [player, null];
+            bool method = (bool)AccessTools.Method(RigCacheType, "TryGetVrrig", [typeof(Player), GTAssembly.GetType("RigContainer&")]).Invoke(CacheInstance, parameters);
 
             if (method)
             {

@@ -4,12 +4,12 @@ using Zenject;
 
 namespace GorillaInfoWatch.Models
 {
-    public class WindowFactory : IFactory<Type, IWindow>
+    public class WindowFactory : IFactory<Type, IPage>
     {
         private readonly DiContainer Container;
 
         public WindowFactory(DiContainer container) => Container = container;
 
-        public IWindow Create(Type viewType) => (IWindow)Container.Instantiate(viewType);
+        public IPage Create(Type viewType) => (IPage)Container.Instantiate(viewType);
     }
 }

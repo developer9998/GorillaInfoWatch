@@ -1,68 +1,46 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaNetworking;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Net.Http;
 using UnityEngine;
-using HarmonyLib;
+using Zenject;
 
 namespace GorillaInfoWatch.Tools
 {
-    public class DataManager
+    public class DataManager : IInitializable
     {
         private static string BasePath => Path.Combine(Application.persistentDataPath, "GorillaInfoWatchData.txt");
 
-        private static readonly Dictionary<string, object> SessionData = new();
-        private static Dictionary<string, object> StoredData = new();
+        private static readonly Dictionary<string, object> _sessionData = [];
+        private static Dictionary<string, object> _storedData = [];
 
-        public DataManager()
+        public void Initialize()
         {
             if (File.Exists(BasePath))
             {
-                StoredData = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(BasePath));
+                _storedData = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(BasePath));
             }
             else
             {
-                File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
-            }
-
-            LoadRecognisedPlayers();
-        }
-
-        private async void LoadRecognisedPlayers()
-        {
-            try
-            {
-                HttpClient client = new();
-                string rawResult = await client.GetStringAsync("https://raw.githubusercontent.com/developer9998/GorillaInfoWatch/main/RecognisedPlayers.txt");
-                string base64Result = Encoding.UTF8.GetString(Convert.FromBase64String(rawResult));
-
-                base64Result.Split('\n').Do(playerId => AddItem(string.Concat(playerId, "rec"), true));
-                Logging.Info("Collected list of recognised players");
-            }
-            catch (Exception exception)
-            {
-                Logging.Error(string.Concat("LoadRecognisedPlayers threw an exception: ", exception.ToString()));
+                File.WriteAllText(BasePath, JsonConvert.SerializeObject(_storedData));
             }
         }
 
         public static void AddItem(string key, object value, DataType dataType = DataType.Session)
         {
-            Dictionary<string, object> dictionary = dataType == DataType.Session ? SessionData : StoredData;
+            Dictionary<string, object> dictionary = dataType == DataType.Session ? _sessionData : _storedData;
             dictionary.AddOrUpdate(key, value);
 
             if (dataType == DataType.Stored)
             {
-                File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
+                File.WriteAllText(BasePath, JsonConvert.SerializeObject(_storedData));
             }
         }
 
         public static T GetItem<T>(string key, T defaultValue, DataType dataType = DataType.Session)
         {
-            Dictionary<string, object> dictionary = dataType == DataType.Session ? SessionData : StoredData;
+            Dictionary<string, object> dictionary = dataType == DataType.Session ? _sessionData : _storedData;
 
             if (dictionary.TryGetValue(key, out object value))
             {
@@ -74,7 +52,7 @@ namespace GorillaInfoWatch.Tools
 
         public static void RemoveItem(string key, DataType dataType = DataType.Session)
         {
-            Dictionary<string, object> dictionary = dataType == DataType.Session ? SessionData : StoredData;
+            Dictionary<string, object> dictionary = dataType == DataType.Session ? _sessionData : _storedData;
 
             if (dictionary.ContainsKey(key))
             {
@@ -82,7 +60,7 @@ namespace GorillaInfoWatch.Tools
 
                 if (dataType == DataType.Stored)
                 {
-                    File.WriteAllText(BasePath, JsonConvert.SerializeObject(StoredData));
+                    File.WriteAllText(BasePath, JsonConvert.SerializeObject(_storedData));
                 }
             }
         }

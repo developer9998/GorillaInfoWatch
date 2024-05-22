@@ -1,5 +1,4 @@
 ﻿using GorillaInfoWatch.Interfaces;
-using GorillaNetworking;
 using System;
 
 namespace GorillaInfoWatch.QuickActions
@@ -8,6 +7,6 @@ namespace GorillaInfoWatch.QuickActions
     {
         public string Name => "Disconnect";
 
-        public Action Function => () => PhotonNetworkController.Instance.AttemptDisconnect();
+        public Action Function => () => NetworkSystem.Instance.ReturnToSinglePlayer();
     }
 }
