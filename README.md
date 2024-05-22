@@ -1,24 +1,30 @@
-<div>
-  <img src="https://github.com/developer9998/GorillaInfoWatch/blob/main/Marketing/GIW_Banner.png?raw=true" title = "GorillaInfoWatch. A general-purpose watch mod for Gorilla Tag for all players" style="display: block;  margin-left: auto; margin-right: auto; width=50%;">
-</div>
-
-<br>
-
 <div align="center">
-  GorillaInfoWatch is a mod which implements a customized watch into <a href="https://store.steampowered.com/app/1533390/Gorilla_Tag/">Gorilla Tag</a>.<br><br>The watch displays a window through a menu, and comes with quick actions, simple customization, and easy usage.<br><br>From simple accessibility to unique features, this mod has everything you need when it comes to casual play, hosting events, and modding.
+ <a href="https://github.com/developer9998/GorillaInfoWatch/blob/main/LICENSE/">   
+ <img src="https://img.shields.io/github/license/developer9998/GorillaInfoWatch?label=License&style=flat-square"</img></a>
+ <a href="https://github.com/developer9998/GorillaInfoWatch/releases/latest">
+ <img src="https://img.shields.io/github/downloads/developer9998/GorillaInfoWatch/total?label=Downloads&style=flat-square"<img></a>
+ <a href="https://discord.gg/dev9998">
+ <img src="https://img.shields.io/discord/989239017511989258?label=Discord&style=flat-square"</img></a>
+</div>
+<div align="center">
+  <img src="https://raw.githubusercontent.com/developer9998/GorillaInfoWatch/baeeb10d86cfe592b0b2908a917a870dd55931f2/Marketing/GIW_Banner.png" style="display: block; margin-left: auto; margin-right: auto; width=50%;">
+  <b>GorillaInfoWatch</b> is a utility mod for Gorilla Tag, which allows players to use the portable graphic interfacial watch created by the mod, and developers to implement their own information and logic using the mod.
 </div>
 
-## Links
-- Discord: https://discord.gg/dev9998
-- YouTube: https://www.youtube.com/@developer9998
+## Features
+TBA
 
-## Requirements
-- [Bepinject](https://github.com/Auros/Bepinject/releases/download/1.0.1/Bepinject-Auros.zip)
-- [Extenject](https://github.com/Auros/Bepinject/releases/download/1.0.1/Extenject.zip)
-- [Newtonsoft.Json](https://github.com/legoandmars/Newtonsoft.Json/releases/download/12.0.3/Newtonsoft.Json-12.0.3.zip)
+## Usage
+TBA
+
+## Dependencies
+The following list of dependencies are required for GorillaInfoWatch to run properly, as the mod constantly relies on them throughout it's usage while playing Gorilla Tag.
+* [Bepinject](https://github.com/Auros/Bepinject/releases/latest)
+* [Extenject](https://github.com/Auros/Bepinject/releases/latest)
+* [Newtonsoft.Json](https://github.com/legoandmars/Newtonsoft.Json/releases/latest)
+* [Utilla](https://github.com/legoandmars/Utilla/releases/latest)
+
+These dependencies can be downloaded and installed manually by the user, or done using an automation tool for Gorilla Tag such as [MonkeModManager](https://github.com/BzzzThe18th/MonkeModManager/releases/latest).
 
 ## Disclaimer
-
-<div align="center">
-  This product is not affiliated with Gorilla Tag or Another Axiom LLC and is not endorsed or otherwise sponsored by Another Axiom LLC. Portions of the materials contained herein are property of Another Axiom LLC. © 2021 Another Axiom LLC.
-</div>
+<b>This product is not affiliated with Gorilla Tag or Another Axiom LLC and is not endorsed or otherwise sponsored by Another Axiom LLC. Portions of the materials contained herein are property of Another Axiom LLC. © 2021 Another Axiom LLC.</b>
