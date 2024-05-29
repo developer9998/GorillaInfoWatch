@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class Slider : MonoBehaviour 
+    public class Slider : MonoBehaviour
     {
         public Relations Relations;
 
@@ -17,6 +17,8 @@ namespace GorillaInfoWatch.Behaviours
         private Transform _needle, _min, _max;
 
         private GorillaTriggerColliderHandIndicator _current;
+
+        private LineSlider _lineSlider;
 
         public void Awake()
         {
@@ -36,10 +38,20 @@ namespace GorillaInfoWatch.Behaviours
             OnApplied = () => slider.RaiseEvent(Value);
 
             gameObject.SetActive(slider != null);
-            if (slider == null) return;
 
-            Value = Mathf.Clamp(slider.InitialValue, 0, slider.Split - 1);
-            Split = slider.Split - 1;
+            if (slider == null)
+            {
+                _lineSlider = null;
+                return;
+            }
+
+            if (_lineSlider == null || !slider.Equals(_lineSlider))
+            {
+                _lineSlider = slider;
+
+                Value = Mathf.Clamp(_lineSlider.InitialValue, 0, slider.Split - 1);
+                Split = slider.Split - 1;
+            }
 
             SetNeedlePosition();
         }

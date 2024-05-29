@@ -7,7 +7,9 @@ namespace GorillaInfoWatch.QuickActions
 {
     public class SetParticles : IQuickAction
     {
-        public string Name => "Set Particles";
+        public bool? Active => !GorillaComputer.instance.disableParticles;
+
+        public string Name => "Toggle Particles";
 
         public Action Function => () =>
         {

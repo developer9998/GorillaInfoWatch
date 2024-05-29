@@ -8,7 +8,9 @@ namespace GorillaInfoWatch.QuickActions
 {
     public class SetVoice : IQuickAction
     {
-        public string Name => "Set Voice Chat";
+        public bool? Active => GorillaComputer.instance.voiceChatOn == "TRUE";
+
+        public string Name => "Toggle Voice Chat";
 
         public Action Function => () =>
         {

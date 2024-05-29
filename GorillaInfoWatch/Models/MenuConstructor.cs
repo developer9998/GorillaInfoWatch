@@ -65,8 +65,8 @@ namespace GorillaInfoWatch.Models
                 else // only applies to generic-lines
                 {
                     currentLine.Text.text = genLine.Text;
-                    currentLine.SpeakIcon.SetActive(genLine.Symbols.HasFlag(LineSymbol.Talk));
-                    currentLine.MuteIcon.SetActive(genLine.Symbols.HasFlag(LineSymbol.Mute));
+                    currentLine.SpeakIcon.SetActive(genLine.Flags.HasFlag(LineFlags.ActiveSpeakerSymbol));
+                    currentLine.MuteIcon.SetActive(genLine.Flags.HasFlag(LineFlags.MutedSpeakerSymbol));
                 }
                 // applies to any line
                 currentLine.Button.ApplyButton(genLine.Button);

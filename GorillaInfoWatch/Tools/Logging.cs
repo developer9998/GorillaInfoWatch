@@ -1,14 +1,22 @@
 ﻿using BepInEx.Logging;
+using Bepinject;
+using Zenject;
 
 namespace GorillaInfoWatch.Tools
 {
-    public class Logging
+    public class Logging : IInitializable
     {
         private static ManualLogSource Logger;
 
-        public Logging(ManualLogSource logger)
+        [Inject]
+        public void Construct(BepInLog logger)
         {
-            Logger = logger;
+            Logger = logger.Logger;
+        }
+
+        public void Initialize()
+        {
+            Info("GorillaInfoWatch logging tool has succesfully initialized.");
         }
 
         public static void Info(object message) => Log(LogLevel.Info, message);

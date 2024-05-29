@@ -5,6 +5,6 @@
         public string Text;
         public LineButton Button;
         public LineSlider Slider;
-        public LineSymbol Symbols = LineSymbol.None;
+        public LineFlags Flags = LineFlags.None;
     }
 }

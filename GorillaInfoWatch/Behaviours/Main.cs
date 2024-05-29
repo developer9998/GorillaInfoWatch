@@ -54,18 +54,26 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Main = this,
                 AssetLoader = assetLoader,
-                Config = configuration
+                Config = configuration,
+                FriendJoinClip = await assetLoader.LoadAsset<AudioClip>("Friend1"),
+                FriendLeftClip = await assetLoader.LoadAsset<AudioClip>("Friend2")
             };
 
             _config = configuration;
 
             _pageFactory = pageFactory;
 
+            Dictionary<string, BepInEx.PluginInfo> loadedPlugins = Chainloader.PluginInfos;
+            _allPages = [.. loadedPlugins.Select(plugin => plugin.Value.Instance.GetType().Assembly).SelectMany(a => a.GetTypes()).Where(type => type.IsSubclassOf(typeof(Page))).Where(type => !_pageCache.ContainsKey(type))];
+
             _homePage = homeWindow;
             _modWarnPage = modWarnPage;
 
             _pageCache.Add(typeof(HomePage), _homePage);
             _pageCache.Add(typeof(ModRoomWarningPage), _modWarnPage);
+
+            FriendLib.InitializeLib(loadedPlugins);
+            RassModLib.InitializeLib(loadedPlugins);
 
             _pageManager = new PageManager
             {
@@ -109,7 +117,7 @@ namespace GorillaInfoWatch.Behaviours
 
             TimeDisplay watchTime = _customWatch.AddComponent<TimeDisplay>();
 
-            watchTime.Text = _customWatch.transform.Find("Hand Menu/Canvas/Time Display/Time").GetComponent<TMP_Text>();
+            watchTime.Text = _customWatch.transform.Find("Watch Head/Canvas/Time Display/Time").GetComponent<TMP_Text>();
             watchTime.Relations = _relations;
 
             WatchTrigger watchTrigger = _customWatch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
@@ -167,10 +175,6 @@ namespace GorillaInfoWatch.Behaviours
             NetworkSystem.Instance.OnPlayerJoined += InitiateRefresh;
             NetworkSystem.Instance.OnPlayerLeft += InitiateRefresh;
 
-            Dictionary<string, BepInEx.PluginInfo> loadedPlugins = Chainloader.PluginInfos;
-            _allPages = [.. loadedPlugins.Select(plugin => plugin.Value.Instance.GetType().Assembly).SelectMany(a => a.GetTypes()).Where(type => type.IsSubclassOf(typeof(Page))).Where(type => !_pageCache.ContainsKey(type))];
-
-            FriendLib.InitializeLib(loadedPlugins);
             _homePage.SetEntries(_allPages);
             _pageManager.SwitchPage(_homePage, []);
         }
@@ -276,9 +280,9 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (lines == null || !lines.Any()) return;
 
-            for (int i = _sceneIndex * Constants.EntriesPerScene; i < GetDisplayedLineCount(lines.Length); i++)
+            for (int i = _sceneIndex * Constants.LinesPerPage; i < GetDisplayedLineCount(lines.Length); i++)
             {
-                int index = i - _sceneIndex * Constants.EntriesPerScene;
+                int index = i - _sceneIndex * Constants.LinesPerPage;
                 PhysicalLine physicalLine = _menuConstructor.Lines.ElementAtOrDefault(index);
 
                 if (!physicalLine || !physicalLine.gameObject.activeSelf) continue;
@@ -303,7 +307,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (lines != null)
             {
-                for (int i = _sceneIndex * Constants.EntriesPerScene; i < GetDisplayedLineCount(lines.Length); i++)
+                for (int i = _sceneIndex * Constants.LinesPerPage; i < GetDisplayedLineCount(lines.Length); i++)
                 {
                     if (lines[i] is PlayerLine playerLine)
                     {
@@ -321,7 +325,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public int GetDisplayedLineCount(int totalLineCount)
         {
-            int EndLine = _sceneIndex * Constants.EntriesPerScene + Constants.EntriesPerScene;
+            int EndLine = _sceneIndex * Constants.LinesPerPage + Constants.LinesPerPage;
             return EndLine > totalLineCount ? totalLineCount : EndLine;
         }
 
@@ -329,10 +333,10 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (_sceneIndex < 0) _sceneIndex = 0;
 
-            _nextPGButton.gameObject.SetActive(totalLineCount / (float)Constants.EntriesPerScene > 1f && _sceneIndex != Mathf.FloorToInt(totalLineCount / (float)Constants.EntriesPerScene));
+            _nextPGButton.gameObject.SetActive(totalLineCount / (float)Constants.LinesPerPage > 1f && _sceneIndex != Mathf.FloorToInt(totalLineCount / (float)Constants.LinesPerPage));
             _backPGButton.gameObject.SetActive(_sceneIndex > 0);
             _currentPageLabel.text = _nextPGButton.gameObject.activeSelf || _backPGButton.gameObject.activeSelf
-                ? string.Format("{0}/{1}", _sceneIndex + 1, Mathf.FloorToInt(totalLineCount / (float)Constants.EntriesPerScene) + 1)
+                ? string.Format("{0}/{1}", _sceneIndex + 1, Mathf.FloorToInt(totalLineCount / (float)Constants.LinesPerPage) + 1)
                 : string.Empty;
         }
 
@@ -400,7 +404,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (taggingPlayer != null && taggingPlayer.IsLocal)
                 {
-                    DataManager.AddItem("Tags", DataManager.GetItem("Tags", 0) + 1);
+                    Metadata.AddItem("Tags", Metadata.GetItem("Tags", 0) + 1);
                 }
             }
         }

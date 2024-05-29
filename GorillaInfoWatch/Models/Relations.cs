@@ -10,6 +10,8 @@ namespace GorillaInfoWatch.Models
         public AssetLoader AssetLoader;
         public Configuration Config;
 
+        public AudioClip FriendJoinClip, FriendLeftClip;
+
         private float _pressTime;
         private Slider _currentSlider;
 

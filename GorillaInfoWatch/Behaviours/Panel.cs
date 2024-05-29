@@ -15,6 +15,7 @@ namespace GorillaInfoWatch.Behaviours
             Head = Player.Instance.headCollider.transform;
 
             RenderPipelineManager.beginCameraRendering += (ScriptableRenderContext arg1, Camera arg2) => ApplyRotation();
+            RenderPipelineManager.endCameraRendering += (ScriptableRenderContext arg1, Camera arg2) => ApplyRotation();
         }
 
         public void ApplyRotation()

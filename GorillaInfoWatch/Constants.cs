@@ -19,6 +19,6 @@
         /// </summary>
         public const string Version = "1.0.0";
 
-        public const int EntriesPerScene = 10;
+        public const int LinesPerPage = 11;
     }
 }

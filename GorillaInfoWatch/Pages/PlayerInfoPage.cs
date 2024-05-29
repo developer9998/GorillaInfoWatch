@@ -1,7 +1,6 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaNetworking;
-using Photon.Pun;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -29,7 +28,7 @@ namespace GorillaInfoWatch.Pages
                 return;
             }
 
-            _normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? _netPlayer.DefaultName : _netPlayer.NickName).ToNormalizedName();
+            _normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? _netPlayer.DefaultName : _netPlayer.NickName).NormalizeName();
             _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ID == _netPlayer.ID);
 
             DrawLines();

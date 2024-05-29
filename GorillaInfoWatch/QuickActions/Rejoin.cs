@@ -10,6 +10,8 @@ namespace GorillaInfoWatch.QuickActions
     {
         private bool isRejoining;
 
+        public bool? Active => null;
+
         public string Name => "Rejoin";
 
         public Action Function => async () =>

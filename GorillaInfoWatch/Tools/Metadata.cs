@@ -8,7 +8,7 @@ using Zenject;
 
 namespace GorillaInfoWatch.Tools
 {
-    public class DataManager : IInitializable
+    public class Metadata : IInitializable
     {
         private static string BasePath => Path.Combine(Application.persistentDataPath, "GorillaInfoWatchData.txt");
 

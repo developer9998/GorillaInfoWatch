@@ -7,8 +7,8 @@ namespace GorillaInfoWatch.QuickActions
 {
     public class Quit : IQuickAction
     {
+        public bool? Active => null;
         public string Name => "Quit Game";
-
         public Action Function => () =>
         {
             PhotonNetwork.Disconnect();

@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Behaviours
                 if (Player == null || !Player.InRoom) return string.Empty;
 
                 if (_scoreboardLine == null || !_scoreboardLine.gameObject.activeInHierarchy || _scoreboardLine.linePlayer.ID != Player.ID)
-                    _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ID == Player.ID && line.gameObject.activeInHierarchy);
+                    _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.Find(line => line.linePlayer.ID == Player.ID && line.gameObject.activeInHierarchy);
 
                 Color playerNameColour = Color.white;
 
@@ -37,7 +37,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 string playerNameHtml = ColorUtility.ToHtmlStringRGB(playerNameColour);
 
-                return string.Format("[<color=#{0}>██</color>] <color=#{1}>{2}</color>", ColorUtility.ToHtmlStringRGB(PlayerSwatchColour), playerNameHtml, (PlayFabAuthenticator.instance.GetSafety() ? Player.DefaultName : Player.NickName).ToNormalizedName().ToUpper());
+                return string.Format("[<color=#{0}>██</color>] <color=#{1}>{2}</color>", ColorUtility.ToHtmlStringRGB(PlayerSwatchColour), playerNameHtml, (PlayFabAuthenticator.instance.GetSafety() ? Player.DefaultName : Player.NickName).NormalizeName().ToUpper());
             }
         }
 

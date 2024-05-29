@@ -31,9 +31,9 @@ namespace GorillaInfoWatch.Models
             return this;
         }
 
-        public Page AddPlayer(NetPlayer player, LineButton button = null, LineSlider slider = null, LineSymbol symbols = LineSymbol.None) => AddLine(new PlayerLine() { Player = player, Button = button, Slider = slider, Symbols = symbols });
+        public Page AddPlayer(NetPlayer player, LineButton button = null, LineSlider slider = null, LineFlags symbols = LineFlags.None) => AddLine(new PlayerLine() { Player = player, Button = button, Slider = slider, Flags = symbols });
 
-        public Page AddLine(string text = "", LineButton button = null, LineSlider slider = null, LineSymbol symbols = LineSymbol.None) => AddLine(new GenericLine() { Text = text, Button = button, Slider = slider, Symbols = symbols });
+        public Page AddLine(string text = "", LineButton button = null, LineSlider slider = null, LineFlags symbols = LineFlags.None) => AddLine(new GenericLine() { Text = text, Button = button, Slider = slider, Flags = symbols });
 
         public Page AddLine(object line)
         {

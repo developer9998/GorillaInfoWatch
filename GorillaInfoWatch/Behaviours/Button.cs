@@ -23,7 +23,7 @@ namespace GorillaInfoWatch.Behaviours
         public void Awake()
         {
             _baseColour = new Color32(191, 188, 170, 255);
-            _activatedColour = Color.red;
+            _activatedColour = new Color32(132, 131, 119, 255);
 
             _meshRenderer = GetComponent<MeshRenderer>();
 

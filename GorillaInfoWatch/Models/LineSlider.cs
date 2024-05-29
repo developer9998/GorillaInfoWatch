@@ -27,6 +27,8 @@ namespace GorillaInfoWatch.Models
             };
             OnApplied?.Invoke(this, args);
         }
+
+        public bool Equals(LineSlider other) => other != null && other.ReturnIndex == this.ReturnIndex && other.Split == this.Split && InitialValue == other.InitialValue;
     }
 
     public class SliderArgs : EventArgs

@@ -81,8 +81,4 @@
       <HintPath>$(PluginsPath)\Extenject\Zenject-usage.dll</HintPath>
     </Reference>
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Patches\" />
-  </ItemGroup>
 </Project>
