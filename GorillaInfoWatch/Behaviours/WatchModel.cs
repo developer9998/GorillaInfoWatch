@@ -3,6 +3,7 @@ using GorillaInfoWatch.Models;
 using GorillaNetworking;
 using Photon.Pun;
 using Photon.Realtime;
+using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -18,11 +19,11 @@ namespace GorillaInfoWatch.Behaviours
 
         private Transform timePanel, friendPanel, huntPanel;
 
-        private TMP_Text _huntText;
+        private TMP_Text _huntText, dayText;
         private Image _material, _hat, _face, _badge, _leftHand, _rightHand;
 
-        private Player _targetPlayer;
-        private VRRig _targetVRRig;
+        private NetPlayer targetPlayer;
+        private VRRig targetPlayerRig;
         private CosmeticsController.CosmeticItem _cachedItem;
 
         private AudioSource _audioSource;
@@ -35,9 +36,9 @@ namespace GorillaInfoWatch.Behaviours
         {
             _audioSource = GetComponent<AudioSource>();
 
-            timePanel = transform.Find("Watch Head/Canvas/Time Display");
-            friendPanel = transform.Find("Watch Head/Canvas/Friend Display");
-            huntPanel = transform.Find("Watch Head/Canvas/Hunt Display");
+            timePanel = transform.Find("Watch Head/Watch GUI/Time Display");
+            friendPanel = transform.Find("Watch Head/Watch GUI/Friend Display");
+            huntPanel = transform.Find("Watch Head/Watch GUI/Hunt Display");
             _huntText = huntPanel.Find("Text").GetComponent<TMP_Text>();
             _material = huntPanel.Find("Fur").GetComponent<Image>();
             _hat = huntPanel.Find("Hat").GetComponent<Image>();
@@ -45,6 +46,7 @@ namespace GorillaInfoWatch.Behaviours
             _badge = huntPanel.Find("Badge").GetComponent<Image>();
             _leftHand = huntPanel.Find("Image_4").GetComponent<Image>();
             _rightHand = huntPanel.Find("Image_5").GetComponent<Image>();
+            dayText = transform.Find("Watch Head/Watch GUI/Time Display/Day").GetComponent<TMP_Text>();
         }
 
         public void ShowFriendPanel(Player player, bool isJoining)
@@ -71,6 +73,11 @@ namespace GorillaInfoWatch.Behaviours
                 timePanel.gameObject.SetActive(!IsHunt);
                 huntPanel.gameObject.SetActive(IsHunt);
                 friendPanel.gameObject.SetActive(false);
+            }
+
+            if (timePanel.gameObject.activeSelf)
+            {
+                dayText.text = DateTime.Now.ToString("MMMM dd, yyyy");
             }
 
             if (huntPanel.gameObject.activeSelf)
@@ -121,9 +128,9 @@ namespace GorillaInfoWatch.Behaviours
                     return;
                 }
 
-                _targetPlayer = hunt.GetTargetOf(PhotonNetwork.LocalPlayer);
+                targetPlayer = hunt.GetTargetOf(PhotonNetwork.LocalPlayer);
 
-                if (_targetPlayer == null)
+                if (targetPlayer == null)
                 {
                     _material.gameObject.SetActive(false);
                     _hat.gameObject.SetActive(false);
@@ -135,39 +142,39 @@ namespace GorillaInfoWatch.Behaviours
                     return;
                 }
 
-                _targetVRRig = hunt.FindPlayerVRRig(_targetPlayer);
+                targetPlayerRig = hunt.FindPlayerVRRig(targetPlayer);
 
-                if (_targetVRRig == null) return;
+                if (targetPlayerRig == null) return;
 
-                if (_targetVRRig.setMatIndex == 0)
+                if (targetPlayerRig.setMatIndex == 0)
                 {
-                    if (_targetVRRig.scoreboardMaterial != null)
+                    if (targetPlayerRig.scoreboardMaterial != null)
                     {
-                        _material.material = _targetVRRig.scoreboardMaterial;
+                        _material.material = targetPlayerRig.scoreboardMaterial;
                         _material.color = Color.white;
                     }
                     else
                     {
                         _material.material = null;
-                        _material.color = _targetVRRig.playerColor;
+                        _material.color = targetPlayerRig.playerColor;
                     }
                 }
                 else
                 {
-                    _material.material = _targetVRRig.materialsToChangeTo[_targetVRRig.setMatIndex];
+                    _material.material = targetPlayerRig.materialsToChangeTo[targetPlayerRig.setMatIndex];
                     _material.color = Color.white;
                 }
 
-                string _hunterWatchText = string.Format("<size=60%>Target Player:</size>\n<b>{0}</b>\n<size=60%>Distance: <b>{1}M</b></size>", _targetPlayer.NickName.NormalizeName().ToUpper(), Mathf.CeilToInt((GorillaLocomotion.Player.Instance.headCollider.transform.position - _targetVRRig.transform.position).magnitude));
+                string _hunterWatchText = string.Format("<size=60%>Target Player:</size>\n<b>{0}</b>\n<size=60%>Distance: <b>{1}M</b></size>", targetPlayer.NickName.NormalizeName().ToUpper(), Mathf.CeilToInt((GorillaLocomotion.Player.Instance.headCollider.transform.position - targetPlayerRig.transform.position).magnitude));
 
                 _huntText.text = _hunterWatchText;
                 _huntText.transform.localPosition = Vector3.up * -18.1f;
 
-                SetImage(_targetVRRig.cosmeticSet.items[0].displayName, ref _hat);
-                SetImage(_targetVRRig.cosmeticSet.items[2].displayName, ref _face);
-                SetImage(_targetVRRig.cosmeticSet.items[1].displayName, ref _badge);
-                SetImage(GetPrioritizedItemForHand(_targetVRRig, forLeftHand: true).displayName, ref _leftHand);
-                SetImage(GetPrioritizedItemForHand(_targetVRRig, forLeftHand: false).displayName, ref _rightHand);
+                SetImage(targetPlayerRig.cosmeticSet.items[0].displayName, ref _hat);
+                SetImage(targetPlayerRig.cosmeticSet.items[2].displayName, ref _face);
+                SetImage(targetPlayerRig.cosmeticSet.items[1].displayName, ref _badge);
+                SetImage(GetPrioritizedItemForHand(targetPlayerRig, forLeftHand: true).displayName, ref _leftHand);
+                SetImage(GetPrioritizedItemForHand(targetPlayerRig, forLeftHand: false).displayName, ref _rightHand);
 
                 _material.gameObject.SetActive(true);
             }
@@ -181,7 +188,7 @@ namespace GorillaInfoWatch.Behaviours
         private void SetImage(string itemDisplayName, ref Image image)
         {
             _cachedItem = CosmeticsController.instance.GetItemFromDict(CosmeticsController.instance.GetItemNameFromDisplayName(itemDisplayName));
-            if (_cachedItem.displayName != "NOTHING" && _targetPlayer != null)
+            if (_cachedItem.displayName != "NOTHING" && targetPlayer != null)
             {
                 image.gameObject.SetActive(true);
                 image.sprite = _cachedItem.itemPicture;

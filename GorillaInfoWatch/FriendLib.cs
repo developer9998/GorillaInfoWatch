@@ -86,10 +86,10 @@ namespace GorillaInfoWatch
                 AccessTools.Field(_gorillaFriendsPlugin.GetType(), "m_listCurrentSessionFriends").SetValue(_gorillaFriendsPlugin, _currentSessionFriends);
                 PlayerPrefs.SetInt(player.UserId + "_friend", 1);
 
-                GorillaPlayerScoreboardLine line = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ID == player.ID && line.gameObject.activeInHierarchy);
+                GorillaPlayerScoreboardLine line = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ActorNumber == player.ActorNumber && line.gameObject.activeInHierarchy);
 
                 line.playerName.color = FriendColour;
-                line.playerVRRig.playerText.color = FriendColour;
+                line.playerVRRig.playerText1.color = FriendColour;
             }
         }
 
@@ -104,17 +104,17 @@ namespace GorillaInfoWatch
                 AccessTools.Field(_gorillaFriendsPlugin.GetType(), "m_listCurrentSessionFriends").SetValue(_gorillaFriendsPlugin, _currentSessionFriends);
                 PlayerPrefs.DeleteKey(player.UserId + "_friend");
 
-                GorillaPlayerScoreboardLine line = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ID == player.ID && line.gameObject.activeInHierarchy);
+                GorillaPlayerScoreboardLine line = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ActorNumber == player.ActorNumber && line.gameObject.activeInHierarchy);
 
                 if (IsVerified(player.UserId))
                 {
                     line.playerName.color = VerifiedColour;
-                    line.playerVRRig.playerText.color = VerifiedColour;
+                    line.playerVRRig.playerText1.color = VerifiedColour;
                 }
                 else
                 {
                     line.playerName.color = Color.white;
-                    line.playerVRRig.playerText.color = Color.white;
+                    line.playerVRRig.playerText1.color = Color.white;
                 }
             }
         }

@@ -22,14 +22,14 @@ namespace GorillaInfoWatch.Pages
 
             _netPlayer = (NetPlayer)Parameters[0];
 
-            if (_netPlayer == null || !_netPlayer.InRoom || _netPlayer.IsNull || NetworkSystem.Instance.GetUserID(_netPlayer.ID) == null)
+            if (_netPlayer == null || !_netPlayer.InRoom || _netPlayer.IsNull || NetworkSystem.Instance.GetUserID(_netPlayer.ActorNumber) == null)
             {
                 ShowPage(typeof(PlayerListPage));
                 return;
             }
 
             _normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? _netPlayer.DefaultName : _netPlayer.NickName).NormalizeName();
-            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ID == _netPlayer.ID);
+            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber);
 
             DrawLines();
             SetLines();
@@ -47,12 +47,12 @@ namespace GorillaInfoWatch.Pages
         {
             ClearLines();
 
-            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ID == _netPlayer.ID);
+            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber);
             string name = PlayFabAuthenticator.instance.GetSafety() ? _netPlayer.DefaultName : _netPlayer.NickName;
 
             AddPlayer(_netPlayer);
             AddLine(string.Concat("Name: ", _normalizedString != name ? string.Format("{0} ({1})", _normalizedString.ToUpper(), name) : _normalizedString.ToUpper()));
-            AddLine(string.Concat("Master: ", _netPlayer.IsMaster ? "True" : "False"));
+            AddLine(string.Concat("Master: ", _netPlayer.IsMasterClient ? "True" : "False"));
             AddLine(string.Concat("Voice: ", _scoreboardLine.playerVRRig.GetComponent<GorillaSpeakerLoudness>().IsMicEnabled ? (_scoreboardLine.playerVRRig.localUseReplacementVoice || _scoreboardLine.playerVRRig.remoteUseReplacementVoice ? "Monke" : "Human") : "None"));
 
             if (!_netPlayer.IsLocal)
@@ -80,7 +80,8 @@ namespace GorillaInfoWatch.Pages
             {
                 0 => GorillaPlayerLineButton.ButtonType.Toxicity,
                 1 => GorillaPlayerLineButton.ButtonType.HateSpeech,
-                _ => GorillaPlayerLineButton.ButtonType.Cheating,
+                2 => GorillaPlayerLineButton.ButtonType.Cheating,
+                _ => throw new System.IndexOutOfRangeException()
             };
 
             DrawLines();
@@ -89,7 +90,7 @@ namespace GorillaInfoWatch.Pages
 
         public void OnButtonSelected(object sender, ButtonArgs args)
         {
-            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ID == _netPlayer.ID);
+            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber);
 
             if (args.returnIndex == 1) // gorillafriends does all this for me !!! <333
             {
@@ -108,7 +109,7 @@ namespace GorillaInfoWatch.Pages
                 return;
             }
 
-            List<GorillaPlayerScoreboardLine> lines = [.. GorillaScoreboardTotalUpdater.allScoreboardLines.Where(line => line.linePlayer.ID == _netPlayer.ID)];
+            List<GorillaPlayerScoreboardLine> lines = [.. GorillaScoreboardTotalUpdater.allScoreboardLines.Where(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber)];
             switch (args.returnIndex)
             {
                 case 0:

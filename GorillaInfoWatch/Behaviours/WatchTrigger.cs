@@ -19,7 +19,6 @@ namespace GorillaInfoWatch.Behaviours
         private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
         private bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (transform.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
 
-
         public void Start()
         {
             AudioSource = GetComponent<AudioSource>();

@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.QuickActions
                 }
 
                 PhotonNetwork.RejoinRoom(roomID);
-                PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(roomID);
+                PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(roomID, JoinType.Solo);
                 isRejoining = false;
             }
         };

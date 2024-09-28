@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Pages
 {
-    [DisplayInHomePage("Mod Status")]
+    [DisplayInHomePage("Mods")]
     public class ModStatusPage : Page
     {
         private static PluginInfo[] _eligiblePlugins, _modEntries;
@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Pages
         {
             base.OnDisplay();
 
-            SetHeader("Mod Status", string.Format("Loaded {0}/{1} Togglable Mods", _eligiblePlugins.Length, _modEntries.Length));
+            SetHeader("Mods", string.Format("Loaded {0}/{1} Togglable Mods", _eligiblePlugins.Length, _modEntries.Length));
 
             DrawPage();
             SetLines();

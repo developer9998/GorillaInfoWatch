@@ -27,7 +27,7 @@ namespace GorillaInfoWatch.Pages
         {
             base.OnDisplay();
 
-            SetHeader(string.Format("{0} v{1}", Constants.Name, Constants.Version), "Created by Dev and Lunakitty");
+            SetHeader(Constants.Name, "Created by dev9998 and lunakitty");
 
             int searchIndex = 0;
             foreach (Type page in _pages)

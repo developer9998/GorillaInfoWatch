@@ -117,7 +117,7 @@ namespace GorillaInfoWatch.Behaviours
 
             TimeDisplay watchTime = _customWatch.AddComponent<TimeDisplay>();
 
-            watchTime.Text = _customWatch.transform.Find("Watch Head/Canvas/Time Display/Time").GetComponent<TMP_Text>();
+            watchTime.Text = _customWatch.transform.Find("Watch Head/Watch GUI/Time Display/Time").GetComponent<TMP_Text>();
             watchTime.Relations = _relations;
 
             WatchTrigger watchTrigger = _customWatch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
@@ -234,7 +234,7 @@ namespace GorillaInfoWatch.Behaviours
             InitiateRefresh();
         }
 
-        public void InitiateRefresh(int ID) => InitiateRefresh();
+        public void InitiateRefresh(NetPlayer player) => InitiateRefresh();
 
         public void InitiateRefresh()
         {
@@ -271,7 +271,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (header != null)
             {
-                string headerText = string.Format("<size=150%><align=\"center\">{0}</align></size>\n<align=\"center\">{1}</align>", header.heading, header.caption);
+                string headerText = string.Format("<size=180%><b><smallcaps>{0}</smallcaps></b></size><br>{1}", header.heading, header.caption);
                 _menuConstructor.Header.text = headerText;
             }
         }
@@ -400,9 +400,10 @@ namespace GorillaInfoWatch.Behaviours
             if (photonEvent.Code == GorillaTagManager.ReportInfectionTagEvent) // The game doesn't use this constant, rather it's hardcoded into the event for some reason
             {
                 object[] data = (object[])photonEvent.CustomData;
-                Player taggingPlayer = GameMode.ParticipatingPlayers.FirstOrDefault(player => player.UserId == (string)data[0]);
 
-                if (taggingPlayer != null && taggingPlayer.IsLocal)
+                NetPlayer taggingNetPlayer = GameMode.ParticipatingPlayers.FirstOrDefault(player => player.UserId == (string)data[0]);
+
+                if (taggingNetPlayer != null && taggingNetPlayer.IsLocal)
                 {
                     Metadata.AddItem("Tags", Metadata.GetItem("Tags", 0) + 1);
                 }

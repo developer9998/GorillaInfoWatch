@@ -39,7 +39,7 @@ namespace GorillaInfoWatch.Behaviours
         public void ApplyButton(LineButton lineButton)
         {
             _lineButton = lineButton;
-            OnPressed = () => _lineButton.RaiseEvent(_toggle ? _bumped : true);
+            OnPressed = () => _lineButton.RaiseEvent(!_toggle || _bumped);
 
             gameObject.SetActive(_lineButton != null);
 
@@ -47,7 +47,7 @@ namespace GorillaInfoWatch.Behaviours
 
             _toggle = lineButton.UseToggle;
 
-            GetComponentInChildren<TextMeshProUGUI>().text = lineButton.Text;
+            GetComponentInChildren<TMP_Text>().text = lineButton.Text;
 
             if (_toggle && lineButton.InitialValue && !_bumped)
             {

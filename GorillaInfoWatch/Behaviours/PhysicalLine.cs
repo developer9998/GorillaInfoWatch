@@ -23,8 +23,8 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (Player == null || !Player.InRoom) return string.Empty;
 
-                if (_scoreboardLine == null || !_scoreboardLine.gameObject.activeInHierarchy || _scoreboardLine.linePlayer.ID != Player.ID)
-                    _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.Find(line => line.linePlayer.ID == Player.ID && line.gameObject.activeInHierarchy);
+                if (_scoreboardLine == null || !_scoreboardLine.gameObject.activeInHierarchy || _scoreboardLine.linePlayer.ActorNumber != Player.ActorNumber)
+                    _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.Find(line => line.linePlayer.ActorNumber == Player.ActorNumber && line.gameObject.activeInHierarchy);
 
                 Color playerNameColour = Color.white;
 
@@ -47,9 +47,9 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (Player == null || !Player.InRoom) return Color.white;
 
-                if (_scoreboardLine == null || _scoreboardLine.linePlayer.ID != Player.ID)
+                if (_scoreboardLine == null || _scoreboardLine.linePlayer.ActorNumber != Player.ActorNumber)
                 {
-                    _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ID == Player.ID);
+                    _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ActorNumber == Player.ActorNumber);
                 }
 
                 return _scoreboardLine.playerVRRig.setMatIndex switch
