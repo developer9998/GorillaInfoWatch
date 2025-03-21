@@ -1,6 +1,8 @@
 ﻿using GorillaLocomotion;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.XR;
+using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -8,14 +10,26 @@ namespace GorillaInfoWatch.Behaviours
     {
         private Transform Head;
 
-        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
+        private bool IsFacingUp => Vector3.Distance(GTPlayer.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
 
-        public void Start()
+        public void Awake()
         {
-            Head = Player.Instance.headCollider.transform;
+            Head = GTPlayer.Instance.headCollider.transform;
 
-            RenderPipelineManager.beginCameraRendering += (ScriptableRenderContext arg1, Camera arg2) => ApplyRotation();
-            RenderPipelineManager.endCameraRendering += (ScriptableRenderContext arg1, Camera arg2) => ApplyRotation();
+            RenderPipelineManager.beginCameraRendering += (context, camera) => ApplyRotation();
+            // RenderPipelineManager.endCameraRendering += (ScriptableRenderContext arg1, Camera arg2) => ApplyRotation();
+
+            // https://github.com/TheKnownPerson/HandController/blob/79960c20fe79d01a14f67c4a700ae072ebc7ac9c/Plugin.cs#L103
+
+            var xrDisplaySubsystems = new List<XRDisplaySubsystem>();
+            SubsystemManager.GetInstances(xrDisplaySubsystems);
+
+            if (xrDisplaySubsystems.Count == 0)
+            {
+                enabled = false;
+                gameObject.SetActive(true);
+                gameObject.transform.localPosition += Vector3.up * 3f;
+            }
         }
 
         public void ApplyRotation()

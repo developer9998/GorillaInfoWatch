@@ -1,4 +1,5 @@
 ﻿using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using System;
 using TMPro;
 using UnityEngine;
@@ -7,95 +8,114 @@ namespace GorillaInfoWatch.Behaviours
 {
     public class Button : MonoBehaviour
     {
-        public Relations Relations;
+        public Action OnPressed, OnReleased;
+        
+        public WidgetButton Widget;
 
-        public Action OnPressed;
+        private BoxCollider collider;
+        private MeshRenderer renderer;
+        private TMP_Text text;
+        private Color colour, bumped_colour;
 
-        private Color _baseColour, _activatedColour;
+        private bool bumped, toggle;
 
-        private BoxCollider _boxCollider;
-        private MeshRenderer _meshRenderer;
-
-        private bool _bumped, _toggle;
-
-        private LineButton _lineButton;
+        public static float PressTime;
 
         public void Awake()
         {
-            _baseColour = new Color32(191, 188, 170, 255);
-            _activatedColour = new Color32(132, 131, 119, 255);
-
-            _meshRenderer = GetComponent<MeshRenderer>();
-
-            _meshRenderer.materials[1] = new Material(_meshRenderer.materials[1]) { color = _baseColour };
-
-            _boxCollider = GetComponent<BoxCollider>();
-
-            _boxCollider.isTrigger = true;
-
+            collider = GetComponent<BoxCollider>();
+            collider.isTrigger = true;
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
+
+            renderer = GetComponent<MeshRenderer>();
+            renderer.materials[1] = new Material(renderer.materials[1]) { color = colour };
+
+            text = GetComponentInChildren<TMP_Text>();
+
+            colour = new Color32(191, 188, 170, 255);
+            bumped_colour = new Color32(132, 131, 119, 255);
         }
 
-        public void ApplyButton(LineButton lineButton)
+        public void ApplyButton(WidgetButton widget)
         {
-            _lineButton = lineButton;
-            OnPressed = () => _lineButton.RaiseEvent(!_toggle || _bumped);
+            if (widget != null && Widget == widget) return;
 
-            gameObject.SetActive(_lineButton != null);
-
-            if (_lineButton == null) return;
-
-            _toggle = lineButton.UseToggle;
-
-            GetComponentInChildren<TMP_Text>().text = lineButton.Text;
-
-            if (_toggle && lineButton.InitialValue && !_bumped)
+            // prepare transition
+            if (Widget != null)
             {
-                _bumped = true;
-                _meshRenderer.materials[1].color = _activatedColour;
-            }
-            else if (_toggle && !lineButton.InitialValue && _bumped)
-            {
-                _bumped = false;
-                _meshRenderer.materials[1].color = _baseColour;
+                Widget.Value = false;
+                bumped = false;
+                toggle = false;
+                renderer.materials[1].color = colour;
             }
 
-            if (_bumped && !_toggle)
+            // apply transition
+            Widget = widget;
+            if (Widget != null)
             {
-                _bumped = false;
-                _meshRenderer.materials[1].color = _baseColour;
+                gameObject.SetActive(true);
+                if (text) text.text = "";
+                OnPressed = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
+                // OnReleased = () => Widget.Command?.Invoke(false, Widget.Parameters);
+                // lazy button state stuff
+                toggle = widget.ButtonType == WidgetButton.EButtonType.Switch;
+                bumped = widget.Value;
+                renderer.materials[1].color = bumped ? bumped_colour : colour;
+                return;
             }
+
+            gameObject.SetActive(false);
+            OnPressed = null;
+            OnReleased = null;
         }
 
-        public void FixedUpdate()
+        public void LateUpdate()
         {
-            if (_bumped && !_toggle && Relations.Pressable())
+            if (!toggle && bumped && Time.realtimeSinceStartup > (PressTime + 0.33f))
             {
-                _bumped = false;
-                _meshRenderer.materials[1].color = _baseColour;
+                bumped = false;
+                if (Widget != null) Widget.Value = false;
+                renderer.materials[1].color = colour;
+                OnReleased?.Invoke();
             }
         }
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Relations.Pressable())
+            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > (PressTime + 0.33f))
             {
-                _bumped = !_toggle || !_bumped;
-                _meshRenderer.materials[1].color = _bumped ? _activatedColour : _baseColour;
+                PressTime = Time.realtimeSinceStartup;
+                
+                // base functionality
+                bumped = !toggle || (!bumped);
+                renderer.materials[1].color = bumped ? bumped_colour : colour;
+                Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
+                GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
-                OnPressed?.Invoke(); // addon functions
-                Relations.Press(this, component.isLeftHand); // base functions
-                GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration); // haptic
+                // additional func
+                if (Widget != null)
+                {
+                    Widget.Value = bumped;
+                }
+                OnPressed?.Invoke(); 
             }
         }
 
-        public void OnDisable()
+        #if DEBUG
+
+        public void PushButton()
         {
-            if (_bumped && !_toggle)
+            try
             {
-                _bumped = false;
-                _meshRenderer.materials[1].color = _baseColour;
+                OnPressed?.Invoke();
+            }
+            catch(Exception ex)
+            {
+                Logging.Error(GetComponentInParent<MenuLine>().name);
+                Logging.Fatal(ex);
             }
         }
+
+        #endif
     }
 }

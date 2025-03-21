@@ -1,14 +1,12 @@
-﻿using GorillaInfoWatch.Interfaces;
-using GorillaInfoWatch.Models;
-using GorillaLocomotion;
+﻿using GorillaLocomotion;
 using UnityEngine;
+using UnityEngine.XR;
+using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class WatchTrigger : MonoBehaviour, IRelations
+    public class WatchTrigger : MonoBehaviour
     {
-        public Relations Relations { get; set; }
-
         public GameObject Menu;
 
         private AudioSource AudioSource;
@@ -16,14 +14,17 @@ namespace GorillaInfoWatch.Behaviours
         private readonly float Debounce = 0.33f;
         private float TouchTime;
 
-        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
-        private bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (transform.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
+        private bool IsFacingUp => Vector3.Distance(GTPlayer.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
+        private bool InView => Vector3.Dot(GTPlayer.Instance.headCollider.transform.forward, (transform.position - GTPlayer.Instance.headCollider.transform.position).normalized) > 0.64f;
 
         public void Start()
         {
             AudioSource = GetComponent<AudioSource>();
 
-            Menu.SetActive(false);
+            var xrDisplaySubsystems = new List<XRDisplaySubsystem>();
+            SubsystemManager.GetInstances(xrDisplaySubsystems);
+            
+            Menu.SetActive(xrDisplaySubsystems.Count == 0);
         }
 
         public void OnTriggerEnter(Collider other)

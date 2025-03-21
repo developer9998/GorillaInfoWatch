@@ -1,35 +1,27 @@
 ﻿using BepInEx.Logging;
-using Bepinject;
-using Zenject;
 
 namespace GorillaInfoWatch.Tools
 {
-    public class Logging : IInitializable
+    internal static class Logging
     {
-        private static ManualLogSource Logger;
+        public static void Info(object message) => LogMessage(LogLevel.Info, message);
 
-        [Inject]
-        public void Construct(BepInLog logger)
+        public static void Warning(object message) => LogMessage(LogLevel.Warning, message);
+
+        public static void Error(object message) => LogMessage(LogLevel.Error, message);
+
+        public static void Fatal(object message) => LogMessage(LogLevel.Fatal, message);
+
+        public static void LogMessage(LogLevel level, object message)
         {
-            Logger = logger.Logger;
-        }
-
-        public void Initialize()
-        {
-            Info("GorillaInfoWatch logging tool has succesfully initialized.");
-        }
-
-        public static void Info(object message) => Log(LogLevel.Info, message);
-
-        public static void Warning(object message) => Log(LogLevel.Warning, message);
-
-        public static void Error(object message) => Log(LogLevel.Error, message);
-
-        private static void Log(LogLevel level, object message)
-        {
+            bool debug = false;
 #if DEBUG
-            Logger.Log(level, message);
+            debug = true;
 #endif
+            if (!Constants.DebugLogExclusive || debug)
+            {
+                Plugin.PluginLogger.Log(level, message);
+            }
         }
     }
 }

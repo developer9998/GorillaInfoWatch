@@ -1,48 +1,54 @@
 ﻿using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
-using System;
+using GorillaInfoWatch.Tools;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace GorillaInfoWatch.Pages
 {
-    public class HomePage : Page
+    public class HomePage : WatchScreen
     {
-        private List<Type> _pages;
+        public override string Title => Constants.Name;
 
-        public void SetEntries(List<Type> allPages)
+        public override string Description => "Created by dev9998 and lunakitty";
+
+        private List<(string entry_name, WatchScreen screen)> home_entries;
+
+        public void SetEntries(List<WatchScreen> screens)
         {
-            _pages = [.. GetEntries(allPages, true).Concat(GetEntries(allPages, false))];
-        }
-
-        private List<Type> GetEntries(List<Type> allPages, bool useExecutingAssembly)
-        {
-            Assembly executingAssembly = Assembly.GetExecutingAssembly();
-            IEnumerable<Type> pages = allPages.Where(type => type.Assembly == executingAssembly);
-            return useExecutingAssembly ? [.. pages] : [.. allPages.Except(pages)];
-        }
-
-        public override void OnDisplay()
-        {
-            base.OnDisplay();
-
-            SetHeader(Constants.Name, "Created by dev9998 and lunakitty");
-
-            int searchIndex = 0;
-            foreach (Type page in _pages)
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            List<WatchScreen> native_screens = [.. screens.Where(screen => screen.GetType().Assembly == assembly)];
+            List<WatchScreen> sorted_screens = [.. native_screens.Concat(screens.Except(native_screens))];
+            home_entries = new(sorted_screens.Count);
+            foreach(WatchScreen screen in sorted_screens)
             {
-                DisplayInHomePage attribute = page.GetCustomAttributes(typeof(DisplayInHomePage), false).FirstOrDefault() as DisplayInHomePage;
-                if (attribute != null) AddLine(attribute.DisplayName, button: new LineButton(OnPageSelected, searchIndex));
-                searchIndex++;
+                if (screen.GetType().GetCustomAttributes(typeof(DisplayInHomePage), false).FirstOrDefault() is DisplayInHomePage attribute)
+                {
+                    home_entries.Add((screen.Title, screen));
+                }
+            }
+        }
+
+        public override void OnScreenOpen()
+        {
+            LineBuilder = new();
+
+            for (int i = 0; i < home_entries.Count; i++)
+            {
+                (string entry_name, WatchScreen screen) = home_entries[i];
+                LineBuilder.AddLine(entry_name, new WidgetButton(EntrySelected, i));
             }
 
             SetLines();
         }
 
-        private void OnPageSelected(object sender, ButtonArgs args)
+        public void EntrySelected(bool value, object[] args)
         {
-            ShowPage(_pages[args.returnIndex]);
+            if (args[0] is int index)
+            {
+                ShowScreen(home_entries[index].screen.GetType());
+            }
         }
     }
 }

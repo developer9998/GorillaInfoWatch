@@ -1,39 +1,36 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using GorillaInfoWatch.Utilities;
+using GorillaNetworking;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace GorillaInfoWatch.Tools
 {
-    public class AssetLoader
+    internal static class AssetLoader
     {
-        private bool _bundleLoaded;
-        private AssetBundle _storedBundle;
+        public static AssetBundle Bundle => _bundleLoaded ? _storedBundle : null;
+        
+        private static bool _bundleLoaded;
+        private static AssetBundle _storedBundle;
 
-        private Task _loadingTask = null;
-        private readonly Dictionary<string, Object> _assetCache = [];
+        private static Task _loadingTask = null;
+        private static readonly Dictionary<string, Object> _assetCache = [];
 
-        private async Task LoadBundle()
+        private static async Task LoadBundle()
         {
-            var taskCompletionSource = new TaskCompletionSource<AssetBundle>();
+            Stream stream = typeof(Plugin).Assembly.GetManifestResourceStream("GorillaInfoWatch.Content.watchbundle");
+            var bundleLoadRequest = AssetBundle.LoadFromStreamAsync(stream);
 
-            Stream str = typeof(Plugin).Assembly.GetManifestResourceStream("GorillaInfoWatch.Content.watchbundle");
-            AssetBundleCreateRequest request = AssetBundle.LoadFromStreamAsync(str);
+            // AssetBundleCreateRequest is a YieldInstruction !!
+            await TaskUtils.YieldInstruction(bundleLoadRequest);
 
-            request.completed += operation =>
-            {
-                AssetBundleCreateRequest outRequest = operation as AssetBundleCreateRequest;
-                taskCompletionSource.SetResult(outRequest.assetBundle);
-            };
-
-            _storedBundle = await taskCompletionSource.Task;
+            _storedBundle = bundleLoadRequest.assetBundle;
             _bundleLoaded = true;
-
-            Logging.Info("Loaded asset bundle");
         }
 
-        public async Task<T> LoadAsset<T>(string name) where T : Object
+        public static async Task<T> LoadAsset<T>(string name) where T : Object
         {
             if (_assetCache.TryGetValue(name, out var _loadedObject)) return _loadedObject as T;
 
@@ -43,26 +40,14 @@ namespace GorillaInfoWatch.Tools
                 await _loadingTask;
             }
 
-            var taskCompletionSource = new TaskCompletionSource<T>();
-            AssetBundleRequest request = _storedBundle.LoadAssetAsync<T>(name);
+            var assetLoadRequest = _storedBundle.LoadAssetAsync<T>(name);
 
-            request.completed += operation =>
-            {
-                AssetBundleRequest outRequest = operation as AssetBundleRequest;
-                if (outRequest.asset == null)
-                {
-                    taskCompletionSource.SetResult(null);
-                    return;
-                }
+            // AssetBundleRequest is a YieldInstruction !!
+            await TaskUtils.YieldInstruction(assetLoadRequest);
 
-                taskCompletionSource.SetResult(outRequest.asset as T);
-            };
-
-            var _finishedTask = await taskCompletionSource.Task;
-            _assetCache.Add(name, _finishedTask);
-
-            Logging.Info(string.Concat("Loaded ", name, " of type ", typeof(T).Name));
-            return _finishedTask;
+            var asset = assetLoadRequest.asset as T;
+            _assetCache.AddOrUpdate(name, asset);
+            return asset;
         }
     }
 }

@@ -23,11 +23,8 @@
     <Reference Include="BepInEx">
       <HintPath>$(BepInExAssemblyPath)\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="Bepinject">
-      <HintPath>$(PluginsPath)\Bepinject-Auros\Bepinject.dll</HintPath>
-    </Reference>
     <Reference Include="Fusion.Runtime">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\Fusion.Runtime.dll</HintPath>
+      <HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(GameAssemblyPath)\Newtonsoft.Json.dll</HintPath>
@@ -70,18 +67,21 @@
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>$(GameAssemblyPath)\UnityEngine.PhysicsModule.dll</HintPath>
-	</Reference>
+	  </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>$(GameAssemblyPath)\UnityEngine.UI.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>$(GameAssemblyPath)\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SubsystemsModule">
+      <HintPath>$(GameAssemblyPath)\UnityEngine.SubsystemsModule.dll</HintPath>
+    </Reference>
     <Reference Include="Utilla">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\BepInEx\plugins\Utilla\Utilla.dll</HintPath>
-    </Reference>
-    <Reference Include="Zenject">
-      <HintPath>$(PluginsPath)\Extenject\Zenject.dll</HintPath>
-    </Reference>
-    <Reference Include="Zenject-usage">
-      <HintPath>$(PluginsPath)\Extenject\Zenject-usage.dll</HintPath>
+      <HintPath>$(PluginsPath)\Utilla\Utilla.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

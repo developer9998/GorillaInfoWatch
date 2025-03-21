@@ -4,18 +4,17 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using Zenject;
 
 namespace GorillaInfoWatch.Tools
 {
-    public class Metadata : IInitializable
+    public class Metadata : MonoBehaviour
     {
         private static string BasePath => Path.Combine(Application.persistentDataPath, "GorillaInfoWatchData.txt");
 
         private static readonly Dictionary<string, object> _sessionData = [];
         private static Dictionary<string, object> _storedData = [];
 
-        public void Initialize()
+        public void Awake()
         {
             if (File.Exists(BasePath))
             {

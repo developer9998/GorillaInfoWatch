@@ -2,6 +2,7 @@
 using BepInEx.Bootstrap;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,13 @@ using System.Linq;
 namespace GorillaInfoWatch.Pages
 {
     [DisplayInHomePage("Mods")]
-    public class ModStatusPage : Page
+    public class ModStatusPage : WatchScreen
     {
+        public override string Title => "Mod Status";
+        
         private static PluginInfo[] _eligiblePlugins, _modEntries;
 
-        public ModStatusPage()
+        public void Awake()
         {
             Dictionary<string, PluginInfo> _loadedPlugins = Chainloader.PluginInfos;
             PluginInfo[] _pluginInfos = [.. _loadedPlugins.Values];
@@ -28,19 +31,14 @@ namespace GorillaInfoWatch.Pages
 
         private bool IsEligible(PluginInfo info) => _eligiblePlugins.Contains(info);
 
-        public override void OnDisplay()
+        public override void OnScreenOpen()
         {
-            base.OnDisplay();
-
-            SetHeader("Mods", string.Format("Loaded {0}/{1} Togglable Mods", _eligiblePlugins.Length, _modEntries.Length));
-
-            DrawPage();
-            SetLines();
+            Build();
         }
 
-        private void DrawPage()
+        private void Build()
         {
-            ClearLines();
+            LineBuilder = new();
 
             for (int i = 0; i < _modEntries.Length; i++)
             {
@@ -48,19 +46,21 @@ namespace GorillaInfoWatch.Pages
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new LineButton(OnButtonSelect, i));
+                    LineBuilder.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new WidgetButton(WidgetButton.EButtonType.Switch, isEnabled, OnButtonSelect, i));
                     continue;
                 }
-                AddLine(info.Metadata.Name);
+                LineBuilder.AddLine(info.Metadata.Name);
             }
         }
 
-        private void OnButtonSelect(object sender, ButtonArgs args)
+        private void OnButtonSelect(bool value, object[] args)
         {
-            _eligiblePlugins[args.returnIndex].Instance.enabled ^= true;
-
-            DrawPage();
-            UpdateLines();
+            if (args[0] is int mod_index)
+            {
+                _modEntries[mod_index].Instance.enabled = value;
+                Build();
+                UpdateLines();
+            }
         }
     }
 }

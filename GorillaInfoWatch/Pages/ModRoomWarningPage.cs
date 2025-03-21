@@ -3,21 +3,10 @@ using System;
 
 namespace GorillaInfoWatch.Pages
 {
-    public class ModRoomWarningPage : Page
+    public class ModRoomWarningPage : WatchScreen
     {
-        public override void OnDisplay()
-        {
-            if (Plugin.InModdedRoom)
-            {
-                ShowPage((Type)Parameters[0]);
-                return;
-            }
+        public override string Title => "Details";
 
-            SetHeader("Modded Room", "Warning - Invalid Room");
-            AddText("This page has been restricted\nfor modded room usage.");
-            AddLines(2);
-            AddText("Please enter a modded room if you\nare interested in using this page.");
-            SetLines();
-        }
+        public override string Description => "n/a";
     }
 }

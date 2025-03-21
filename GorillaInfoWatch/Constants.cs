@@ -19,6 +19,8 @@
         /// </summary>
         public const string Version = "1.0.0.1";
 
+        public const bool DebugLogExclusive = false;
+
         public const int LinesPerPage = 11;
     }
 }

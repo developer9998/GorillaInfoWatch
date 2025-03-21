@@ -1,245 +1,336 @@
 ﻿using BepInEx.Bootstrap;
 using ExitGames.Client.Photon;
 using GorillaGameModes;
-using GorillaInfoWatch.Interfaces;
-using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Attributes;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Pages;
 using GorillaInfoWatch.Tools;
 using Photon.Pun;
-using Photon.Realtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using Zenject;
+using TMPro;
+using GorillaInfoWatch.Models;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class Main : MonoBehaviourPunCallbacks, IInitializable
+    public class Main : Singleton<Main>
     {
-        private bool _initialized;
-
-        private Relations _relations;
-
-        // Tools
-        private Configuration _config;
-
         // Pages
-        private HomePage _homePage;
-        private ModRoomWarningPage _modWarnPage;
-        private List<Type> _allPages;
-        private PageManager _pageManager;
-        private WindowPlaceholderFactory _pageFactory;
-        private readonly Dictionary<Type, IPage> _pageCache = [];
+
+        private HomePage HomePage;
+
+        private ModRoomWarningPage WarnPage;
+        
+        public List<WatchScreen> ScreenRegistry = [];
+
+        // private Dictionary<Type, Screen> ScreenCache = [];
+        
+        public WatchScreen CurrentScreen;
+
+        private List<WatchScreen> screen_history = [];
 
         // Assets
-        private GameObject _customWatch, _customMenu;
-        private AudioClip _clickAudio;
+        private GameObject watch, menu;
+
+        // Menu
+        private Image menu_background;
+        private TMP_Text menu_header;
+        private TMP_Text menu_description;
+        private Transform menu_line_tform;
+        private List<MenuLine> menu_lines;
 
         // Display
-        private int _sceneIndex;
-        private MenuConstructor _menuConstructor;
-        private TextMeshProUGUI _currentPageLabel;
-        private Button _backPGButton, _nextPGButton, _returnButton, _reloadButton;
+        private TMP_Text menu_page_text;
+        private Button button_prev_page, button_next_page, button_return_screen, button_reload_screen;
 
-        [Inject]
-        public async void Construct(AssetLoader assetLoader, WindowPlaceholderFactory pageFactory, HomePage homeWindow, ModRoomWarningPage modWarnPage, Configuration configuration)
+        public Dictionary<string, AudioClip> Sounds;
+
+        public Dictionary<EDefaultSymbol, Sprite> Sprites;
+
+        public async override void Initialize()
         {
-            if (_initialized) return;
+            enabled = false;
 
-            _initialized = true;
-            _relations = new Relations()
+            FriendLib.InitializeLib(Chainloader.PluginInfos);
+
+            // Screens
+
+            var builtinPages = new List<Type>()
             {
-                Main = this,
-                AssetLoader = assetLoader,
-                Config = configuration,
-                FriendJoinClip = await assetLoader.LoadAsset<AudioClip>("Friend1"),
-                FriendLeftClip = await assetLoader.LoadAsset<AudioClip>("Friend2")
+                typeof(ScoreboardScreen),
+                typeof(DetailsScreen),
+                typeof(FriendScreen),
+                typeof(ModStatusPage),
+                typeof(CreditScreen)
             };
 
-            _config = configuration;
+            builtinPages.ForEach(RegisterPage);
 
-            _pageFactory = pageFactory;
-
-            Dictionary<string, BepInEx.PluginInfo> loadedPlugins = Chainloader.PluginInfos;
-            _allPages = [.. loadedPlugins.Select(plugin => plugin.Value.Instance.GetType().Assembly).SelectMany(a => a.GetTypes()).Where(type => type.IsSubclassOf(typeof(Page))).Where(type => !_pageCache.ContainsKey(type))];
-
-            _homePage = homeWindow;
-            _modWarnPage = modWarnPage;
-
-            _pageCache.Add(typeof(HomePage), _homePage);
-            _pageCache.Add(typeof(ModRoomWarningPage), _modWarnPage);
-
-            FriendLib.InitializeLib(loadedPlugins);
-            RassModLib.InitializeLib(loadedPlugins);
-
-            _pageManager = new PageManager
+            try
             {
-                ModWarnPage = _modWarnPage
-            };
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            _pageManager.OnHeaderSet += SetHeader;
-            _pageManager.OnLinesSet += SetLines;
-            _pageManager.OnLinesUpdated += UpdateLines;
-            _pageManager.OnPageSwitched += SetPage;
-
-            _customWatch = Instantiate(await assetLoader.LoadAsset<GameObject>("Watch"));
-
-            _customWatch.transform.SetParent(GorillaTagger.Instance.offlineVRRig.leftHandTransform.parent, false);
-
-            _customWatch.transform.localPosition = Vector3.zero;
-            _customWatch.transform.localEulerAngles = Vector3.zero;
-            _customWatch.transform.localScale = Vector3.one;
-
-            _customWatch.AddComponent<WatchModel>().Relations = _relations;
-
-            _customMenu = Instantiate(await assetLoader.LoadAsset<GameObject>("Menu"));
-
-            _customMenu.transform.SetParent(_customWatch.transform.Find("Point"));
-
-            _customMenu.transform.localPosition = Vector3.zero;
-            _customMenu.transform.localEulerAngles = Vector3.zero;
-
-            _customMenu.AddComponent<Panel>();
-
-            _clickAudio = await assetLoader.LoadAsset<AudioClip>("Click");
-
-            _menuConstructor = new MenuConstructor()
-            {
-                Relations = _relations,
-                Background = _customMenu.transform.Find("Canvas/Background").GetComponent<Image>(),
-                Header = _customMenu.transform.Find("Canvas/Header").GetComponent<TextMeshProUGUI>(),
-                LineGrid = _customMenu.transform.Find("Canvas/Lines"),
-            };
-            _menuConstructor.InitializeLines();
-
-            TimeDisplay watchTime = _customWatch.AddComponent<TimeDisplay>();
-
-            watchTime.Text = _customWatch.transform.Find("Watch Head/Watch GUI/Time Display/Time").GetComponent<TMP_Text>();
-            watchTime.Relations = _relations;
-
-            WatchTrigger watchTrigger = _customWatch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
-
-            watchTrigger.Menu = _customMenu;
-            watchTrigger.Relations = _relations;
-
-            _currentPageLabel = _customMenu.transform.Find("Canvas/Page Text").GetComponent<TextMeshProUGUI>();
-
-            _nextPGButton = _customMenu.transform.Find("Canvas/Button_Next").AddComponent<Button>();
-
-            _nextPGButton.Relations = _relations;
-            _nextPGButton.OnPressed = () =>
-            {
-                _sceneIndex++;
-                _pageManager.DisplayPage();
-            };
-
-            _nextPGButton.gameObject.SetActive(false);
-
-            _backPGButton = _customMenu.transform.Find("Canvas/Button_Previous").AddComponent<Button>();
-
-            _backPGButton.Relations = _relations;
-            _backPGButton.OnPressed = () =>
-            {
-                _sceneIndex--;
-                _pageManager.DisplayPage();
-            };
-
-            _backPGButton.gameObject.SetActive(false);
-
-            _returnButton = _customMenu.transform.Find("Canvas/Button_Return").AddComponent<Button>();
-
-            _returnButton.Relations = _relations;
-            _returnButton.OnPressed = () =>
-            {
-                if (_pageManager.CurrentPage.CallerPage != null)
+                assemblies.Where(assembly => assembly != null && assembly.GetCustomAttribute<WatchCompatibleModAttribute>() != null).ForEach(assembly =>
                 {
-                    SetPage(_pageManager.CurrentPage.GetType(), _pageManager.CurrentPage.CallerPage, _pageCache[_pageManager.CurrentPage.CallerPage].Parameters, true);
+                    try
+                    {
+                        Logging.Info($"Searching assembly {assembly.GetName().Name}");
+
+                        var types = assembly.GetTypes();
+                        types.Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() != null).ForEach(RegisterPage);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Fatal($"Exception thrown when searching assembly {assembly.GetName().Name}");
+                        Logging.Error(ex);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Logging.Fatal("Exception thrown when performing initial assembly check");
+                Logging.Error(ex);
+            }
+
+            HomePage = gameObject.AddComponent<HomePage>();
+            WarnPage = gameObject.AddComponent<ModRoomWarningPage>();
+
+            // Assets
+
+            Sounds = [];
+            Sounds.Add("FriendJoin", await AssetLoader.LoadAsset<AudioClip>("Friend1"));
+            Sounds.Add("FriendLeave", await AssetLoader.LoadAsset<AudioClip>("Friend2"));
+            Sounds.Add("Press", await AssetLoader.LoadAsset<AudioClip>("Click"));
+
+            var sprite_assets = AssetLoader.Bundle.LoadAssetWithSubAssets<Sprite>("Sheet");
+            Sprites = Array.FindAll(sprite_assets, sprite => Enum.IsDefined(typeof(EDefaultSymbol), sprite.name)).ToDictionary(sprite => (EDefaultSymbol)Enum.Parse(typeof(EDefaultSymbol), sprite.name), sprite => sprite);
+
+            // Objects
+
+            watch = Instantiate(await AssetLoader.LoadAsset<GameObject>("Watch25"));
+            var watch_component = watch.AddComponent<Watch>();
+            watch_component.Rig = GorillaTagger.Instance.offlineVRRig;
+            watch_component.TimeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalSeconds;
+
+            menu = Instantiate(await AssetLoader.LoadAsset<GameObject>("Menu"));
+            menu.transform.SetParent(watch.transform.Find("Point"));
+            menu.transform.localPosition = Vector3.zero;
+            menu.transform.localEulerAngles = Vector3.zero;
+            menu.AddComponent<Panel>();
+
+            menu_background = menu.transform.Find("Canvas/Background").GetComponent<Image>();
+            menu_header = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
+            menu_description = menu.transform.Find("Canvas/Header/Description").GetComponent<TMP_Text>();
+            menu_line_tform = menu.transform.Find("Canvas/Lines");
+            menu_lines = new(Constants.LinesPerPage);
+
+            foreach (Transform line_tform in menu_line_tform)
+            {
+                line_tform.gameObject.SetActive(false);
+                var line_component = line_tform.gameObject.AddComponent<MenuLine>();
+                menu_lines.Add(line_component);
+            }
+
+            // Components
+
+            WatchTrigger watchTrigger = watch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
+            watchTrigger.Menu = menu;
+
+            menu_page_text = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
+
+            button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<Button>();
+            button_next_page.OnPressed = () =>
+            {
+                CurrentScreen.PageNumber++;
+                DisplayScreen();
+            };
+
+            button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<Button>();
+            button_prev_page.OnPressed = () =>
+            {
+                CurrentScreen.PageNumber--;
+                DisplayScreen();
+            };
+
+            button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<Button>();
+            button_return_screen.OnPressed = () =>
+            {
+                if (screen_history.Count > 0)
+                {
+                    SwitchScreen(screen_history[^1]);
                 }
             };
 
-            _returnButton.gameObject.SetActive(false);
-
-            _reloadButton = _customMenu.transform.Find("Canvas/Button_Redraw").AddComponent<Button>();
-
-            _reloadButton.Relations = _relations;
-            _reloadButton.OnPressed = () =>
+            button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<Button>();
+            button_reload_screen.OnPressed = () =>
             {
-                _pageManager.DisplayPage();
+                if (CurrentScreen != null)
+                {
+                    CurrentScreen.OnScreenOpen();
+                    DisplayScreen();
+                }
             };
 
-            NetworkSystem.Instance.OnReturnedToSinglePlayer += InitiateRefresh;
-            NetworkSystem.Instance.OnMultiplayerStarted += InitiateRefresh;
-            NetworkSystem.Instance.OnPlayerJoined += InitiateRefresh;
-            NetworkSystem.Instance.OnPlayerLeft += InitiateRefresh;
-
-            _homePage.SetEntries(_allPages);
-            _pageManager.SwitchPage(_homePage, []);
-        }
-
-        public void Initialize()
-        {
+            //Events.OnPlayerJoined += OnPlayerJoined;
+            //Events.OnPlayerLeft += OnPlayerLeft;
             PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
+
+            HomePage.SetEntries(ScreenRegistry);
+            Logging.Info("Switching to home");
+            SwitchScreen(HomePage);
+            enabled = true;
         }
 
-        public void FixedUpdate()
+        public void SwitchScreen(WatchScreen screen)
         {
-            if (_menuConstructor != null)
+            if (CurrentScreen != null)
             {
-                foreach (PhysicalLine line in _menuConstructor.Lines)
+                Logging.Warning(CurrentScreen.GetType().Name);
+
+                CurrentScreen.RequestScreenSwitch -= SwitchScreen;
+                CurrentScreen.RequestDisplayScreen -= DisplayScreen;
+                CurrentScreen.RequestSetLines -= DisplayScreen;
+                CurrentScreen.enabled = false;
+                CurrentScreen.OnScreenClose();
+
+                if (screen.GetType() != typeof(HomePage))
                 {
-                    line.InvokeUpdate();
+                    screen_history.Add(CurrentScreen);
+                }
+            }
+
+            Logging.Info(screen.GetType().Name);
+            CurrentScreen = screen;
+
+            if (screen_history.Count > 0 && screen_history[^1] == screen)
+            {
+                screen_history.RemoveAt(screen_history.Count - 1);
+            }
+
+            screen.enabled = true;
+            screen.RequestScreenSwitch += SwitchScreen;
+            screen.RequestDisplayScreen += DisplayScreen;
+            screen.RequestSetLines += DisplayScreen;
+            screen.OnScreenOpen();
+
+            DisplayScreen();
+            button_return_screen.gameObject.SetActive(screen_history.Count > 0);
+        }
+
+        public void SwitchScreen(Type type)
+        {
+            if (TryGetComponent(type, out Component component) && component is WatchScreen screen)
+            {
+                SwitchScreen(screen);
+                return;
+            }
+            RegisterPage(type);
+            SwitchScreen(ScreenRegistry[^1]);
+        }
+
+        public void DisplayScreen() => DisplayScreen(false);
+
+        public void DisplayScreen(bool text_exclusive)
+        {
+            Logging.Info($"Only text: {text_exclusive}");
+
+            var content = CurrentScreen.Content;
+
+            int page_count = content.GetPageCount();
+            CurrentScreen.PageNumber = CurrentScreen.PageNumber.Wrap(0, page_count);
+
+            button_next_page.gameObject.SetActive(page_count > 1);
+            button_prev_page.gameObject.SetActive(page_count > 1);
+            menu_page_text.text = (button_next_page.gameObject.activeSelf || button_prev_page.gameObject.activeSelf) ? $"{CurrentScreen.PageNumber + 1}/{page_count}" : "";
+
+            string page_title = content.GetPageTitle(CurrentScreen.PageNumber);
+            menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(page_title) ? "": $" - {page_title}")}";
+            if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
+            {
+                menu_description.gameObject.SetActive(false);
+            }
+            else if (!string.IsNullOrEmpty(CurrentScreen.Description))
+            {
+                menu_description.gameObject.SetActive(true);
+                menu_description.text = CurrentScreen.Description;
+            }
+
+            var lines = content.GetPageLines(CurrentScreen.PageNumber);
+            
+            for (int i = 0; i < Constants.LinesPerPage; i++)
+            {
+                var menu_line = menu_lines[i];
+                var page_line = lines.ElementAtOrDefault(i);
+
+                if (page_line != null)
+                {
+                    bool set_widgets = !menu_line.gameObject.activeSelf;
+                    menu_line.gameObject.SetActive(true);
+                    menu_line.Build(page_line, set_widgets || !text_exclusive);
+                }
+                else
+                {
+                    menu_line.gameObject.SetActive(false);
                 }
             }
         }
 
-        public override void OnPlayerEnteredRoom(Player newPlayer)
+        public void RegisterPage(Type type)
         {
             try
             {
-                if (FriendLib.IsFriend(newPlayer.UserId))
+                var component = gameObject.AddComponent(type);
+                if (component is WatchScreen page)
                 {
-                    GorillaTagger.Instance.StartVibration(true, 0.04f, 0.2f);
-                    _customWatch.GetComponent<WatchModel>().ShowFriendPanel(newPlayer, true);
+                    page.enabled = false;
+                    RegisterPage(page);
+                }
+                else
+                {
+                    Destroy(component);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Logging.Error("womp womp");
-            }
-
-        }
-
-        public override void OnPlayerLeftRoom(Player otherPlayer)
-        {
-            try
-            {
-                if (FriendLib.IsFriend(otherPlayer.UserId))
-                {
-                    GorillaTagger.Instance.StartVibration(true, 0.04f, 0.2f);
-                    _customWatch.GetComponent<WatchModel>().ShowFriendPanel(otherPlayer, false);
-                }
-            }
-            catch
-            {
-                Logging.Error("womp womp");
+                Logging.Fatal($"Exception thrown when casting Page from Type {type.FullName}");
+                Logging.Error(ex);
             }
         }
 
-        public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+        public void RegisterPage(WatchScreen page)
         {
-            base.OnRoomPropertiesUpdate(propertiesThatChanged);
-            InitiateRefresh();
+            if (ScreenRegistry.Contains(page))
+            {
+                Logging.Warning($"Page {page.GetType().Name} is already included in registry");
+                return;
+            }
+
+            ScreenRegistry.Add(page);
         }
 
-        public void InitiateRefresh(NetPlayer player) => InitiateRefresh();
-
-        public void InitiateRefresh()
+        /*
+        public void OnPlayerJoined(NetPlayer player, VRRig rig)
         {
-            _pageManager.DisplayPage();
+            if (FriendLib.IsFriend(player.UserId))
+            {
+                string player_name = ((bool)rig && !string.IsNullOrEmpty(rig.playerNameVisible) && !string.IsNullOrWhiteSpace(rig.playerNameVisible)) ? rig.playerNameVisible : player.NickName.NormalizeName();
+                watch.GetComponent<WatchModel>().Notify($"<size=60%>A FRIEND HAS JOINED:</size>\n<b><color=#{ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour)}>{player_name}</color></b>", 4, true);
+            }
         }
+
+        public void OnPlayerLeft(NetPlayer player, VRRig rig)
+        {
+            if (FriendLib.IsFriend(player.UserId))
+            {
+                string player_name = ((bool)rig && !string.IsNullOrEmpty(rig.playerNameVisible) && !string.IsNullOrWhiteSpace(rig.playerNameVisible)) ? rig.playerNameVisible : player.NickName.NormalizeName();
+                watch.GetComponent<WatchModel>().Notify($"<size=60%>A FRIEND HAS LEFT:</size>\n<b><color=#{ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour)}>{player_name}</color></b>", 4, false);
+            }
+        }
+        */
 
         public void PressButton(Button button, bool isLeftHand)
         {
@@ -249,12 +340,12 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : _clickAudio;
+                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds["Press"];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }
 
-        public void PressSlider(Slider slider, bool isLeftHand)
+        public void PressSlider(SnapSlider slider, bool isLeftHand)
         {
             if (slider)
             {
@@ -262,138 +353,10 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = _clickAudio;
+                AudioClip clip = Sounds["Press"];
                 handSource.PlayOneShot(clip, 0.2f);
             }
-        }
-
-        public void SetHeader(HeaderLine header)
-        {
-            if (header != null)
-            {
-                string headerText = string.Format("<size=180%><b><smallcaps>{0}</smallcaps></b></size><br>{1}", header.heading, header.caption);
-                _menuConstructor.Header.text = headerText;
-            }
-        }
-
-        public void UpdateLines(object[] lines)
-        {
-            if (lines == null || !lines.Any()) return;
-
-            for (int i = _sceneIndex * Constants.LinesPerPage; i < GetDisplayedLineCount(lines.Length); i++)
-            {
-                int index = i - _sceneIndex * Constants.LinesPerPage;
-                PhysicalLine physicalLine = _menuConstructor.Lines.ElementAtOrDefault(index);
-
-                if (!physicalLine || !physicalLine.gameObject.activeSelf) continue;
-
-                if (lines[i] is PlayerLine)
-                {
-                    physicalLine.Text.text = physicalLine.PlayerText;
-                }
-                else if (lines[i] is GenericLine genLine)
-                {
-                    physicalLine.Text.text = genLine.Text;
-                }
-            }
-
-            _returnButton.gameObject.SetActive(_pageManager.CurrentPage.CallerPage != null);
-        }
-
-        public void SetLines(object[] lines)
-        {
-            _menuConstructor.ClearLines();
-            ValidateSceneIndex(lines.Length);
-
-            if (lines != null)
-            {
-                for (int i = _sceneIndex * Constants.LinesPerPage; i < GetDisplayedLineCount(lines.Length); i++)
-                {
-                    if (lines[i] is PlayerLine playerLine)
-                    {
-                        _menuConstructor.AddLine(playerLine);
-                    }
-                    else if (lines[i] is GenericLine genLine)
-                    {
-                        _menuConstructor.AddLine(genLine);
-                    }
-                }
-            }
-
-            _returnButton.gameObject.SetActive(_pageManager.CurrentPage.CallerPage != null);
-        }
-
-        public int GetDisplayedLineCount(int totalLineCount)
-        {
-            int EndLine = _sceneIndex * Constants.LinesPerPage + Constants.LinesPerPage;
-            return EndLine > totalLineCount ? totalLineCount : EndLine;
-        }
-
-        public void ValidateSceneIndex(int totalLineCount)
-        {
-            if (_sceneIndex < 0) _sceneIndex = 0;
-
-            _nextPGButton.gameObject.SetActive(totalLineCount / (float)Constants.LinesPerPage > 1f && _sceneIndex != Mathf.FloorToInt(totalLineCount / (float)Constants.LinesPerPage));
-            _backPGButton.gameObject.SetActive(_sceneIndex > 0);
-            _currentPageLabel.text = _nextPGButton.gameObject.activeSelf || _backPGButton.gameObject.activeSelf
-                ? string.Format("{0}/{1}", _sceneIndex + 1, Mathf.FloorToInt(totalLineCount / (float)Constants.LinesPerPage) + 1)
-                : string.Empty;
-        }
-
-        public void SetPage(Type origin, Type type, object[] parameters) => SetPage(origin, type, parameters, false);
-
-        public void SetPage(Type origin, Type type, object[] parameters, bool isReturnApplied)
-        {
-            parameters ??= [];
-            try
-            {
-                IPage page = GetPage(type);
-
-                if (type == typeof(ModRoomWarningPage) || origin == typeof(ModRoomWarningPage))
-                {
-                    page.CallerPage = GetPage(origin).CallerPage;
-                }
-                else if (!isReturnApplied && origin != page.CallerPage && GetPage(origin).CallerPage != type)
-                {
-                    page.CallerPage = origin;
-                }
-
-                _sceneIndex = 0;
-
-                _returnButton.gameObject.SetActive(page.CallerPage != null);
-                _pageManager.SwitchPage(page, parameters);
-            }
-            catch (Exception exception)
-            {
-                Logging.Error(string.Concat("SetPage threw an exception: ", exception.ToString()));
-            }
-        }
-
-        private IPage GetPage(Type type)
-        {
-            if (_pageCache.TryGetValue(type, out IPage view)) return view;
-
-            if (!_allPages.Contains(type))
-            {
-                Logging.Error(string.Format("Type {0} can not be used with GetPage.", nameof(type)));
-                return null;
-            }
-
-            IPage newPage = null;
-            try
-            {
-                newPage = _pageFactory.Create(type);
-                _pageCache.Add(type, newPage);
-
-                Logging.Info(string.Concat("Created new page of type ", type));
-            }
-            catch (Exception exception)
-            {
-                Logging.Error(string.Concat("GetPage threw an exception: ", exception.ToString()));
-            }
-
-            return newPage;
-        }
+        } 
 
         private void OnEventReceived(EventData photonEvent)
         {

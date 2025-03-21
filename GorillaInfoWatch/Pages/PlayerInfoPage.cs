@@ -7,11 +7,16 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Pages
 {
-    public class PlayerInfoPage : Page
+    public class PlayerInfoPage : Models.WatchScreen
     {
-        private NetPlayer _netPlayer;
+        public override string Title => "Details";
+
+        public override string Description => "n/a";
+        
+        /*
+        private NetPlayer player;
         private string _normalizedString;
-        private GorillaPlayerScoreboardLine _scoreboardLine;
+        private GorillaPlayerScoreboardLine scoreboard_line;
 
         private bool _usingReportOptions;
         GorillaPlayerLineButton.ButtonType _reportType;
@@ -20,16 +25,16 @@ namespace GorillaInfoWatch.Pages
         {
             base.OnDisplay();
 
-            _netPlayer = (NetPlayer)Parameters[0];
+            player = (NetPlayer)Parameters[0];
+            scoreboard_line = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.UserId == player?.UserId);
 
-            if (_netPlayer == null || !_netPlayer.InRoom || _netPlayer.IsNull || NetworkSystem.Instance.GetUserID(_netPlayer.ActorNumber) == null)
+            if ((scoreboard_line == null && NetworkSystem.Instance.InRoom) || !NetworkSystem.Instance.InRoom)
             {
-                ShowPage(typeof(PlayerListPage));
-                return;
+                
             }
 
-            _normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? _netPlayer.DefaultName : _netPlayer.NickName).NormalizeName();
-            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber);
+            _normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? player.DefaultName : player.NickName).NormalizeName();
+            scoreboard_line = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == player.ActorNumber);
 
             DrawLines();
             SetLines();
@@ -47,15 +52,15 @@ namespace GorillaInfoWatch.Pages
         {
             ClearLines();
 
-            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber);
-            string name = PlayFabAuthenticator.instance.GetSafety() ? _netPlayer.DefaultName : _netPlayer.NickName;
+            scoreboard_line = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == player.ActorNumber);
+            string name = PlayFabAuthenticator.instance.GetSafety() ? player.DefaultName : player.NickName;
 
-            AddPlayer(_netPlayer);
+            AddPlayer(player);
             AddLine(string.Concat("Name: ", _normalizedString != name ? string.Format("{0} ({1})", _normalizedString.ToUpper(), name) : _normalizedString.ToUpper()));
-            AddLine(string.Concat("Master: ", _netPlayer.IsMasterClient ? "True" : "False"));
-            AddLine(string.Concat("Voice: ", _scoreboardLine.playerVRRig.GetComponent<GorillaSpeakerLoudness>().IsMicEnabled ? (_scoreboardLine.playerVRRig.localUseReplacementVoice || _scoreboardLine.playerVRRig.remoteUseReplacementVoice ? "Monke" : "Human") : "None"));
+            AddLine(string.Concat("Master: ", player.IsMasterClient ? "True" : "False"));
+            AddLine(string.Concat("Voice: ", scoreboard_line.playerVRRig.GetComponent<GorillaSpeakerLoudness>().IsMicEnabled ? (scoreboard_line.playerVRRig.localUseReplacementVoice || scoreboard_line.playerVRRig.remoteUseReplacementVoice ? "Monke" : "Human") : "None"));
 
-            if (!_netPlayer.IsLocal)
+            if (!player.IsLocal)
             {
                 AddLine();
 
@@ -67,9 +72,9 @@ namespace GorillaInfoWatch.Pages
                 }
                 else
                 {
-                    AddLine(string.Concat(_scoreboardLine.muteButton.isOn ? "Muted" : "Mute"), new LineButton(OnButtonSelected, 0, true, _scoreboardLine.muteButton.isOn));
-                    if (FriendLib.FriendCompatible) AddLine(string.Concat(FriendLib.IsInFriendList(_netPlayer.UserId) ? "Friend!" : "Add Friend"), new LineButton(OnButtonSelected, 1, true, FriendLib.IsInFriendList(_netPlayer.UserId)));
-                    AddLine().AddLine(_scoreboardLine.reportButton.isOn ? "<color=red>Reported</color>" : "Report", new LineButton(OnButtonSelected, 2, true, _scoreboardLine.reportButton.isOn));
+                    AddLine(string.Concat(scoreboard_line.muteButton.isOn ? "Muted" : "Mute"), new LineButton(OnButtonSelected, 0, true, scoreboard_line.muteButton.isOn));
+                    if (FriendLib.FriendCompatible) AddLine(string.Concat(FriendLib.IsInFriendList(player.UserId) ? "Friend!" : "Add Friend"), new LineButton(OnButtonSelected, 1, true, FriendLib.IsInFriendList(player.UserId)));
+                    AddLine().AddLine(scoreboard_line.reportButton.isOn ? "<color=red>Reported</color>" : "Report", new LineButton(OnButtonSelected, 2, true, scoreboard_line.reportButton.isOn));
                 }
             }
         }
@@ -90,17 +95,17 @@ namespace GorillaInfoWatch.Pages
 
         public void OnButtonSelected(object sender, ButtonArgs args)
         {
-            _scoreboardLine = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber);
+            scoreboard_line = GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.linePlayer.ActorNumber == player.ActorNumber);
 
             if (args.returnIndex == 1) // gorillafriends does all this for me !!! <333
             {
-                if (FriendLib.IsInFriendList(_netPlayer.UserId))
+                if (FriendLib.IsInFriendList(player.UserId))
                 {
-                    FriendLib.RemoveFriend(_netPlayer);
+                    FriendLib.RemoveFriend(player);
                 }
                 else
                 {
-                    FriendLib.AddFriend(_netPlayer);
+                    FriendLib.AddFriend(player);
                 }
 
                 DrawLines();
@@ -109,12 +114,12 @@ namespace GorillaInfoWatch.Pages
                 return;
             }
 
-            List<GorillaPlayerScoreboardLine> lines = [.. GorillaScoreboardTotalUpdater.allScoreboardLines.Where(line => line.linePlayer.ActorNumber == _netPlayer.ActorNumber)];
+            List<GorillaPlayerScoreboardLine> lines = [.. GorillaScoreboardTotalUpdater.allScoreboardLines.Where(line => line.linePlayer.ActorNumber == player.ActorNumber)];
             switch (args.returnIndex)
             {
                 case 0:
 
-                    bool isMuted = PlayerPrefs.GetInt(_netPlayer.UserId, 0) != 0;
+                    bool isMuted = PlayerPrefs.GetInt(player.UserId, 0) != 0;
 
                     lines.First().PressButton(!isMuted, GorillaPlayerLineButton.ButtonType.Mute);
                     lines.ForEach(line =>
@@ -180,5 +185,6 @@ namespace GorillaInfoWatch.Pages
                     break;
             };
         }
+        */
     }
 }

@@ -1,148 +1,107 @@
-﻿using GorillaInfoWatch.Attributes;
-using GorillaInfoWatch.Extensions;
+﻿using GorillaGameModes;
+using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
+using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
+using System.Text;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Pages
 {
     [DisplayInHomePage("Details")]
-    public class DetailsPage : Page
+    public class DetailsScreen : WatchScreen
     {
-        private int _detailsMode = 0;
+        public override string Title => "Details";
 
-        private Gorillanalytics _analytics;
+        private bool show_sensitive_data = false;
 
-        public DetailsPage()
+        public override void OnScreenOpen()
         {
-            _analytics = UnityEngine.Object.FindObjectOfType<Gorillanalytics>();
+            SetContent();
         }
 
-        public override void OnDisplay()
+        public void SetContent()
         {
-            base.OnDisplay();
+            StringBuilder str = new();
+            str.Append("Name: ").AppendLine(GorillaComputer.instance.savedName ?? PlayerPrefs.GetString("playerName", "gorilla"));
 
-            SetHeader("Details", "Use scroll wheel to navigate");
+            Color colour = GorillaTagger.Instance.offlineVRRig.playerColor;
+            str.Append("Colour (0-9): ").AppendLine($"{Mathf.RoundToInt(colour.r * 9)}, {Mathf.RoundToInt(colour.g * 9)}, {Mathf.RoundToInt(colour.b * 9)}");
+            str.Append("Colour (0-255): ").AppendLine($"{Mathf.RoundToInt(colour.r * 255)}, {Mathf.RoundToInt(colour.g * 255)}, {Mathf.RoundToInt(colour.b * 255)}");
 
-            DrawPage();
-            SetLines();
-        }
+            str.Append("Shiny Rocks: ").AppendLine(CosmeticsController.instance.CurrencyBalance.ToString());
+            string creator_code = (string)AccessTools.Field(typeof(ATM_Manager), "currentCreatorCode").GetValue(ATM_Manager.instance);
+            str.Append("Creator Code: ").AppendLine(creator_code == "" ? "None" : creator_code);
+            str.Append("Points: ").AppendLine(ProgressionController.TotalPoints.ToString());
 
-        private void DrawPage()
-        {
-            ClearLines();
+            bool troop_active = GorillaComputer.instance.troopQueueActive || PlayerPrefs.GetInt("troopQueueActive", 0) == 1;
+            str.Append(troop_active ? "Troop: " : "Queue: ").AppendLine(troop_active ? (GorillaComputer.instance.troopName ?? PlayerPrefs.GetString("troopName", "")) : (GorillaComputer.instance.currentQueue ?? PlayerPrefs.GetString("currentQueue", "DEFAULT")));
+            str.Append("Game Mode: ").Append(GorillaComputer.instance.currentGameMode.Value.Replace("_", " ").ToUpper());
 
-            string _detailsModeString = _detailsMode switch
+            LineBuilder profile = str;
+
+            profile.AddLine($"Show Sensitive Data: {(show_sensitive_data ? "Yes" : "No")}", new WidgetButton(WidgetButton.EButtonType.Switch, show_sensitive_data, ProcessSensitiveData));
+            if (show_sensitive_data)
             {
-                0 => "Profile",
-                1 => "Session",
-                2 => "Connection",
-                3 => "Build",
-                _ => "TBA"
-            };
-            TextInfo _textInfo = new CultureInfo("en-US", false).TextInfo;
-
-            AddLine("Type: " + _detailsModeString, slider: new LineSlider(OnSliderChanged, 0, 4, _detailsMode)).AddLine();
-
-            switch (_detailsMode)
-            {
-                case 0:
-
-                    string _localName = GorillaComputer.instance.savedName;
-                    string _normalizedString = _localName.NormalizeName();
-                    Color _localColour = GorillaTagger.Instance.offlineVRRig.playerColor;
-
-                    AddLine(string.Concat("Name: ", _normalizedString != _localName ? string.Format("{0} ({1})", _normalizedString.ToUpper(), _localName) : _normalizedString.ToUpper()));
-                    AddLine(string.Format("Colour: ({0}, {1}, {2})", Mathf.FloorToInt(_localColour.r * 9f), Mathf.FloorToInt(_localColour.g * 9f), Mathf.FloorToInt(_localColour.b * 9f)));
-                    AddLine(string.Format("Turning: {0} ({1})", _textInfo.ToTitleCase(GorillaComputer.instance.GetField<string>("turnType").ToLower()), GorillaComputer.instance.GetField<int>("turnValue")));
-                    AddLine(string.Concat("Microphone: ", _textInfo.ToTitleCase(GorillaComputer.instance.pttType.ToLower())));
-                    AddLine(string.Concat("Queue: ", _textInfo.ToTitleCase(GorillaComputer.instance.currentQueue.ToLower())));
-
-                    GetModeInfo(GorillaComputer.instance.currentGameMode.Value, out string mode, out bool isModded);
-                    AddLine(string.Concat("Gamemode: ", mode == "unknown"
-                        ? _textInfo.ToTitleCase(GorillaComputer.instance.currentGameMode.Value.ToLower())
-                        : (isModded
-                            ? string.Concat("Modded ", _textInfo.ToTitleCase(mode.ToLower()))
-                            : _textInfo.ToTitleCase(mode.ToLower())
-                          )));
-
-                    break;
-                case 1:
-
-                    AddLine(string.Concat("Playtime: ", TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"h\:mm\:ss")));
-                    AddLine(string.Concat("Tags: ", Metadata.GetItem("Tags", 0)));
-
-                    break;
-                case 2:
-
-                    AddLine(string.Concat("Player Count: ", NetworkSystem.Instance.GlobalPlayerCount())).AddLine();
-
-                    bool validServerConnection = PhotonNetwork.NetworkingClient != null && PhotonNetwork.IsConnected && PhotonNetwork.Server != ServerConnection.NameServer;
-                    if (validServerConnection)
-                    {
-                        AddLine(string.Concat("Region: ", PhotonNetwork.CloudRegion.Replace("/*", "").ToUpper() switch
-                        {
-                            "US" => "USA, East",
-                            "USW" => "USA, West",
-                            "EU" => "Europe",
-                            _ => "Unknown"
-                        }));
-                        AddLine(string.Concat("Ping: ", PhotonNetwork.GetPing()));
-
-                        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("gameMode", out object obj) && obj != null)
-                        {
-                            GetModeInfo(obj.ToString(), out string serverMode, out bool serverModded);
-                            GetQueueInfo(obj.ToString(), out string serverQueue);
-
-                            AddLine().AddLine(string.Concat("Gamemode: ", serverMode == "unknown"
-                            ? GorillaGameManager.instance != null ? GorillaGameManager.instance.GameModeName() : "Unknown"
-                            : (serverModded
-                                ? string.Concat("Modded ", _textInfo.ToTitleCase(serverMode.ToLower()))
-                                : _textInfo.ToTitleCase(serverMode.ToLower())
-                              )));
-                            AddLine(string.Concat("Queue: ", _textInfo.ToTitleCase(serverQueue.ToLower())));
-                        }
-                    }
-
-                    //AddLine(string.Concat("Player Bans: ", GorillaComputer.instance.GetField<string>("usersBanned")));
-
-                    break;
-                case 3:
-
-                    //AddLine(string.Concat("Player-ID: ", PlayFabAuthenticator.instance._playFabPlayerIdCache));
-                    AddLine(string.Concat("Platform: ", PlayFabAuthenticator.instance.GetField<string>("platform")));
-                    AddLine(string.Concat("Version: ", GorillaComputer.instance.version));
-                    AddLine(string.Concat("Build Date: ", GorillaComputer.instance.buildDate));
-
-                    break;
+                profile.AddLine($"User ID: {PlayFabAuthenticator.instance.GetPlayFabPlayerId()}");
             }
+
+            str = new();
+            str.Append("Playtime: ").AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"h\:mm\:ss"));
+            str.Append("Tags: ").AppendLine(Metadata.GetItem("Tags", 0).ToString());
+            LineBuilder session = str;
+
+            str = new();
+            str.Append("Players Online: ").AppendLine(NetworkSystem.Instance.GlobalPlayerCount().ToString());
+            if (NetworkSystem.Instance.CurrentPhotonBackend == "PUN" || NetworkSystem.Instance is NetworkSystemPUN)
+            {
+                // START OF PUN CODE
+                bool photon_server_connection = PhotonNetwork.NetworkingClient != null && PhotonNetwork.IsConnected && PhotonNetwork.Server != ServerConnection.NameServer;
+                if (photon_server_connection && NetworkSystem.Instance.netState > NetSystemState.PingRecon && NetworkSystem.Instance.netState < NetSystemState.Disconnecting)
+                {
+                    // referenced variables/properties in "photon_server_connection" make up the CloudRegion property and PhotonNetwork.GetPing method result
+                    string cloud_region = PhotonNetwork.CloudRegion.Replace("/*", "").ToLower();
+                    str.Append("Region: ").AppendLine(cloud_region switch
+                    {
+                        "us" => "United States (East)",
+                        "usw" => "United States (West)",
+                        "eu" => "Europe",
+                        _ => cloud_region
+                    });
+                    str.Append("Ping: ").AppendLine(PhotonNetwork.GetPing().ToString());
+                }
+                // END OF PUN CODE
+            }
+            str.Append("In Room: ").AppendLine(NetworkSystem.Instance.InRoom.ToString());
+
+            if (NetworkSystem.Instance.InRoom)
+            {
+                str.AppendLine().Append("Room Name: ").AppendLine(NetworkSystem.Instance.RoomName);
+                str.Append("Players In Room: ").Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").AppendLine(PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString).ToString());
+                str.Append("Game Mode: ").AppendLine((bool)GameMode.ActiveGameMode ? GameMode.ActiveGameMode.GameModeName() : "Null");
+                VRRig master_rig = GorillaGameManager.StaticFindRigForPlayer(NetworkSystem.Instance.MasterClient);
+                str.Append("Master: ").AppendLine(master_rig == null ? NetworkSystem.Instance.MasterClient.NickName : master_rig.playerNameVisible);
+            }
+            LineBuilder connection = str;
+
+            str = new();
+            str.Append("Platform: ").AppendLine(PlayFabAuthenticator.instance.platform.ToString());
+            str.Append("Version: ").AppendLine(GorillaComputer.instance.version);
+            str.Append("Build Date: ").AppendLine(GorillaComputer.instance.buildDate);
+            LineBuilder platform = str;
+
+            PageBuilder = new(("Profile", profile), ("Session", session), ("Connection", connection), ("Platform", platform));
         }
 
-        private void GetModeInfo(string reference, out string mode, out bool modded)
+        public void ProcessSensitiveData(bool value, object[] args)
         {
-            List<string> modes = _analytics.modes;
-            mode = modes.Find(reference.Contains) ?? "unknown";
-            modded = reference.Contains(Utilla.Models.Gamemode.GamemodePrefix);
-        }
-
-        private void GetQueueInfo(string reference, out string queue)
-        {
-            List<string> queues = _analytics.queues;
-            queue = queues.Find(reference.Contains) ?? "unknown";
-        }
-
-        public void OnSliderChanged(object sender, SliderArgs args)
-        {
-            _detailsMode = args.currentValue;
-
-            DrawPage();
-            SetLines(); // just text
+            show_sensitive_data = !show_sensitive_data;
+            SetContent();
+            UpdateLines();
         }
     }
 }

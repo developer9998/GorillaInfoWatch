@@ -1,0 +1,84 @@
+﻿using System;
+using GorillaInfoWatch.Tools;
+using TMPro;
+using UnityEngine;
+
+namespace GorillaInfoWatch.Behaviours
+{
+    public class Watch : MonoBehaviour
+    {
+        public VRRig Rig;
+
+        public float? TimeOffset;
+
+        private Transform time_display, notification_display;
+
+        private TMP_Text time_text, date_text;
+
+        private AudioSource audio_device;
+
+        private bool has_notification;
+
+        private float notification_time;
+
+        public void Start()
+        {
+            audio_device = GetComponent<AudioSource>();
+
+            time_display = transform.Find("Watch Head/Watch GUI/Time Display");
+            notification_display = transform.Find("Watch Head/Watch GUI/Friend Display");
+            time_text = transform.Find("Watch Head/Watch GUI/Time Display/Time").GetComponent<TMP_Text>();
+            date_text = transform.Find("Watch Head/Watch GUI/Time Display/Day").GetComponent<TMP_Text>();
+
+            transform.SetParent(Rig.leftHandTransform.parent, false);
+            transform.localPosition = Vector3.zero;
+            transform.localEulerAngles = Vector3.zero;
+            transform.localScale = Vector3.one;
+        }
+
+        public void OnEnable()
+        {
+            InvokeRepeating(nameof(SetTime), 0f, 1f);
+        }
+
+        public void OnDisable()
+        {
+            CancelInvoke(nameof(SetTime));
+        }
+
+        public void Notify(string content, float duration, bool upbeat = true)
+        {
+            GorillaTagger.Instance.StartVibration(true, 0.04f, 0.2f);
+
+            TMP_Text text = notification_display.Find("Text").GetComponent<TMP_Text>();
+            text.text = content;
+
+            audio_device.PlayOneShot(upbeat ? Singleton<Main>.Instance.Sounds["FriendJoin"] : Singleton<Main>.Instance.Sounds["FriendLeave"]);
+            time_display.gameObject.SetActive(false);
+            notification_display.gameObject.SetActive(true);
+
+            has_notification = true;
+            notification_time = Time.realtimeSinceStartup + duration;
+        }
+
+        private void SetTime()
+        {
+            if (time_display.gameObject.activeSelf && TimeOffset.HasValue)
+            {
+                var time = DateTime.UtcNow + TimeSpan.FromSeconds(TimeOffset.Value);
+                time_text.text = time.ToShortTimeString();
+                date_text.text = time.ToLongDateString();
+            }
+        }
+
+        public void FixedUpdate()
+        {
+            if (has_notification && Time.realtimeSinceStartup > notification_time)
+            {
+                has_notification = false;
+                time_display.gameObject.SetActive(true);
+                notification_display.gameObject.SetActive(false);
+            }
+        }
+    }
+}
