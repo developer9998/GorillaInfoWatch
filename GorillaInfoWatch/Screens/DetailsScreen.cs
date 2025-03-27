@@ -1,5 +1,6 @@
 ﻿using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
+using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
@@ -10,9 +11,9 @@ using System;
 using System.Text;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    [DisplayInHomePage("Details")]
+    [DisplayAtHomeScreen]
     public class DetailsScreen : WatchScreen
     {
         public override string Title => "Details";
@@ -21,10 +22,10 @@ namespace GorillaInfoWatch.Pages
 
         public override void OnScreenOpen()
         {
-            SetContent();
+            Draw();
         }
 
-        public void SetContent()
+        public void Draw()
         {
             StringBuilder str = new();
             str.Append("Name: ").AppendLine(GorillaComputer.instance.savedName ?? PlayerPrefs.GetString("playerName", "gorilla"));
@@ -52,7 +53,7 @@ namespace GorillaInfoWatch.Pages
 
             str = new();
             str.Append("Playtime: ").AppendLine(TimeSpan.FromSeconds(Time.realtimeSinceStartup).ToString(@"h\:mm\:ss"));
-            str.Append("Tags: ").AppendLine(Metadata.GetItem("Tags", 0).ToString());
+            str.Append("Tags: ").AppendLine(Singleton<DataHandler>.Instance.GetItem("Tags", 0).ToString());
             LineBuilder session = str;
 
             str = new();
@@ -100,7 +101,7 @@ namespace GorillaInfoWatch.Pages
         public void ProcessSensitiveData(bool value, object[] args)
         {
             show_sensitive_data = !show_sensitive_data;
-            SetContent();
+            Draw();
             UpdateLines();
         }
     }

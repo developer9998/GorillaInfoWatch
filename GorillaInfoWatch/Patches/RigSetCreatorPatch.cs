@@ -1,4 +1,4 @@
-using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Behaviours.Networking;
 using HarmonyLib;
 
 namespace GorillaInfoWatch.Patches
@@ -7,13 +7,13 @@ namespace GorillaInfoWatch.Patches
     public class RigSetCreatorPatch
     {
         [HarmonyWrapSafe]
-        public static void Postfix(RigContainer __instance)
+        public static void Postfix(RigContainer __instance, NetPlayer value)
         {
-            /*VRRig rig = __instance.Rig;
-            Events.Instance.PlayerJoined(__instance.Creator, rig);*/
-            if (!__instance.GetComponent<WatchOwner>())
+            if (!__instance.GetComponent<NetworkedPlayer>())
             {
-                __instance.gameObject.AddComponent<WatchOwner>();
+                NetworkedPlayer networked_player = __instance.gameObject.AddComponent<NetworkedPlayer>();
+                networked_player.Rig = __instance.Rig;
+                networked_player.Owner = value;
             }
         }
     }

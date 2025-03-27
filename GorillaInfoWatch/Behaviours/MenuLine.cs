@@ -4,6 +4,8 @@ using GorillaInfoWatch.Models;
 using System.Linq;
 using TMPro;
 using System;
+using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
+using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours
 {

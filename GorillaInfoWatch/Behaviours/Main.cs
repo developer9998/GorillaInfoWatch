@@ -3,7 +3,6 @@ using ExitGames.Client.Photon;
 using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Pages;
 using GorillaInfoWatch.Tools;
 using Photon.Pun;
 using System;
@@ -14,6 +13,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Behaviours.Networking;
+using GorillaInfoWatch.Utilities;
+using GorillaInfoWatch.Screens;
+using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
+using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
+using Player = GorillaLocomotion.GTPlayer;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -21,19 +26,17 @@ namespace GorillaInfoWatch.Behaviours
     {
         // Pages
 
-        private HomePage HomePage;
+        private HomeScreen HomePage;
 
-        private ModRoomWarningPage WarnPage;
+        private WarningScreen WarnPage;
         
         public List<WatchScreen> ScreenRegistry = [];
-
-        // private Dictionary<Type, Screen> ScreenCache = [];
         
         public WatchScreen CurrentScreen;
-
         private List<WatchScreen> screen_history = [];
 
         // Assets
+        public GameObject WatchAsset;
         private GameObject watch, menu;
 
         // Menu
@@ -50,6 +53,50 @@ namespace GorillaInfoWatch.Behaviours
         public Dictionary<string, AudioClip> Sounds;
 
         public Dictionary<EDefaultSymbol, Sprite> Sprites;
+
+        public Dictionary<Predicate<NetPlayer>, EDefaultSymbol> SpecialSprites = new() 
+        {
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "/yF6UwSXIckuQ7wP/qjCWAa5lhjs7quGdVrI7M4dSwc=".DecryptString(),
+                EDefaultSymbol.DevSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "SlWeo52Ixd1btPgOM2bHJXcs7GbDwgjf3HistODbaoY=".DecryptString(),
+                EDefaultSymbol.KaylieSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "ewR3RCl6bzac7EDrhvW8LvcZ9n3JS1BnzBDY9xvZ78w=".DecryptString(),
+                EDefaultSymbol.StaircaseSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "1lreM0Lvqm6upbUKS/w+Aw==".DecryptString(),
+                EDefaultSymbol.AstridSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "vQeBg4Z53jQ8TXVGCZL/ytBCNybn+yZPETrA38Sr9ZI=".DecryptString(),
+                EDefaultSymbol.DeactivatedSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && (netPlayer.UserId == "qWPfsoYiOBeCN1UvSK6xQbbBxBXCkrTBfCrENFyTYWg=".DecryptString() || netPlayer.UserId == "ERCerPrBZZCZ+i375oEZsw6GgTkWod3ZhdXnffp52cU=".DecryptString()),
+                EDefaultSymbol.CyanSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "vLzPScDeh77w2JuqJK5LYliri9cgBulaARLzWTgheg8=".DecryptString(),
+                EDefaultSymbol.H4rnsSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAAK."),
+                EDefaultSymbol.StickCosmetic
+            },
+            {
+                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBADE."),
+                EDefaultSymbol.FingerPainterBadge
+            },
+            {
+                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAGS."),
+                EDefaultSymbol.IllustratorBadge
+            }
+        };
 
         public async override void Initialize()
         {
@@ -68,7 +115,7 @@ namespace GorillaInfoWatch.Behaviours
                 typeof(CreditScreen)
             };
 
-            builtinPages.ForEach(RegisterPage);
+            builtinPages.ForEach(RegisterScreen);
 
             try
             {
@@ -81,7 +128,7 @@ namespace GorillaInfoWatch.Behaviours
                         Logging.Info($"Searching assembly {assembly.GetName().Name}");
 
                         var types = assembly.GetTypes();
-                        types.Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() != null).ForEach(RegisterPage);
+                        types.Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() != null).ForEach(RegisterScreen);
                     }
                     catch (Exception ex)
                     {
@@ -96,8 +143,8 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Error(ex);
             }
 
-            HomePage = gameObject.AddComponent<HomePage>();
-            WarnPage = gameObject.AddComponent<ModRoomWarningPage>();
+            HomePage = gameObject.AddComponent<HomeScreen>();
+            WarnPage = gameObject.AddComponent<WarningScreen>();
 
             // Assets
 
@@ -111,16 +158,19 @@ namespace GorillaInfoWatch.Behaviours
 
             // Objects
 
-            watch = Instantiate(await AssetLoader.LoadAsset<GameObject>("Watch25"));
+            WatchAsset = await AssetLoader.LoadAsset<GameObject>("Watch25");
+            watch = Instantiate(WatchAsset);
+            watch.name = "InfoWatch";
             var watch_component = watch.AddComponent<Watch>();
             watch_component.Rig = GorillaTagger.Instance.offlineVRRig;
-            watch_component.TimeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalSeconds;
+            watch_component.TimeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
+            NetworkHandler.Instance.SetProperty("TimeOffset", watch_component.TimeOffset.Value);
 
             menu = Instantiate(await AssetLoader.LoadAsset<GameObject>("Menu"));
-            menu.transform.SetParent(watch.transform.Find("Point"));
-            menu.transform.localPosition = Vector3.zero;
-            menu.transform.localEulerAngles = Vector3.zero;
-            menu.AddComponent<Panel>();
+            menu.name = "InfoMenu";
+            var menu_component = menu.AddComponent<Panel>();
+            menu_component.Origin = watch.transform.Find("Point");
+            //menu_component.Head = Player.Instance.headCollider.transform;
 
             menu_background = menu.transform.Find("Canvas/Background").GetComponent<Image>();
             menu_header = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
@@ -192,28 +242,20 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Warning(CurrentScreen.GetType().Name);
 
                 CurrentScreen.RequestScreenSwitch -= SwitchScreen;
-                CurrentScreen.RequestDisplayScreen -= DisplayScreen;
                 CurrentScreen.RequestSetLines -= DisplayScreen;
                 CurrentScreen.enabled = false;
                 CurrentScreen.OnScreenClose();
 
-                if (screen.GetType() != typeof(HomePage))
-                {
-                    screen_history.Add(CurrentScreen);
-                }
+                if (screen_history.Count == 0 || screen_history[^1] != screen) screen_history.Add(CurrentScreen);
             }
 
             Logging.Info(screen.GetType().Name);
             CurrentScreen = screen;
 
-            if (screen_history.Count > 0 && screen_history[^1] == screen)
-            {
-                screen_history.RemoveAt(screen_history.Count - 1);
-            }
+            if (screen_history.Count > 0 && screen_history[^1] == screen) screen_history.RemoveAt(screen_history.Count - 1);
 
             screen.enabled = true;
             screen.RequestScreenSwitch += SwitchScreen;
-            screen.RequestDisplayScreen += DisplayScreen;
             screen.RequestSetLines += DisplayScreen;
             screen.OnScreenOpen();
 
@@ -228,17 +270,15 @@ namespace GorillaInfoWatch.Behaviours
                 SwitchScreen(screen);
                 return;
             }
-            RegisterPage(type);
-            SwitchScreen(ScreenRegistry[^1]);
+
+            RegisterScreen(type);
+            SwitchScreen(ScreenRegistry[^1]); // latest screen
         }
 
-        public void DisplayScreen() => DisplayScreen(false);
-
-        public void DisplayScreen(bool text_exclusive)
+        public void DisplayScreen(bool text_exclusive = false)
         {
-            Logging.Info($"Only text: {text_exclusive}");
-
             var content = CurrentScreen.Content;
+            if (content == null) return;
 
             int page_count = content.GetPageCount();
             CurrentScreen.PageNumber = CurrentScreen.PageNumber.Wrap(0, page_count);
@@ -279,7 +319,7 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void RegisterPage(Type type)
+        public void RegisterScreen(Type type)
         {
             try
             {
@@ -287,7 +327,7 @@ namespace GorillaInfoWatch.Behaviours
                 if (component is WatchScreen page)
                 {
                     page.enabled = false;
-                    RegisterPage(page);
+                    RegisterScreen(page);
                 }
                 else
                 {
@@ -301,7 +341,7 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void RegisterPage(WatchScreen page)
+        public void RegisterScreen(WatchScreen page)
         {
             if (ScreenRegistry.Contains(page))
             {
@@ -368,7 +408,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (taggingNetPlayer != null && taggingNetPlayer.IsLocal)
                 {
-                    Metadata.AddItem("Tags", Metadata.GetItem("Tags", 0) + 1);
+                    Singleton<DataHandler>.Instance.AddItem("Tags", Singleton<DataHandler>.Instance.GetItem("Tags", 0) + 1);
                 }
             }
         }

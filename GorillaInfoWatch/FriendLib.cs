@@ -18,12 +18,10 @@ namespace GorillaInfoWatch
 
         public static void InitializeLib(Dictionary<string, PluginInfo> loadedPlugins)
         {
-            _pluginInfos = [.. loadedPlugins.Values];
-            PluginInfo friendPluginInfo = _pluginInfos.FirstOrDefault(plugin => plugin.Metadata.GUID == "net.rusjj.gorillafriends");
-
-            if (friendPluginInfo != null)
+            PluginInfo plugin_info = loadedPlugins.ContainsKey("net.rusjj.gorillafriends") ? loadedPlugins["net.rusjj.gorillafriends"] : loadedPlugins.Values.FirstOrDefault(plugin => plugin.Metadata.GUID == "net.rusjj.gorillafriends");
+            if (plugin_info != null)
             {
-                _gorillaFriendsPlugin = friendPluginInfo.Instance;
+                _gorillaFriendsPlugin = plugin_info.Instance;
 
                 _friendColour = (Color)AccessTools.Property(_gorillaFriendsPlugin.GetType(), "m_clrFriend").GetValue(_gorillaFriendsPlugin);
                 _verifiedColour = (Color)AccessTools.Property(_gorillaFriendsPlugin.GetType(), "m_clrVerified").GetValue(_gorillaFriendsPlugin);

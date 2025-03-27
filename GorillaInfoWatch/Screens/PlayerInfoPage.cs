@@ -1,18 +1,43 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaNetworking;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    public class PlayerInfoPage : Models.WatchScreen
+    public class PlayerInfoPage : WatchScreen
     {
-        public override string Title => "Details";
+        public override string Title => "Player Inspector";
 
-        public override string Description => "n/a";
+        public static RigContainer Container;
+
+        private GorillaPlayerScoreboardLine ScoreboardLine =>  GorillaScoreboardTotalUpdater.allScoreboardLines.FirstOrDefault(line => line.playerVRRig == Container.Rig);
+
+        public override void OnScreenOpen()
+        {
+            Draw();
+        }
         
+        public void Draw()
+        {
+            LineBuilder = new();
+
+            if (Container == null || Container.Creator == null || !ScoreboardLine)
+            {
+                ShowScreen(typeof(ScoreboardScreen));
+                return;
+            }
+
+            var player = Container.Creator;
+            LineBuilder.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !Container.Rig) ? player.NickName.NormalizeName() : Container.Rig.playerNameVisible,  new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player));
+            LineBuilder.AddLines(1);
+            LineBuilder.AddLine("work in progrss");
+            LineBuilder.AddLine("come back soon");  
+        }
+
         /*
         private NetPlayer player;
         private string _normalizedString;

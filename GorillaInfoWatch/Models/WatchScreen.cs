@@ -1,5 +1,9 @@
-﻿using GorillaInfoWatch.Pages;
+﻿using GorillaInfoWatch.Screens;
+using JetBrains.Annotations;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -30,13 +34,9 @@ namespace GorillaInfoWatch.Models
 
         public event Action<Type> RequestScreenSwitch;
 
-        public event Action RequestDisplayScreen;
-
-        public void ReturnToHomePage() => ShowScreen(typeof(HomePage));
+        public void ReturnToHomePage() => ShowScreen(typeof(HomeScreen));
 
         public void ShowScreen(Type type) => RequestScreenSwitch?.Invoke(type);
-
-        public void Display() => RequestDisplayScreen?.Invoke();
 
         public void SetLines(bool text_exclusive = false) => RequestSetLines?.Invoke(text_exclusive);
 

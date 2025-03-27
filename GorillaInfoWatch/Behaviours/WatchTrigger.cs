@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 using System.Collections.Generic;
+using GorillaInfoWatch.Utilities;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -21,10 +22,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             AudioSource = GetComponent<AudioSource>();
 
-            var xrDisplaySubsystems = new List<XRDisplaySubsystem>();
-            SubsystemManager.GetInstances(xrDisplaySubsystems);
-            
-            Menu.SetActive(xrDisplaySubsystems.Count == 0);
+            Menu.SetActive(!RuntimeUtils.InVR);
         }
 
         public void OnTriggerEnter(Collider other)

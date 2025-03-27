@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    public class HomePage : WatchScreen
+    public class HomeScreen : WatchScreen
     {
         public override string Title => Constants.Name;
 
@@ -23,7 +23,7 @@ namespace GorillaInfoWatch.Pages
             home_entries = new(sorted_screens.Count);
             foreach(WatchScreen screen in sorted_screens)
             {
-                if (screen.GetType().GetCustomAttributes(typeof(DisplayInHomePage), false).FirstOrDefault() is DisplayInHomePage attribute)
+                if (screen.GetType().GetCustomAttributes(typeof(DisplayAtHomeScreenAttribute), false).FirstOrDefault() is DisplayAtHomeScreenAttribute)
                 {
                     home_entries.Add((screen.Title, screen));
                 }

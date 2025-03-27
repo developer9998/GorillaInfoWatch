@@ -1,26 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
+using UnityEngine;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    [DisplayInHomePage("Scoreboard")]
+    [DisplayAtHomeScreen]
     public class ScoreboardScreen : WatchScreen
     {
         public override string Title => "Scoreboard";
 
-        public GorillaScoreBoard last_board;
+        private IEnumerator routine = null;
+        private int player_count = -1;
 
         public override void OnScreenOpen()
         {
-            Build();
+            Draw();
         }
-        
-        public void Build()
+
+        public override void OnScreenClose()
+        {
+            StopRefresh();
+        }
+
+        public void Draw()
         {
             LineBuilder = new();
 
@@ -28,29 +37,62 @@ namespace GorillaInfoWatch.Pages
             {
                 Description = "";
                 LineBuilder.AddLine("<align=\"center\">Not in Room</align>");
+                StopRefresh();
+                player_count = -1;
                 return;
             }
 
             Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
-
+            
             var players_in_room = new List<NetPlayer>(NetworkSystem.Instance.AllNetPlayers);
             players_in_room.Sort((x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
 
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
+                LineBuilder.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !RigUtils.TryGetVRRig(player, out RigContainer container)) ? player.NickName.NormalizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new WidgetButton(TryInspectPlayer, player));
+            }
 
-                string player_name;
-                if (!GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) && RigUtils.TryGetVRRig(player, out RigContainer container) && container.Rig)
-                {
-                    player_name = container.Rig.playerNameVisible;
-                }
-                else
-                {
-                    player_name = player.NickName.NormalizeName();
-                }
-                
-                LineBuilder.AddLine($"<line-indent=3em>{player_name}", new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player));
+            StartRefresh();
+            player_count = NetworkSystem.Instance.RoomPlayerCount;
+        }
+
+        public void StartRefresh()
+        {
+            if (routine == null)
+            {
+                routine = Refresh(1f / 3f);
+                StartCoroutine(routine);
+            }
+        }
+
+        public void StopRefresh()
+        {
+            if (routine != null)
+            {
+                StopCoroutine(routine);
+                routine = null;
+            }
+        }
+
+        public IEnumerator Refresh(float interval)
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(interval);
+                int player_count = this.player_count;
+                Draw();
+                if (player_count != this.player_count) SetLines();
+                else UpdateLines();
+            }
+        }
+
+        public void TryInspectPlayer(bool value, object[] args)
+        {
+            if (args[0] is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer playerRig))
+            {
+                PlayerInfoPage.Container = playerRig;
+                ShowScreen(typeof(PlayerInfoPage));
             }
         }
 

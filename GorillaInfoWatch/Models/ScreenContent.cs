@@ -9,6 +9,7 @@ namespace GorillaInfoWatch.Models
         /// </summary>
         public abstract List<ScreenLine> GetPageLines(int page);
 
+        // Given title at a specified page
         public abstract string GetPageTitle(int page);
 
         /// <summary>

@@ -1,4 +1,4 @@
-using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Behaviours.Networking;
 using HarmonyLib;
 
 namespace GorillaInfoWatch.Patches
@@ -9,11 +9,9 @@ namespace GorillaInfoWatch.Patches
         [HarmonyWrapSafe]
         public static void Postfix(RigContainer __instance)
         {
-            /*VRRig rig = __instance.Rig;
-            Events.Instance.PlayerLeft(__instance.Creator, rig);*/
-            if (__instance.TryGetComponent(out WatchOwner watch_owner))
+            if (__instance.TryGetComponent(out NetworkedPlayer networked_player))
             {
-                UnityEngine.Object.Destroy(watch_owner);
+                UnityEngine.Object.Destroy(networked_player);
             }
         }
     }

@@ -9,16 +9,16 @@ namespace GorillaInfoWatch.Behaviours
 
         public static bool HasInstance => Instance;
 
-        private T SelfInstance => gameObject.GetComponent<T>();
+        private T GenericComponent => gameObject.GetComponent<T>();
 
         public void Awake()
         {
-            if (HasInstance && Instance != SelfInstance)
+            if (HasInstance && Instance != GenericComponent)
             {
-                Destroy(SelfInstance);
+                Destroy(GenericComponent);
             }
 
-            Instance = SelfInstance;
+            Instance = GenericComponent;
             Initialize();
         }
 

@@ -1,6 +1,7 @@
 using System;
 using GorillaInfoWatch.Behaviours;
 using UnityEngine;
+using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
 
 namespace GorillaInfoWatch.Models
 {

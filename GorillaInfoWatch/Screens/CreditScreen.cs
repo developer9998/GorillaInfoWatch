@@ -2,19 +2,14 @@ using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Attributes;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    [DisplayInHomePage("Credits")]
+    [DisplayAtHomeScreen]
     public class CreditScreen : WatchScreen
     {
         public override string Title => "Credits";
 
         public override void OnScreenOpen()
-        {
-            Build();
-        }
-
-        public void Build()
         {
             PageBuilder = new();
 

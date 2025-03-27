@@ -1,5 +1,4 @@
 ﻿using System;
-using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
 
@@ -21,6 +20,8 @@ namespace GorillaInfoWatch.Behaviours
 
         private float notification_time;
 
+        private MeshRenderer screen_renderer, outline_renderer;
+
         public void Start()
         {
             audio_device = GetComponent<AudioSource>();
@@ -30,10 +31,23 @@ namespace GorillaInfoWatch.Behaviours
             time_text = transform.Find("Watch Head/Watch GUI/Time Display/Time").GetComponent<TMP_Text>();
             date_text = transform.Find("Watch Head/Watch GUI/Time Display/Day").GetComponent<TMP_Text>();
 
+            screen_renderer = transform.Find("Watch Head/WatchScreen").GetComponent<MeshRenderer>();
+            screen_renderer.material = new Material(screen_renderer.material);
+            outline_renderer = transform.Find("Watch Head/WatchOuterScreen").GetComponent<MeshRenderer>();
+            outline_renderer.material = new Material(outline_renderer.material);
+
+            Rig.OnColorChanged += SetColour;
+            SetColour(Rig.playerColor);
+
             transform.SetParent(Rig.leftHandTransform.parent, false);
             transform.localPosition = Vector3.zero;
             transform.localEulerAngles = Vector3.zero;
             transform.localScale = Vector3.one;
+        }
+
+        public void OnDestroy()
+        {
+            Rig.OnColorChanged -= SetColour;
         }
 
         public void OnEnable()
@@ -44,6 +58,15 @@ namespace GorillaInfoWatch.Behaviours
         public void OnDisable()
         {
             CancelInvoke(nameof(SetTime));
+        }
+
+        public void SetColour(Color colour)
+        {
+            Color.RGBToHSV(colour, out float h, out float s, out _);
+            float v = 0.13f * Mathf.Clamp((s + 1) * 0.9f, 1, float.MaxValue);
+            var screen_colour = Color.HSVToRGB(h, s, v);
+            screen_renderer.material.color = screen_colour;
+            outline_renderer.material.color = colour;
         }
 
         public void Notify(string content, float duration, bool upbeat = true)
@@ -65,7 +88,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (time_display.gameObject.activeSelf && TimeOffset.HasValue)
             {
-                var time = DateTime.UtcNow + TimeSpan.FromSeconds(TimeOffset.Value);
+                var time = DateTime.UtcNow + TimeSpan.FromMinutes(TimeOffset.Value);
                 time_text.text = time.ToShortTimeString();
                 date_text.text = time.ToLongDateString();
             }

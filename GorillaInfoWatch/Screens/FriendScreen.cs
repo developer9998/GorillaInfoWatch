@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using GorillaNetworking;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    [DisplayInHomePage("Friends")]
+    [DisplayAtHomeScreen]
     public class FriendScreen : WatchScreen
     {
         public override string Title => "Friends";
@@ -15,12 +15,8 @@ namespace GorillaInfoWatch.Pages
 
         public override void OnScreenOpen()
         {
-            FriendsList = null;
-
             FriendSystem.Instance.OnFriendListRefresh += OnGetFriendsReceived;
-            FriendSystem.Instance.RefreshFriendsList();
-
-            Build();
+            RequestFriendsList();
         }
 
         public override void OnScreenClose()
@@ -28,14 +24,22 @@ namespace GorillaInfoWatch.Pages
             FriendSystem.Instance.OnFriendListRefresh -= OnGetFriendsReceived;
         }
 
+        public void RequestFriendsList()
+        {
+            FriendsList = null;
+            FriendSystem.Instance.RefreshFriendsList();
+            Draw();
+            SetLines();
+        }
+
         public void OnGetFriendsReceived(List<FriendBackendController.Friend> friendsList)
         {
             FriendsList = friendsList;
-            Build();
-            Display();
+            Draw();
+            SetLines();
         }
 
-        public void Build()
+        public void Draw()
         {
             LineBuilder = new();
 

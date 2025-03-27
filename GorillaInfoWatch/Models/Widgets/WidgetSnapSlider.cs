@@ -1,6 +1,7 @@
 using System;
 using GorillaInfoWatch.Behaviours;
 using UnityEngine;
+using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
 
 namespace GorillaInfoWatch.Models
 {

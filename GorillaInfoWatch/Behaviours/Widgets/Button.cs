@@ -4,8 +4,11 @@ using System;
 using TMPro;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours.Widgets
 {
+    /// <summary>
+    /// A push and toggle compatible button, used commonly alongside a WidgetButton, though can be used down to the OnPressed action
+    /// </summary>
     public class Button : MonoBehaviour
     {
         public Action OnPressed, OnReleased;
@@ -56,8 +59,6 @@ namespace GorillaInfoWatch.Behaviours
                 gameObject.SetActive(true);
                 if (text) text.text = "";
                 OnPressed = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
-                // OnReleased = () => Widget.Command?.Invoke(false, Widget.Parameters);
-                // lazy button state stuff
                 toggle = widget.ButtonType == WidgetButton.EButtonType.Switch;
                 bumped = widget.Value;
                 renderer.materials[1].color = bumped ? bumped_colour : colour;

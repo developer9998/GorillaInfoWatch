@@ -2,14 +2,13 @@
 using BepInEx.Bootstrap;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Tools;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GorillaInfoWatch.Pages
+namespace GorillaInfoWatch.Screens
 {
-    [DisplayInHomePage("Mods")]
+    [DisplayAtHomeScreen]
     public class ModStatusPage : WatchScreen
     {
         public override string Title => "Mod Status";
@@ -33,10 +32,10 @@ namespace GorillaInfoWatch.Pages
 
         public override void OnScreenOpen()
         {
-            Build();
+            Draw();
         }
 
-        private void Build()
+        public void Draw()
         {
             LineBuilder = new();
 
@@ -46,7 +45,7 @@ namespace GorillaInfoWatch.Pages
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    LineBuilder.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new WidgetButton(WidgetButton.EButtonType.Switch, isEnabled, OnButtonSelect, i));
+                    LineBuilder.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new WidgetButton(WidgetButton.EButtonType.Switch, !isEnabled, OnButtonSelect, i));
                     continue;
                 }
                 LineBuilder.AddLine(info.Metadata.Name);
@@ -57,9 +56,9 @@ namespace GorillaInfoWatch.Pages
         {
             if (args[0] is int mod_index)
             {
-                _modEntries[mod_index].Instance.enabled = value;
-                Build();
-                UpdateLines();
+                _modEntries[mod_index].Instance.enabled = !value;
+                Draw();
+                SetLines();
             }
         }
     }

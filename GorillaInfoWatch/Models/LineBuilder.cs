@@ -10,12 +10,12 @@ namespace GorillaInfoWatch.Models
     {
         public List<ScreenLine> Lines = lines ?? [];
 
-        public void AddLine(string text, params IWidget[] widgets)
+        public void AddLine(string text, params List<IWidget> widgets)
         {
             Lines.Add(new(text, widgets));
         }
 
-        public void AddLines(int amount, string text = "", params IWidget[] widgets)
+        public void AddLines(int amount, string text = "", params List<IWidget> widgets)
         {
             Lines.AddRange(Enumerable.Repeat<ScreenLine>(new(text, widgets), amount));
         }

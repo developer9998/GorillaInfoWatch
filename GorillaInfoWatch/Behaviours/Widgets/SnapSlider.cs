@@ -2,9 +2,12 @@
 using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours.Widgets
 {   
     // TODO: make sliders based around a generic class, int for snap, float for smooth
+    /// <summary>
+    /// A snap slider, used commonly alongside a WidgetSnapSlider, though can be used down to the OnApplied action
+    /// </summary>
     public class SnapSlider : MonoBehaviour
     {
         public Action OnApplied;
