@@ -79,11 +79,19 @@ namespace GorillaInfoWatch.Screens
 			base.LineBuilder.AddLine("Voice: " + str2, new List<IWidget>());
 			if (vrrig != null)
 			{
-				base.LineBuilder.AddLine("Color: " + this.ColorCode(vrrig), new List<IWidget>());
+				base.LineBuilder.AddLine("Colour (0-9): " + this.ColorCode9(vrrig), new List<IWidget>());
 			}
 			else
 			{
-				base.LineBuilder.AddLine("Color: <color=red><b>ERROR</b></color>", new List<IWidget>());
+				base.LineBuilder.AddLine("Colour: <color=red><b>ERROR</b></color>", new List<IWidget>());
+			}
+			if (vrrig != null)
+			{
+				base.LineBuilder.AddLine("Colour (0-255): " + this.ColorCode255(vrrig), new List<IWidget>());
+			}
+			else
+			{
+				base.LineBuilder.AddLine("Colour: <color=red><b>ERROR</b></color>", new List<IWidget>());
 			}
 			if (!creator.IsLocal)
 			{
@@ -146,9 +154,14 @@ namespace GorillaInfoWatch.Screens
 			this.creationDates = new Dictionary<string, string>();
 		}
 
-		public string ColorCode(VRRig vrrig)
+		public string ColorCode9(VRRig vrrig)
 		{
 			return string.Format("{0}, {1}, {2}", Mathf.RoundToInt(vrrig.playerColor.r * 9f), Mathf.RoundToInt(vrrig.playerColor.g * 9f), Mathf.RoundToInt(vrrig.playerColor.b * 9f));
+		}
+
+		public string ColorCode255(VRRig vrrig)
+		{
+			return string.Format("{0}, {1}, {2}", Mathf.RoundToInt(vrrig.playerColor.r * 255f), Mathf.RoundToInt(vrrig.playerColor.g * 255f), Mathf.RoundToInt(vrrig.playerColor.b * 255f));
 		}
 
 		public override void OnScreenClose()
