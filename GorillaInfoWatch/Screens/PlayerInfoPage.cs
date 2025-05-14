@@ -80,18 +80,12 @@ namespace GorillaInfoWatch.Screens
 			if (vrrig != null)
 			{
 				base.LineBuilder.AddLine("Colour (0-9): " + this.ColorCode9(vrrig), new List<IWidget>());
-			}
-			else
-			{
-				base.LineBuilder.AddLine("Colour: <color=red><b>ERROR</b></color>", new List<IWidget>());
-			}
-			if (vrrig != null)
-			{
 				base.LineBuilder.AddLine("Colour (0-255): " + this.ColorCode255(vrrig), new List<IWidget>());
 			}
 			else
 			{
-				base.LineBuilder.AddLine("Colour: <color=red><b>ERROR</b></color>", new List<IWidget>());
+				base.LineBuilder.AddLine("Colour (0-9): <color=red><b>ERROR</b></color>", new List<IWidget>());
+				base.LineBuilder.AddLine("Colour (0-255): <color=red><b>ERROR</b></color>", new List<IWidget>());
 			}
 			if (!creator.IsLocal)
 			{
