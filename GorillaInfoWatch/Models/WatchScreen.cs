@@ -1,9 +1,6 @@
-﻿using GorillaInfoWatch.Screens;
-using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System;
+using GorillaInfoWatch.Screens;
+using GorillaInfoWatch.Tools;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -14,6 +11,7 @@ namespace GorillaInfoWatch.Models
 
         public virtual string Description { get; set; }
 
+        /*
         public LineBuilder LineBuilder
         {
             get => (Content is LineBuilder line_builder) ? line_builder : null;
@@ -25,31 +23,36 @@ namespace GorillaInfoWatch.Models
             get => (Content is PageBuilder page_builder) ? page_builder : null;
             set => Content = value;
         }
+        */
 
         public int PageNumber = 0;
 
-        public ScreenContent Content;
+        // public ScreenContent Content;
 
         public event Action<bool> RequestSetLines;
 
         public event Action<Type> RequestScreenSwitch;
 
-        public void ReturnToHomePage() => ShowScreen(typeof(HomeScreen));
+        public void ReturnToHomePage() => SetScreen<HomeScreen>();
 
-        public void ShowScreen(Type type) => RequestScreenSwitch?.Invoke(type);
+        public void SetScreen<T>() where T : WatchScreen => SetScreen(typeof(T));
 
-        public void SetLines(bool text_exclusive = false) => RequestSetLines?.Invoke(text_exclusive);
+        public void SetScreen(Type type) => RequestScreenSwitch?.Invoke(type);
 
-        public void UpdateLines() => SetLines(true);
+        public void SetText() => SetContent(false);
+
+        public void SetContent(bool setWidgets = true) => RequestSetLines?.Invoke(setWidgets);
 
         public virtual void OnScreenOpen()
         {
-
+            Logging.Info($"OnScreenOpen: {Title} / {GetType().Name})");
         }
 
         public virtual void OnScreenClose()
         {
-            
+            Logging.Info($"OnScreenClose: {Title} / {GetType().Name})");
         }
+
+        public abstract ScreenContent GetContent();
     }
 }

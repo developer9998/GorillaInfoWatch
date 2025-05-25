@@ -17,17 +17,17 @@ namespace GorillaInfoWatch.Models
 
         public Action<bool, object[]> Command { get; set; } = command;
 
-        public WidgetButton(EButtonType type, bool initial_value, Action<bool, object[]> command, params object[] parameters): this(initial_value, command, parameters)
+        public WidgetButton(EButtonType type, bool initial_value, Action<bool, object[]> command, params object[] parameters) : this(initial_value, command, parameters)
         {
             ButtonType = type;
         }
 
-        public WidgetButton(EButtonType type, Action<bool, object[]> command, params object[] parameters): this(command, parameters)
+        public WidgetButton(EButtonType type, Action<bool, object[]> command, params object[] parameters) : this(command, parameters)
         {
             ButtonType = type;
         }
 
-        public WidgetButton(bool initial_value, Action<bool, object[]> command, params object[] parameters): this(command, parameters)
+        public WidgetButton(bool initial_value, Action<bool, object[]> command, params object[] parameters) : this(command, parameters)
         {
             Value = initial_value;
         }

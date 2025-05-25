@@ -1,9 +1,9 @@
-﻿using GorillaInfoWatch.Models;
-using System;
+﻿using System;
+using GorillaInfoWatch.Models;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Widgets
-{   
+{
     // TODO: make sliders based around a generic class, int for snap, float for smooth
     /// <summary>
     /// A snap slider, used commonly alongside a WidgetSnapSlider, though can be used down to the OnApplied action
@@ -27,7 +27,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             collider = GetComponent<BoxCollider>();
             collider.isTrigger = true;
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
-            
+
             needle = transform.Find("Button");
             min = transform.Find("Min");
             max = transform.Find("Max");

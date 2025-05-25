@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Models
 
         public void InvokeUpdate()
         {
-            
+
         }
     }
 }

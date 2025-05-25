@@ -1,4 +1,6 @@
-﻿using GorillaGameModes;
+﻿using System;
+using System.Text;
+using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
@@ -7,8 +9,6 @@ using GorillaNetworking;
 using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
-using System;
-using System.Text;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
@@ -20,12 +20,7 @@ namespace GorillaInfoWatch.Screens
 
         private bool show_sensitive_data = false;
 
-        public override void OnScreenOpen()
-        {
-            Draw();
-        }
-
-        public void Draw()
+        public override ScreenContent GetContent()
         {
             StringBuilder str = new();
             str.Append("Name: ").AppendLine(GorillaComputer.instance.savedName ?? PlayerPrefs.GetString("playerName", "gorilla"));
@@ -95,14 +90,13 @@ namespace GorillaInfoWatch.Screens
             str.Append("Build Date: ").AppendLine(GorillaComputer.instance.buildDate);
             LineBuilder platform = str;
 
-            PageBuilder = new(("Profile", profile), ("Session", session), ("Connection", connection), ("Platform", platform));
+            return new PageBuilder(("Profile", profile), ("Session", session), ("Connection", connection), ("Platform", platform));
         }
 
         public void ProcessSensitiveData(bool value, object[] args)
         {
             show_sensitive_data = !show_sensitive_data;
-            Draw();
-            UpdateLines();
+            SetText();
         }
     }
 }

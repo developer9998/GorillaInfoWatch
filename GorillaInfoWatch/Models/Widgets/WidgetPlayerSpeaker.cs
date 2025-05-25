@@ -113,8 +113,8 @@ namespace GorillaInfoWatch.Models.Widgets
                 }
                 return;
             }
-            
-            HideSpeaker:
+
+        HideSpeaker:
             if (image.enabled) image.enabled = false;
         }
     }

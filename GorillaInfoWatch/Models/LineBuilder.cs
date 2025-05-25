@@ -6,9 +6,19 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public class LineBuilder(List<ScreenLine> lines = null) : ScreenContent
+    public class LineBuilder(List<ScreenLine> lines) : ScreenContent
     {
         public List<ScreenLine> Lines = lines ?? [];
+
+        public LineBuilder() : this(string.Empty)
+        {
+
+        }
+
+        public LineBuilder(string content) : this(content.Split(Environment.NewLine).Select(line => new ScreenLine(line)).ToList())
+        {
+
+        }
 
         public void AddLine(string text, params List<IWidget> widgets)
         {
@@ -48,19 +58,13 @@ namespace GorillaInfoWatch.Models
             return line_builder.Lines;
         }
 
-        public override List<ScreenLine> GetPageLines(int page)
-        {
-            return [.. Lines.Skip(page * Constants.LinesPerPage).Take(Constants.LinesPerPage)];
-        }
-
-        public override string GetPageTitle(int page)
-        {
-            return string.Empty;
-        }
-
         public override int GetPageCount()
-        {
-            return Mathf.CeilToInt(Lines.Count / (float)Constants.LinesPerPage);
-        }
+            => Mathf.CeilToInt(Lines.Count / (float)Constants.LinesPerPage);
+
+        public override IEnumerable<ScreenLine> GetPageLines(int page)
+            => Lines.Skip(page * Constants.LinesPerPage).Take(Constants.LinesPerPage);
+
+        public override string GetPageTitle(int page)  
+            => string.Empty;
     }
 }

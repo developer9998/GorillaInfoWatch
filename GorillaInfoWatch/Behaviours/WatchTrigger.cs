@@ -1,8 +1,6 @@
-﻿using GorillaLocomotion;
+﻿using GorillaInfoWatch.Utilities;
+using GorillaLocomotion;
 using UnityEngine;
-using UnityEngine.XR;
-using System.Collections.Generic;
-using GorillaInfoWatch.Utilities;
 
 namespace GorillaInfoWatch.Behaviours
 {

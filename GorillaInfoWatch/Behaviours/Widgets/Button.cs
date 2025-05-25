@@ -1,6 +1,6 @@
-﻿using GorillaInfoWatch.Models;
+﻿using System;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
-using System;
 using TMPro;
 using UnityEngine;
 
@@ -12,7 +12,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
     public class Button : MonoBehaviour
     {
         public Action OnPressed, OnReleased;
-        
+
         public WidgetButton Widget;
 
         private BoxCollider collider;
@@ -86,7 +86,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > (PressTime + 0.33f))
             {
                 PressTime = Time.realtimeSinceStartup;
-                
+
                 // base functionality
                 bumped = !toggle || (!bumped);
                 renderer.materials[1].color = bumped ? bumped_colour : colour;
@@ -98,11 +98,11 @@ namespace GorillaInfoWatch.Behaviours.Widgets
                 {
                     Widget.Value = bumped;
                 }
-                OnPressed?.Invoke(); 
+                OnPressed?.Invoke();
             }
         }
 
-        #if DEBUG
+#if DEBUG
 
         public void PushButton()
         {
@@ -110,13 +110,13 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 OnPressed?.Invoke();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logging.Error(GetComponentInParent<MenuLine>().name);
                 Logging.Fatal(ex);
             }
         }
 
-        #endif
+#endif
     }
 }

@@ -7,7 +7,7 @@ namespace GorillaInfoWatch.Models
         /// <summary>
         /// All lines at a specified page
         /// </summary>
-        public abstract List<ScreenLine> GetPageLines(int page);
+        public abstract IEnumerable<ScreenLine> GetPageLines(int page);
 
         // Given title at a specified page
         public abstract string GetPageTitle(int page);

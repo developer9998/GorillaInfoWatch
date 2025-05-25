@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Models
         public bool PerformNativeMethods { get; }
 
         public void Initialize(GameObject game_object);
-        
+
         public void InvokeUpdate();
     }
 }

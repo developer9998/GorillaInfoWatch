@@ -1,7 +1,7 @@
-﻿using GorillaLocomotion;
-using UnityEngine;
+﻿using System;
 using GorillaInfoWatch.Utilities;
-using System;
+using GorillaLocomotion;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -43,7 +43,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             SetPosition();
             SetRotation();
-            
+
             // Turn off the menu if we're not looking at it, or if our hand is facing down
             if (!IsFacingUp) gameObject.SetActive(false);
         }
@@ -65,7 +65,7 @@ namespace GorillaInfoWatch.Behaviours
             transform.rotation = Quaternion.Euler(euler_angles);
         }
 
-        #if DEBUG
+#if DEBUG
 
         public void Step(float amount)
         {
@@ -73,6 +73,6 @@ namespace GorillaInfoWatch.Behaviours
             SetRotation();
         }
 
-        #endif
+#endif
     }
 }

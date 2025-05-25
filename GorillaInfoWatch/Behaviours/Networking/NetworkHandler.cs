@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
             if (NetworkSystem.Instance && (NetworkSystem.Instance.CurrentPhotonBackend == "PUN" || NetworkSystem.Instance is NetworkSystemPUN))
             {
                 PhotonNetwork.LocalPlayer.SetCustomProperties(new()
-                { 
+                {
                     { Constants.NetworkVersionKey, Constants.Version }
                 });
                 return;
@@ -46,9 +46,9 @@ namespace GorillaInfoWatch.Behaviours.Networking
             if (set_properties && properties.Count > 0 && properties_timer <= 0)
             {
                 Logging.Info($"Set properties for local player: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
-                PhotonNetwork.LocalPlayer.SetCustomProperties(new() 
-                { 
-                    { Constants.NetworkPropertiesKey, new Dictionary<string, object>(properties) } 
+                PhotonNetwork.LocalPlayer.SetCustomProperties(new()
+                {
+                    { Constants.NetworkPropertiesKey, new Dictionary<string, object>(properties) }
                 });
                 set_properties = false;
                 properties_timer = Constants.NetworkSetInterval;
@@ -90,22 +90,22 @@ namespace GorillaInfoWatch.Behaviours.Networking
 
         public void OnPlayerEnteredRoom(Player newPlayer)
         {
-            
+
         }
 
         public void OnPlayerLeftRoom(Player otherPlayer)
         {
-            
+
         }
 
         public void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
         {
-            
+
         }
 
         public void OnMasterClientSwitched(Player newMasterClient)
         {
-            
+
         }
     }
 }

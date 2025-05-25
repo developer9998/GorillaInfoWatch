@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
+using GorillaInfoWatch.Tools;
 using Photon.Realtime;
 using UnityEngine;
-using GorillaInfoWatch.Tools;
-using System.Linq;
 
 namespace GorillaInfoWatch.Behaviours.Networking
 {

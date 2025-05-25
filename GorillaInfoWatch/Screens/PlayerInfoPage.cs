@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
@@ -12,7 +12,6 @@ namespace GorillaInfoWatch.Screens
 
 	public class PlayerInfoPage : WatchScreen
 	{
-
 		public override string Title
 		{
 			get
@@ -29,126 +28,135 @@ namespace GorillaInfoWatch.Screens
 			}
 		}
 
-		public override void OnScreenOpen()
-		{
-			this.Draw();
-		}
-
-		public void Draw()
-		{
-			base.LineBuilder = new LineBuilder(null);
-			if (PlayerInfoPage.Container == null || PlayerInfoPage.Container.Creator == null || !this.ScoreboardLine)
-			{
-				base.ShowScreen(typeof(ScoreboardScreen));
-				return;
-			}
-			NetPlayer creator = PlayerInfoPage.Container.Creator;
-			VRRig vrrig = GorillaParent.instance.vrrigs.FirstOrDefault((VRRig rig) => rig != null && rig.playerNameVisible == creator.NickName);
-			string userId = vrrig.OwningNetPlayer.UserId;
-			if (creator == null || !creator.InRoom || creator.IsNull || NetworkSystem.Instance.GetUserID(creator.ActorNumber) == null)
-			{
-				base.ShowScreen(typeof(ScoreboardScreen));
-				return;
-			}
-			this._normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? creator.DefaultName : creator.NickName).NormalizeName();
-			string text = (this._normalizedString != creator.NickName) ? (this._normalizedString.ToUpper() + " (" + creator.NickName + ")") : this._normalizedString.ToUpper();
-			if (FriendLib.IsFriend(creator.UserId))
-			{
-				text = string.Concat(new string[]
-				{
-					"<color=#",
-					ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour),
-					">",
-					text,
-					"</color>"
-				});
-			}
-			base.LineBuilder.AddLine(text, new List<IWidget>(3)
-			{
-				new WidgetPlayerSwatch(creator, 520f, 90, 90),
-				new WidgetPlayerSpeaker(creator, 620f, 100, 100),
-				new WidgetSpecialPlayerSwatch(creator, 520f, 80, 70)
-			});
-			base.LineBuilder.AddLine("User ID: " + creator.UserId, new List<IWidget>());
-			base.LineBuilder.AddLine("Master: " + (creator.IsMasterClient ? "Yes" : "No"), new List<IWidget>());
-			string str2 = "None";
-			if (this.ScoreboardLine.playerVRRig.GetComponent<GorillaSpeakerLoudness>().IsMicEnabled)
-			{
-				str2 = ((this.ScoreboardLine.playerVRRig.localUseReplacementVoice || this.ScoreboardLine.playerVRRig.remoteUseReplacementVoice) ? "Monke" : "Human");
-			}
-			base.LineBuilder.AddLine("Voice: " + str2, new List<IWidget>());
-			if (vrrig != null)
-			{
-				base.LineBuilder.AddLine("Colour (0-9): " + this.ColorCode9(vrrig), new List<IWidget>());
-				base.LineBuilder.AddLine("Colour (0-255): " + this.ColorCode255(vrrig), new List<IWidget>());
-			}
-			else
-			{
-				base.LineBuilder.AddLine("Colour (0-9): <color=red><b>ERROR</b></color>", new List<IWidget>());
-				base.LineBuilder.AddLine("Colour (0-255): <color=red><b>ERROR</b></color>", new List<IWidget>());
-			}
-			if (!creator.IsLocal)
-			{
-				base.LineBuilder.AddLines(1, "", new List<IWidget>());
-				if (this._usingReportOptions)
-				{
-					base.LineBuilder.AddLine(string.Format("Type: {0}", this._reportType), new List<IWidget>(1)
-					{
-						new WidgetSnapSlider(0, 2, (int)this._reportType)
-						{
-							Command = new Action<int, object[]>(this.OnReportTypeChanged)
-						}
-					});
-					base.LineBuilder.AddLine("Submit", new List<IWidget>(1)
-					{
-						new WidgetButton(new Action<bool, object[]>(this.OnReportButtonClick), new object[]
-						{
-							3
-						})
-					});
-					base.LineBuilder.AddLine("Cancel", new List<IWidget>(1)
-					{
-						new WidgetButton(new Action<bool, object[]>(this.OnReportButtonClick), new object[]
-						{
-							4
-						})
-					});
-					return;
-				}
-				base.LineBuilder.AddLine(this.ScoreboardLine.muteButton.isOn ? "Unmute" : "Mute", new List<IWidget>(1)
-				{
-					new WidgetButton(new Action<bool, object[]>(this.OnMuteButtonClick), new object[]
-					{
-						creator
-					})
-				});
-				if (FriendLib.FriendCompatible)
-				{
-					base.LineBuilder.AddLine(FriendLib.IsFriend(creator.UserId) ? "Remove Friend" : "Add Friend", new List<IWidget>(1)
-					{
-						new WidgetButton(new Action<bool, object[]>(this.OnFriendButtonClick), new object[]
-						{
-							creator
-						})
-					});
-				}
-				base.LineBuilder.AddLines(1, "", new List<IWidget>());
-				base.LineBuilder.AddLine(this.ScoreboardLine.reportButton.isOn ? "<color=red>Reported</color>" : "Report", new List<IWidget>(1)
-				{
-					new WidgetButton(new Action<bool, object[]>(this.OnReportButtonClick), new object[]
-					{
-						2
-					})
-				});
-			}
-		}
-
 		public PlayerInfoPage()
 		{
 			this.creationDates = new Dictionary<string, string>();
 		}
 
-		public string ColorCode9(VRRig vrrig)
+        public override ScreenContent GetContent()
+        {
+            if (Container == null || Container.Creator == null || !this.ScoreboardLine)
+            {
+				SetScreen<ScoreboardScreen>();
+				return null;
+            }
+
+            VRRig vrrig = Container.Rig;
+            NetPlayer creator = Container.Creator;
+
+            if (creator == null || !creator.InRoom || creator.IsNull || NetworkSystem.Instance.GetUserID(creator.ActorNumber) == null)
+            {
+                SetScreen<ScoreboardScreen>();
+                return null;
+            }
+
+            string userId = creator.UserId;
+
+            this._normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? creator.DefaultName : creator.NickName).NormalizeName();
+            string text = (this._normalizedString != creator.NickName) ? (this._normalizedString.ToUpper() + " (" + creator.NickName + ")") : this._normalizedString.ToUpper();
+            
+			if (FriendLib.IsFriend(creator.UserId))
+            {
+                text = string.Concat(
+                [
+                    "<color=#",
+                    ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour),
+                    ">",
+                    text,
+                    "</color>"
+                ]);
+            }
+
+			LineBuilder lines = new();
+
+            lines.AddLine(text, new List<IWidget>(3)
+            {
+                new WidgetPlayerSwatch(creator, 520f, 90, 90),
+                new WidgetPlayerSpeaker(creator, 620f, 100, 100),
+                new WidgetSpecialPlayerSwatch(creator, 520f, 80, 70)
+            });
+
+            lines.AddLine("User ID: " + creator.UserId, new List<IWidget>());
+            lines.AddLine("Master: " + (creator.IsMasterClient ? "Yes" : "No"), new List<IWidget>());
+            string str2 = "None";
+            if (this.ScoreboardLine.playerVRRig.GetComponent<GorillaSpeakerLoudness>().IsMicEnabled)
+            {
+                str2 = ((this.ScoreboardLine.playerVRRig.localUseReplacementVoice || this.ScoreboardLine.playerVRRig.remoteUseReplacementVoice) ? "Monke" : "Human");
+            }
+            lines.AddLine("Voice: " + str2, new List<IWidget>());
+            if (vrrig != null)
+            {
+                lines.AddLine("Colour (0-9): " + this.ColorCode9(vrrig), new List<IWidget>());
+                lines.AddLine("Colour (0-255): " + this.ColorCode255(vrrig), new List<IWidget>());
+            }
+            else
+            {
+                lines.AddLine("Colour (0-9): <color=red><b>ERROR</b></color>", new List<IWidget>());
+                lines.AddLine("Colour (0-255): <color=red><b>ERROR</b></color>", new List<IWidget>());
+            }
+            if (!creator.IsLocal)
+            {
+                lines.AddLines(1, "", new List<IWidget>());
+                if (this._usingReportOptions)
+                {
+                    lines.AddLine(string.Format("Type: {0}", this._reportType), new List<IWidget>(1)
+                    {
+                        new WidgetSnapSlider(0, 2, (int)this._reportType)
+                        {
+                            Command = new Action<int, object[]>(this.OnReportTypeChanged)
+                        }
+                    });
+                    lines.AddLine("Submit", new List<IWidget>(1)
+                    {
+                        new WidgetButton(new Action<bool, object[]>(this.OnReportButtonClick),
+                        [
+                            3
+                        ])
+                    });
+                    lines.AddLine("Cancel", new List<IWidget>(1)
+                    {
+                        new WidgetButton(new Action<bool, object[]>(this.OnReportButtonClick),
+                        [
+                            4
+                        ])
+                    });
+
+					return lines;
+                }
+
+                lines.AddLine(this.ScoreboardLine.muteButton.isOn ? "Unmute" : "Mute", new List<IWidget>(1)
+                {
+                    new WidgetButton(new Action<bool, object[]>(this.OnMuteButtonClick),
+                    [
+                        creator
+                    ])
+                });
+
+                if (FriendLib.FriendCompatible)
+                {
+                    lines.AddLine(FriendLib.IsFriend(creator.UserId) ? "Remove Friend" : "Add Friend", new List<IWidget>(1)
+                    {
+                        new WidgetButton(new Action<bool, object[]>(this.OnFriendButtonClick),
+                        [
+                            creator
+                        ])
+                    });
+                }
+
+                lines.AddLines(1, "", new List<IWidget>());
+                lines.AddLine(this.ScoreboardLine.reportButton.isOn ? "<color=red>Reported</color>" : "Report", new List<IWidget>(1)
+                {
+                    new WidgetButton(new Action<bool, object[]>(this.OnReportButtonClick),
+                    [
+                        2
+                    ])
+                });
+            }
+
+			return lines;
+        }
+
+        public string ColorCode9(VRRig vrrig)
 		{
 			return string.Format("{0}, {1}, {2}", Mathf.RoundToInt(vrrig.playerColor.r * 9f), Mathf.RoundToInt(vrrig.playerColor.g * 9f), Mathf.RoundToInt(vrrig.playerColor.b * 9f));
 		}
@@ -183,58 +191,51 @@ namespace GorillaInfoWatch.Screens
 				break;
 			}
 			this._reportType = reportType;
-			this.Draw();
-			base.UpdateLines();
+			base.SetText();
 		}
 
 		private void OnFriendButtonClick(bool value, object[] args)
 		{
-			NetPlayer netPlayer = args[0] as NetPlayer;
-			if (netPlayer != null)
-			{
-				if (FriendLib.IsFriend(netPlayer.UserId))
-				{
-					FriendLib.RemoveFriend(netPlayer);
-				}
-				else
-				{
-					FriendLib.AddFriend(netPlayer);
-				}
-				this.Draw();
-				base.SetLines(false);
-			}
-		}
+            if (args.ElementAtOrDefault(0) is NetPlayer netPlayer)
+            {
+                if (FriendLib.IsFriend(netPlayer.UserId))
+                {
+                    FriendLib.RemoveFriend(netPlayer);
+                }
+                else
+                {
+                    FriendLib.AddFriend(netPlayer);
+                }
+                base.SetContent(false);
+            }
+        }
 
 		private void OnMuteButtonClick(bool value, object[] args)
 		{
-			object obj = args[0];
-			NetPlayer player = obj as NetPlayer;
-			if (player != null && this.ScoreboardLine != null)
-			{
-				bool isMuted = PlayerPrefs.GetInt(player.UserId, 0) != 0;
-				List<GorillaPlayerScoreboardLine> list = (from line in GorillaScoreboardTotalUpdater.allScoreboardLines
-				where line.linePlayer.ActorNumber == player.ActorNumber
-				select line).ToList<GorillaPlayerScoreboardLine>();
-				list.First<GorillaPlayerScoreboardLine>().PressButton(!isMuted, GorillaPlayerLineButton.ButtonType.Mute);
-				list.ForEach(delegate(GorillaPlayerScoreboardLine line)
+			object obj = args.ElementAtOrDefault(0);
+            if (obj is NetPlayer player && this.ScoreboardLine != null)
+            {
+                bool isMuted = PlayerPrefs.GetInt(player.UserId, 0) != 0;
+				var lines = GorillaScoreboardTotalUpdater.allScoreboards.SelectMany(scoreboard => scoreboard.lines).Where(line => line.linePlayer == player);
+				lines.ForEach(line =>
 				{
 					line.muteButton.isOn = !isMuted;
-					line.muteButton.UpdateColor();
-				});
-				this.Draw();
-				base.SetLines(false);
-			}
-		}
+					line.PressButton(!isMuted, GorillaPlayerLineButton.ButtonType.Mute);
+                });
+
+                SetContent(false);
+            }
+        }
 
 		private void OnReportButtonClick(bool value, object[] args)
 		{
-			RigContainer container = PlayerInfoPage.Container;
-			if (((container != null) ? container.Creator : null) != null)
+			RigContainer container = Container;
+			if ((container?.Creator) != null)
 			{
 				NetPlayer player = PlayerInfoPage.Container.Creator;
-				List<GorillaPlayerScoreboardLine> list = (from line in GorillaScoreboardTotalUpdater.allScoreboardLines
+				List<GorillaPlayerScoreboardLine> list = [.. (from line in GorillaScoreboardTotalUpdater.allScoreboardLines
 				where line.linePlayer.ActorNumber == player.ActorNumber
-				select line).ToList<GorillaPlayerScoreboardLine>();
+				select line)];
 				object obj = args[0];
 				int num = -1;
 				bool flag;
@@ -291,8 +292,7 @@ namespace GorillaInfoWatch.Screens
 						this._usingReportOptions = false;
 						break;
 					}
-					this.Draw();
-					base.SetLines(false);
+					base.SetContent(false);
 				}
 			}
 		}

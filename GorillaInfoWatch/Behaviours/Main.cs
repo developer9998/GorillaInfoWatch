@@ -1,24 +1,23 @@
-﻿using BepInEx.Bootstrap;
-using ExitGames.Client.Photon;
-using GorillaGameModes;
-using GorillaInfoWatch.Attributes;
-using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Tools;
-using Photon.Pun;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Bootstrap;
+using ExitGames.Client.Photon;
+using GorillaGameModes;
+using GorillaInfoWatch.Attributes;
+using GorillaInfoWatch.Behaviours.Networking;
+using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Screens;
+using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
+using Photon.Pun;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Behaviours.Networking;
-using GorillaInfoWatch.Utilities;
-using GorillaInfoWatch.Screens;
 using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
 using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
-using Player = GorillaLocomotion.GTPlayer;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -29,11 +28,13 @@ namespace GorillaInfoWatch.Behaviours
         private HomeScreen HomePage;
 
         private WarningScreen WarnPage;
-        
+
+        private GameObject screen_container;
+
         public List<WatchScreen> ScreenRegistry = [];
-        
+
         public WatchScreen CurrentScreen;
-        private List<WatchScreen> screen_history = [];
+        private readonly List<WatchScreen> screen_history = [];
 
         // Assets
         public GameObject WatchAsset;
@@ -50,50 +51,55 @@ namespace GorillaInfoWatch.Behaviours
         private TMP_Text menu_page_text;
         private Button button_prev_page, button_next_page, button_return_screen, button_reload_screen;
 
+        // Assets
         public Dictionary<string, AudioClip> Sounds;
 
         public Dictionary<EDefaultSymbol, Sprite> Sprites;
 
-        public Dictionary<Predicate<NetPlayer>, EDefaultSymbol> SpecialSprites = new() 
+        public Dictionary<Predicate<NetPlayer>, EDefaultSymbol> SpecialSprites = new()
         {
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "/yF6UwSXIckuQ7wP/qjCWAa5lhjs7quGdVrI7M4dSwc=".DecryptString(),
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "E354E818871BD1D8",
                 EDefaultSymbol.DevSprite
             },
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "SlWeo52Ixd1btPgOM2bHJXcs7GbDwgjf3HistODbaoY=".DecryptString(),
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "FBE3EE50747CB892",
                 EDefaultSymbol.KaylieSprite
             },
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "ewR3RCl6bzac7EDrhvW8LvcZ9n3JS1BnzBDY9xvZ78w=".DecryptString(),
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "AA30186DA3713730" && UnityEngine.Random.value <= 0.01f,
+                EDefaultSymbol.BloodJmanSprite
+            },
+            {
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "AA30186DA3713730",
                 EDefaultSymbol.StaircaseSprite
             },
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "1lreM0Lvqm6upbUKS/w+Aw==".DecryptString(),
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "149657534CA679F",
                 EDefaultSymbol.AstridSprite
             },
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "vQeBg4Z53jQ8TXVGCZL/ytBCNybn+yZPETrA38Sr9ZI=".DecryptString(),
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "95ACF372B189C4EB",
                 EDefaultSymbol.DeactivatedSprite
             },
             {
-                (netPlayer) => netPlayer != null && (netPlayer.UserId == "qWPfsoYiOBeCN1UvSK6xQbbBxBXCkrTBfCrENFyTYWg=".DecryptString() || netPlayer.UserId == "ERCerPrBZZCZ+i375oEZsw6GgTkWod3ZhdXnffp52cU=".DecryptString()),
+                (netPlayer) => netPlayer != null && (netPlayer.UserId == "412602E3586FEF3A" || netPlayer.UserId == "383A50F9EB1ACD5A"),
                 EDefaultSymbol.CyanSprite
             },
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "vLzPScDeh77w2JuqJK5LYliri9cgBulaARLzWTgheg8=".DecryptString(),
+                (netPlayer) => netPlayer != null && netPlayer.UserId == "82CDEE6EC76948D",
                 EDefaultSymbol.H4rnsSprite
             },
             {
-                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAAK."),
+                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAAK.", false),
                 EDefaultSymbol.StickCosmetic
             },
             {
-                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBADE."),
+                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBADE.", false),
                 EDefaultSymbol.FingerPainterBadge
             },
             {
-                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAGS."),
+                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAGS.", false),
                 EDefaultSymbol.IllustratorBadge
             }
         };
@@ -105,6 +111,10 @@ namespace GorillaInfoWatch.Behaviours
             FriendLib.InitializeLib(Chainloader.PluginInfos);
 
             // Screens
+
+            screen_container = new GameObject("Screen Container");
+            screen_container.transform.SetParent(transform, false);
+            screen_container.SetActive(false);
 
             var builtinPages = new List<Type>()
             {
@@ -142,6 +152,8 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Fatal("Exception thrown when performing initial assembly check");
                 Logging.Error(ex);
             }
+
+            screen_container.SetActive(true);
 
             HomePage = gameObject.AddComponent<HomeScreen>();
             WarnPage = gameObject.AddComponent<WarningScreen>();
@@ -218,9 +230,9 @@ namespace GorillaInfoWatch.Behaviours
             button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<Button>();
             button_reload_screen.OnPressed = () =>
             {
-                if (CurrentScreen != null)
+                if (CurrentScreen is WatchScreen screen)
                 {
-                    CurrentScreen.OnScreenOpen();
+                    screen.OnScreenOpen();
                     DisplayScreen();
                 }
             };
@@ -235,32 +247,28 @@ namespace GorillaInfoWatch.Behaviours
             enabled = true;
         }
 
-        public void SwitchScreen(WatchScreen screen)
+        public void SwitchScreen(WatchScreen newScreen)
         {
-            if (CurrentScreen != null)
+            if (CurrentScreen is WatchScreen lastScreen)
             {
-                Logging.Warning(CurrentScreen.GetType().Name);
-
                 CurrentScreen.RequestScreenSwitch -= SwitchScreen;
                 CurrentScreen.RequestSetLines -= DisplayScreen;
                 CurrentScreen.enabled = false;
                 CurrentScreen.OnScreenClose();
 
-                if (screen_history.Count == 0 || screen_history[^1] != screen) screen_history.Add(CurrentScreen);
+                if (screen_history.Count == 0 || screen_history[^1] != newScreen) screen_history.Add(CurrentScreen);
             }
 
-            Logging.Info(screen.GetType().Name);
-            CurrentScreen = screen;
+            CurrentScreen = newScreen;
 
-            if (screen_history.Count > 0 && screen_history[^1] == screen) screen_history.RemoveAt(screen_history.Count - 1);
+            if (screen_history.Count > 0 && screen_history[^1] == newScreen) screen_history.RemoveAt(screen_history.Count - 1);
 
-            screen.enabled = true;
-            screen.RequestScreenSwitch += SwitchScreen;
-            screen.RequestSetLines += DisplayScreen;
-            screen.OnScreenOpen();
+            newScreen.enabled = true;
+            newScreen.RequestScreenSwitch += SwitchScreen;
+            newScreen.RequestSetLines += DisplayScreen;
+            newScreen.OnScreenOpen();
 
             DisplayScreen();
-            button_return_screen.gameObject.SetActive(screen_history.Count > 0);
         }
 
         public void SwitchScreen(Type type)
@@ -277,7 +285,9 @@ namespace GorillaInfoWatch.Behaviours
 
         public void DisplayScreen(bool text_exclusive = false)
         {
-            var content = CurrentScreen.Content;
+            button_return_screen.gameObject.SetActive(screen_history.Count > 0);
+
+            var content = CurrentScreen.GetContent();
             if (content == null) return;
 
             int page_count = content.GetPageCount();
@@ -288,7 +298,7 @@ namespace GorillaInfoWatch.Behaviours
             menu_page_text.text = (button_next_page.gameObject.activeSelf || button_prev_page.gameObject.activeSelf) ? $"{CurrentScreen.PageNumber + 1}/{page_count}" : "";
 
             string page_title = content.GetPageTitle(CurrentScreen.PageNumber);
-            menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(page_title) ? "": $" - {page_title}")}";
+            menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(page_title) ? "" : $" - {page_title}")}";
             if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
             {
                 menu_description.gameObject.SetActive(false);
@@ -300,7 +310,7 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             var lines = content.GetPageLines(CurrentScreen.PageNumber);
-            
+
             for (int i = 0; i < Constants.LinesPerPage; i++)
             {
                 var menu_line = menu_lines[i];
@@ -323,16 +333,21 @@ namespace GorillaInfoWatch.Behaviours
         {
             try
             {
-                var component = gameObject.AddComponent(type);
+                var component = screen_container.AddComponent(type);
+
                 if (component is WatchScreen page)
                 {
+                    Logging.Info($"Added Type {type.Name}");
+
                     page.enabled = false;
                     RegisterScreen(page);
+
+                    return;
                 }
-                else
-                {
-                    Destroy(component);
-                }
+
+                Logging.Warning($"Type {type.Name} is not WatchScreen");
+
+                Destroy(component);
             }
             catch (Exception ex)
             {
@@ -396,7 +411,7 @@ namespace GorillaInfoWatch.Behaviours
                 AudioClip clip = Sounds["Press"];
                 handSource.PlayOneShot(clip, 0.2f);
             }
-        } 
+        }
 
         private void OnEventReceived(EventData photonEvent)
         {

@@ -11,7 +11,7 @@ namespace GorillaInfoWatch.Tools
     internal static class AssetLoader
     {
         public static AssetBundle Bundle => is_bundle_loaded ? asset_bundle : null;
-        
+
         private static bool is_bundle_loaded;
         private static AssetBundle asset_bundle;
         private static Task bundle_load_task = null;

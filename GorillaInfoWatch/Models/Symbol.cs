@@ -1,11 +1,12 @@
+using GorillaInfoWatch.Behaviours;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models
 {
-    public class Symbol(Sprite sprite)
+    public class Symbol
     {
-        public Sprite Sprite = sprite;
+        public Sprite Sprite;
 
         public Color Colour = Color.white;
 
@@ -16,6 +17,19 @@ namespace GorillaInfoWatch.Models
         }
 
         public Material Material;
+
+        public Symbol(Sprite sprite)
+        {
+            Sprite = sprite;
+        }
+
+        public Symbol(EDefaultSymbol symbol)
+        {
+            if (Main.Instance is Main main && main.Sprites.TryGetValue(symbol, out Sprite sprite))
+            {
+                Sprite = sprite;
+            }
+        }
 
         public void Set(Image image)
         {

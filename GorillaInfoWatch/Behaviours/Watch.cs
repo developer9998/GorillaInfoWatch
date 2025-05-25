@@ -22,6 +22,8 @@ namespace GorillaInfoWatch.Behaviours
 
         private MeshRenderer screen_renderer, outline_renderer;
 
+        public bool HideWatch = false;
+
         public void Start()
         {
             audio_device = GetComponent<AudioSource>();
@@ -43,6 +45,13 @@ namespace GorillaInfoWatch.Behaviours
             transform.localPosition = Vector3.zero;
             transform.localEulerAngles = Vector3.zero;
             transform.localScale = Vector3.one;
+
+            if (HideWatch)
+            {
+                time_text.enabled = false;
+                date_text.enabled = false;
+                transform.GetComponentsInChildren<MeshRenderer>(true).ForEach(renderer => renderer.enabled = false);
+            }
         }
 
         public void OnDestroy()

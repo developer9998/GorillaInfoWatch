@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Models.Widgets
                 if (Singleton<Main>.HasInstance)
                 {
                     Predicate<NetPlayer> match = null;
-                    foreach(var predicate in Singleton<Main>.Instance.SpecialSprites.Keys)
+                    foreach (var predicate in Singleton<Main>.Instance.SpecialSprites.Keys)
                     {
                         if (predicate(Player))
                         {

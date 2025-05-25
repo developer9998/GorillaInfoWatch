@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections.Generic;
-using GorillaInfoWatch.Models;
 using System.Linq;
+using GorillaInfoWatch.Models;
 using TMPro;
-using System;
+using UnityEngine;
 using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
 using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
 
@@ -43,7 +43,7 @@ namespace GorillaInfoWatch.Behaviours
                 widget_objects.AddRange(Enumerable.Repeat<GameObject>(null, widgets.Length - widget_objects.Count));
             }
 
-            for(int i = 0; i < widget_objects.Count; i++)
+            for (int i = 0; i < widget_objects.Count; i++)
             {
                 IWidgetObject widget = (i < widgets.Length) ? widgets[i] : null;
                 if (widget == null)
@@ -83,7 +83,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
             }
 
-            var widgets_with_behaviour =  Array.FindAll(widgets, widget => widget is IWidgetBehaviour).Select(widget => widget as IWidgetBehaviour);
+            var widgets_with_behaviour = Array.FindAll(widgets, widget => widget is IWidgetBehaviour).Select(widget => widget as IWidgetBehaviour);
             var list_removal_candidates = widget_behaviours.Where(behaviour => !widgets_with_behaviour.Contains(behaviour) || !(bool)behaviour.game_object);
             widget_behaviours = [.. widget_behaviours.Except(list_removal_candidates)];
         }
@@ -92,7 +92,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (widget_behaviours.Count > 0)
             {
-                foreach(var behaviour in widget_behaviours)
+                foreach (var behaviour in widget_behaviours)
                 {
                     behaviour.InvokeUpdate();
                 }

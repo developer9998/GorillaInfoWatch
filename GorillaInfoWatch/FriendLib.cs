@@ -1,16 +1,18 @@
-﻿using BepInEx;
-using HarmonyLib;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using BepInEx;
+using GorillaInfoWatch.Tools;
+using HarmonyLib;
 using UnityEngine;
 
 namespace GorillaInfoWatch
 {
     public static class FriendLib
     {
-        private static List<PluginInfo> _pluginInfos = [];
-        private static BaseUnityPlugin _gorillaFriendsPlugin;
+        private const string GorillaFriendsGUID = "net.rusjj.gorillafriends";
+
+        private static BaseUnityPlugin gorilla_friends;
 
         private static Color _friendColour, _verifiedColour, _recentlyPlayedColour;
         private static MethodInfo _isVerified, _isFriend, _isInFriendList, _hasPlayedWithUsRecently, _needToCheckRecently;
@@ -18,24 +20,28 @@ namespace GorillaInfoWatch
 
         public static void InitializeLib(Dictionary<string, PluginInfo> loadedPlugins)
         {
-            PluginInfo plugin_info = loadedPlugins.ContainsKey("net.rusjj.gorillafriends") ? loadedPlugins["net.rusjj.gorillafriends"] : loadedPlugins.Values.FirstOrDefault(plugin => plugin.Metadata.GUID == "net.rusjj.gorillafriends");
-            if (plugin_info != null)
+            if (loadedPlugins.TryGetValue(GorillaFriendsGUID, out PluginInfo pluginInfo))
             {
-                _gorillaFriendsPlugin = plugin_info.Instance;
+                Logging.Info($"Identified GorillaFriends Plugin");
 
-                _friendColour = (Color)AccessTools.Property(_gorillaFriendsPlugin.GetType(), "m_clrFriend").GetValue(_gorillaFriendsPlugin);
-                _verifiedColour = (Color)AccessTools.Property(_gorillaFriendsPlugin.GetType(), "m_clrVerified").GetValue(_gorillaFriendsPlugin);
-                _recentlyPlayedColour = (Color)AccessTools.Property(_gorillaFriendsPlugin.GetType(), "m_clrPlayedRecently").GetValue(_gorillaFriendsPlugin);
+                gorilla_friends = pluginInfo.Instance;
 
-                _isVerified = AccessTools.Method(_gorillaFriendsPlugin.GetType(), "IsVerified");
-                _isFriend = AccessTools.Method(_gorillaFriendsPlugin.GetType(), "IsFriend");
-                _isInFriendList = AccessTools.Method(_gorillaFriendsPlugin.GetType(), "IsInFriendList");
-                _hasPlayedWithUsRecently = AccessTools.Method(_gorillaFriendsPlugin.GetType(), "IsVerified");
-                _needToCheckRecently = AccessTools.Method(_gorillaFriendsPlugin.GetType(), "NeedToCheckRecently");
+                _friendColour = (Color)AccessTools.Property(gorilla_friends.GetType(), "m_clrFriend").GetValue(gorilla_friends);
+                _verifiedColour = (Color)AccessTools.Property(gorilla_friends.GetType(), "m_clrVerified").GetValue(gorilla_friends);
+                _recentlyPlayedColour = (Color)AccessTools.Property(gorilla_friends.GetType(), "m_clrPlayedRecently").GetValue(gorilla_friends);
+
+                _isVerified = AccessTools.Method(gorilla_friends.GetType(), "IsVerified");
+                _isFriend = AccessTools.Method(gorilla_friends.GetType(), "IsFriend");
+                _isInFriendList = AccessTools.Method(gorilla_friends.GetType(), "IsInFriendList");
+                _hasPlayedWithUsRecently = AccessTools.Method(gorilla_friends.GetType(), "IsVerified");
+                _needToCheckRecently = AccessTools.Method(gorilla_friends.GetType(), "NeedToCheckRecently");
+                return;
             }
+
+            Logging.Warning("Missing GorillaFriends Plugin");
         }
 
-        public static bool FriendCompatible => _gorillaFriendsPlugin != null;
+        public static bool FriendCompatible => gorilla_friends != null;
 
         public static Color FriendColour => _friendColour;
 
@@ -46,42 +52,42 @@ namespace GorillaInfoWatch
         public static bool IsVerified(string userId)
         {
             if (!FriendCompatible) return false;
-            return (bool)_isVerified.Invoke(_gorillaFriendsPlugin, [userId]);
+            return (bool)_isVerified.Invoke(gorilla_friends, [userId]);
         }
 
         public static bool IsFriend(string userId)
         {
             if (!FriendCompatible) return false;
-            return (bool)_isFriend.Invoke(_gorillaFriendsPlugin, [userId]);
+            return (bool)_isFriend.Invoke(gorilla_friends, [userId]);
         }
 
         public static bool IsInFriendList(string userId)
         {
             if (!FriendCompatible) return false;
-            return (bool)_isInFriendList.Invoke(_gorillaFriendsPlugin, [userId]);
+            return (bool)_isInFriendList.Invoke(gorilla_friends, [userId]);
         }
 
         public static bool NeedToCheckRecently(string userId)
         {
             if (!FriendCompatible) return false;
-            return (bool)_needToCheckRecently.Invoke(_gorillaFriendsPlugin, [userId]);
+            return (bool)_needToCheckRecently.Invoke(gorilla_friends, [userId]);
         }
 
         public static byte HasPlayedWithUsRecently(string userId)
         {
             if (!FriendCompatible) return 0; // Never = 0
-            return (byte)_hasPlayedWithUsRecently.Invoke(_gorillaFriendsPlugin, [userId]);
+            return (byte)_hasPlayedWithUsRecently.Invoke(gorilla_friends, [userId]);
         }
 
         public static void AddFriend(NetPlayer player)
         {
             if (!FriendCompatible) return;
 
-            _currentSessionFriends = (List<string>)AccessTools.Field(_gorillaFriendsPlugin.GetType(), "m_listCurrentSessionFriends").GetValue(_gorillaFriendsPlugin);
+            _currentSessionFriends = (List<string>)AccessTools.Field(gorilla_friends.GetType(), "m_listCurrentSessionFriends").GetValue(gorilla_friends);
             if (!IsInFriendList(player.UserId))
             {
                 _currentSessionFriends.Add(player.UserId);
-                AccessTools.Field(_gorillaFriendsPlugin.GetType(), "m_listCurrentSessionFriends").SetValue(_gorillaFriendsPlugin, _currentSessionFriends);
+                AccessTools.Field(gorilla_friends.GetType(), "m_listCurrentSessionFriends").SetValue(gorilla_friends, _currentSessionFriends);
                 PlayerPrefs.SetInt(player.UserId + "_friend", 1);
 
                 GorillaPlayerScoreboardLine line = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ActorNumber == player.ActorNumber && line.gameObject.activeInHierarchy);
@@ -95,11 +101,11 @@ namespace GorillaInfoWatch
         {
             if (!FriendCompatible) return;
 
-            _currentSessionFriends = (List<string>)AccessTools.Field(_gorillaFriendsPlugin.GetType(), "m_listCurrentSessionFriends").GetValue(_gorillaFriendsPlugin);
+            _currentSessionFriends = (List<string>)AccessTools.Field(gorilla_friends.GetType(), "m_listCurrentSessionFriends").GetValue(gorilla_friends);
             if (IsInFriendList(player.UserId))
             {
                 _currentSessionFriends.Remove(player.UserId);
-                AccessTools.Field(_gorillaFriendsPlugin.GetType(), "m_listCurrentSessionFriends").SetValue(_gorillaFriendsPlugin, _currentSessionFriends);
+                AccessTools.Field(gorilla_friends.GetType(), "m_listCurrentSessionFriends").SetValue(gorilla_friends, _currentSessionFriends);
                 PlayerPrefs.DeleteKey(player.UserId + "_friend");
 
                 GorillaPlayerScoreboardLine line = GorillaScoreboardTotalUpdater.allScoreboardLines.First(line => line.linePlayer.ActorNumber == player.ActorNumber && line.gameObject.activeInHierarchy);

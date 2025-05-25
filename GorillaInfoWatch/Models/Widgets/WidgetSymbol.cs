@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Models
         {
             game_object = Object.Instantiate(line.Symbol, line.Symbol.transform.parent);
             game_object.name = "Symbol";
-            
+
             game_object.SetActive(true);
             if (game_object.TryGetComponent(out Image image)) image.enabled = true;
         }

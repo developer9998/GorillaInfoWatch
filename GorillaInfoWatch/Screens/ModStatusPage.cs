@@ -1,10 +1,10 @@
-﻿using BepInEx;
+﻿using System.Collections.Generic;
+using System.Linq;
+using BepInEx;
 using BepInEx.Bootstrap;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
 using HarmonyLib;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -12,7 +12,7 @@ namespace GorillaInfoWatch.Screens
     public class ModStatusPage : WatchScreen
     {
         public override string Title => "Mod Status";
-        
+
         private static PluginInfo[] _eligiblePlugins, _modEntries;
 
         public void Awake()
@@ -30,26 +30,26 @@ namespace GorillaInfoWatch.Screens
 
         private bool IsEligible(PluginInfo info) => _eligiblePlugins.Contains(info);
 
-        public override void OnScreenOpen()
-        {
-            Draw();
-        }
 
-        public void Draw()
+        public override ScreenContent GetContent()
         {
-            LineBuilder = new();
+            LineBuilder lines = new();
 
             for (int i = 0; i < _modEntries.Length; i++)
             {
                 PluginInfo info = _modEntries[i];
+
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    LineBuilder.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new WidgetButton(WidgetButton.EButtonType.Switch, !isEnabled, OnButtonSelect, i));
+                    lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new WidgetButton(WidgetButton.EButtonType.Switch, !isEnabled, OnButtonSelect, i));
                     continue;
                 }
-                LineBuilder.AddLine(info.Metadata.Name);
+
+                lines.AddLine(info.Metadata.Name);
             }
+
+            return lines;
         }
 
         private void OnButtonSelect(bool value, object[] args)
@@ -57,8 +57,7 @@ namespace GorillaInfoWatch.Screens
             if (args[0] is int mod_index)
             {
                 _modEntries[mod_index].Instance.enabled = !value;
-                Draw();
-                SetLines();
+                SetContent();
             }
         }
     }

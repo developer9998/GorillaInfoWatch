@@ -1,8 +1,12 @@
-using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using GorillaInfoWatch.Attributes;
+using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using GorillaNetworking;
+using PlayFab;
+using PlayFab.ClientModels;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -28,48 +32,60 @@ namespace GorillaInfoWatch.Screens
         {
             FriendsList = null;
             FriendSystem.Instance.RefreshFriendsList();
-            Draw();
-            SetLines();
+            SetContent();
         }
 
         public void OnGetFriendsReceived(List<FriendBackendController.Friend> friendsList)
         {
             FriendsList = friendsList;
-            Draw();
-            SetLines();
+            SetContent();
         }
 
-        public void Draw()
+        public void GetUserName(string userId, Action<string> onUserNameRecieved)
         {
-            LineBuilder = new();
-
-            if (FriendsList == null)
+            PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
             {
-                LineBuilder.AddLine("<align=\"center\">Retrieving friends list</align>");
-                return;
-            }
+                PlayFabId = userId
+            }, result =>
+            {
+                Logging.Info(result.AccountInfo.TitleInfo.DisplayName);
+                onUserNameRecieved?.Invoke(result.AccountInfo.TitleInfo.DisplayName);
+            }, error =>
+            {
+                Logging.Fatal($"PlayFabClientAPI.GetAccountInfo with PlayFabId {userId}");
+                Logging.Error(error.ErrorMessage);
+                onUserNameRecieved?.Invoke(string.Empty);
+            });
+        }
+
+        public override ScreenContent GetContent()
+        {
+            if (FriendsList == null)
+                return new LineBuilder("<align=\"center\">Retrieving friends list</align>");
 
             List<FriendBackendController.FriendPresence> list = [];
-            foreach(var friend in FriendsList)
+            foreach (var friend in FriendsList)
             {
                 if (friend == null) continue;
                 var presence = friend.Presence;
                 if (presence == null) continue;
                 string friend_name = presence.UserName;
                 string room_id = presence.RoomId;
+                GetUserName(presence.FriendLinkId, (string userName) =>
+                {
+                    Logging.Info($"got name {userName} for id {presence.FriendLinkId}");
+                });
+
                 if ((string.IsNullOrEmpty(friend_name) || string.IsNullOrWhiteSpace(friend_name)) && (string.IsNullOrEmpty(room_id) || string.IsNullOrWhiteSpace(room_id))) continue;
                 list.Add(presence);
             }
 
             if (list.Count == 0)
-            {
-                LineBuilder.AddLine("<align=\"center\">No friends are currently active</align>");
-                return;
-            }
+                return new LineBuilder("<align=\"center\">No friends are currently active</align>");
 
-            LineBuilder.AddLine($"<align=\"center\">Showing {list.Count} friends:</align>");
+            var lines = new LineBuilder($"<align=\"center\">Showing {list.Count} friends:</align>");
 
-            foreach(FriendBackendController.FriendPresence presence in list)
+            foreach (FriendBackendController.FriendPresence presence in list)
             {
                 if (!string.IsNullOrEmpty(presence.RoomId) && presence.RoomId.Length > 0)
                 {
@@ -90,17 +106,19 @@ namespace GorillaInfoWatch.Screens
                     bool joinable = !has_vstump_prepend && !is_in_room && (!is_public_room || in_zone);
                     if (joinable)
                     {
-                        LineBuilder.AddLine(line_content, new WidgetButton(FriendButtonClick, presence));
+                        lines.AddLine(line_content, new WidgetButton(FriendButtonClick, presence));
                     }
                     else
                     {
-                        LineBuilder.AddLine(line_content);
+                        lines.AddLine(line_content);
                     }
                     continue;
                 }
 
-                LineBuilder.AddLine($"{presence.UserName}: OFFLINE");
+                lines.AddLine($"{presence.UserName}: OFFLINE");
             }
+
+            return lines;
         }
 
         public void FriendButtonClick(bool value, object[] args)
@@ -112,7 +130,7 @@ namespace GorillaInfoWatch.Screens
                 bool has_vstump_prepend = presence.RoomId[0] == '@';
                 string friend_room = has_vstump_prepend ? presence.RoomId[1..].ToUpper() : presence.RoomId.ToUpper();
                 GorillaComputer.instance.roomToJoin = friend_room;
-			    PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(friend_room, joinType);
+                PhotonNetworkController.Instance.AttemptToJoinSpecificRoom(friend_room, joinType);
             }
         }
     }
