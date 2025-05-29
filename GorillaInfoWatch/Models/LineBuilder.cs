@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Models
     {
         public List<ScreenLine> Lines = lines ?? [];
 
-        public LineBuilder() : this(string.Empty)
+        public LineBuilder() : this([])
         {
 
         }
@@ -35,7 +35,7 @@ namespace GorillaInfoWatch.Models
             string[] texts = text.Split('\n');
             foreach (string s in texts)
             {
-                int characters = 37; // might not be accurate
+                int characters = 37; // TODO: update this if needed, *might* not be accurate
                 int amount = Mathf.CeilToInt((float)s.Length / characters);
                 for (int i = 0; i < amount; i++)
                 {

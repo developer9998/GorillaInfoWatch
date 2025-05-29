@@ -59,7 +59,7 @@ namespace GorillaInfoWatch.Behaviours
         public Dictionary<Predicate<NetPlayer>, EDefaultSymbol> SpecialSprites = new()
         {
             {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "E354E818871BD1D8",
+                (netPlayer) => netPlayer != null && (netPlayer.UserId == "E354E818871BD1D8" || netPlayer.UserId == "91902A4E2624708F"),
                 EDefaultSymbol.DevSprite
             },
             {
@@ -175,8 +175,16 @@ namespace GorillaInfoWatch.Behaviours
             watch.name = "InfoWatch";
             var watch_component = watch.AddComponent<Watch>();
             watch_component.Rig = GorillaTagger.Instance.offlineVRRig;
-            watch_component.TimeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
-            NetworkHandler.Instance.SetProperty("TimeOffset", watch_component.TimeOffset.Value);
+
+            TimeZoneInfo timeZoneInfo = TimeZoneInfo.Local;
+
+            string timeZone = (timeZoneInfo.SupportsDaylightSavingTime && timeZoneInfo.IsDaylightSavingTime(DateTime.Now)) ? timeZoneInfo.DaylightName : timeZoneInfo.StandardName;
+            watch_component.TimeZone = timeZone;
+            NetworkHandler.Instance.SetProperty("TimeZone", timeZone);
+
+            float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
+            watch_component.TimeOffset = timeOffset;
+            NetworkHandler.Instance.SetProperty("TimeOffset", timeOffset);
 
             menu = Instantiate(await AssetLoader.LoadAsset<GameObject>("Menu"));
             menu.name = "InfoMenu";
@@ -232,7 +240,6 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (CurrentScreen is WatchScreen screen)
                 {
-                    screen.OnScreenOpen();
                     DisplayScreen();
                 }
             };
@@ -283,30 +290,37 @@ namespace GorillaInfoWatch.Behaviours
             SwitchScreen(ScreenRegistry[^1]); // latest screen
         }
 
-        public void DisplayScreen(bool text_exclusive = false)
+        public void DisplayScreen(bool includeWidgets = true)
         {
             button_return_screen.gameObject.SetActive(screen_history.Count > 0);
 
             var content = CurrentScreen.GetContent();
             if (content == null) return;
 
-            int page_count = content.GetPageCount();
-            CurrentScreen.PageNumber = CurrentScreen.PageNumber.Wrap(0, page_count);
-
-            button_next_page.gameObject.SetActive(page_count > 1);
-            button_prev_page.gameObject.SetActive(page_count > 1);
-            menu_page_text.text = (button_next_page.gameObject.activeSelf || button_prev_page.gameObject.activeSelf) ? $"{CurrentScreen.PageNumber + 1}/{page_count}" : "";
-
-            string page_title = content.GetPageTitle(CurrentScreen.PageNumber);
-            menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(page_title) ? "" : $" - {page_title}")}";
-            if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
+            try
             {
-                menu_description.gameObject.SetActive(false);
+                int page_count = content.GetPageCount();
+                CurrentScreen.PageNumber = page_count != 0 ? CurrentScreen.PageNumber.Wrap(0, page_count) : 0;
+
+                button_next_page.gameObject.SetActive(page_count > 1);
+                button_prev_page.gameObject.SetActive(page_count > 1);
+                menu_page_text.text = (button_next_page.gameObject.activeSelf || button_prev_page.gameObject.activeSelf) ? $"{CurrentScreen.PageNumber + 1}/{page_count}" : "";
+
+                string page_title = content.GetPageTitle(CurrentScreen.PageNumber);
+                menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(page_title) ? "" : $" - {page_title}")}";
+                if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
+                {
+                    menu_description.gameObject.SetActive(false);
+                }
+                else if (!string.IsNullOrEmpty(CurrentScreen.Description))
+                {
+                    menu_description.gameObject.SetActive(true);
+                    menu_description.text = CurrentScreen.Description;
+                }
             }
-            else if (!string.IsNullOrEmpty(CurrentScreen.Description))
+            catch(Exception ex)
             {
-                menu_description.gameObject.SetActive(true);
-                menu_description.text = CurrentScreen.Description;
+                Logging.Error($"Exception thrown when displaying screen {CurrentScreen.GetType().Name}: {ex}");
             }
 
             var lines = content.GetPageLines(CurrentScreen.PageNumber);
@@ -314,18 +328,16 @@ namespace GorillaInfoWatch.Behaviours
             for (int i = 0; i < Constants.LinesPerPage; i++)
             {
                 var menu_line = menu_lines[i];
-                var page_line = lines.ElementAtOrDefault(i);
 
-                if (page_line != null)
+                if (lines.ElementAtOrDefault(i) is ScreenLine line)
                 {
-                    bool set_widgets = !menu_line.gameObject.activeSelf;
+                    bool wasLineActive = menu_line.gameObject.activeSelf;
                     menu_line.gameObject.SetActive(true);
-                    menu_line.Build(page_line, set_widgets || !text_exclusive);
+                    menu_line.Build(line, !wasLineActive || includeWidgets);
+                    continue;
                 }
-                else
-                {
-                    menu_line.gameObject.SetActive(false);
-                }
+
+                menu_line.gameObject.SetActive(false);
             }
         }
 

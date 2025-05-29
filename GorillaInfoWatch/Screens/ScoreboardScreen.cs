@@ -15,28 +15,82 @@ namespace GorillaInfoWatch.Screens
     {
         public override string Title => "Scoreboard";
 
+        public HashSet<NetPlayer> includedPlayers = [];
+
+        public override void OnScreenOpen()
+        {
+            base.OnScreenOpen();
+
+            RoomSystem.JoinedRoomEvent += OnRoomJoined;
+            RoomSystem.LeftRoomEvent += OnRoomLeft;
+            RoomSystem.PlayerJoinedEvent += OnPlayerJoined;
+            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+        }
+
+        public override void OnScreenClose()
+        {
+            base.OnScreenClose();
+
+            RoomSystem.JoinedRoomEvent += OnRoomJoined;
+            RoomSystem.LeftRoomEvent += OnRoomLeft;
+            RoomSystem.PlayerJoinedEvent += OnPlayerJoined;
+            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+        }
+
         public override ScreenContent GetContent()
         {
+            LineBuilder lines = new();
+
             if (!NetworkSystem.Instance.InRoom)
             {
                 Description = string.Empty;
-                return new LineBuilder("<align=\"center\">Not in Room</align>");
+
+                lines.AddLine("You aren't connected to a room!");
+                lines.AddLines(1);
+                lines.AddLine("Join a room to view scoreboard.");
+
+                return lines;
             }
 
             Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
 
-            LineBuilder lines = new();
+            var hashSet = new HashSet<NetPlayer>(NetworkSystem.Instance.AllNetPlayers);
+            hashSet.UnionWith(includedPlayers);
 
-            var players_in_room = new List<NetPlayer>(NetworkSystem.Instance.AllNetPlayers);
+            var players_in_room = hashSet.ToList();
             players_in_room.Sort((x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
 
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
-                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !RigUtils.TryGetVRRig(player, out RigContainer container)) ? player.NickName.NormalizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new WidgetButton(TryInspectPlayer, player));
+                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !RigUtils.TryGetVRRig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new WidgetButton(TryInspectPlayer, player));
             }
 
             return lines;
+        }
+
+        private void OnRoomJoined()
+        {
+            includedPlayers = [.. NetworkSystem.Instance.AllNetPlayers];
+            SetContent();
+        }
+
+        private void OnRoomLeft()
+        {
+            includedPlayers.Clear();
+            SetContent();
+        }
+
+        private void OnPlayerJoined(NetPlayer player)
+        {
+            if (includedPlayers.Add(player))
+                SetContent();
+        }
+
+        private void OnPlayerLeft(NetPlayer player)
+        {
+            if (includedPlayers.Remove(player))
+                SetContent();
         }
 
         public void TryInspectPlayer(bool value, object[] args)

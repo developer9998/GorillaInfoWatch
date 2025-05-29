@@ -8,6 +8,8 @@ namespace GorillaInfoWatch.Behaviours
     {
         public VRRig Rig;
 
+        public string? TimeZone;
+
         public float? TimeOffset;
 
         private Transform time_display, notification_display;

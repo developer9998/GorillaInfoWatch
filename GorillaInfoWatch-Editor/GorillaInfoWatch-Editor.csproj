@@ -2,45 +2,16 @@
 
   <PropertyGroup>
 	  <TargetFramework>netstandard2.1</TargetFramework>
-	  <LangVersion>latest</LangVersion>
-	  <Configurations>Debug;Release;Editor</Configurations>
+	  <LangVersion>8.0</LangVersion>
+	  <RootNamespace>GorillaInfoWatch_Editor</RootNamespace>
+	  <AssemblyName>GorillaInfoWatch</AssemblyName>
   </PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>TRACE;PLUGIN</DefineConstants>
-		<PlatformTarget>AnyCPU</PlatformTarget>
-		<DebugType>portable</DebugType>
-		<DebugSymbols>true</DebugSymbols>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>TRACE;PLUGIN</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor|AnyCPU'">
-		<DefineConstants>TRACE</DefineConstants>
-	</PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Content\watchbundle" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Content\watchbundle" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>$(BepInExAssemblyPath)\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp" Publicize="true">
+    <Reference Include="Assembly-CSharp">
       <HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">

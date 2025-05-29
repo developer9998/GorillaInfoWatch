@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
+using System.Linq;
 using GorillaNetworking;
 
 namespace GorillaInfoWatch.Extensions
@@ -11,74 +9,31 @@ namespace GorillaInfoWatch.Extensions
     {
         private static readonly Dictionary<string, string> SanitizedNames = [];
 
-        private static readonly string Key = "ShibaAspectAndTundraSmellLikeDog"; // still accurate and i can't think of anything better
-
-        public static string NormalizeName(this string name)
+        public static string SanitizeName(this string originalName)
         {
-            if (SanitizedNames.ContainsKey(name)) return SanitizedNames[name];
+            if (SanitizedNames.TryGetValue(originalName, out string cachedName)) 
+                return cachedName;
 
-            string original_name = name;
+            string sanitizedName = new string(Array.FindAll(originalName.ToCharArray(), Utils.IsASCIILetterOrDigit)).LimitLength(12);
 
-            if (GorillaComputer.instance.CheckAutoBanListForName(name))
+            if (!GorillaComputer.instance.CheckAutoBanListForName(sanitizedName))
             {
-                name = new string(Array.FindAll(name.ToCharArray(), Utils.IsASCIILetterOrDigit)).LimitLength(12);
-                name = (string.IsNullOrEmpty(name) || string.IsNullOrWhiteSpace(name)) ? "<empty>" : name.ToUpper();
-            }
-            else
-            {
-                name = "<badname>"; // scoreboard handles reporting, no need to do it here, or in any mod for that matter
+                char[] characters = [.. Enumerable.Repeat('#', sanitizedName.Length)];
+                characters[0] = sanitizedName[0];
+                characters[^1] = sanitizedName[^1];
             }
 
-            SanitizedNames.Add(original_name, name);
-            return name;
+            sanitizedName = originalName.ToUpper();
+
+            SanitizedNames.Add(originalName, sanitizedName);
+            return sanitizedName;
         }
 
-        public static string LimitLength(this string str, int length)
+        public static string LimitLength(this string str, int maxLength)
         {
-            return (str.Length > length) ? str[..length] : str;
-        }
-
-        // https://github.com/KyleTheScientist/Bark/blob/3de171aca033d45f464a5120fb1932c9a0d2a3af/Extensions/StringExtensions.cs#L11
-        public static string EncryptString(this string plainText)
-        {
-            byte[] iv = new byte[16];
-            byte[] array;
-
-            using (Aes aes = Aes.Create())
-            {
-                aes.Key = Encoding.UTF8.GetBytes(Key);
-                aes.IV = iv;
-
-                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
-                using MemoryStream memoryStream = new();
-                using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
-                using (StreamWriter streamWriter = new(cryptoStream))
-                {
-                    streamWriter.Write(plainText);
-                }
-
-                array = memoryStream.ToArray();
-            }
-
-            return Convert.ToBase64String(array);
-        }
-
-        // https://github.com/KyleTheScientist/Bark/blob/3de171aca033d45f464a5120fb1932c9a0d2a3af/Extensions/StringExtensions.cs#L40
-        public static string DecryptString(this string cipherText)
-        {
-            byte[] iv = new byte[16];
-            byte[] buffer = Convert.FromBase64String(cipherText);
-
-            using Aes aes = Aes.Create();
-            aes.Key = Encoding.UTF8.GetBytes(Key);
-            aes.IV = iv;
-            ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-
-            using MemoryStream memoryStream = new(buffer);
-            using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
-            using StreamReader streamReader = new(cryptoStream);
-            return streamReader.ReadToEnd();
+            if (str.Length > maxLength)
+                return str[..maxLength];
+            return str;
         }
     }
 }

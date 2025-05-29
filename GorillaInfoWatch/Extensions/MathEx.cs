@@ -8,9 +8,7 @@ namespace GorillaInfoWatch.Extensions
             int range = max - min;
             int result = (x - min) % range;
             if (result < 0)
-            {
                 result += range;
-            }
             return result + min;
         }
     }

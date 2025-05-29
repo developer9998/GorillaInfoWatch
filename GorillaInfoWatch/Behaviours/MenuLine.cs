@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
 using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
@@ -31,11 +32,12 @@ namespace GorillaInfoWatch.Behaviours
             Symbol.SetActive(false);
         }
 
-        public void Build(ScreenLine line, bool set_widgets)
+        public void Build(ScreenLine line, bool applyWidgets)
         {
+            Logging.Info($"Text: \"{line.Text}\" Apply Widgets: {applyWidgets}");
             Text.text = line.Text;
 
-            if (!set_widgets) return;
+            if (!applyWidgets) return;
 
             IWidgetObject[] widgets = [.. Array.FindAll(line.Widgets.ToArray(), widget => widget is IWidgetObject).Select(widget => widget as IWidgetObject)];
             if (widgets.Length > 0 && widget_objects.Count < widgets.Length)
@@ -48,6 +50,7 @@ namespace GorillaInfoWatch.Behaviours
                 IWidgetObject widget = (i < widgets.Length) ? widgets[i] : null;
                 if (widget == null)
                 {
+                    Logging.Info($"No widget at {i}");
                     if (widget_objects[i] != null)
                     {
                         Destroy(widget_objects[i]);
@@ -57,16 +60,18 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 int fits = widget.ObjectFits(widget_objects[i]);
-                //Logging.Info($"{i} {widget.GetType().Name} fits = {fits}");
+                Logging.Info($"{i} {widget.GetType().Name} fits = {fits}");
 
                 if (fits < 2 && widget_objects[i] != null)
                 {
+                    Logging.Info($"Destroying widget");
                     Destroy(widget_objects[i]);
                     if (fits == 0) continue;
                 }
 
                 if (fits == 1)
                 {
+                    Logging.Info($"Creating widget");
                     widget.CreateObject(this, out GameObject widget_object);
                     widget_objects[i] = widget_object;
                 }
@@ -77,8 +82,10 @@ namespace GorillaInfoWatch.Behaviours
                     widget_behaviour.Initialize(widget_objects[i]);
                     widget_behaviours.Add(widget_behaviour);
                 }
+
                 if (widget is not IWidgetBehaviour || (widget as IWidgetBehaviour).PerformNativeMethods)
                 {
+                    Logging.Info($"Modifying widget");
                     widget.ModifyObject(widget_objects[i]);
                 }
             }

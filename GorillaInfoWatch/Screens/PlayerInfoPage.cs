@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using UnityEngine;
 
@@ -52,7 +54,7 @@ namespace GorillaInfoWatch.Screens
 
             string userId = creator.UserId;
 
-            this._normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? creator.DefaultName : creator.NickName).NormalizeName();
+            this._normalizedString = (PlayFabAuthenticator.instance.GetSafety() ? creator.DefaultName : creator.NickName).SanitizeName();
             string text = (this._normalizedString != creator.NickName) ? (this._normalizedString.ToUpper() + " (" + creator.NickName + ")") : this._normalizedString.ToUpper();
             
 			if (FriendLib.IsFriend(creator.UserId))
@@ -213,15 +215,13 @@ namespace GorillaInfoWatch.Screens
 		private void OnMuteButtonClick(bool value, object[] args)
 		{
 			object obj = args.ElementAtOrDefault(0);
-            if (obj is NetPlayer player && this.ScoreboardLine != null)
+            if (obj is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer container))
             {
-                bool isMuted = PlayerPrefs.GetInt(player.UserId, 0) != 0;
-				var lines = GorillaScoreboardTotalUpdater.allScoreboards.SelectMany(scoreboard => scoreboard.lines).Where(line => line.linePlayer == player);
-				lines.ForEach(line =>
-				{
-					line.muteButton.isOn = !isMuted;
-					line.PressButton(!isMuted, GorillaPlayerLineButton.ButtonType.Mute);
-                });
+				container.hasManualMute = true;
+				container.Muted ^= true;
+
+				Logging.Info($"Reported mute for {player.NickName}: {container.Muted}");
+                GorillaScoreboardTotalUpdater.ReportMute(player, container.Muted ? 1 : 0);
 
                 SetContent(false);
             }
