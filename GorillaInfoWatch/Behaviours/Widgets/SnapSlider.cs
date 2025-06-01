@@ -1,5 +1,5 @@
 ﻿using System;
-using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Widgets
@@ -63,7 +63,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 Vector3 local = transform.InverseTransformPoint(component.transform.position);
                 float clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
-                int split = Mathf.Abs(Widget.Start - Widget.End);
+                int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
                 float oneDivSplit = 1f / split;
                 int targetValue = (int)(Mathf.RoundToInt(clampedPreciseValue / oneDivSplit) * oneDivSplit * split);
 
@@ -99,7 +99,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         private void SetNeedlePosition()
         {
-            int split = Mathf.Abs(Widget.Start - Widget.End);
+            int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
             needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, Widget.Value / (float)split);
         }
     }

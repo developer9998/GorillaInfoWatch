@@ -4,6 +4,7 @@ using BepInEx;
 using BepInEx.Bootstrap;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
 
 namespace GorillaInfoWatch.Screens

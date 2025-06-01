@@ -1,13 +1,14 @@
 using System.Collections.Generic;
+using GorillaInfoWatch.Models.Widgets;
 
 namespace GorillaInfoWatch.Models
 {
-    public class ScreenLine(string text, params List<IWidget> widgets)
+    public class ScreenLine(string text, params List<Widget> widgets)
     {
         //public bool Visible = true;
 
         public string Text = text;
 
-        public List<IWidget> Widgets = widgets != null && widgets.Count > 0 ? widgets : [];
+        public List<Widget> Widgets = widgets != null && widgets.Count > 0 ? widgets : [];
     }
 }

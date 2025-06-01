@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
@@ -17,9 +17,9 @@ namespace GorillaInfoWatch.Behaviours
         public SnapSlider SnapSlider;
         public GameObject Symbol;
 
-        private readonly List<GameObject> widget_objects = [];
+        private readonly List<Widget> currentWidgets = [];
 
-        private List<IWidgetBehaviour> widget_behaviours = [];
+        private readonly HashSet<Widget> regularWidgets = [];
 
         public void Awake()
         {
@@ -37,71 +37,93 @@ namespace GorillaInfoWatch.Behaviours
             Logging.Info($"Text: \"{line.Text}\" Apply Widgets: {applyWidgets}");
             Text.text = line.Text;
 
-            if (!applyWidgets) return;
-
-            IWidgetObject[] widgets = [.. Array.FindAll(line.Widgets.ToArray(), widget => widget is IWidgetObject).Select(widget => widget as IWidgetObject)];
-            if (widgets.Length > 0 && widget_objects.Count < widgets.Length)
+            if (applyWidgets)
             {
-                widget_objects.AddRange(Enumerable.Repeat<GameObject>(null, widgets.Length - widget_objects.Count));
-            }
+                List<Widget> newWidgets = line.Widgets;
 
-            for (int i = 0; i < widget_objects.Count; i++)
-            {
-                IWidgetObject widget = (i < widgets.Length) ? widgets[i] : null;
-                if (widget == null)
+                if (newWidgets is null)
                 {
-                    Logging.Info($"No widget at {i}");
-                    if (widget_objects[i] != null)
+                    Logging.Fatal("newWidgets is null!!! It should at least be an empty collection");
+                    return;
+                }
+
+                int intake = newWidgets.Count - currentWidgets.Count;
+                if (intake > 0)
+                {
+                    Logging.Info($"Extending widget list +{intake}");
+                    currentWidgets.AddRange(Enumerable.Repeat<Widget>(null, intake));
+                    Logging.Info($"Total count of {currentWidgets.Count}");
+                }
+
+                for(int i = 0; i < currentWidgets.Count; i++)
+                {
+                    Logging.Debug(i);
+
+                    Widget currentWidget = currentWidgets.ElementAtOrDefault(i);
+                    Widget newWidget = newWidgets.ElementAtOrDefault(i);
+
+                    if (newWidget is null)
                     {
-                        Destroy(widget_objects[i]);
-                        widget_objects[i] = null;
+                        Logging.Info($"{i} : null widget");
+
+                        if (currentWidget is not null)
+                        {
+                            Logging.Info("Clearing existing widget");
+                            if (currentWidget.gameObject is not null)
+                                Destroy(currentWidget.gameObject);
+                            if (regularWidgets.Contains(currentWidget))
+                                regularWidgets.Remove(currentWidget);
+                            currentWidgets[i] = null;
+                        }
+
+                        continue;
                     }
-                    continue;
-                }
 
-                int fits = widget.ObjectFits(widget_objects[i]);
-                Logging.Info($"{i} {widget.GetType().Name} fits = {fits}");
+                    bool equivalent = currentWidget is not null && newWidget.Equals(currentWidget);
 
-                if (fits < 2 && widget_objects[i] != null)
-                {
-                    Logging.Info($"Destroying widget");
-                    Destroy(widget_objects[i]);
-                    if (fits == 0) continue;
-                }
+                    Logging.Info($"{i} : {newWidget.GetType().Name} with {((newWidget is not null && newWidget.gameObject is not null) ? newWidget.gameObject.name : "null object/widget")}: {equivalent}");
 
-                if (fits == 1)
-                {
-                    Logging.Info($"Creating widget");
-                    widget.CreateObject(this, out GameObject widget_object);
-                    widget_objects[i] = widget_object;
-                }
+                    if (/*!equivalent*/true)
+                    {
+                        Logging.Info("Not equivalent");
 
-                if (widget is IWidgetBehaviour widget_behaviour && (bool)widget_objects[i])
-                {
-                    widget_behaviour.game_object = widget_objects[i];
-                    widget_behaviour.Initialize(widget_objects[i]);
-                    widget_behaviours.Add(widget_behaviour);
-                }
+                        if (currentWidget is not null && currentWidget.gameObject is not null)
+                        {
+                            Logging.Info("Clearing existing widget (not equivalent)");
+                            if (currentWidget.gameObject is not null)
+                                Destroy(currentWidget.gameObject);
+                            if (regularWidgets.Contains(currentWidget))
+                                regularWidgets.Remove(currentWidget);
+                        }
 
-                if (widget is not IWidgetBehaviour || (widget as IWidgetBehaviour).PerformNativeMethods)
-                {
-                    Logging.Info($"Modifying widget");
-                    widget.ModifyObject(widget_objects[i]);
+                        newWidget.CreateObject(this);
+                        currentWidgets[i] = newWidget;
+                        currentWidget = newWidget;
+                        Logging.Info("Updated current widget");
+
+                        if (currentWidget.Init())
+                        {
+                            regularWidgets.Add(currentWidget);
+                        }
+                        Logging.Info("Initialized new widget");
+                    }
+
+                    if (currentWidget.AllowModification)
+                    {
+                        Logging.Info("Modifying widget");
+                        currentWidget.ModifyObject();
+                    }
                 }
             }
-
-            var widgets_with_behaviour = Array.FindAll(widgets, widget => widget is IWidgetBehaviour).Select(widget => widget as IWidgetBehaviour);
-            var list_removal_candidates = widget_behaviours.Where(behaviour => !widgets_with_behaviour.Contains(behaviour) || !(bool)behaviour.game_object);
-            widget_behaviours = [.. widget_behaviours.Except(list_removal_candidates)];
         }
 
         public void Update()
         {
-            if (widget_behaviours.Count > 0)
+            if (regularWidgets.Count > 0)
             {
-                foreach (var behaviour in widget_behaviours)
+                foreach (var widget in regularWidgets)
                 {
-                    behaviour.InvokeUpdate();
+                    widget.Update();
                 }
             }
         }

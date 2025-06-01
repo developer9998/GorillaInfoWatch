@@ -6,8 +6,6 @@
         public const string Name = "GorillaInfoWatch";
         public const string Version = "1.0.0.0";
 
-        public const bool DebugLogExclusive = false;
-
         public const int LinesPerPage = 13;
 
         public const float NetworkSetInterval = 0.5f;

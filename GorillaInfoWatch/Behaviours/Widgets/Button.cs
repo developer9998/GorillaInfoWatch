@@ -1,5 +1,5 @@
 ﻿using System;
-using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;

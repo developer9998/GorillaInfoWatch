@@ -4,6 +4,7 @@ using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using HarmonyLib;
@@ -25,9 +26,14 @@ namespace GorillaInfoWatch.Screens
             StringBuilder str = new();
             str.Append("Name: ").AppendLine(GorillaComputer.instance.savedName ?? PlayerPrefs.GetString("playerName", "gorilla"));
 
-            Color colour = GorillaTagger.Instance.offlineVRRig.playerColor;
-            str.Append("Colour (0-9): ").AppendLine($"{Mathf.RoundToInt(colour.r * 9)}, {Mathf.RoundToInt(colour.g * 9)}, {Mathf.RoundToInt(colour.b * 9)}");
-            str.Append("Colour (0-255): ").AppendLine($"{Mathf.RoundToInt(colour.r * 255)}, {Mathf.RoundToInt(colour.g * 255)}, {Mathf.RoundToInt(colour.b * 255)}");
+            Color playerColor = GorillaTagger.Instance.offlineVRRig.playerColor;
+            str.AppendLine(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
+                Mathf.RoundToInt(playerColor.r * 9f),
+                Mathf.RoundToInt(playerColor.g * 9f),
+                Mathf.RoundToInt(playerColor.b * 9f),
+                Mathf.RoundToInt(playerColor.r * 255f),
+                Mathf.RoundToInt(playerColor.r * 255f),
+                Mathf.RoundToInt(playerColor.r * 255f)));
 
             str.Append("Shiny Rocks: ").AppendLine(CosmeticsController.instance.CurrencyBalance.ToString());
             string creator_code = (string)AccessTools.Field(typeof(ATM_Manager), "currentCreatorCode").GetValue(ATM_Manager.instance);

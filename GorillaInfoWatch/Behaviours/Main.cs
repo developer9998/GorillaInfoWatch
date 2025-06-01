@@ -13,6 +13,7 @@ using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
 using Photon.Pun;
+using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,7 +39,10 @@ namespace GorillaInfoWatch.Behaviours
 
         // Assets
         public GameObject WatchAsset;
-        private GameObject watch, menu;
+        private GameObject watchObject, menu;
+
+        private Watch localPlayerWatch;
+        private Panel localPlayerPanel;
 
         // Menu
         private Image menu_background;
@@ -52,7 +56,7 @@ namespace GorillaInfoWatch.Behaviours
         private Button button_prev_page, button_next_page, button_return_screen, button_reload_screen;
 
         // Assets
-        public Dictionary<string, AudioClip> Sounds;
+        public readonly Dictionary<EWatchSound, AudioClip> Sounds = [];
 
         public Dictionary<EDefaultSymbol, Sprite> Sprites;
 
@@ -160,10 +164,16 @@ namespace GorillaInfoWatch.Behaviours
 
             // Assets
 
-            Sounds = [];
-            Sounds.Add("FriendJoin", await AssetLoader.LoadAsset<AudioClip>("Friend1"));
-            Sounds.Add("FriendLeave", await AssetLoader.LoadAsset<AudioClip>("Friend2"));
-            Sounds.Add("Press", await AssetLoader.LoadAsset<AudioClip>("Click"));
+            foreach(string watchSoundName in Enum.GetNames(typeof(EWatchSound)))
+            {
+                AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(watchSoundName);
+                if (clip)
+                {
+                    Sounds.TryAdd(Enum.Parse<EWatchSound>(watchSoundName), clip);
+                    continue;
+                }
+                Logging.Warning($"Missing AudioClip asset for sound: {watchSoundName}");
+            }
 
             var sprite_assets = AssetLoader.Bundle.LoadAssetWithSubAssets<Sprite>("Sheet");
             Sprites = Array.FindAll(sprite_assets, sprite => Enum.IsDefined(typeof(EDefaultSymbol), sprite.name)).ToDictionary(sprite => (EDefaultSymbol)Enum.Parse(typeof(EDefaultSymbol), sprite.name), sprite => sprite);
@@ -171,26 +181,27 @@ namespace GorillaInfoWatch.Behaviours
             // Objects
 
             WatchAsset = await AssetLoader.LoadAsset<GameObject>("Watch25");
-            watch = Instantiate(WatchAsset);
-            watch.name = "InfoWatch";
-            var watch_component = watch.AddComponent<Watch>();
-            watch_component.Rig = GorillaTagger.Instance.offlineVRRig;
+            watchObject = Instantiate(WatchAsset);
+            watchObject.name = "InfoWatch";
+
+            localPlayerWatch = watchObject.AddComponent<Watch>();
+            localPlayerWatch.Rig = GorillaTagger.Instance.offlineVRRig;
 
             TimeZoneInfo timeZoneInfo = TimeZoneInfo.Local;
 
             string timeZone = (timeZoneInfo.SupportsDaylightSavingTime && timeZoneInfo.IsDaylightSavingTime(DateTime.Now)) ? timeZoneInfo.DaylightName : timeZoneInfo.StandardName;
-            watch_component.TimeZone = timeZone;
+            localPlayerWatch.TimeZone = timeZone;
             NetworkHandler.Instance.SetProperty("TimeZone", timeZone);
 
             float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
-            watch_component.TimeOffset = timeOffset;
+            localPlayerWatch.TimeOffset = timeOffset;
             NetworkHandler.Instance.SetProperty("TimeOffset", timeOffset);
 
             menu = Instantiate(await AssetLoader.LoadAsset<GameObject>("Menu"));
             menu.name = "InfoMenu";
-            var menu_component = menu.AddComponent<Panel>();
-            menu_component.Origin = watch.transform.Find("Point");
-            //menu_component.Head = Player.Instance.headCollider.transform;
+
+            localPlayerPanel = menu.AddComponent<Panel>();
+            localPlayerPanel.Origin = watchObject.transform.Find("Point");
 
             menu_background = menu.transform.Find("Canvas/Background").GetComponent<Image>();
             menu_header = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
@@ -207,7 +218,7 @@ namespace GorillaInfoWatch.Behaviours
 
             // Components
 
-            WatchTrigger watchTrigger = watch.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
+            WatchTrigger watchTrigger = watchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
             watchTrigger.Menu = menu;
 
             menu_page_text = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
@@ -244,13 +255,13 @@ namespace GorillaInfoWatch.Behaviours
                 }
             };
 
-            //Events.OnPlayerJoined += OnPlayerJoined;
-            //Events.OnPlayerLeft += OnPlayerLeft;
+            NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
+            NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
             PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
 
             HomePage.SetEntries(ScreenRegistry);
-            Logging.Info("Switching to home");
             SwitchScreen(HomePage);
+
             enabled = true;
         }
 
@@ -379,25 +390,37 @@ namespace GorillaInfoWatch.Behaviours
             ScreenRegistry.Add(page);
         }
 
-        /*
-        public void OnPlayerJoined(NetPlayer player, VRRig rig)
+        public void OnPlayerJoined(NetPlayer player)
         {
-            if (FriendLib.IsFriend(player.UserId))
+            try
             {
-                string player_name = ((bool)rig && !string.IsNullOrEmpty(rig.playerNameVisible) && !string.IsNullOrWhiteSpace(rig.playerNameVisible)) ? rig.playerNameVisible : player.NickName.NormalizeName();
-                watch.GetComponent<WatchModel>().Notify($"<size=60%>A FRIEND HAS JOINED:</size>\n<b><color=#{ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour)}>{player_name}</color></b>", 4, true);
+                if (FriendLib.IsFriend(player.UserId))
+                {
+                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS JOINED:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 4f, EWatchSound.NotifPos);
+                }
+            }
+            catch(Exception ex)
+            {
+                Logging.Fatal("Main.OnPlayerJoined");
+                Logging.Error(ex);
             }
         }
 
-        public void OnPlayerLeft(NetPlayer player, VRRig rig)
+        public void OnPlayerLeft(NetPlayer player)
         {
-            if (FriendLib.IsFriend(player.UserId))
+            try
             {
-                string player_name = ((bool)rig && !string.IsNullOrEmpty(rig.playerNameVisible) && !string.IsNullOrWhiteSpace(rig.playerNameVisible)) ? rig.playerNameVisible : player.NickName.NormalizeName();
-                watch.GetComponent<WatchModel>().Notify($"<size=60%>A FRIEND HAS LEFT:</size>\n<b><color=#{ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour)}>{player_name}</color></b>", 4, false);
+                if (FriendLib.IsFriend(player.UserId))
+                {
+                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS LEFT:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 4f, EWatchSound.NotifNeg);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Fatal("Main.OnPlayerLeft");
+                Logging.Error(ex);
             }
         }
-        */
 
         public void PressButton(Button button, bool isLeftHand)
         {
@@ -407,7 +430,7 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds["Press"];
+                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.Tap];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }
@@ -420,7 +443,7 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = Sounds["Press"];
+                AudioClip clip = Sounds[EWatchSound.Tap];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }

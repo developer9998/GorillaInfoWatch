@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 
 namespace GorillaInfoWatch.Screens
 {

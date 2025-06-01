@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using GorillaInfoWatch.Models.Widgets;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -20,12 +21,12 @@ namespace GorillaInfoWatch.Models
 
         }
 
-        public void AddLine(string text, params List<IWidget> widgets)
+        public void AddLine(string text, params List<Widget> widgets)
         {
             Lines.Add(new(text, widgets));
         }
 
-        public void AddLines(int amount, string text = "", params List<IWidget> widgets)
+        public void AddLines(int amount, string text = "", params List<Widget> widgets)
         {
             Lines.AddRange(Enumerable.Repeat<ScreenLine>(new(text, widgets), amount));
         }

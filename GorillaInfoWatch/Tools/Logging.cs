@@ -4,6 +4,10 @@ namespace GorillaInfoWatch.Tools
 {
     internal static class Logging
     {
+        private static readonly bool DebugLogExclusive = true;
+
+        public static void Debug(object message) => LogMessage(LogLevel.Debug, message);
+
         public static void Info(object message) => LogMessage(LogLevel.Info, message);
 
         public static void Warning(object message) => LogMessage(LogLevel.Warning, message);
@@ -18,7 +22,7 @@ namespace GorillaInfoWatch.Tools
 #if DEBUG
             debug = true;
 #endif
-            if (!Constants.DebugLogExclusive || debug)
+            if (!DebugLogExclusive || debug)
             {
                 Plugin.PluginLogger.Log(level, message);
             }

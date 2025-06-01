@@ -9,9 +9,12 @@ namespace GorillaInfoWatch.Behaviours.Networking
     [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
     public class NetworkedPlayer : MonoBehaviour
     {
+        public Watch Watch => watch;
+
+        public bool HasWatch;
+
         public VRRig Rig;
         public NetPlayer Owner;
-        public bool HasWatch;
 
         private Watch watch;
 
@@ -49,6 +52,10 @@ namespace GorillaInfoWatch.Behaviours.Networking
                 if (properties.TryGetValue("TimeOffset", out object time_offset_object) && time_offset_object is float time_offset)
                 {
                     watch.TimeOffset = time_offset;
+                }
+                if (properties.TryGetValue("TimeZone", out object timeZoneObj) && timeZoneObj is string timeZone)
+                {
+                    watch.TimeZone = timeZone;
                 }
             }
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using PlayFab;

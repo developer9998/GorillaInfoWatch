@@ -1,4 +1,4 @@
-namespace GorillaInfoWatch.Models
+namespace GorillaInfoWatch.Models.Widgets
 {
     public interface IWidget
     {

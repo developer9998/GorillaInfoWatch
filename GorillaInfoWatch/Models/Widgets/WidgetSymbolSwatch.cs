@@ -2,33 +2,25 @@ using GorillaExtensions;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GorillaInfoWatch.Models
+namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetSymbolSwatch(Symbol symbol, float offset = 44) : WidgetSymbol(symbol), IWidgetBehaviour
+    public class WidgetSymbolSwatch(Symbol symbol, float offset = 44) : WidgetSymbol(symbol)
     {
-        public GameObject game_object { get; set; }
-
-        public bool PerformNativeMethods => true;
-
-        private Image image;
-
-        public void Initialize(GameObject gameObject)
+        public override bool Init()
         {
-            image = gameObject.GetComponent<Image>();
             image.enabled = true;
-            if (!image.GetComponent<LayoutElement>())
+
+            if (image.GetComponent<LayoutElement>() is null)
             {
-                var element = image.gameObject.AddComponent<LayoutElement>();
-                element.ignoreLayout = true;
-                var rect_tform = image.GetComponent<RectTransform>();
-                rect_tform.anchoredPosition3D = rect_tform.anchoredPosition3D.WithX(offset).WithY(31.25f);
+                LayoutElement layoutElement = image.gameObject.AddComponent<LayoutElement>();
+                layoutElement.ignoreLayout = true;
+
+                RectTransform rectTransform = image.GetComponent<RectTransform>();
+                rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
                 // rect_tform.sizeDelta = new Vector2(90, 90);
             }
-        }
 
-        public void InvokeUpdate()
-        {
-
+            return true;
         }
     }
 }

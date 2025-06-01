@@ -6,59 +6,55 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : WidgetSymbol(new Symbol(null)), IWidgetBehaviour
+    public class WidgetPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : WidgetSymbol(new Symbol(null))
     {
+        public override bool AllowModification => false;
+
         public NetPlayer Player = player;
 
-        public GameObject game_object { get; set; }
+        private RigContainer playerRig;
 
-        public bool PerformNativeMethods => false;
-
-        private VRRig rig;
-
-        private Image image;
-
-        public void Initialize(GameObject gameObject)
+        public override bool Init()
         {
-            if (RigUtils.TryGetVRRig(Player, out var playerRig))
+            if (RigUtils.TryGetVRRig(Player, out playerRig))
             {
-                rig = playerRig.Rig;
-                image = gameObject.GetComponent<Image>();
                 image.enabled = true;
-                if (!image.GetComponent<LayoutElement>())
+
+                if (image.GetComponent<LayoutElement>() is null)
                 {
-                    var element = image.gameObject.AddComponent<LayoutElement>();
-                    element.ignoreLayout = true;
-                    var rect_tform = image.GetComponent<RectTransform>();
-                    rect_tform.anchoredPosition3D = rect_tform.anchoredPosition3D.WithX(offset).WithY(31.25f);
-                    rect_tform.sizeDelta = new Vector2(scaleX, scaleY);
+                    LayoutElement layoutElement = image.gameObject.AddComponent<LayoutElement>();
+                    layoutElement.ignoreLayout = true;
+
+                    RectTransform rectTransform = image.GetComponent<RectTransform>();
+                    rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
+                    rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
                 }
-                // Logging.Info($"PlayerSwatch for {Player.NickName}: {((bool)rig ? rig.name : "null")}");
+
                 SetSwatchColour();
             }
+
+            return true;
         }
 
-        public void InvokeUpdate()
+        public override void Update()
         {
-            if (!rig) return;
-
-            if (!rig.isOfflineVRRig && !Utils.PlayerInRoom(Player.ActorNumber))
+            if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
                 Logging.Info($"PlayerSwatch for {Player.NickName} will be shut off");
-                rig = null;
-                Player = null;
+                playerRig = null;
                 return;
             }
 
-            SetSwatchColour();
+            if (playerRig is not null)
+                SetSwatchColour();
         }
 
         public void SetSwatchColour()
         {
-            var scoreboard_material = rig.scoreboardMaterial;
+            var scoreboard_material = playerRig.Rig.scoreboardMaterial;
             if (image.material != scoreboard_material) image.material = scoreboard_material;
 
-            var player_colour = rig.materialsToChangeTo[0].color;
+            var player_colour = playerRig.Rig.playerColor;
             if (image.color != player_colour) image.color = player_colour;
         }
     }
