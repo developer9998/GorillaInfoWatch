@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 ﻿using System.Linq;
 using GorillaInfoWatch.Behaviours.Networking;
@@ -18,8 +19,6 @@ namespace GorillaInfoWatch.Screens
 		public override string Title => "Player Inspector";
 
         public static RigContainer Container;
-
-        private GorillaPlayerScoreboardLine ScoreboardLine => GorillaScoreboardTotalUpdater.allScoreboards.SelectMany(scoreboard => scoreboard.lines).FirstOrDefault(line => line.linePlayer == Container.Creator);
 
         private bool IsValid => Container != null && Container.Creator is NetPlayer creator && creator.InRoom() && !creator.IsNull;
 
@@ -120,55 +119,52 @@ namespace GorillaInfoWatch.Screens
 			return pages;
         }
 
-        public string ColorCode9(VRRig vrrig)
-		{
-			return string.Format("{0}, {1}, {2}", Mathf.RoundToInt(vrrig.playerColor.r * 9f), Mathf.RoundToInt(vrrig.playerColor.g * 9f), Mathf.RoundToInt(vrrig.playerColor.b * 9f));
-		}
-
-		public string ColorCode255(VRRig vrrig)
-		{
-			return string.Format("{0}, {1}, {2}", Mathf.RoundToInt(vrrig.playerColor.r * 255f), Mathf.RoundToInt(vrrig.playerColor.g * 255f), Mathf.RoundToInt(vrrig.playerColor.b * 255f));
-		}
-
-	
 		private void OnFriendButtonClick(bool value, object[] args)
 		{
             if (args.ElementAtOrDefault(0) is NetPlayer netPlayer)
             {
                 if (FriendLib.IsFriend(netPlayer.UserId))
-                {
                     FriendLib.RemoveFriend(netPlayer);
-                }
                 else
-                {
                     FriendLib.AddFriend(netPlayer);
-                }
-                base.SetContent(false);
+
+                SetText();
             }
         }
 
 		private void OnMuteButtonClick(bool value, object[] args)
 		{
-			object obj = args.ElementAtOrDefault(0);
-            if (obj is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer container))
+            if (args.ElementAtOrDefault(0) is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer container))
             {
 				container.hasManualMute = true;
 				container.Muted ^= true;
 
-                GorillaScoreboardTotalUpdater.allScoreboards.Select(scoreboard => scoreboard.lines)
-                    .SelectMany(line => line)
-                    .Where(line => line.linePlayer == player || line.rigContainer == container)
-                    .ForEach(line =>
-                    {
-                        line.muteButton.isAutoOn = false;
-                        line.muteButton.isOn = container.Muted;
-                        line.muteButton.UpdateColor();
-                    });
+                try
+                {
+                    GorillaScoreboardTotalUpdater.allScoreboards.Select(scoreboard => scoreboard.lines)
+                        .SelectMany(line => line)
+                        .Where(line => line.linePlayer == player || line.rigContainer == container)
+                        .ForEach(line =>
+                        {
+                            line.muteButton.isAutoOn = false;
+                            line.muteButton.isOn = container.Muted;
+                            line.muteButton.UpdateColor();
+                        }
+                    );
+                }
+                catch(Exception ex)
+                {
+                    Logging.Fatal($"Unable to update mute colour of lines for {player.NickName}");
+                    Logging.Error(ex);
+                }
 
-				Logging.Info($"Reported mute for {player.NickName}: {container.Muted}");
                 GorillaScoreboardTotalUpdater.ReportMute(player, container.Muted ? 1 : 0);
+                Logging.Info($"Reported mute for {player.NickName}: {container.Muted}");
 
-                SetContent(false);
+                PlayerPrefs.SetInt(player.UserId, container.Muted ? 1 : 0);
+                PlayerPrefs.Save();
+
+                SetText();
             }
         }
 	}

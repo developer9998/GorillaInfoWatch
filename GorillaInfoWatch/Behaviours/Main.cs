@@ -133,23 +133,28 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                //var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                var assemblies = Chainloader.PluginInfos.Values.Select(info => info.Instance.GetType().Assembly).Distinct();
 
-                assemblies.Where(assembly => assembly != null && assembly.GetCustomAttribute<WatchCompatibleModAttribute>() != null).ForEach(assembly =>
+                foreach(Assembly assembly in assemblies)
                 {
                     try
                     {
-                        Logging.Info($"Searching assembly {assembly.GetName().Name}");
+                        if (assembly is null) continue;
+                        Logging.Info(assembly.GetName().Name);
+                        if (assembly.GetCustomAttribute<WatchCompatibleModAttribute>() is not null)
+                        {
+                            Logging.Info($"Searching assembly {assembly.GetName().Name}");
 
-                        var types = assembly.GetTypes();
-                        types.Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() != null).ForEach(RegisterScreen);
+                            var types = assembly.GetTypes();
+                            types.Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() != null).ForEach(RegisterScreen);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Logging.Fatal($"Exception thrown when searching assembly {assembly.GetName().Name}");
-                        Logging.Error(ex);
+
                     }
-                });
+                }
             }
             catch (Exception ex)
             {

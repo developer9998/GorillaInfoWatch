@@ -85,11 +85,11 @@ namespace GorillaInfoWatch.Behaviours
 
                     if (/*!equivalent*/true)
                     {
-                        Logging.Info("Not equivalent");
+                        // Logging.Info("Not equivalent");
 
                         if (currentWidget is not null && currentWidget.gameObject is not null)
                         {
-                            Logging.Info("Clearing existing widget (not equivalent)");
+                            Logging.Info("Clearing existing widget");
                             if (currentWidget.gameObject is not null)
                                 Destroy(currentWidget.gameObject);
                             if (regularWidgets.Contains(currentWidget))
