@@ -46,7 +46,10 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder profile = str;
 
-            profile.AddLine($"Show Sensitive Data: {(show_sensitive_data ? "Yes" : "No")}", new WidgetButton(WidgetButton.EButtonType.Switch, show_sensitive_data, ProcessSensitiveData));
+            profile.AddLine($"Show Sensitive Data: {(show_sensitive_data ? "Yes" : "No")}", new Switch((Action)ProcessSensitiveData)
+            {
+                Value = show_sensitive_data
+            });
             if (show_sensitive_data)
             {
                 profile.AddLine($"User ID: {PlayFabAuthenticator.instance.GetPlayFabPlayerId()}");
@@ -99,9 +102,9 @@ namespace GorillaInfoWatch.Screens
             return new PageBuilder(("Profile", profile), ("Session", session), ("Connection", connection), ("Platform", platform));
         }
 
-        public void ProcessSensitiveData(bool value, object[] args)
+        public void ProcessSensitiveData()
         {
-            show_sensitive_data = !show_sensitive_data;
+            show_sensitive_data ^= true;
             SetText();
         }
     }

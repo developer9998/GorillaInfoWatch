@@ -1,26 +1,22 @@
 ﻿using System;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Widgets
 {
-    /// <summary>
-    /// A push and toggle compatible button, used commonly alongside a WidgetButton, though can be used down to the OnPressed action
-    /// </summary>
-    public class Button : MonoBehaviour
+    public class PushButtonComponent : MonoBehaviour
     {
         public Action OnPressed, OnReleased;
 
-        public WidgetButton Widget;
+        public PushButton Widget;
 
         private BoxCollider collider;
         private MeshRenderer renderer;
         private TMP_Text text;
         private Color colour, bumped_colour;
 
-        private bool bumped, toggle;
+        private bool bumped; //, toggle;
 
         public static float PressTime;
 
@@ -39,16 +35,14 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             bumped_colour = new Color32(132, 131, 119, 255);
         }
 
-        public void ApplyButton(WidgetButton widget)
+        public void ApplyButton(PushButton widget)
         {
             if (widget != null && Widget == widget) return;
 
             // prepare transition
             if (Widget != null)
             {
-                Widget.Value = false;
-                bumped = false;
-                toggle = false;
+                // toggle = false;
                 renderer.materials[1].color = colour;
             }
 
@@ -58,10 +52,8 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 gameObject.SetActive(true);
                 if (text) text.text = "";
-                OnPressed = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
-                toggle = widget.ButtonType == WidgetButton.EButtonType.Switch;
-                bumped = widget.Value;
-                renderer.materials[1].color = bumped ? bumped_colour : colour;
+                OnPressed = () => Widget.Command?.Invoke([Widget.Parameters ?? []]);
+                renderer.materials[1].color = colour;
                 return;
             }
 
@@ -72,10 +64,9 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void LateUpdate()
         {
-            if (!toggle && bumped && Time.realtimeSinceStartup > (PressTime + 0.33f))
+            if (bumped && Time.realtimeSinceStartup > (PressTime + 0.33f))
             {
                 bumped = false;
-                if (Widget != null) Widget.Value = false;
                 renderer.materials[1].color = colour;
                 OnReleased?.Invoke();
             }
@@ -88,35 +79,14 @@ namespace GorillaInfoWatch.Behaviours.Widgets
                 PressTime = Time.realtimeSinceStartup;
 
                 // base functionality
-                bumped = !toggle || (!bumped);
+                bumped = true;// !toggle || (!bumped);
                 renderer.materials[1].color = bumped ? bumped_colour : colour;
                 Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
                 // additional func
-                if (Widget != null)
-                {
-                    Widget.Value = bumped;
-                }
                 OnPressed?.Invoke();
             }
         }
-
-#if DEBUG
-
-        public void PushButton()
-        {
-            try
-            {
-                OnPressed?.Invoke();
-            }
-            catch (Exception ex)
-            {
-                Logging.Error(GetComponentInParent<MenuLine>().name);
-                Logging.Fatal(ex);
-            }
-        }
-
-#endif
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-﻿using System.Linq;
+using System.Linq;
+using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
@@ -14,22 +15,22 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
 
-	public class PlayerInfoPage : WatchScreen
-	{
-		public override string Title => "Player Inspector";
+    public class PlayerInfoPage : WatchScreen
+    {
+        public override string Title => "Player Inspector";
 
         public static RigContainer Container;
 
         private bool IsValid => Container != null && Container.Creator is NetPlayer creator && creator.InRoom() && !creator.IsNull;
 
-		private readonly Dictionary<string, GetAccountInfoResult> accountInfoCache = [];
+        private readonly Dictionary<string, GetAccountInfoResult> accountInfoCache = [];
 
         public override ScreenContent GetContent()
         {
             if (!IsValid)
             {
-				SetScreen<ScoreboardScreen>();
-				return null;
+                SetScreen<ScoreboardScreen>();
+                return null;
             }
 
             NetPlayer player = Container.Creator;
@@ -46,11 +47,13 @@ namespace GorillaInfoWatch.Screens
                 {
                     if (accountInfoCache.TryAdd(player.UserId, result))
                         SetContent();
-                }, 
+                },
                 error =>
                 {
                     Logging.Fatal($"PlayFabClientAPI.GetAccountInfo ({player.UserId})");
                     Logging.Error(error.GenerateErrorReport());
+
+                    Main.Instance.PlayErrorSound();
                 });
             }
 
@@ -66,7 +69,7 @@ namespace GorillaInfoWatch.Screens
             basicInfoLines.AddLine($"Creation Date: {(hasAccountInfo ? $"{accountInfo.AccountInfo.TitleInfo.Created.ToLongDateString()} at {accountInfo.AccountInfo.TitleInfo.Created.ToShortTimeString()}" : "Retrieving..")}");
 
             basicInfoLines.AddLines(1);
-			basicInfoLines.AddLine(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
+            basicInfoLines.AddLine(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
                 Mathf.RoundToInt(rig.playerColor.r * 9f),
                 Mathf.RoundToInt(rig.playerColor.g * 9f),
                 Mathf.RoundToInt(rig.playerColor.b * 9f),
@@ -77,13 +80,22 @@ namespace GorillaInfoWatch.Screens
             basicInfoLines.AddLine($"Voice Type: {(rig.localUseReplacementVoice || rig.remoteUseReplacementVoice ? "MONKE" : "HUMAN")}");
             basicInfoLines.AddLine($"Is Master Client: {(player.IsMasterClient ? "Yes" : "No")}");
 
-			if (!player.IsLocal)
+            if (!player.IsLocal)
             {
                 basicInfoLines.AddLines(1);
-                basicInfoLines.AddLine(Container.Muted ? "Unmute" : "Mute", new WidgetButton(OnMuteButtonClick, player));
+                basicInfoLines.AddLine(Container.Muted ? "Unmute" : "Mute", new Switch((Delegate)OnMuteButtonClick, player)
+                {
+                    Value = Container.Muted
+                });
 
                 if (FriendLib.FriendCompatible)
-                    basicInfoLines.AddLine(FriendLib.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new WidgetButton(OnFriendButtonClick, player));
+                {
+                    bool isFriend = FriendLib.IsFriend(player.UserId);
+                    basicInfoLines.AddLine(FriendLib.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch((Delegate)OnFriendButtonClick, player)
+                    {
+                        Value = isFriend
+                    });
+                }
             }
 
             pages.AddPage("General", basicInfoLines);
@@ -116,11 +128,11 @@ namespace GorillaInfoWatch.Screens
                 pages.AddPage("GorillaInfoWatch", infoWatchLines);
             }
 
-			return pages;
+            return pages;
         }
 
-		private void OnFriendButtonClick(bool value, object[] args)
-		{
+        private void OnFriendButtonClick(bool value, object[] args)
+        {
             if (args.ElementAtOrDefault(0) is NetPlayer netPlayer)
             {
                 if (FriendLib.IsFriend(netPlayer.UserId))
@@ -132,12 +144,12 @@ namespace GorillaInfoWatch.Screens
             }
         }
 
-		private void OnMuteButtonClick(bool value, object[] args)
-		{
+        private void OnMuteButtonClick(bool value, object[] args)
+        {
             if (args.ElementAtOrDefault(0) is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer container))
             {
-				container.hasManualMute = true;
-				container.Muted ^= true;
+                container.hasManualMute = true;
+                container.Muted ^= true;
 
                 try
                 {
@@ -152,7 +164,7 @@ namespace GorillaInfoWatch.Screens
                         }
                     );
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Logging.Fatal($"Unable to update mute colour of lines for {player.NickName}");
                     Logging.Error(ex);
@@ -167,5 +179,5 @@ namespace GorillaInfoWatch.Screens
                 SetText();
             }
         }
-	}
+    }
 }

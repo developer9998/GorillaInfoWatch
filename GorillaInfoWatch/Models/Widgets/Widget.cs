@@ -3,13 +3,15 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public abstract class Widget : IWidget
+    public abstract class Widget
     {
         public abstract EWidgetType WidgetType { get; }
 
         public virtual bool AllowModification { get; } = true;
 
         public GameObject gameObject;
+
+        public WidgetBehaviour<Widget> behaviour;
 
         public virtual bool Equals(Widget widget)
         {
@@ -18,7 +20,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public virtual void CreateObject(MenuLine menuLine)
         {
-            
+
         }
 
         public virtual void ModifyObject()

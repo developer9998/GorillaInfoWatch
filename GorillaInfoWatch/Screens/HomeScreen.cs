@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using GorillaInfoWatch.Attributes;
@@ -37,13 +38,13 @@ namespace GorillaInfoWatch.Screens
             for (int i = 0; i < home_entries.Count; i++)
             {
                 (string entry_name, WatchScreen screen) = home_entries[i];
-                lines.AddLine(entry_name, new WidgetButton(EntrySelected, i));
+                lines.AddLine(entry_name, new PushButton((Delegate)EntrySelected, i));
             }
 
             return lines;
         }
 
-        public void EntrySelected(bool value, object[] args)
+        public void EntrySelected(object[] args)
         {
             if (args[0] is int index)
             {

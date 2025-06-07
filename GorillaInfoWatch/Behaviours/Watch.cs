@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
+using GorillaExtensions;
+using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using GorillaInfoWatch.Models;
-using System.Linq;
-using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Tools;
 
 namespace GorillaInfoWatch.Behaviours
 {
+    [RequireComponent(typeof(AudioSource)), DisallowMultipleComponent]
     public class Watch : MonoBehaviour
     {
         public VRRig Rig;
@@ -24,7 +26,7 @@ namespace GorillaInfoWatch.Behaviours
 
         private Slider messageSlider;
 
-        private AudioSource audio_device;
+        public AudioSource AudioDevice;
 
         public bool HasNotification;
 
@@ -32,27 +34,37 @@ namespace GorillaInfoWatch.Behaviours
 
         private MeshRenderer screen_renderer, outline_renderer;
 
+        public bool InLeftHand = true;
+
         public bool HideWatch = false;
+
+        private int frameCount;
+        private float timeCount;
 
         public void Start()
         {
-            audio_device = GetComponent<AudioSource>();
+            AudioDevice = GetComponent<AudioSource>();
 
-            idleMenu = transform.Find("Watch Head/Watch GUI/IdleMenu").gameObject;
+            Transform head = transform.Find("Watch Head");
+            head.localEulerAngles = head.localEulerAngles.WithZ(-91.251f);
+
+            idleMenu = head.Find("Watch GUI/IdleMenu").gameObject;
 
             timeText = idleMenu.transform.Find("TimeDate").GetComponent<TMP_Text>();
             fpsText = idleMenu.transform.Find("FPS").GetComponent<TMP_Text>();
 
-            messageMenu = transform.Find("Watch Head/Watch GUI/MessageMenu").gameObject;
+            messageMenu = head.Find("Watch GUI/MessageMenu").gameObject;
 
-            messageText = messageMenu.transform.Find("Text").GetComponent<TMP_Text>();
+            messageText = messageMenu.transform.Find("Message").GetComponent<TMP_Text>();
             messageSlider = messageMenu.transform.Find("Slider").GetComponent<Slider>();
 
+            idleMenu.SetActive(true);
+            messageMenu.SetActive(false);
+
             MeshRenderer[] rendererArray = transform.GetComponentsInChildren<MeshRenderer>(true);
-            foreach(MeshRenderer meshRenderer in rendererArray)
+            foreach (MeshRenderer meshRenderer in rendererArray)
             {
-                Material[] originalMaterials = [.. meshRenderer.materials];
-                Material[] uberMaterials = [.. originalMaterials.Select(material => material.CreateUberShaderVariant())];
+                Material[] uberMaterials = [.. meshRenderer.materials.Select(material => material.CreateUberShaderVariant())];
                 meshRenderer.materials = uberMaterials;
             }
 
@@ -61,32 +73,37 @@ namespace GorillaInfoWatch.Behaviours
             outline_renderer = transform.Find("Watch Head/WatchScreenRing").GetComponent<MeshRenderer>();
             outline_renderer.material = new Material(outline_renderer.material);
 
+            // sub
             Rig.OnColorChanged += SetColour;
             SetColour(Rig.playerColor);
-
             Events.OnSetInvisibleToLocalPlayer += SetVisibilityCheck;
             SetVisibility(HideWatch || Rig.IsInvisibleToLocalPlayer);
 
             transform.SetParent(Rig.leftHandTransform.parent, false);
-            transform.localPosition = Vector3.zero;
-            transform.localEulerAngles = Vector3.zero;
+            transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
+            transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
             transform.localScale = Vector3.one;
         }
 
         public void OnDestroy()
         {
+            // unsub
             Rig.OnColorChanged -= SetColour;
             Events.OnSetInvisibleToLocalPlayer -= SetVisibilityCheck;
         }
 
-        public void OnEnable()
+        public void Update()
         {
-            InvokeRepeating(nameof(InfrequentUpdate), 0f, 1f);
-        }
+            if (timeCount < 1f)
+            {
+                timeCount += Time.unscaledDeltaTime;
+                frameCount++;
+                return;
+            }
 
-        public void OnDisable()
-        {
-            CancelInvoke(nameof(InfrequentUpdate));
+            InfrequentUpdate();
+            timeCount = 0f;
+            frameCount = 0;
         }
 
         private void InfrequentUpdate()
@@ -98,7 +115,7 @@ namespace GorillaInfoWatch.Behaviours
                 string date = dateTime.ToLongDateString();
                 timeText.text = string.Format("<cspace=0.1em>{0}</cspace><br><size=50%>{1}</size>", time, date);
             }
-            fpsText.text = $"FPS: {(Rig.isOfflineVRRig ? Mathf.Min(Mathf.RoundToInt(1f / Time.smoothDeltaTime), 255) : Rig.fps)}";
+            fpsText.text = $"FPS: {(Rig.isOfflineVRRig ? Mathf.FloorToInt((float)frameCount / timeCount) : Rig.fps)}";
         }
 
         public void SetVisibilityCheck(VRRig rig, bool invisible)
@@ -141,7 +158,7 @@ namespace GorillaInfoWatch.Behaviours
             messageSlider.value = 1f;
 
             if (Main.HasInstance && Main.Instance.Sounds.TryGetValue(sound, out AudioClip clip))
-                audio_device.PlayOneShot(clip);
+                AudioDevice.PlayOneShot(clip);
             GorillaTagger.Instance.StartVibration(true, 0.04f, 0.2f);
 
             float elapsed = 0f;

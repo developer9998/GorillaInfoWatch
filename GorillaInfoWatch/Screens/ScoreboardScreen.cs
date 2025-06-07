@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
@@ -63,7 +64,7 @@ namespace GorillaInfoWatch.Screens
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
-                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !RigUtils.TryGetVRRig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new WidgetButton(TryInspectPlayer, player));
+                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !RigUtils.TryGetVRRig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new PushButton((Delegate)TryInspectPlayer, player));
             }
 
             return lines;

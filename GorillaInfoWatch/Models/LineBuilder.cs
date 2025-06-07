@@ -65,7 +65,7 @@ namespace GorillaInfoWatch.Models
         public override IEnumerable<ScreenLine> GetPageLines(int page)
             => Lines.Skip(page * Constants.LinesPerPage).Take(Constants.LinesPerPage);
 
-        public override string GetPageTitle(int page)  
+        public override string GetPageTitle(int page)
             => string.Empty;
     }
 }

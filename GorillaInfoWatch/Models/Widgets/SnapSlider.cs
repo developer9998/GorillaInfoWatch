@@ -1,20 +1,21 @@
-using System;
 using GorillaInfoWatch.Behaviours;
-using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
+using GorillaInfoWatch.Behaviours.Widgets;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetSnapSlider(int startValue = 0, int endValue = 100, int currentValue = 0) : Widget, IWidgetValue<int>
+    public class SnapSlider(WidgetCommand command = null, int value = 0, int start = 0, int end = 10) : Widget
     {
         public override EWidgetType WidgetType => EWidgetType.Interaction;
 
-        public int Value { get; set; } = currentValue;
-        public object[] Parameters { get; set; }
-        public Action<int, object[]> Command { get; set; }
+        public int Value = value;
 
-        public int StartValue = startValue;
+        public WidgetCommand Command = command;
 
-        public int EndValue = endValue;
+        public int StartValue = start;
+
+        public int EndValue = end;
+
+        public bool ReadOnly;
 
         public override void CreateObject(MenuLine menuLine)
         {
@@ -26,8 +27,8 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void ModifyObject()
         {
-            if (gameObject.TryGetComponent(out SnapSlider snapSlider))
-                snapSlider.ApplySlider(this);
+            if (gameObject.TryGetComponent(out SnapSliderComponent component))
+                component.ApplySlider(this);
         }
 
         public override bool Equals(Widget widget)
@@ -35,7 +36,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (widget is null)
                 return false;
 
-            if (widget is not WidgetSnapSlider widgetSnapSlider)
+            if (widget is not SnapSlider widgetSnapSlider)
                 return false;
 
             return Command.Target == widgetSnapSlider.Command.Target && Command.Method.Equals(widgetSnapSlider.Command.Method) && StartValue == widgetSnapSlider.StartValue && EndValue == widgetSnapSlider.EndValue;

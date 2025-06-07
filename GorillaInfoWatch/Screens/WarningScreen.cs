@@ -1,5 +1,5 @@
-﻿using GorillaInfoWatch.Models;
-using System;
+﻿using System;
+using GorillaInfoWatch.Models;
 
 namespace GorillaInfoWatch.Screens
 {

@@ -107,7 +107,7 @@ namespace GorillaInfoWatch.Screens
                     bool joinable = !has_vstump_prepend && !is_in_room && (!is_public_room || in_zone);
                     if (joinable)
                     {
-                        lines.AddLine(line_content, new WidgetButton(FriendButtonClick, presence));
+                        lines.AddLine(line_content, new PushButton((Delegate)FriendButtonClick, presence));
                     }
                     else
                     {
@@ -122,7 +122,7 @@ namespace GorillaInfoWatch.Screens
             return lines;
         }
 
-        public void FriendButtonClick(bool value, object[] args)
+        public void FriendButtonClick(object[] args)
         {
             if (args[0] is FriendBackendController.FriendPresence presence)
             {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BepInEx;
 using BepInEx.Bootstrap;
@@ -10,7 +11,7 @@ using HarmonyLib;
 namespace GorillaInfoWatch.Screens
 {
     [DisplayAtHomeScreen]
-    public class ModStatusPage : WatchScreen
+    public class ModListPage : WatchScreen
     {
         public override string Title => "Mod Status";
 
@@ -24,7 +25,7 @@ namespace GorillaInfoWatch.Screens
             _eligiblePlugins = [.. _pluginInfos.Where(plugin =>
             {
                 List<string> _instanceMethods = AccessTools.GetMethodNames(plugin.Instance);
-                return _instanceMethods.Contains("OnEnable") && _instanceMethods.Contains("OnDisable");
+                return _instanceMethods.Contains("OnEnable") || _instanceMethods.Contains("OnDisable");
             })];
             _modEntries = [.. _eligiblePlugins.Concat(_pluginInfos.Except(_eligiblePlugins))]; // sort
         }
@@ -43,7 +44,10 @@ namespace GorillaInfoWatch.Screens
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new WidgetButton(WidgetButton.EButtonType.Switch, !isEnabled, OnButtonSelect, i));
+                    lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Switch((Delegate)OnButtonSelect, i)
+                    {
+                        Value = !isEnabled
+                    });
                     continue;
                 }
 

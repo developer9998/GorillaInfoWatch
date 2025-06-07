@@ -11,7 +11,7 @@ namespace GorillaInfoWatch.Extensions
 
         public static string SanitizeName(this string originalName)
         {
-            if (SanitizedNames.TryGetValue(originalName, out string cachedName)) 
+            if (SanitizedNames.TryGetValue(originalName, out string cachedName))
                 return cachedName;
 
             string sanitizedName = new string(Array.FindAll(originalName.ToCharArray(), Utils.IsASCIILetterOrDigit)).LimitLength(12);

@@ -4,15 +4,15 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Widgets
 {
-    // TODO: make sliders based around a generic class, int for snap, float for smooth
+    // TODO: make sliders based on a generic class, int for snap, float for smooth
     /// <summary>
     /// A snap slider, used commonly alongside a WidgetSnapSlider, though can be used down to the OnApplied action
     /// </summary>
-    public class SnapSlider : MonoBehaviour
+    public class SnapSliderComponent : MonoBehaviour
     {
         public Action OnApplied;
 
-        public WidgetSnapSlider Widget;
+        public Models.Widgets.SnapSlider Widget;
 
         private BoxCollider collider;
 
@@ -20,7 +20,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         private GorillaTriggerColliderHandIndicator index_finger;
 
-        public static SnapSlider Current;
+        public static SnapSliderComponent Current;
 
         public void Awake()
         {
@@ -33,12 +33,12 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             max = transform.Find("Max");
         }
 
-        public void ApplySlider(WidgetSnapSlider widget)
+        public void ApplySlider(Models.Widgets.SnapSlider widget)
         {
             if (Widget == widget && widget != null) return;
 
             // prepare transition
-            if (Widget != null && string.Join("", Widget.Parameters ?? []) == string.Join("", widget.Parameters ?? []) && Widget.Command != null && widget.Command != null && Widget.Command.Target == widget.Command.Target && Widget.Command.Method == widget.Command.Method)
+            if (Widget != null && Widget.Command != null && widget.Command != null && Widget.Command.Target == widget.Command.Target && Widget.Command.Method == widget.Command.Method)
             {
                 widget.Value = Widget.Value;
             }
@@ -48,7 +48,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             if (Widget != null)
             {
                 gameObject.SetActive(true);
-                OnApplied = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
+                OnApplied = () => Widget.Command?.Invoke([Widget.Value]);
                 SetNeedlePosition();
                 return;
             }
@@ -59,7 +59,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void OnTriggerStay(Collider other)
         {
-            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > (Button.PressTime + 0.33f))
+            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > (PushButtonComponent.PressTime + 0.33f))
             {
                 Vector3 local = transform.InverseTransformPoint(component.transform.position);
                 float clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
@@ -93,7 +93,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 index_finger = null;
                 Current = null;
-                Button.PressTime = Time.realtimeSinceStartup + 0.1f;
+                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.1f;
             }
         }
 

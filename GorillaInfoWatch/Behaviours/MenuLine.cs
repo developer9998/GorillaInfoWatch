@@ -1,20 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using GorillaExtensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
-using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
-using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
+using PushButtonComponent = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
+using SnapSliderComponent = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
+using SwitchComponent = GorillaInfoWatch.Behaviours.Widgets.SwitchComponent;
 
 namespace GorillaInfoWatch.Behaviours
 {
     public class MenuLine : MonoBehaviour
     {
         public TMP_Text Text;
-        public Button Button;
-        public SnapSlider SnapSlider;
+        public PushButtonComponent Button;
+        public SnapSliderComponent SnapSlider;
+        public SwitchComponent Switch;
         public GameObject Symbol;
 
         private readonly List<Widget> currentWidgets = [];
@@ -24,10 +27,12 @@ namespace GorillaInfoWatch.Behaviours
         public void Awake()
         {
             Text = transform.Find("Text").GetComponent<TMP_Text>();
-            Button = transform.Find("Grid/Button").AddComponent<Button>();
+            Button = transform.Find("Grid/Button").gameObject.GetOrAddComponent<PushButtonComponent>();
             Button.gameObject.SetActive(false);
-            SnapSlider = transform.Find("Grid/Slider").AddComponent<SnapSlider>();
+            SnapSlider = transform.Find("Grid/Slider").gameObject.GetOrAddComponent<SnapSliderComponent>();
             SnapSlider.gameObject.SetActive(false);
+            Switch = transform.Find("Grid/Switch").gameObject.GetOrAddComponent<SwitchComponent>();
+            Switch.gameObject.SetActive(false);
             Symbol = transform.Find("Grid/Symbol").gameObject;
             Symbol.SetActive(false);
         }
@@ -55,7 +60,7 @@ namespace GorillaInfoWatch.Behaviours
                     Logging.Info($"Total count of {currentWidgets.Count}");
                 }
 
-                for(int i = 0; i < currentWidgets.Count; i++)
+                for (int i = 0; i < currentWidgets.Count; i++)
                 {
                     Logging.Debug(i);
 

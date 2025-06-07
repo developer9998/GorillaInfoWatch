@@ -18,14 +18,14 @@ namespace GorillaInfoWatch.Utilities
             if (RigCacheInstance == null)
             {
                 Logging.Warning("VRRigCache.Instance is null");
-                
+
                 playerRig = null;
                 return false;
             }
 
             object[] parameters = [targetPlayer, null];
             bool has_vr_rig = (bool)AccessTools.Method(RigCacheType, "TryGetVrrig", [typeof(NetPlayer), RefContainerType]).Invoke(RigCacheInstance, parameters);
-            
+
             playerRig = has_vr_rig ? (RigContainer)parameters[1] : null;
             return has_vr_rig;
         }

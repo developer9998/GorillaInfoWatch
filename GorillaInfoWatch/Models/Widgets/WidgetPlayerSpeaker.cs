@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (RigUtils.TryGetVRRig(Player, out playerRig))
             {
                 is_mute_manual = PlayerPrefs.HasKey(Player.UserId);
- 
+
                 image.enabled = true;
 
                 if (image.GetComponent<LayoutElement>() is null)

@@ -7,18 +7,18 @@ using ExitGames.Client.Photon;
 using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Behaviours.Networking;
+using GorillaInfoWatch.Behaviours.Widgets;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
 using Photon.Pun;
-using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Button = GorillaInfoWatch.Behaviours.Widgets.Button;
-using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSlider;
+using PushButtonComponent = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
+using SnapSliderComponent = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -53,7 +53,7 @@ namespace GorillaInfoWatch.Behaviours
 
         // Display
         private TMP_Text menu_page_text;
-        private Button button_prev_page, button_next_page, button_return_screen, button_reload_screen;
+        private PushButtonComponent button_prev_page, button_next_page, button_return_screen, button_reload_screen;
 
         // Assets
         public readonly Dictionary<EWatchSound, AudioClip> Sounds = [];
@@ -125,7 +125,7 @@ namespace GorillaInfoWatch.Behaviours
                 typeof(ScoreboardScreen),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
-                typeof(ModStatusPage),
+                typeof(ModListPage),
                 typeof(CreditScreen)
             };
 
@@ -136,23 +136,28 @@ namespace GorillaInfoWatch.Behaviours
                 //var assemblies = AppDomain.CurrentDomain.GetAssemblies();
                 var assemblies = Chainloader.PluginInfos.Values.Select(info => info.Instance.GetType().Assembly).Distinct();
 
-                foreach(Assembly assembly in assemblies)
+                foreach (Assembly assembly in assemblies)
                 {
                     try
                     {
                         if (assembly is null) continue;
+
                         Logging.Info(assembly.GetName().Name);
+
                         if (assembly.GetCustomAttribute<WatchCompatibleModAttribute>() is not null)
                         {
                             Logging.Info($"Searching assembly {assembly.GetName().Name}");
 
-                            var types = assembly.GetTypes();
-                            types.Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() != null).ForEach(RegisterScreen);
+                            assembly
+                                .GetTypes()
+                                .Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() is not null)
+                                .ForEach(RegisterScreen);
                         }
                     }
                     catch (Exception ex)
                     {
-
+                        Logging.Fatal($"Could not check assembly {assembly.GetName().Name}");
+                        Logging.Error(ex);
                     }
                 }
             }
@@ -169,7 +174,7 @@ namespace GorillaInfoWatch.Behaviours
 
             // Assets
 
-            foreach(string watchSoundName in Enum.GetNames(typeof(EWatchSound)))
+            foreach (string watchSoundName in Enum.GetNames(typeof(EWatchSound)))
             {
                 AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(watchSoundName);
                 if (clip)
@@ -228,21 +233,21 @@ namespace GorillaInfoWatch.Behaviours
 
             menu_page_text = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
 
-            button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<Button>();
+            button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButtonComponent>();
             button_next_page.OnPressed = () =>
             {
                 CurrentScreen.PageNumber++;
                 DisplayScreen();
             };
 
-            button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<Button>();
+            button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButtonComponent>();
             button_prev_page.OnPressed = () =>
             {
                 CurrentScreen.PageNumber--;
                 DisplayScreen();
             };
 
-            button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<Button>();
+            button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButtonComponent>();
             button_return_screen.OnPressed = () =>
             {
                 if (screen_history.Count > 0)
@@ -251,7 +256,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
             };
 
-            button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<Button>();
+            button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButtonComponent>();
             button_reload_screen.OnPressed = () =>
             {
                 if (CurrentScreen is WatchScreen screen)
@@ -263,6 +268,7 @@ namespace GorillaInfoWatch.Behaviours
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
             PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
+            Events.OnCompleteQuest += OnQuestCompleted;
 
             HomePage.SetEntries(ScreenRegistry);
             SwitchScreen(HomePage);
@@ -334,9 +340,12 @@ namespace GorillaInfoWatch.Behaviours
                     menu_description.text = CurrentScreen.Description;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Logging.Error($"Exception thrown when displaying screen {CurrentScreen.GetType().Name}: {ex}");
+                Logging.Fatal($"Screen contents could not be displayed ({CurrentScreen.GetType().Name})");
+                Logging.Error(ex);
+
+                PlayErrorSound();
             }
 
             var lines = content.GetPageLines(CurrentScreen.PageNumber);
@@ -395,16 +404,22 @@ namespace GorillaInfoWatch.Behaviours
             ScreenRegistry.Add(page);
         }
 
+        public void PlayErrorSound()
+        {
+            if (Enum.Parse<EWatchSound>(string.Concat("error", UnityEngine.Random.Range(1, 6))) is EWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
+                localPlayerWatch.AudioDevice.PlayOneShot(audioClip);
+        }
+
         public void OnPlayerJoined(NetPlayer player)
         {
             try
             {
                 if (FriendLib.IsFriend(player.UserId))
                 {
-                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS JOINED:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 4f, EWatchSound.NotifPos);
+                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS JOINED:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 3, EWatchSound.notificationPositive);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logging.Fatal("Main.OnPlayerJoined");
                 Logging.Error(ex);
@@ -417,7 +432,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (FriendLib.IsFriend(player.UserId))
                 {
-                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS LEFT:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 4f, EWatchSound.NotifNeg);
+                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS LEFT:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 3, EWatchSound.notificationNegative);
                 }
             }
             catch (Exception ex)
@@ -427,7 +442,14 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void PressButton(Button button, bool isLeftHand)
+        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
+        {
+            Logging.Info(quest.questOccurenceFilter);
+            Logging.Info(quest.questID);
+            localPlayerWatch.DisplayMessage(string.Format("<size=60%>QUEST COMPLETED:</size><br><b><size=90%>{0}</size></b>", quest.questName), 3, EWatchSound.notificationNeutral);
+        }
+
+        public void PressButton(PushButtonComponent button, bool isLeftHand)
         {
             if (button)
             {
@@ -435,12 +457,12 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.Tap];
+                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.widgetButton];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }
 
-        public void PressSlider(SnapSlider slider, bool isLeftHand)
+        public void PressSlider(SnapSliderComponent slider, bool isLeftHand)
         {
             if (slider)
             {
@@ -448,10 +470,24 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = Sounds[EWatchSound.Tap];
+                AudioClip clip = Sounds[EWatchSound.widgetButton];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }
+
+        public void PressSwitch(SwitchComponent button, bool isLeftHand)
+        {
+            if (button)
+            {
+                AudioSource handSource = isLeftHand
+                    ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
+                    : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
+
+                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.widgetSwitch];
+                handSource.PlayOneShot(clip, 0.2f);
+            }
+        }
+
 
         private void OnEventReceived(EventData photonEvent)
         {
