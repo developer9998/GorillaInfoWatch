@@ -74,8 +74,8 @@ namespace GorillaInfoWatch.Screens
                 Mathf.RoundToInt(rig.playerColor.g * 9f),
                 Mathf.RoundToInt(rig.playerColor.b * 9f),
                 Mathf.RoundToInt(rig.playerColor.r * 255f),
-                Mathf.RoundToInt(rig.playerColor.r * 255f),
-                Mathf.RoundToInt(rig.playerColor.r * 255f)));
+                Mathf.RoundToInt(rig.playerColor.g * 255f),
+                Mathf.RoundToInt(rig.playerColor.b * 255f)));
             basicInfoLines.AddLine($"Points: {rig.currentQuestScore}");
             basicInfoLines.AddLine($"Voice Type: {(rig.localUseReplacementVoice || rig.remoteUseReplacementVoice ? "MONKE" : "HUMAN")}");
             basicInfoLines.AddLine($"Is Master Client: {(player.IsMasterClient ? "Yes" : "No")}");
