@@ -111,7 +111,7 @@ namespace GorillaInfoWatch.Screens
 
                 pages.AddPage("Competitive", compDataLines);
 
-                LineBuilder infoWatchLines = new();
+                LineBuilder infoWatchLines = new(); // i made this is another mod and it was pretty cool 
 
                 bool hasInfoWatch = rig.TryGetComponent(out NetworkedPlayer component) && component.HasWatch;
                 infoWatchLines.AddLine($"Has GorillaInfoWatch: {(hasInfoWatch ? "Yes" : "No")}");
@@ -120,12 +120,27 @@ namespace GorillaInfoWatch.Screens
                 {
                     infoWatchLines.AddLines(1);
                     if (player.GetPlayerRef().CustomProperties.TryGetValue(Constants.NetworkVersionKey, out object versionObj) && versionObj is string version)
-                        infoWatchLines.AddLine($"Version: {version}");
+                        infoWatchLines.AddLine($"> Version: {version}");
                     if (!string.IsNullOrEmpty(component.Watch.TimeZone))
-                        infoWatchLines.AddLine($"Time Zone: {component.Watch.TimeZone}");
+                        infoWatchLines.AddLine($"> Time Zone: {component.Watch.TimeZone}");
                 }
 
-                pages.AddPage("GorillaInfoWatch", infoWatchLines);
+                infoWatchLines.AddLines(1)
+                player.GetPlayerRef().CustomProperties.TryGetValue("GC", out object gorillacraft)
+                infoWatchLines.AddLine($"Has GorillaCraft: {(gorillacraft ? "Yes" : "No")}"); // if 'gorillacraft' doesnt work do 'gorillacraft != null'
+
+                if (gorillacraft) {
+                    infoWatchLines.AddLines(1)
+                    infoWatchLines.AddLine($"> Version: {gorillacraft}"); // plain object holds version value
+                }
+                /*
+                    if this is cool here are some more custom props
+                    GorillaStats
+                    cheese is gouda (WhoIsCheating)
+                    GrateVersion (grate)
+                */
+                
+                pages.AddPage("Exclusive mods", infoWatchLines);
             }
 
             return pages;
