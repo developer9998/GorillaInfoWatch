@@ -1,15 +1,37 @@
+using System;
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Widgets;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class PushButton(WidgetCommand command, params object[] parameters) : Widget
+    public class PushButton : Widget
     {
         public override EWidgetType WidgetType => EWidgetType.Interaction;
 
-        public WidgetCommand Command = command;
+        public Action<object[]> Command;
 
-        public object[] Parameters = parameters;
+        public object[] Parameters;
+
+        public Gradient Colour;
+
+        public PushButton(Action<object[]> action, params object[] parameters)
+        {
+            Command = action;
+            Parameters = parameters;
+
+            Colour = new Gradient();
+            Colour.SetKeys
+            (
+                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(new Color32(132, 131, 119, 255), 1)],
+                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
+            );
+        }
+
+        public PushButton(Action action) : this(args => action(), [])
+        {
+            // Must declare a body
+        }
 
         public override void CreateObject(MenuLine menuLine)
         {

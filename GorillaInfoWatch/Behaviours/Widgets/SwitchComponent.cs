@@ -56,7 +56,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 gameObject.SetActive(true);
                 if (text) text.text = "";
-                OnPressed = () => currentWidget.Command?.Invoke([currentWidget.Value, currentWidget.Parameters ?? []]);
+                OnPressed = () => currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
                 bumped = widget.Value;
                 renderer.materials[1].color = bumped ? pressedColour : unpressedColour;
                 SetNeedlePosition();
@@ -70,7 +70,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (currentWidget is not null && currentWidget.ReadOnly) 
+            if (currentWidget is null)
                 return;
 
             if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > (PressTime + 0.33f))

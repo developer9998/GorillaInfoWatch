@@ -261,6 +261,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (CurrentScreen is WatchScreen screen)
                 {
+                    screen.OnScreenRefresh();
                     DisplayScreen();
                 }
             };
@@ -342,27 +343,37 @@ namespace GorillaInfoWatch.Behaviours
             }
             catch (Exception ex)
             {
-                Logging.Fatal($"Screen contents could not be displayed ({CurrentScreen.GetType().Name})");
+                Logging.Fatal($"Menu could not adjust for ({CurrentScreen.GetType().Name})");
                 Logging.Error(ex);
 
                 PlayErrorSound();
             }
 
-            var lines = content.GetPageLines(CurrentScreen.PageNumber);
-
-            for (int i = 0; i < Constants.LinesPerPage; i++)
+            try
             {
-                var menu_line = menu_lines[i];
+                var lines = content.GetPageLines(CurrentScreen.PageNumber);
 
-                if (lines.ElementAtOrDefault(i) is ScreenLine line)
+                for (int i = 0; i < Constants.LinesPerPage; i++)
                 {
-                    bool wasLineActive = menu_line.gameObject.activeSelf;
-                    menu_line.gameObject.SetActive(true);
-                    menu_line.Build(line, !wasLineActive || includeWidgets);
-                    continue;
-                }
+                    var menu_line = menu_lines[i];
 
-                menu_line.gameObject.SetActive(false);
+                    if (lines.ElementAtOrDefault(i) is ScreenLine line)
+                    {
+                        bool wasLineActive = menu_line.gameObject.activeSelf;
+                        menu_line.gameObject.SetActive(true);
+                        menu_line.Build(line, !wasLineActive || includeWidgets);
+                        continue;
+                    }
+
+                    menu_line.gameObject.SetActive(false);
+                }
+            }
+            catch(Exception ex)
+            {
+                Logging.Fatal($"Screen contents could not be displayed ({CurrentScreen.GetType().Name})");
+                Logging.Error(ex);
+
+                PlayErrorSound();
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Tools;
 using TMPro;
 using UnityEngine;
 
@@ -37,29 +38,36 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void ApplyButton(PushButton widget)
         {
-            if (widget != null && Widget == widget) return;
+            Logging.Info($"Button {renderer is null}");
+            Logging.Info($"{text is null} {renderer is null}");
 
             // prepare transition
-            if (Widget != null)
+            if (Widget is not null)
             {
-                // toggle = false;
+                bumped = false;
                 renderer.materials[1].color = colour;
             }
 
             // apply transition
-            Widget = widget;
-            if (Widget != null)
+            
+            if (widget is not null)
             {
+                Widget = widget;
                 gameObject.SetActive(true);
                 if (text) text.text = "";
-                OnPressed = () => Widget.Command?.Invoke([Widget.Parameters ?? []]);
+                OnPressed = () => Widget.Command?.Invoke(Widget.Parameters ?? []);
                 renderer.materials[1].color = colour;
+
+                Logging.Info("show");
                 return;
             }
 
+            Widget = null;
             gameObject.SetActive(false);
             OnPressed = null;
             OnReleased = null;
+
+            Logging.Info("hide");
         }
 
         public void LateUpdate()
@@ -79,7 +87,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
                 PressTime = Time.realtimeSinceStartup;
 
                 // base functionality
-                bumped = true;// !toggle || (!bumped);
+                bumped = true;
                 renderer.materials[1].color = bumped ? bumped_colour : colour;
                 Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);

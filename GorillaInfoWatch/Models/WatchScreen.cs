@@ -53,6 +53,11 @@ namespace GorillaInfoWatch.Models
             Logging.Info($"OnScreenClose: {Title} / {GetType().Name})");
         }
 
+        public virtual void OnScreenRefresh()
+        {
+            Logging.Info($"OnScreenRefresh: {Title} / {GetType().Name})");
+        }
+
         public abstract ScreenContent GetContent();
     }
 }

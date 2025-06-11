@@ -21,6 +21,11 @@ namespace GorillaInfoWatch.Models
 
         }
 
+        public void AddLine()
+        {
+            Lines.Add(new(string.Empty, []));
+        }
+
         public void AddLine(string text, params List<Widget> widgets)
         {
             Lines.Add(new(text, widgets));

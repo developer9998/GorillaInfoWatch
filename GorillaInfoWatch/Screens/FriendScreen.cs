@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using GorillaInfoWatch.Attributes;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Tools;
 using GorillaNetworking;
-using PlayFab;
 using PlayFab.ClientModels;
 
 namespace GorillaInfoWatch.Screens
@@ -29,34 +28,33 @@ namespace GorillaInfoWatch.Screens
             FriendSystem.Instance.OnFriendListRefresh -= OnGetFriendsReceived;
         }
 
+        public override void OnScreenRefresh()
+        {
+            RequestFriendsList();
+        }
+
         public void RequestFriendsList()
         {
             FriendsList = null;
             FriendSystem.Instance.RefreshFriendsList();
-            SetContent();
         }
 
-        public void OnGetFriendsReceived(List<FriendBackendController.Friend> friendsList)
+        public async void OnGetFriendsReceived(List<FriendBackendController.Friend> friendsList)
         {
+            foreach (var friend in friendsList)
+            {
+                if (friend is null || friend.Presence is not FriendBackendController.FriendPresence presence) continue;
+
+                string userId = presence.FriendLinkId;
+
+                TaskCompletionSource<GetAccountInfoResult> completionSource = new();
+                GetAccountInfoResult currentAccountInfo = PlayerEx.GetAccountInfo(userId, completionSource.SetResult);
+                currentAccountInfo ??= await completionSource.Task;
+            }
+
             FriendsList = friendsList;
-            SetContent();
-        }
 
-        public void GetUserName(string userId, Action<string> onUserNameRecieved)
-        {
-            PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
-            {
-                PlayFabId = userId
-            }, result =>
-            {
-                Logging.Info(result.AccountInfo.TitleInfo.DisplayName);
-                onUserNameRecieved?.Invoke(result.AccountInfo.TitleInfo.DisplayName);
-            }, error =>
-            {
-                Logging.Fatal($"PlayFabClientAPI.GetAccountInfo with PlayFabId {userId}");
-                Logging.Error(error.ErrorMessage);
-                onUserNameRecieved?.Invoke(string.Empty);
-            });
+            SetContent();
         }
 
         public override ScreenContent GetContent()
@@ -64,30 +62,19 @@ namespace GorillaInfoWatch.Screens
             if (FriendsList == null)
                 return new LineBuilder("<align=\"center\">Retrieving friends list</align>");
 
-            List<FriendBackendController.FriendPresence> list = [];
-            foreach (var friend in FriendsList)
-            {
-                if (friend == null) continue;
-                var presence = friend.Presence;
-                if (presence == null) continue;
-                string friend_name = presence.UserName;
-                string room_id = presence.RoomId;
-                GetUserName(presence.FriendLinkId, (string userName) =>
-                {
-                    Logging.Info($"got name {userName} for id {presence.FriendLinkId}");
-                });
+            var list = FriendsList.Where(friend => friend is not null).Select(friend => friend.Presence).ToArray();
 
-                if ((string.IsNullOrEmpty(friend_name) || string.IsNullOrWhiteSpace(friend_name)) && (string.IsNullOrEmpty(room_id) || string.IsNullOrWhiteSpace(room_id))) continue;
-                list.Add(presence);
-            }
-
-            if (list.Count == 0)
+            if (list.Length == 0)
                 return new LineBuilder("<align=\"center\">No friends are currently active</align>");
 
-            var lines = new LineBuilder($"<align=\"center\">Showing {list.Count} friends:</align>");
+            var lines = new LineBuilder($"<align=\"center\">Showing {list.Length} friends:</align>");
 
             foreach (FriendBackendController.FriendPresence presence in list)
             {
+                GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(presence.FriendLinkId, null);
+                if (accountInfo is null)
+                    continue;
+
                 if (!string.IsNullOrEmpty(presence.RoomId) && presence.RoomId.Length > 0)
                 {
                     bool has_room = !string.IsNullOrEmpty(presence.RoomId) && presence.RoomId.Length > 0;
@@ -107,7 +94,7 @@ namespace GorillaInfoWatch.Screens
                     bool joinable = !has_vstump_prepend && !is_in_room && (!is_public_room || in_zone);
                     if (joinable)
                     {
-                        lines.AddLine(line_content, new PushButton((Delegate)FriendButtonClick, presence));
+                        lines.AddLine(line_content, new PushButton(FriendButtonClick, presence));
                     }
                     else
                     {
@@ -116,7 +103,7 @@ namespace GorillaInfoWatch.Screens
                     continue;
                 }
 
-                lines.AddLine($"{presence.UserName}: OFFLINE");
+                lines.AddLine($"{(string.IsNullOrEmpty(presence.UserName) || string.IsNullOrWhiteSpace(presence.UserName) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4] : presence.UserName)}: OFFLINE");
             }
 
             return lines;

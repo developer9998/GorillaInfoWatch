@@ -1,5 +1,4 @@
 ﻿using System;
-using GorillaInfoWatch.Models.Widgets;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Widgets
@@ -48,7 +47,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             if (Widget != null)
             {
                 gameObject.SetActive(true);
-                OnApplied = () => Widget.Command?.Invoke([Widget.Value]);
+                OnApplied = () => Widget.Command?.Invoke(Widget.Value);
                 SetNeedlePosition();
                 return;
             }

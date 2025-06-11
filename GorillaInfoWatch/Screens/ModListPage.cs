@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Screens
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Switch((Delegate)OnButtonSelect, i)
+                    lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Switch(OnButtonSelect, i)
                     {
                         Value = !isEnabled
                     });

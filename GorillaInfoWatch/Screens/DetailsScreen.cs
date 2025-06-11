@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Text;
-using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
-using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Tools;
 using GorillaNetworking;
-using HarmonyLib;
-using Photon.Pun;
-using Photon.Realtime;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
@@ -23,6 +16,69 @@ namespace GorillaInfoWatch.Screens
 
         public override ScreenContent GetContent()
         {
+            LineBuilder profileLines = new();
+
+            VRRig localRig = GorillaTagger.Instance.offlineVRRig;
+
+            profileLines.AddLine($"Name: {localRig.playerNameVisible}");
+
+            Color playerColour = localRig.playerColor;
+            profileLines.AddLine(string.Format("Colour: [{0}, {1}, {2} / {3}, {4}, {5}]",
+                Mathf.RoundToInt(playerColour.r * 9f),
+                Mathf.RoundToInt(playerColour.g * 9f),
+                Mathf.RoundToInt(playerColour.b * 9f),
+                Mathf.RoundToInt(playerColour.r * 255f),
+                Mathf.RoundToInt(playerColour.r * 255f),
+                Mathf.RoundToInt(playerColour.r * 255f)));
+
+            var accountInfo = NetworkSystem.Instance.GetLocalPlayer().GetAccountInfo(result => SetContent());
+            profileLines.AddLine($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
+
+            LineBuilder economyLines = new();
+
+            economyLines.AddLine($"Shiny Rocks: {CosmeticsController.instance.CurrencyBalance}");
+            economyLines.AddLine($"+ 100 Shiny Rocks in: {TimeSpan.FromSeconds(CosmeticsController.instance.secondsUntilTomorrow):h\\:mm\\:ss}");
+            economyLines.AddLine();
+
+            var currentWornSet = CosmeticsController.instance.currentWornSet;
+            for (int i = 0; i < currentWornSet.items.Length; i++)
+            {
+                var item = currentWornSet.items[i];
+                if (item.isNullItem)
+                    continue;
+                string displayName = CosmeticsController.instance.GetItemDisplayName(item);
+                CosmeticsController.CosmeticSlots slot = (CosmeticsController.CosmeticSlots)i;
+                string displaySlot = slot switch
+                {
+                    CosmeticsController.CosmeticSlots.ArmLeft => "Left Arm",
+                    CosmeticsController.CosmeticSlots.ArmRight => "Right Arm",
+                    CosmeticsController.CosmeticSlots.HandLeft => "Left Paw",
+                    CosmeticsController.CosmeticSlots.HandRight => "Right Paw",
+                    CosmeticsController.CosmeticSlots.BackLeft => "Back Left",
+                    CosmeticsController.CosmeticSlots.BackRight => "Back Right",
+                    CosmeticsController.CosmeticSlots.TagEffect => "Tag Effect",
+                    _ => slot.ToString()
+                };
+                economyLines.AddLine($"{displaySlot}: {displayName}");
+            }
+
+            LineBuilder progressionLines = new();
+
+            progressionLines.AddLine($"Tutorial Completion: {NetworkSystem.Instance.GetMyTutorialCompletion()}");
+            progressionLines.AddLine($"Total Points: {ProgressionController._gInstance.totalPointsRaw}");
+            progressionLines.AddLine($"Unclaimed Points: {ProgressionController._gInstance.unclaimedPoints}");
+
+            if (localRig.TryGetComponent(out GRPlayer grPlayer))
+            {
+                progressionLines.AddLine();
+                var grProgression = grPlayer.CurrentProgression;
+                int nextTier = GhostReactorProgression.TotalPointsForNextGrade(grProgression.redeemedPoints);
+                progressionLines.AddLine($"Employment: {GhostReactorProgression.GetTitleNameAndGrade(grProgression.redeemedPoints)}");
+                progressionLines.AddLine($"Earned: {grProgression.points} out of {nextTier} / {Mathf.FloorToInt((float)grProgression.points / nextTier * 100f)}%");
+                progressionLines.AddLine($"Promotion: {(grProgression.points - nextTier) >= 0}");
+            }
+
+            /*
             StringBuilder str = new();
             str.Append("Name: ").AppendLine(GorillaComputer.instance.savedName ?? PlayerPrefs.GetString("playerName", "gorilla"));
 
@@ -46,7 +102,7 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder profile = str;
 
-            profile.AddLine($"Show Sensitive Data: {(show_sensitive_data ? "Yes" : "No")}", new Switch((Action)ProcessSensitiveData)
+            profile.AddLine($"Show Sensitive Data: {(show_sensitive_data ? "Yes" : "No")}", new Switch(ProcessSensitiveData)
             {
                 Value = show_sensitive_data
             });
@@ -98,13 +154,14 @@ namespace GorillaInfoWatch.Screens
             str.Append("Version: ").AppendLine(GorillaComputer.instance.version);
             str.Append("Build Date: ").AppendLine(GorillaComputer.instance.buildDate);
             LineBuilder platform = str;
+            */
 
-            return new PageBuilder(("Profile", profile), ("Session", session), ("Connection", connection), ("Platform", platform));
+            return new PageBuilder(("Profile", profileLines), ("Economy", economyLines), ("Progression", progressionLines));
         }
 
-        public void ProcessSensitiveData()
+        public void ProcessSensitiveData(bool value)
         {
-            show_sensitive_data ^= true;
+            show_sensitive_data = value;
             SetText();
         }
     }

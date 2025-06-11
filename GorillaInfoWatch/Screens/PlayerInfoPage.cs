@@ -83,7 +83,7 @@ namespace GorillaInfoWatch.Screens
             if (!player.IsLocal)
             {
                 basicInfoLines.AddLines(1);
-                basicInfoLines.AddLine(Container.Muted ? "Unmute" : "Mute", new Switch((Delegate)OnMuteButtonClick, player)
+                basicInfoLines.AddLine(Container.Muted ? "Unmute" : "Mute", new Switch(OnMuteButtonClick, player)
                 {
                     Value = Container.Muted
                 });
@@ -91,7 +91,7 @@ namespace GorillaInfoWatch.Screens
                 if (FriendLib.FriendCompatible)
                 {
                     bool isFriend = FriendLib.IsFriend(player.UserId);
-                    basicInfoLines.AddLine(FriendLib.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch((Delegate)OnFriendButtonClick, player)
+                    basicInfoLines.AddLine(FriendLib.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
                     {
                         Value = isFriend
                     });
