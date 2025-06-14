@@ -17,7 +17,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override bool Init()
         {
-            if (RigUtils.TryGetVRRig(Player, out playerRig))
+            if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
                 image.enabled = false;
 

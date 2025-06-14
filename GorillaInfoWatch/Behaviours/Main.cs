@@ -1,9 +1,9 @@
 ﻿using BepInEx.Bootstrap;
-using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.Widgets;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
@@ -11,11 +11,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using PushButtonComponent = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
-using SnapSliderComponent = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
+using PushButton = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
+using Screen = GorillaInfoWatch.Models.Screen;
+using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -23,16 +26,20 @@ namespace GorillaInfoWatch.Behaviours
     {
         // Pages
 
-        private HomeScreen HomePage;
+        private HomeScreen Home;
 
-        private WarningScreen WarnPage;
+        private WarningScreen Warning;
+
+        private InboxScreen Inbox;
 
         private GameObject container;
 
-        public Dictionary<Type, WatchScreen> ScreenRegistry = [];
+        public Dictionary<Type, Models.Screen> ScreenRegistry = [];
 
-        public WatchScreen CurrentScreen;
-        private readonly List<WatchScreen> history = [];
+        public Screen CurrentScreen;
+        private readonly List<Screen> history = [];
+
+        private readonly List<Notification> notifications = [];
 
         // Assets
         public GameObject WatchAsset;
@@ -50,7 +57,7 @@ namespace GorillaInfoWatch.Behaviours
 
         // Display
         private TMP_Text menu_page_text;
-        private PushButtonComponent button_prev_page, button_next_page, button_return_screen, button_reload_screen;
+        private PushButton button_prev_page, button_next_page, button_return_screen, button_reload_screen, buttonOpenInbox;
 
         // Assets
         public readonly Dictionary<EWatchSound, AudioClip> Sounds = [];
@@ -92,15 +99,15 @@ namespace GorillaInfoWatch.Behaviours
                 EDefaultSymbol.H4rnsSprite
             },
             {
-                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAAK.", false),
+                (netPlayer) => netPlayer != null && VRRigCache.Instance.TryGetVrrig(netPlayer, out var playerRig) && RigUtilities.HasItem(playerRig, "LBAAK.", false),
                 EDefaultSymbol.StickCosmetic
             },
             {
-                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBADE.", false),
+                (netPlayer) => netPlayer != null && VRRigCache.Instance.TryGetVrrig(netPlayer, out var playerRig) && RigUtilities.HasItem(playerRig, "LBADE.", false),
                 EDefaultSymbol.FingerPainterBadge
             },
             {
-                (netPlayer) => netPlayer != null && RigUtils.TryGetVRRig(netPlayer, out var playerRig) && RigUtils.HasItem(playerRig, "LBAGS.", false),
+                (netPlayer) => netPlayer != null && VRRigCache.Instance.TryGetVrrig(netPlayer, out var playerRig) && RigUtilities.HasItem(playerRig, "LBAGS.", false),
                 EDefaultSymbol.IllustratorBadge
             }
         };
@@ -109,7 +116,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             enabled = false;
 
-            FriendLib.InitializeLib(Chainloader.PluginInfos);
+            FriendUtilities.InitializeLib(Chainloader.PluginInfos);
 
             // Screens
 
@@ -120,17 +127,22 @@ namespace GorillaInfoWatch.Behaviours
             var builtinPages = new List<Type>()
             {
                 typeof(ScoreboardScreen),
+                typeof(PlayerInfoPage),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
                 typeof(ModListPage),
+                typeof(ModInfoPage),
                 typeof(CreditScreen)
             };
 
             builtinPages.ForEach(page => RegisterScreen(page));
 
+            Type baseScreen = typeof(Screen);
+
             try
             {
-                //var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                // var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
                 var assemblies = Chainloader.PluginInfos.Values.Select(info => info.Instance.GetType().Assembly).Distinct();
 
                 foreach (Assembly assembly in assemblies)
@@ -139,35 +151,28 @@ namespace GorillaInfoWatch.Behaviours
                     {
                         if (assembly is null) continue;
 
-                        Logging.Info(assembly.GetName().Name);
+                        Logging.Info($"Searching assembly {assembly.GetName().Name}");
 
-                        if (assembly.GetCustomAttribute<WatchCompatibleModAttribute>() is not null)
-                        {
-                            Logging.Info($"Searching assembly {assembly.GetName().Name}");
-
-                            assembly
-                                .GetTypes()
-                                .Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() is not null)
-                                .ForEach(page => RegisterScreen(page));
-                        }
+                        assembly.GetTypes().Where(type => type.IsSubclassOf(baseScreen) && baseScreen.IsAssignableFrom(baseScreen)).ForEach(page => RegisterScreen(page));
                     }
                     catch (Exception ex)
                     {
-                        Logging.Fatal($"Could not check assembly {assembly.GetName().Name}");
+                        Logging.Fatal($"Could not search assembly {assembly.GetName().Name}");
                         Logging.Error(ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Fatal("Exception thrown when performing initial assembly check");
+                Logging.Fatal("Exception thrown when performing initial assembly search");
                 Logging.Error(ex);
             }
 
             container.SetActive(true);
 
-            HomePage = GetScreen(typeof(HomeScreen)) as HomeScreen;
-            WarnPage = GetScreen(typeof(WarningScreen)) as WarningScreen;
+            Home = GetScreen(typeof(HomeScreen)) as HomeScreen;
+            Warning = GetScreen(typeof(WarningScreen)) as WarningScreen;
+            Inbox = GetScreen(typeof(InboxScreen)) as InboxScreen;
 
             // Assets
 
@@ -227,86 +232,106 @@ namespace GorillaInfoWatch.Behaviours
 
             menu_page_text = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
 
-            button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButtonComponent>();
+            button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
             button_next_page.OnPressed = () =>
             {
                 CurrentScreen.PageNumber++;
-                DisplayScreen();
+                RefreshScreen();
             };
 
-            button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButtonComponent>();
+            button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
             button_prev_page.OnPressed = () =>
             {
                 CurrentScreen.PageNumber--;
-                DisplayScreen();
+                RefreshScreen();
             };
 
-            button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButtonComponent>();
+            button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
             button_return_screen.OnPressed = () =>
             {
-                if (history.Count > 0)
+                if (CurrentScreen is Screen screen && screen.CallerType is Type callerType)
                 {
-                    SwitchScreen(history[^1]);
+                    SwitchScreen(callerType);
+                }
+                else
+                {
+                    SwitchScreen(Home);
                 }
             };
 
-            button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButtonComponent>();
+            button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
             button_reload_screen.OnPressed = () =>
             {
-                if (CurrentScreen is WatchScreen screen)
+                if (CurrentScreen is Screen screen)
                 {
                     screen.OnScreenRefresh();
-                    DisplayScreen();
+                    RefreshScreen();
                 }
             };
 
+            buttonOpenInbox ??= menu.transform.Find("Canvas/Button_Inbox").AddComponent<PushButton>();
+            buttonOpenInbox.OnPressed = delegate ()
+            {
+                SwitchScreen(Inbox);
+            };
+
+            Events.OnNotificationSent = SendNotification;
+            Events.OnNotificationOpened = OpenNotification;
+
+            // Multicasted delegates aka. Events
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
             Events.OnCompleteQuest += OnQuestCompleted;
 
-            HomePage.SetEntries([.. ScreenRegistry.Values]);
-            SwitchScreen(HomePage);
+            Home.SetEntries([.. ScreenRegistry.Values]);
+            SwitchScreen(Home);
 
             enabled = true;
         }
 
-        public void SwitchScreen(WatchScreen newScreen)
+        public void SwitchScreen(Screen newScreen)
         {
-            if (CurrentScreen is WatchScreen lastScreen)
+            if (CurrentScreen is Screen lastScreen)
             {
                 CurrentScreen.RequestScreenSwitch -= SwitchScreen;
-                CurrentScreen.RequestSetLines -= DisplayScreen;
+                CurrentScreen.RequestSetLines -= RefreshScreen;
+
                 CurrentScreen.enabled = false;
+
                 CurrentScreen.OnScreenClose();
 
-                if (history.Count == 0 || history[^1] != newScreen) history.Add(CurrentScreen);
+                if (history.Count == 0 || history.Last() != newScreen) history.Add(CurrentScreen);
             }
 
             CurrentScreen = newScreen;
 
-            if (newScreen == HomePage) history.Clear();
-            else if (history.Count > 0 && history[^1] == newScreen) history.RemoveAt(history.Count - 1);
+            if (newScreen == Home) history.Clear();
+            else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
             newScreen.enabled = true;
+            newScreen.CallerType = history.Count > 0 ? history.Last().GetType() : null;
+
             newScreen.RequestScreenSwitch += SwitchScreen;
-            newScreen.RequestSetLines += DisplayScreen;
+            newScreen.RequestSetLines += RefreshScreen;
+
             newScreen.OnScreenOpen();
 
-            DisplayScreen();
+            RefreshScreen();
         }
 
         public void SwitchScreen(Type type)
         {
-            if (GetScreen(type) is WatchScreen screen)
+            if (GetScreen(type) is Screen screen)
                 SwitchScreen(screen);
         }
 
-        public void DisplayScreen(bool includeWidgets = true)
+        public void RefreshScreen(bool includeWidgets = true)
         {
-            button_return_screen.gameObject.SetActive(history.Count > 0);
+            buttonOpenInbox.gameObject.SetActive(CurrentScreen == Home);
+            button_return_screen.gameObject.SetActive(CurrentScreen != Home);
 
             var content = CurrentScreen.GetContent();
-            if (content == null) return;
+            if (content is null) return;
 
             try
             {
@@ -371,7 +396,7 @@ namespace GorillaInfoWatch.Behaviours
                 return false;
             }
 
-            Type baseScreen = typeof(WatchScreen);
+            Type baseScreen = typeof(Screen);
 
             if (!type.IsSubclassOf(baseScreen))
             {
@@ -387,18 +412,18 @@ namespace GorillaInfoWatch.Behaviours
 
             Component component = container.AddComponent(type);
 
-            if (component is WatchScreen page)
+            if (component is Screen screen)
             {
-                if (ScreenRegistry.ContainsValue(page))
+                if (ScreenRegistry.ContainsValue(screen))
                 {
                     Logging.Warning("Registry contains value (component of type)");
                     Destroy(component);
                     return false;
                 }
 
-                page.enabled = false;
+                screen.enabled = false;
 
-                ScreenRegistry[type] = page;
+                ScreenRegistry[type] = screen;
 
                 Logging.Info("Register success");
                 return true;
@@ -409,9 +434,9 @@ namespace GorillaInfoWatch.Behaviours
             return false;
         }
 
-        public WatchScreen GetScreen(Type type)
+        public Screen GetScreen(Type type, bool registerFallback = true)
         {
-            return (ScreenRegistry.ContainsKey(type) || RegisterScreen(type)) ? ScreenRegistry[type] : null;
+            return (ScreenRegistry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? ScreenRegistry[type] : null;
         }
 
         public void PlayErrorSound()
@@ -420,63 +445,126 @@ namespace GorillaInfoWatch.Behaviours
                 localInfoWatch.AudioDevice.PlayOneShot(audioClip);
         }
 
+        public void SendNotification(Notification notification)
+        {
+            if (notification is null || notification.IsOpened || notifications.Contains(notification))
+                return;
+
+            notifications.Add(notification);
+
+            if (Sounds.TryGetValue(notification.Sound, out AudioClip audio))
+                localInfoWatch.AudioDevice.PlayOneShot(audio);
+
+            GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, 0.04f, 0.2f);
+
+            var stateMachine = localInfoWatch.stateMachine;
+            Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;
+            stateMachine.SwitchState(new Menu_Notification(localInfoWatch, currentState, notification));
+
+            RefreshInbox();
+        }
+
+        public void OpenNotification(Notification notification)
+        {
+            if (notification is null || notification.IsOpened || !notifications.Contains(notification))
+                return;
+
+            notification.IsOpened = true;
+
+            if (notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is Screen screen)
+            {
+                if (notification.Screen.Task is Task task)
+                {
+                    TaskAwaiter awaiter = task.GetAwaiter();
+                    awaiter.OnCompleted(delegate ()
+                    {
+                        SwitchScreen(screen);
+                    });
+                    awaiter.GetResult();
+                }
+                else
+                {
+                    SwitchScreen(screen);
+                }
+            }
+
+            RefreshInbox();
+        }
+
+        public void RefreshInbox()
+        {
+            Inbox.Inbox = [.. notifications.Where(notif => !notif.IsOpened).OrderBy(notif => notif.Created)];
+
+            if (CurrentScreen == Inbox)
+                RefreshScreen();
+        }
+
         public void OnPlayerJoined(NetPlayer player)
         {
-            if (FriendLib.IsFriend(player.UserId))
+            if (FriendUtilities.IsFriend(player.UserId))
             {
-                localInfoWatch.DisplayMessage
+                Events.SendNotification
                 (
-                    string.Format
+                    new
                     (
-                        "<size=6>Your friend has joined:</size><br><b><color=#{0}>{1}</color></b>",
-                        ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour),
-                        player.NickName.SanitizeName()
-                    ),
-                    5,
-                    EWatchSound.notificationPositive,
-                    GetScreen(typeof(PlayerInfoPage)),
-                    delegate ()
-                    {
-                        if (RigUtils.TryGetVRRig(player, out RigContainer playerRig))
-                            PlayerInfoPage.Container = playerRig;
-                    }
+                        "Your friend has joined",
+                        string.Format
+                        (
+                            "<color=#{0}>{1}</color>",
+                            ColorUtility.ToHtmlStringRGB(FriendUtilities.FriendColour),
+                            player.NickName.SanitizeName()
+                        ),
+                        5, EWatchSound.notificationPositive,
+                        new Notification.ExternalScreen
+                        (
+                            typeof(PlayerInfoPage),
+                            $"Inspect {player.NickName.SanitizeName()}",
+                            delegate()
+                            {
+                                if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                                    PlayerInfoPage.Container = playerRig;
+                            }
+                        )
+                    )
                 );
             }
         }
 
         public void OnPlayerLeft(NetPlayer player)
         {
-            if (FriendLib.IsFriend(player.UserId))
+            if (FriendUtilities.IsFriend(player.UserId))
             {
-                localInfoWatch.DisplayMessage
+                Events.SendNotification
                 (
-                    string.Format
+                    new
                     (
-                        "<size=6>Your friend has left:</size><br><b><color=#{0}>{1}</color></b>",
-                        ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour),
-                        player.NickName.SanitizeName()
-                    ),
-                    5,
-                    EWatchSound.notificationNegative
+                        "Your friend has left",
+                        string.Format
+                        (
+                            "<color=#{0}>{1}</color>",
+                            ColorUtility.ToHtmlStringRGB(FriendUtilities.FriendColour),
+                            player.NickName.SanitizeName()
+                        ),
+                        5, EWatchSound.notificationNegative
+                    )
                 );
             }
         }
 
         public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
         {
-            localInfoWatch.DisplayMessage
+            Events.SendNotification
             (
-                string.Format
+                new
                 (
-                    "<size=6>You completed a quest:</size><br><b>{0}</b>",
-                    quest.GetTextDescription()
-                ),
-                3,
-                EWatchSound.notificationNeutral
+                    "You completed a quest",
+                    quest.GetTextDescription(),
+                    5, EWatchSound.notificationNeutral
+                )
             );
         }
 
-        public void PressButton(PushButtonComponent button, bool isLeftHand)
+        public void PressButton(PushButton button, bool isLeftHand)
         {
             if (button)
             {
@@ -489,7 +577,7 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void PressSlider(SnapSliderComponent slider, bool isLeftHand)
+        public void PressSlider(SnapSlider slider, bool isLeftHand)
         {
             if (slider)
             {

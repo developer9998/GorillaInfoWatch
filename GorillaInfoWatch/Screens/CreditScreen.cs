@@ -4,8 +4,8 @@ using GorillaInfoWatch.Models.Widgets;
 
 namespace GorillaInfoWatch.Screens
 {
-    [DisplayAtHomeScreen]
-    public class CreditScreen : WatchScreen
+    [ShowOnHomeScreen]
+    public class CreditScreen : Screen
     {
         public override string Title => "Credits";
 

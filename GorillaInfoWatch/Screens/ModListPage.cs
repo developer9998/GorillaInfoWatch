@@ -10,8 +10,8 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    [DisplayAtHomeScreen]
-    public class ModListPage : WatchScreen
+    [ShowOnHomeScreen]
+    public class ModListPage : Screen
     {
         public override string Title => "Mod Status";
 

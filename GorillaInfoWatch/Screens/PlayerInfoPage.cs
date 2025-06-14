@@ -11,7 +11,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
 
-    public class PlayerInfoPage : WatchScreen
+    public class PlayerInfoPage : Models.Screen
     {
         public override string Title => "Player Inspector";
 
@@ -35,7 +35,7 @@ namespace GorillaInfoWatch.Screens
             friendColour = new Gradient();
             friendColour.SetKeys
             (
-                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(FriendLib.FriendColour, 1)],
+                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(FriendUtilities.FriendColour, 1)],
                 [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
             );
         }
@@ -105,10 +105,10 @@ namespace GorillaInfoWatch.Screens
                     Colour = muteColour
                 });
 
-                if (FriendLib.FriendCompatible)
+                if (FriendUtilities.FriendCompatible)
                 {
-                    bool isFriend = FriendLib.IsFriend(player.UserId);
-                    basicInfoLines.AddLine(FriendLib.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
+                    bool isFriend = FriendUtilities.IsFriend(player.UserId);
+                    basicInfoLines.AddLine(FriendUtilities.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
                     {
                         Value = isFriend,
                         Colour = friendColour
@@ -125,10 +125,10 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is NetPlayer netPlayer)
             {
-                if (FriendLib.IsFriend(netPlayer.UserId))
-                    FriendLib.RemoveFriend(netPlayer);
+                if (FriendUtilities.IsFriend(netPlayer.UserId))
+                    FriendUtilities.RemoveFriend(netPlayer);
                 else
-                    FriendLib.AddFriend(netPlayer);
+                    FriendUtilities.AddFriend(netPlayer);
 
                 SetText();
             }
@@ -136,7 +136,7 @@ namespace GorillaInfoWatch.Screens
 
         private void OnMuteButtonClick(bool value, object[] args)
         {
-            if (args.ElementAtOrDefault(0) is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer container))
+            if (args.ElementAtOrDefault(0) is NetPlayer player && VRRigCache.Instance.TryGetVrrig(player, out RigContainer container))
             {
                 container.hasManualMute = true;
                 container.Muted ^= true;

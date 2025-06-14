@@ -33,21 +33,18 @@ namespace GorillaInfoWatch.Behaviours
 
                 GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 
-                if (InfoWatch.LocalWatch.RedirectScreen is WatchScreen newScreen && !Menu.activeSelf)
+                if (InfoWatch.LocalWatch is InfoWatch watch && watch.stateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
                 {
-                    InfoWatch.LocalWatch.RedirectPrep?.Invoke();
-                    Main.Instance.SwitchScreen(newScreen);
+                    Events.OpenNotification(notification);
 
-                    if (InfoWatch.LocalWatch.stateMachine.CurrentState is Menu_SubState subState)
-                    {
-                        InfoWatch.LocalWatch.stateMachine.SwitchState(subState.previousState);
-                    }
+                    watch.stateMachine.SwitchState(subState.previousState);
 
-                    InfoWatch.LocalWatch.RedirectScreen = null;
-                    InfoWatch.LocalWatch.RedirectPrep = null;
+                    Menu.SetActive(true);
                 }
-
-                Menu.SetActive(!Menu.activeSelf);
+                else
+                {
+                    Menu.SetActive(!Menu.activeSelf);
+                }
 
                 AudioSource.PlayOneShot(AudioSource.clip, 0.4f);
             }

@@ -7,8 +7,8 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
 {
-    [DisplayAtHomeScreen]
-    public class DetailsScreen : WatchScreen
+    [ShowOnHomeScreen]
+    public class DetailsScreen : Models.Screen
     {
         public override string Title => "Details";
 

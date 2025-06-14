@@ -3,15 +3,12 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.StateMachine
 {
-    public class Menu_ShowMessage(InfoWatch watch, Menu_StateBase previousState, string content, float duration, WatchScreen redirect) : Menu_SubState(watch, previousState)
+    public class Menu_Notification(InfoWatch watch, Menu_StateBase previousState, Notification notification) : Menu_SubState(watch, previousState)
     {
-        protected string content = content;
-        protected float duration = duration;
-        protected WatchScreen redirect = redirect;
-
-        readonly bool hasRedirect = redirect is not null;
+        public readonly Notification notification = notification;
 
         private float elapsed;
+
         private bool ended;
 
         public override void Enter()
@@ -25,11 +22,11 @@ namespace GorillaInfoWatch.Models.StateMachine
         {
             base.Initialize();
 
-            Watch.messageText.text = content;
+            Watch.messageText.text = notification.Content;
             Watch.messageSlider.value = 1f;
 
-            Watch.redirectIcon.SetActive(hasRedirect);
-            Watch.redirectText.text = hasRedirect ? redirect.Title : string.Empty;
+            Watch.redirectIcon.SetActive(notification.Screen is not null);
+            Watch.redirectText.text = notification.Screen is null ? string.Empty : notification.Screen.DisplayText;
         }
 
         public override void Resume()
@@ -55,16 +52,14 @@ namespace GorillaInfoWatch.Models.StateMachine
 
             elapsed += Time.unscaledDeltaTime;
 
-            if (elapsed >= duration)
+            if (elapsed >= notification.Duration)
             {
                 ended = true;
-                Watch.RedirectScreen = null;
-                Watch.RedirectPrep = null;
                 Watch.stateMachine.SwitchState(previousState);
                 return;
             }
 
-            float progress = Mathf.Clamp01(1 - (elapsed / duration)) * Watch.messageSlider.maxValue;
+            float progress = Mathf.Clamp01(1 - (elapsed / notification.Duration)) * Watch.messageSlider.maxValue;
             Watch.messageSlider.value = Watch.messageSlider.wholeNumbers ? Mathf.CeilToInt(progress) : progress;
         }
     }

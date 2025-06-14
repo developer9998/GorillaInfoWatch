@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Models.Widgets;
 using System;
-using TMPro;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Widgets
@@ -15,8 +14,6 @@ namespace GorillaInfoWatch.Behaviours.Widgets
         private Transform needle, min, max;
 
         private MeshRenderer renderer;
-
-        private TMP_Text text;
 
         //private Color unpressedColour, pressedColour;
 
@@ -80,7 +77,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
         {
             if (currentValue != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.2f);
+                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.15f);
                 float animatedValue = AnimationCurves.EaseInOutSine.Evaluate(currentValue);
                 needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, animatedValue);
                 renderer.materials[1].color = currentWidget.Colour.Evaluate(animatedValue);
@@ -94,7 +91,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
             if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > PushButtonComponent.PressTime)
             {
-                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.4f;
+                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.25f;
 
                 // base functionality
                 bumped ^= true;

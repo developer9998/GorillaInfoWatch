@@ -29,7 +29,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
             recorder = NetworkSystem.Instance.LocalRecorder;
 
-            if (RigUtils.TryGetVRRig(Player, out playerRig))
+            if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
                 is_mute_manual = PlayerPrefs.HasKey(Player.UserId);
 

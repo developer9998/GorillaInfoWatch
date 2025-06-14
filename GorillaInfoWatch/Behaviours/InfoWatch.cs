@@ -2,7 +2,6 @@
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
-using GorillaInfoWatch.Tools;
 using System;
 using System.Linq;
 using TMPro;
@@ -35,10 +34,6 @@ namespace GorillaInfoWatch.Behaviours
         public bool InLeftHand = true;
 
         public bool HideWatch = false;
-
-        public WatchScreen RedirectScreen;
-
-        public Action RedirectPrep;
 
         public StateMachine<Menu_StateBase> stateMachine;
 
@@ -138,20 +133,6 @@ namespace GorillaInfoWatch.Behaviours
             float value = 0.13f * Mathf.Clamp((saturation + 1) * 0.9f, 1, float.MaxValue);
             Color screenColour = Color.HSVToRGB(hue, saturation, value);
             screenMaterial.color = screenColour;
-        }
-
-        public void DisplayMessage(string content, float duration, EWatchSound sound, WatchScreen redirect = null, Action redirectPrep = null)
-        {
-            RedirectScreen = redirect;
-            RedirectPrep = redirectPrep;
-
-            if (Main.HasInstance && Main.Instance.Sounds.TryGetValue(sound, out AudioClip clip))
-                AudioDevice.PlayOneShot(clip);
-
-            GorillaTagger.Instance.StartVibration(InLeftHand, 0.04f, 0.2f);
-
-            Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;
-            stateMachine.SwitchState(new Menu_ShowMessage(this, currentState, content, duration, redirect));
         }
     }
 }

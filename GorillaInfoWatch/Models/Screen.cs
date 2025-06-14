@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public abstract class WatchScreen : MonoBehaviour
+    public abstract class Screen : MonoBehaviour
     {
         public abstract string Title { get; }
 
@@ -33,9 +33,11 @@ namespace GorillaInfoWatch.Models
 
         public event Action<Type> RequestScreenSwitch;
 
+        public Type CallerType;
+
         public void ReturnToHomePage() => SetScreen<HomeScreen>();
 
-        public void SetScreen<T>() where T : WatchScreen => SetScreen(typeof(T));
+        public void SetScreen<T>() where T : Screen => SetScreen(typeof(T));
 
         public void SetScreen(Type type) => RequestScreenSwitch?.Invoke(type);
 

@@ -3,7 +3,7 @@ using System;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class WarningScreen : WatchScreen
+    public class WarningScreen : Screen
     {
         public override string Title => "Warning";
 

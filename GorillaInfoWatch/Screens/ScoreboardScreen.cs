@@ -10,8 +10,8 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    [DisplayAtHomeScreen]
-    public class ScoreboardScreen : WatchScreen
+    [ShowOnHomeScreen]
+    public class ScoreboardScreen : Screen
     {
         public override string Title => "Scoreboard";
 
@@ -63,7 +63,7 @@ namespace GorillaInfoWatch.Screens
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
-                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !RigUtils.TryGetVRRig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new PushButton(TryInspectPlayer, player));
+                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !VRRigCache.Instance.TryGetVrrig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new PushButton(TryInspectPlayer, player));
             }
 
             return lines;
@@ -95,7 +95,7 @@ namespace GorillaInfoWatch.Screens
 
         public void TryInspectPlayer(object[] args)
         {
-            if (args.ElementAtOrDefault(0) is NetPlayer player && RigUtils.TryGetVRRig(player, out RigContainer playerRig))
+            if (args.ElementAtOrDefault(0) is NetPlayer player && VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
             {
                 PlayerInfoPage.Container = playerRig;
                 SetScreen<PlayerInfoPage>();

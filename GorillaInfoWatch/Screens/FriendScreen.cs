@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 
 namespace GorillaInfoWatch.Screens
 {
-    [DisplayAtHomeScreen]
-    public class FriendScreen : WatchScreen
+    [ShowOnHomeScreen]
+    public class FriendScreen : Screen
     {
         public override string Title => "Friends";
 

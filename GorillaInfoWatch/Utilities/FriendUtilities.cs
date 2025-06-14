@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch
 {
-    public static class FriendLib
+    public static class FriendUtilities
     {
         private const string GorillaFriendsGUID = "net.rusjj.gorillafriends";
 
