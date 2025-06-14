@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch
 {
-    [BepInPlugin(Constants.Guid, Constants.Name, Constants.Version)]
+    [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
     public class Plugin : BaseUnityPlugin
     {
         public static ManualLogSource PluginLogger;
@@ -21,7 +21,7 @@ namespace GorillaInfoWatch
             PluginLogger = Logger;
             PluginConfig = Config;
 
-            Harmony.CreateAndPatchAll(typeof(Plugin).Assembly, Constants.Guid);
+            Harmony.CreateAndPatchAll(typeof(Plugin).Assembly, Constants.GUID);
             GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(Main), typeof(NetworkHandler), typeof(DataHandler)));
         }
     }

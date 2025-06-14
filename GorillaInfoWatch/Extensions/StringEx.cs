@@ -1,7 +1,7 @@
-﻿using System;
+﻿using GorillaNetworking;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using GorillaNetworking;
 
 namespace GorillaInfoWatch.Extensions
 {

@@ -1,6 +1,5 @@
-﻿using System;
-using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Models.Widgets;
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -17,7 +16,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
         private TMP_Text text;
         private Color colour, bumped_colour;
 
-        private bool bumped; //, toggle;
+        private bool bumped;
 
         public static float PressTime;
 
@@ -38,9 +37,6 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void ApplyButton(PushButton widget)
         {
-            Logging.Info($"Button {renderer is null}");
-            Logging.Info($"{text is null} {renderer is null}");
-
             // prepare transition
             if (Widget is not null)
             {
@@ -49,7 +45,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             }
 
             // apply transition
-            
+
             if (widget is not null)
             {
                 Widget = widget;
@@ -57,8 +53,6 @@ namespace GorillaInfoWatch.Behaviours.Widgets
                 if (text) text.text = "";
                 OnPressed = () => Widget.Command?.Invoke(Widget.Parameters ?? []);
                 renderer.materials[1].color = colour;
-
-                Logging.Info("show");
                 return;
             }
 
@@ -66,13 +60,11 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             gameObject.SetActive(false);
             OnPressed = null;
             OnReleased = null;
-
-            Logging.Info("hide");
         }
 
         public void LateUpdate()
         {
-            if (bumped && Time.realtimeSinceStartup > (PressTime + 0.33f))
+            if (bumped && Time.unscaledTime > PressTime)
             {
                 bumped = false;
                 renderer.materials[1].color = colour;
@@ -82,19 +74,19 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > (PressTime + 0.33f))
-            {
-                PressTime = Time.realtimeSinceStartup;
+            if (PressTime > Time.realtimeSinceStartup || !collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) || component.isLeftHand == InfoWatch.LocalWatch.InLeftHand)
+                return;
 
-                // base functionality
-                bumped = true;
-                renderer.materials[1].color = bumped ? bumped_colour : colour;
-                Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
-                GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
+            PressTime = Time.realtimeSinceStartup + 0.25f;
 
-                // additional func
-                OnPressed?.Invoke();
-            }
+            // base functionality
+            bumped = true;
+            renderer.materials[1].color = bumped ? bumped_colour : colour;
+            Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
+            GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
+
+            // additional func
+            OnPressed?.Invoke();
         }
     }
 }

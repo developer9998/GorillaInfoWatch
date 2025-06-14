@@ -58,7 +58,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void OnTriggerStay(Collider other)
         {
-            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > (PushButtonComponent.PressTime + 0.33f))
+            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > PushButtonComponent.PressTime)
             {
                 Vector3 local = transform.InverseTransformPoint(component.transform.position);
                 float clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
@@ -92,7 +92,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 index_finger = null;
                 Current = null;
-                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.1f;
+                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.5f;
             }
         }
 

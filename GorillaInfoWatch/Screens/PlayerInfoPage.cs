@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
-using PlayFab;
-using PlayFab.ClientModels;
+using GorillaNetworking;
+using System;
+using System.Linq;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
@@ -21,9 +17,43 @@ namespace GorillaInfoWatch.Screens
 
         public static RigContainer Container;
 
-        private bool IsValid => Container != null && Container.Creator is NetPlayer creator && creator.InRoom() && !creator.IsNull;
+        private bool IsValid => Container is not null && Container.Creator is NetPlayer creator && !creator.IsNull && (creator.IsLocal || (NetworkSystem.Instance.InRoom && NetworkSystem.Instance.GetPlayer(creator.ActorNumber) is not null));
 
-        private readonly Dictionary<string, GetAccountInfoResult> accountInfoCache = [];
+        private int playerActorNum;
+
+        private readonly Gradient muteColour, friendColour;
+
+        public PlayerInfoPage()
+        {
+            muteColour = new Gradient();
+            muteColour.SetKeys
+            (
+                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(new Color32(255, 0, 0, 255), 1)],
+                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
+            );
+
+            friendColour = new Gradient();
+            friendColour.SetKeys
+            (
+                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(FriendLib.FriendColour, 1)],
+                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
+            );
+        }
+
+        public override void OnScreenOpen()
+        {
+            base.OnScreenOpen();
+
+            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+        }
+
+        public override void OnScreenClose()
+        {
+            base.OnScreenClose();
+
+            playerActorNum = -1;
+            RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
+        }
 
         public override ScreenContent GetContent()
         {
@@ -34,39 +64,25 @@ namespace GorillaInfoWatch.Screens
             }
 
             NetPlayer player = Container.Creator;
+
+            if (playerActorNum == -1)
+                playerActorNum = player.ActorNumber;
+
             VRRig rig = Container.Rig;
 
-            bool hasAccountInfo = accountInfoCache.TryGetValue(player.UserId, out GetAccountInfoResult accountInfo);
-
-            if (!hasAccountInfo)
-            {
-                PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
-                {
-                    PlayFabId = player.UserId
-                }, result =>
-                {
-                    if (accountInfoCache.TryAdd(player.UserId, result))
-                        SetContent();
-                },
-                error =>
-                {
-                    Logging.Fatal($"PlayFabClientAPI.GetAccountInfo ({player.UserId})");
-                    Logging.Error(error.GenerateErrorReport());
-
-                    Main.Instance.PlayErrorSound();
-                });
-            }
+            var accountInfo = player.GetAccountInfo(result => SetContent());
 
             PageBuilder pages = new();
 
             LineBuilder basicInfoLines = new();
 
-            string playerName = (KIDManager.HasPermissionToUseFeature(EKIDFeatures.Custom_Nametags) ? player.NickName : player.DefaultName).LimitLength(12);
-            string playerNameSanitized = playerName.SanitizeName();
+            bool hasPermission = GorillaComputer.instance.NametagsEnabled && KIDManager.HasPermissionToUseFeature(EKIDFeatures.Custom_Nametags);
+            string playerName = hasPermission ? player.NickName : player.DefaultName;
+            string playerNameSanitized = playerName.SanitizeName().LimitLength(12);
 
             basicInfoLines.AddLine($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new WidgetPlayerSwatch(player, 520f, 90, 90), new WidgetPlayerSpeaker(player, 620f, 100, 100), new WidgetSpecialPlayerSwatch(player, 520f, 80, 70));
 
-            basicInfoLines.AddLine($"Creation Date: {(hasAccountInfo ? $"{accountInfo.AccountInfo.TitleInfo.Created.ToLongDateString()} at {accountInfo.AccountInfo.TitleInfo.Created.ToShortTimeString()}" : "Retrieving..")}");
+            basicInfoLines.AddLine($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
 
             basicInfoLines.AddLines(1);
             basicInfoLines.AddLine(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
@@ -74,8 +90,8 @@ namespace GorillaInfoWatch.Screens
                 Mathf.RoundToInt(rig.playerColor.g * 9f),
                 Mathf.RoundToInt(rig.playerColor.b * 9f),
                 Mathf.RoundToInt(rig.playerColor.r * 255f),
-                Mathf.RoundToInt(rig.playerColor.r * 255f),
-                Mathf.RoundToInt(rig.playerColor.r * 255f)));
+                Mathf.RoundToInt(rig.playerColor.g * 255f),
+                Mathf.RoundToInt(rig.playerColor.b * 255f)));
             basicInfoLines.AddLine($"Points: {rig.currentQuestScore}");
             basicInfoLines.AddLine($"Voice Type: {(rig.localUseReplacementVoice || rig.remoteUseReplacementVoice ? "MONKE" : "HUMAN")}");
             basicInfoLines.AddLine($"Is Master Client: {(player.IsMasterClient ? "Yes" : "No")}");
@@ -85,7 +101,8 @@ namespace GorillaInfoWatch.Screens
                 basicInfoLines.AddLines(1);
                 basicInfoLines.AddLine(Container.Muted ? "Unmute" : "Mute", new Switch(OnMuteButtonClick, player)
                 {
-                    Value = Container.Muted
+                    Value = Container.Muted,
+                    Colour = muteColour
                 });
 
                 if (FriendLib.FriendCompatible)
@@ -93,40 +110,13 @@ namespace GorillaInfoWatch.Screens
                     bool isFriend = FriendLib.IsFriend(player.UserId);
                     basicInfoLines.AddLine(FriendLib.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
                     {
-                        Value = isFriend
+                        Value = isFriend,
+                        Colour = friendColour
                     });
                 }
             }
 
             pages.AddPage("General", basicInfoLines);
-
-            if (!player.IsLocal)
-            {
-                LineBuilder compDataLines = new();
-
-                compDataLines.AddLine($"FPS: {rig.fps}");
-                compDataLines.AddLines(1);
-                compDataLines.AddLine($"Turn Type: {rig.turnType}");
-                compDataLines.AddLine($"Turn Factor: {rig.turnFactor}");
-
-                pages.AddPage("Competitive", compDataLines);
-
-                LineBuilder infoWatchLines = new();
-
-                bool hasInfoWatch = rig.TryGetComponent(out NetworkedPlayer component) && component.HasWatch;
-                infoWatchLines.AddLine($"Has GorillaInfoWatch: {(hasInfoWatch ? "Yes" : "No")}");
-
-                if (hasInfoWatch)
-                {
-                    infoWatchLines.AddLines(1);
-                    if (player.GetPlayerRef().CustomProperties.TryGetValue(Constants.NetworkVersionKey, out object versionObj) && versionObj is string version)
-                        infoWatchLines.AddLine($"Version: {version}");
-                    if (!string.IsNullOrEmpty(component.Watch.TimeZone))
-                        infoWatchLines.AddLine($"Time Zone: {component.Watch.TimeZone}");
-                }
-
-                pages.AddPage("GorillaInfoWatch", infoWatchLines);
-            }
 
             return pages;
         }
@@ -153,7 +143,8 @@ namespace GorillaInfoWatch.Screens
 
                 try
                 {
-                    GorillaScoreboardTotalUpdater.allScoreboards.Select(scoreboard => scoreboard.lines)
+                    GorillaScoreboardTotalUpdater.allScoreboards
+                        .Select(scoreboard => scoreboard.lines)
                         .SelectMany(line => line)
                         .Where(line => line.linePlayer == player || line.rigContainer == container)
                         .ForEach(line =>
@@ -161,12 +152,11 @@ namespace GorillaInfoWatch.Screens
                             line.muteButton.isAutoOn = false;
                             line.muteButton.isOn = container.Muted;
                             line.muteButton.UpdateColor();
-                        }
-                    );
+                        });
                 }
                 catch (Exception ex)
                 {
-                    Logging.Fatal($"Unable to update mute colour of lines for {player.NickName}");
+                    Logging.Fatal($"Mute buttons could not be updated for {player.NickName}");
                     Logging.Error(ex);
                 }
 
@@ -177,6 +167,15 @@ namespace GorillaInfoWatch.Screens
                 PlayerPrefs.Save();
 
                 SetText();
+            }
+        }
+
+        private void OnPlayerLeft(NetPlayer player)
+        {
+            if (playerActorNum != -1 && player.ActorNumber == playerActorNum)
+            {
+                Container = null;
+                SetContent();
             }
         }
     }

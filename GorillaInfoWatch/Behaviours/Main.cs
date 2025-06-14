@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using BepInEx.Bootstrap;
-using ExitGames.Client.Photon;
-using GorillaGameModes;
+﻿using BepInEx.Bootstrap;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.Widgets;
@@ -13,7 +7,10 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
-using Photon.Pun;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,9 +27,9 @@ namespace GorillaInfoWatch.Behaviours
 
         private WarningScreen WarnPage;
 
-        private GameObject screen_container;
+        private GameObject container;
 
-        public List<WatchScreen> ScreenRegistry = [];
+        public Dictionary<Type, WatchScreen> ScreenRegistry = [];
 
         public WatchScreen CurrentScreen;
         private readonly List<WatchScreen> screen_history = [];
@@ -41,15 +38,15 @@ namespace GorillaInfoWatch.Behaviours
         public GameObject WatchAsset;
         private GameObject watchObject, menu;
 
-        private Watch localPlayerWatch;
-        private Panel localPlayerPanel;
+        private InfoWatch localInfoWatch;
+        private Panel localPanel;
 
         // Menu
         private Image menu_background;
         private TMP_Text menu_header;
         private TMP_Text menu_description;
         private Transform menu_line_tform;
-        private List<MenuLine> menu_lines;
+        private List<Line> menu_lines;
 
         // Display
         private TMP_Text menu_page_text;
@@ -116,9 +113,9 @@ namespace GorillaInfoWatch.Behaviours
 
             // Screens
 
-            screen_container = new GameObject("Screen Container");
-            screen_container.transform.SetParent(transform, false);
-            screen_container.SetActive(false);
+            container = new GameObject("ScreenContainer");
+            container.transform.SetParent(transform);
+            container.SetActive(false);
 
             var builtinPages = new List<Type>()
             {
@@ -129,7 +126,7 @@ namespace GorillaInfoWatch.Behaviours
                 typeof(CreditScreen)
             };
 
-            builtinPages.ForEach(RegisterScreen);
+            builtinPages.ForEach(page => RegisterScreen(page));
 
             try
             {
@@ -151,7 +148,7 @@ namespace GorillaInfoWatch.Behaviours
                             assembly
                                 .GetTypes()
                                 .Where(page => page.GetCustomAttribute<WatchCustomPageAttribute>() is not null)
-                                .ForEach(RegisterScreen);
+                                .ForEach(page => RegisterScreen(page));
                         }
                     }
                     catch (Exception ex)
@@ -167,10 +164,10 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Error(ex);
             }
 
-            screen_container.SetActive(true);
+            container.SetActive(true);
 
-            HomePage = gameObject.AddComponent<HomeScreen>();
-            WarnPage = gameObject.AddComponent<WarningScreen>();
+            HomePage = GetScreen(typeof(HomeScreen)) as HomeScreen;
+            WarnPage = GetScreen(typeof(WarningScreen)) as WarningScreen;
 
             // Assets
 
@@ -194,24 +191,18 @@ namespace GorillaInfoWatch.Behaviours
             watchObject = Instantiate(WatchAsset);
             watchObject.name = "InfoWatch";
 
-            localPlayerWatch = watchObject.AddComponent<Watch>();
-            localPlayerWatch.Rig = GorillaTagger.Instance.offlineVRRig;
+            localInfoWatch = watchObject.AddComponent<InfoWatch>();
+            localInfoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
 
             TimeZoneInfo timeZoneInfo = TimeZoneInfo.Local;
 
-            string timeZone = (timeZoneInfo.SupportsDaylightSavingTime && timeZoneInfo.IsDaylightSavingTime(DateTime.Now)) ? timeZoneInfo.DaylightName : timeZoneInfo.StandardName;
-            localPlayerWatch.TimeZone = timeZone;
-            NetworkHandler.Instance.SetProperty("TimeZone", timeZone);
-
             float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
-            localPlayerWatch.TimeOffset = timeOffset;
+            localInfoWatch.TimeOffset = timeOffset;
             NetworkHandler.Instance.SetProperty("TimeOffset", timeOffset);
 
             menu = Instantiate(await AssetLoader.LoadAsset<GameObject>("Menu"));
             menu.name = "InfoMenu";
-
-            localPlayerPanel = menu.AddComponent<Panel>();
-            localPlayerPanel.Origin = watchObject.transform.Find("Point");
+            menu.gameObject.SetActive(true);
 
             menu_background = menu.transform.Find("Canvas/Background").GetComponent<Image>();
             menu_header = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
@@ -221,10 +212,13 @@ namespace GorillaInfoWatch.Behaviours
 
             foreach (Transform line_tform in menu_line_tform)
             {
-                line_tform.gameObject.SetActive(false);
-                var line_component = line_tform.gameObject.AddComponent<MenuLine>();
+                line_tform.gameObject.SetActive(true);
+                var line_component = line_tform.gameObject.AddComponent<Line>();
                 menu_lines.Add(line_component);
             }
+
+            localPanel = menu.AddComponent<Panel>();
+            localPanel.Origin = watchObject.transform.Find("Point");
 
             // Components
 
@@ -268,10 +262,9 @@ namespace GorillaInfoWatch.Behaviours
 
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
-            PhotonNetwork.NetworkingClient.EventReceived += OnEventReceived;
             Events.OnCompleteQuest += OnQuestCompleted;
 
-            HomePage.SetEntries(ScreenRegistry);
+            HomePage.SetEntries([.. ScreenRegistry.Values]);
             SwitchScreen(HomePage);
 
             enabled = true;
@@ -303,14 +296,8 @@ namespace GorillaInfoWatch.Behaviours
 
         public void SwitchScreen(Type type)
         {
-            if (TryGetComponent(type, out Component component) && component is WatchScreen screen)
-            {
+            if (GetScreen(type) is WatchScreen screen)
                 SwitchScreen(screen);
-                return;
-            }
-
-            RegisterScreen(type);
-            SwitchScreen(ScreenRegistry[^1]); // latest screen
         }
 
         public void DisplayScreen(bool includeWidgets = true)
@@ -345,8 +332,6 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Logging.Fatal($"Menu could not adjust for ({CurrentScreen.GetType().Name})");
                 Logging.Error(ex);
-
-                PlayErrorSound();
             }
 
             try
@@ -368,96 +353,126 @@ namespace GorillaInfoWatch.Behaviours
                     menu_line.gameObject.SetActive(false);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logging.Fatal($"Screen contents could not be displayed ({CurrentScreen.GetType().Name})");
                 Logging.Error(ex);
-
-                PlayErrorSound();
             }
         }
 
-        public void RegisterScreen(Type type)
+        public bool RegisterScreen(Type type)
         {
-            try
+            Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
+
+            if (ScreenRegistry.ContainsKey(type))
             {
-                var component = screen_container.AddComponent(type);
+                Logging.Warning("Registry contains key");
+                return false;
+            }
 
-                if (component is WatchScreen page)
+            Type baseScreen = typeof(WatchScreen);
+
+            if (!type.IsSubclassOf(baseScreen))
+            {
+                Logging.Warning("Type is not subclass of screen");
+                return false;
+            }
+
+            if (!baseScreen.IsAssignableFrom(type))
+            {
+                Logging.Warning("Type is not assignable from screen");
+                return false;
+            }
+
+            Component component = container.AddComponent(type);
+
+            if (component is WatchScreen page)
+            {
+                if (ScreenRegistry.ContainsValue(page))
                 {
-                    Logging.Info($"Added Type {type.Name}");
-
-                    page.enabled = false;
-                    RegisterScreen(page);
-
-                    return;
+                    Logging.Warning("Registry contains value (component of type)");
+                    Destroy(component);
+                    return false;
                 }
 
-                Logging.Warning($"Type {type.Name} is not WatchScreen");
+                page.enabled = false;
 
-                Destroy(component);
+                ScreenRegistry[type] = page;
+
+                Logging.Info("Register success");
+                return true;
             }
-            catch (Exception ex)
-            {
-                Logging.Fatal($"Exception thrown when casting Page from Type {type.FullName}");
-                Logging.Error(ex);
-            }
+
+            Logging.Warning("Component of type is not screen (this shouldn't happen)");
+            Destroy(component);
+            return false;
         }
 
-        public void RegisterScreen(WatchScreen page)
+        public WatchScreen GetScreen(Type type)
         {
-            if (ScreenRegistry.Contains(page))
-            {
-                Logging.Warning($"Page {page.GetType().Name} is already included in registry");
-                return;
-            }
-
-            ScreenRegistry.Add(page);
+            return (ScreenRegistry.ContainsKey(type) || RegisterScreen(type)) ? ScreenRegistry[type] : null;
         }
 
         public void PlayErrorSound()
         {
             if (Enum.Parse<EWatchSound>(string.Concat("error", UnityEngine.Random.Range(1, 6))) is EWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
-                localPlayerWatch.AudioDevice.PlayOneShot(audioClip);
+                localInfoWatch.AudioDevice.PlayOneShot(audioClip);
         }
 
         public void OnPlayerJoined(NetPlayer player)
         {
-            try
+            if (FriendLib.IsFriend(player.UserId))
             {
-                if (FriendLib.IsFriend(player.UserId))
-                {
-                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS JOINED:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 3, EWatchSound.notificationPositive);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Fatal("Main.OnPlayerJoined");
-                Logging.Error(ex);
+                localInfoWatch.DisplayMessage
+                (
+                    string.Format
+                    (
+                        "<size=6>Your friend has joined:</size><br><b><color=#{0}>{1}</color></b>",
+                        ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour),
+                        player.NickName.SanitizeName()
+                    ),
+                    5,
+                    EWatchSound.notificationPositive,
+                    GetScreen(typeof(PlayerInfoPage)),
+                    delegate ()
+                    {
+                        if (RigUtils.TryGetVRRig(player, out RigContainer playerRig))
+                            PlayerInfoPage.Container = playerRig;
+                    }
+                );
             }
         }
 
         public void OnPlayerLeft(NetPlayer player)
         {
-            try
+            if (FriendLib.IsFriend(player.UserId))
             {
-                if (FriendLib.IsFriend(player.UserId))
-                {
-                    localPlayerWatch.DisplayMessage(string.Format("<size=60%>A FRIEND HAS LEFT:</size><br><b><color=#{0}>{1}</color></b>", ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour), player.NickName.SanitizeName()), 3, EWatchSound.notificationNegative);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Fatal("Main.OnPlayerLeft");
-                Logging.Error(ex);
+                localInfoWatch.DisplayMessage
+                (
+                    string.Format
+                    (
+                        "<size=6>Your friend has left:</size><br><b><color=#{0}>{1}</color></b>",
+                        ColorUtility.ToHtmlStringRGB(FriendLib.FriendColour),
+                        player.NickName.SanitizeName()
+                    ),
+                    5,
+                    EWatchSound.notificationNegative
+                );
             }
         }
 
         public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
         {
-            Logging.Info(quest.questOccurenceFilter);
-            Logging.Info(quest.questID);
-            localPlayerWatch.DisplayMessage(string.Format("<size=60%>QUEST COMPLETED:</size><br><b><size=90%>{0}</size></b>", quest.questName), 3, EWatchSound.notificationNeutral);
+            localInfoWatch.DisplayMessage
+            (
+                string.Format
+                (
+                    "<size=6>You completed a quest:</size><br><b>{0}</b>",
+                    quest.GetTextDescription()
+                ),
+                3,
+                EWatchSound.notificationNeutral
+            );
         }
 
         public void PressButton(PushButtonComponent button, bool isLeftHand)
@@ -496,22 +511,6 @@ namespace GorillaInfoWatch.Behaviours
 
                 AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.widgetSwitch];
                 handSource.PlayOneShot(clip, 0.2f);
-            }
-        }
-
-
-        private void OnEventReceived(EventData photonEvent)
-        {
-            if (photonEvent.Code == GorillaTagManager.ReportInfectionTagEvent) // The game doesn't use this constant, rather it's hardcoded into the event for some reason
-            {
-                object[] data = (object[])photonEvent.CustomData;
-
-                NetPlayer taggingNetPlayer = GameMode.ParticipatingPlayers.FirstOrDefault(player => player.UserId == (string)data[0]);
-
-                if (taggingNetPlayer != null && taggingNetPlayer.IsLocal)
-                {
-                    Singleton<DataHandler>.Instance.AddItem("Tags", Singleton<DataHandler>.Instance.GetItem("Tags", 0) + 1);
-                }
             }
         }
     }

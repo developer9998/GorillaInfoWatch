@@ -1,5 +1,4 @@
-﻿using System;
-using GorillaInfoWatch.Utilities;
+﻿using GorillaInfoWatch.Utilities;
 using GorillaLocomotion;
 using UnityEngine;
 
@@ -44,6 +43,8 @@ namespace GorillaInfoWatch.Behaviours
             SetPosition();
             SetRotation();
 
+            transform.localScale = Vector3.one * 1.7f * GorillaTagger.Instance.offlineVRRig.lastScaleFactor;
+
             // Turn off the menu if we're not looking at it, or if our hand is facing down
             if (!IsFacingUp) gameObject.SetActive(false);
         }
@@ -60,7 +61,8 @@ namespace GorillaInfoWatch.Behaviours
         {
             Vector3 forward = transform.position - Head.position;
             Vector3 euler_angles = Quaternion.LookRotation(forward, Vector3.up).eulerAngles;
-            euler_angles.x = Math.Abs(euler_angles.x) > Constants.MenuTiltAngle ? Mathf.Lerp((Mathf.Abs(euler_angles.x) - Constants.MenuTiltAngle) * Constants.MenuTiltAmount * Mathf.Sign(euler_angles.x), euler_angles.x, (Mathf.Abs(euler_angles.x) - Constants.MenuTiltAngle) / Constants.MenuTiltMinimum) : 0f;
+            // euler_angles.x = Math.Abs(euler_angles.x) > Constants.MenuTiltAngle ? Mathf.Lerp((Mathf.Abs(euler_angles.x) - Constants.MenuTiltAngle) * Constants.MenuTiltAmount * Mathf.Sign(euler_angles.x), euler_angles.x, (Mathf.Abs(euler_angles.x) - Constants.MenuTiltAngle) / Constants.MenuTiltMinimum) : 0f;
+            euler_angles.x = 0f;
             euler_angles.z = 0f;
             transform.rotation = Quaternion.Euler(euler_angles);
         }

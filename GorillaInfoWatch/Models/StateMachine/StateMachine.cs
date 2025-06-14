@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-
-namespace GorillaInfoWatch.Models.StateMachine
+﻿namespace GorillaInfoWatch.Models.StateMachine
 {
-    public class StateMachine<T> : MonoBehaviour where T : State
+    public class StateMachine<T> where T : State
     {
         public T CurrentState => currentState;
         public bool HasState => currentState is not null;

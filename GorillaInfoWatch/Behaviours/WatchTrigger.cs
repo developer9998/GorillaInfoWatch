@@ -1,6 +1,8 @@
-﻿using GorillaInfoWatch.Utilities;
+﻿using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Utilities;
 using GorillaLocomotion;
 using UnityEngine;
+using HandIndicator = GorillaTriggerColliderHandIndicator;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -10,7 +12,6 @@ namespace GorillaInfoWatch.Behaviours
 
         private AudioSource AudioSource;
 
-        private readonly float Debounce = 0.33f;
         private float TouchTime;
 
         private bool IsFacingUp => Vector3.Distance(GTPlayer.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
@@ -25,10 +26,17 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnTriggerEnter(Collider other)
         {
-            if (IsFacingUp && InView && other.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) && !handIndicator.isLeftHand && Time.time > (TouchTime + Debounce))
+            if (IsFacingUp && InView && other.TryGetComponent(out HandIndicator handIndicator) && Time.realtimeSinceStartup > TouchTime)
             {
-                TouchTime = Time.time;
+                TouchTime = Time.realtimeSinceStartup + 0.3f;
+
                 GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);
+
+                if (InfoWatch.LocalWatch.RedirectScreen is WatchScreen newScreen && !Menu.activeSelf)
+                {
+                    InfoWatch.LocalWatch.RedirectPrep?.Invoke();
+                    Main.Instance.SwitchScreen(newScreen);
+                }
 
                 Menu.SetActive(!Menu.activeSelf);
 

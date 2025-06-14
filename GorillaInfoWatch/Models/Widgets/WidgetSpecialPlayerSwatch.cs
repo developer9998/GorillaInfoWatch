@@ -1,7 +1,7 @@
-using System;
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Utilities;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 

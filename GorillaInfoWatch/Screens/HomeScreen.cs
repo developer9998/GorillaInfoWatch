@@ -1,43 +1,36 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using GorillaInfoWatch.Attributes;
+﻿using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace GorillaInfoWatch.Screens
 {
     public class HomeScreen : WatchScreen
     {
         public override string Title => Constants.Name;
-
         public override string Description => "Created by dev9998 and gizmogoat";
 
-        private List<(string entry_name, WatchScreen screen)> home_entries;
+        private Dictionary<string, WatchScreen> entries;
 
         public void SetEntries(List<WatchScreen> screens)
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            List<WatchScreen> native_screens = [.. screens.Where(screen => screen.GetType().Assembly == assembly)];
-            List<WatchScreen> sorted_screens = [.. native_screens.Concat(screens.Except(native_screens))];
-            home_entries = new(sorted_screens.Count);
-            foreach (WatchScreen screen in sorted_screens)
-            {
-                if (screen.GetType().GetCustomAttributes(typeof(DisplayAtHomeScreenAttribute), false).FirstOrDefault() is DisplayAtHomeScreenAttribute)
-                {
-                    home_entries.Add((screen.Title, screen));
-                }
-            }
+            Assembly nativeAssembly = Assembly.GetExecutingAssembly();
+            var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly).ToList();
+            var orderedScreens = nativeScreens.Concat(screens.Except(nativeScreens)).ToList();
+
+            entries = orderedScreens.Where(screen => screen.GetType().GetCustomAttributes(typeof(DisplayAtHomeScreenAttribute), false).Any()).ToDictionary(screen => screen.Title, screen => screen);
         }
 
         public override ScreenContent GetContent()
         {
             var lines = new LineBuilder();
 
-            for (int i = 0; i < home_entries.Count; i++)
+            for (int i = 0; i < entries.Count; i++)
             {
-                (string entry_name, WatchScreen screen) = home_entries[i];
-                lines.AddLine(entry_name, new PushButton(EntrySelected, i));
+                (string entry_name, WatchScreen screen) = entries.ElementAt(i);
+                lines.AddLine(entry_name, new PushButton(EntrySelected, screen));
             }
 
             return lines;
@@ -45,9 +38,9 @@ namespace GorillaInfoWatch.Screens
 
         public void EntrySelected(object[] args)
         {
-            if (args[0] is int index)
+            if (args.ElementAtOrDefault(0) is WatchScreen screen)
             {
-                SetScreen(home_entries[index].screen.GetType());
+                SetScreen(screen.GetType());
             }
         }
     }

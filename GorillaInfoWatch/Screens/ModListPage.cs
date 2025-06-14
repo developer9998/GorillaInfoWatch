@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Bootstrap;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -46,7 +46,7 @@ namespace GorillaInfoWatch.Screens
                     bool isEnabled = info.Instance.enabled;
                     lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Switch(OnButtonSelect, i)
                     {
-                        Value = !isEnabled
+                        Value = isEnabled
                     });
                     continue;
                 }
@@ -61,8 +61,8 @@ namespace GorillaInfoWatch.Screens
         {
             if (args[0] is int mod_index)
             {
-                _modEntries[mod_index].Instance.enabled = !value;
-                SetContent();
+                _modEntries[mod_index].Instance.enabled = value;
+                SetText();
             }
         }
     }

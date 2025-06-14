@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using GorillaExtensions;
+﻿using GorillaExtensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
-using PushButtonComponent = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
-using SnapSliderComponent = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
-using SwitchComponent = GorillaInfoWatch.Behaviours.Widgets.SwitchComponent;
+using PushButton = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
+using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
+using Switch = GorillaInfoWatch.Behaviours.Widgets.SwitchComponent;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class MenuLine : MonoBehaviour
+    public class Line : MonoBehaviour
     {
         public TMP_Text Text;
-        public PushButtonComponent Button;
-        public SnapSliderComponent SnapSlider;
-        public SwitchComponent Switch;
+        public PushButton Button;
+        public SnapSlider SnapSlider;
+        public Switch Switch;
         public GameObject Symbol;
 
         private readonly List<Widget> currentWidgets = [];
@@ -28,11 +28,11 @@ namespace GorillaInfoWatch.Behaviours
         public void Awake()
         {
             Text = transform.Find("Text").GetComponent<TMP_Text>();
-            Button = transform.Find("Grid/Button").gameObject.GetOrAddComponent<PushButtonComponent>();
+            Button = transform.Find("Grid/Button").gameObject.GetOrAddComponent<PushButton>();
             Button.gameObject.SetActive(false);
-            SnapSlider = transform.Find("Grid/Slider").gameObject.GetOrAddComponent<SnapSliderComponent>();
+            SnapSlider = transform.Find("Grid/Slider").gameObject.GetOrAddComponent<SnapSlider>();
             SnapSlider.gameObject.SetActive(false);
-            Switch = transform.Find("Grid/Switch").gameObject.GetOrAddComponent<SwitchComponent>();
+            Switch = transform.Find("Grid/Switch").gameObject.GetOrAddComponent<Switch>();
             Switch.gameObject.SetActive(false);
             Symbol = transform.Find("Grid/Symbol").gameObject;
             Symbol.SetActive(false);

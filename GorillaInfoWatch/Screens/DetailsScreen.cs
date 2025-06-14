@@ -1,8 +1,8 @@
-﻿using System;
-using GorillaInfoWatch.Attributes;
+﻿using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaNetworking;
+using System;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Screens

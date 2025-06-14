@@ -1,6 +1,5 @@
-﻿using System;
-using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Behaviours.Widgets;
+﻿using GorillaInfoWatch.Behaviours.Widgets;
+using System;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
@@ -40,7 +39,7 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void CreateObject(MenuLine menuLine)
+        public override void CreateObject(Behaviours.Line menuLine)
         {
             gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
             gameObject.name = "Switch";

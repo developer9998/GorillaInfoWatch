@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using System.Linq;
 using GorillaInfoWatch.Tools;
 using Photon.Realtime;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Networking
@@ -9,31 +9,31 @@ namespace GorillaInfoWatch.Behaviours.Networking
     [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
     public class NetworkedPlayer : MonoBehaviour
     {
-        public Watch Watch => watch;
+        public InfoWatch InfoWatch => watch;
 
-        public bool HasWatch;
+        public bool HasInfoWatch;
 
         public VRRig Rig;
         public NetPlayer Owner;
 
-        private Watch watch;
+        private InfoWatch watch;
 
         public void Start()
         {
             // https://github.com/The-Graze/Grate/blob/9dddf2084a75f22cc45024f38d564f788db661d6/Networking/NetworkedPlayer.cs#L39
             NetworkHandler.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
 
-            Player player = Owner.GetPlayerRef();
-            NetworkHandler.Instance.OnPlayerPropertiesUpdate(player, player.CustomProperties);
+            if (!HasInfoWatch && Owner is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef)
+                NetworkHandler.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
         }
 
         public void OnDestroy()
         {
             NetworkHandler.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
 
-            if (HasWatch)
+            if (HasInfoWatch)
             {
-                HasWatch = false;
+                HasInfoWatch = false;
                 Destroy(watch.gameObject);
             }
         }
@@ -53,16 +53,12 @@ namespace GorillaInfoWatch.Behaviours.Networking
                 {
                     watch.TimeOffset = time_offset;
                 }
-                if (properties.TryGetValue("TimeZone", out object timeZoneObj) && timeZoneObj is string timeZone)
-                {
-                    watch.TimeZone = timeZone;
-                }
             }
         }
 
         public void CreateWatch()
         {
-            watch = Instantiate(Singleton<Main>.Instance.WatchAsset).AddComponent<Watch>();
+            watch = Instantiate(Singleton<Main>.Instance.WatchAsset).AddComponent<InfoWatch>();
             watch.Rig = Rig;
         }
     }

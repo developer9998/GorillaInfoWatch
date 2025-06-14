@@ -1,5 +1,5 @@
-﻿using System;
-using GorillaInfoWatch.Models.Widgets;
+﻿using GorillaInfoWatch.Models.Widgets;
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -18,25 +18,23 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         private TMP_Text text;
 
-        private Color unpressedColour, pressedColour;
+        //private Color unpressedColour, pressedColour;
 
         private bool bumped;
 
-        public static float PressTime;
+        private float currentValue, targetValue;
 
         public void Awake()
         {
-            unpressedColour = new Color32(191, 188, 170, 255);
-            pressedColour = new Color32(132, 131, 119, 255);
+            //unpressedColour = new Color32(191, 188, 170, 255);
+            //pressedColour = new Color32(132, 131, 119, 255);
 
             needle = transform.Find("Button");
             min = transform.Find("Min");
             max = transform.Find("Max");
 
             renderer = needle.GetComponent<MeshRenderer>();
-            renderer.materials[1] = new Material(renderer.materials[1]) { color = unpressedColour };
-
-            text = needle.GetComponentInChildren<TMP_Text>();
+            renderer.materials[1] = new Material(renderer.materials[1]);
         }
 
         public void SetWidget(Switch widget)
@@ -47,7 +45,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             if (currentWidget != null)
             {
                 currentWidget.Value = false;
-                renderer.materials[1].color = unpressedColour;
+                //renderer.materials[1].color = unpressedColour;
             }
 
             // apply transition
@@ -55,11 +53,14 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             if (currentWidget != null)
             {
                 gameObject.SetActive(true);
-                if (text) text.text = "";
                 OnPressed = () => currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
                 bumped = widget.Value;
-                renderer.materials[1].color = bumped ? pressedColour : unpressedColour;
-                SetNeedlePosition();
+
+                currentValue = bumped ? 1 : 0;
+                targetValue = currentValue;
+                needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
+                renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
+
                 return;
             }
 
@@ -68,19 +69,29 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             OnReleased = null;
         }
 
+        public void Update()
+        {
+            if (currentValue != targetValue)
+            {
+                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.2f);
+                float animatedValue = AnimationCurves.EaseInOutSine.Evaluate(currentValue);
+                needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, animatedValue);
+                renderer.materials[1].color = currentWidget.Colour.Evaluate(animatedValue);
+            }
+        }
+
         public void OnTriggerEnter(Collider collider)
         {
             if (currentWidget is null)
                 return;
 
-            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > (PressTime + 0.33f))
+            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > PushButtonComponent.PressTime)
             {
-                PressTime = Time.realtimeSinceStartup;
+                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.4f;
 
                 // base functionality
                 bumped ^= true;
-                renderer.materials[1].color = bumped ? pressedColour : unpressedColour;
-                SetNeedlePosition();
+                targetValue = bumped ? 1 : 0;
 
                 Singleton<Main>.Instance.PressSwitch(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
@@ -92,11 +103,6 @@ namespace GorillaInfoWatch.Behaviours.Widgets
                 }
                 OnPressed?.Invoke();
             }
-        }
-
-        private void SetNeedlePosition()
-        {
-            needle.localPosition = bumped ? max.localPosition : min.localPosition;
         }
     }
 }

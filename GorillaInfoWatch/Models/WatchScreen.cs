@@ -1,6 +1,6 @@
-﻿using System;
-using GorillaInfoWatch.Screens;
+﻿using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
+using System;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models

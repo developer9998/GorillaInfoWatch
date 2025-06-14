@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using GorillaInfoWatch.Models.Widgets;
+using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Models
 {

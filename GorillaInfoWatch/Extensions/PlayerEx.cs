@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Tools;
 using PlayFab;
 using PlayFab.ClientModels;
+using System;
+using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Extensions
 {
@@ -40,7 +39,6 @@ namespace GorillaInfoWatch.Extensions
             {
                 Logging.Fatal($"PlayFabClientAPI.GetAccountInfo ({userId})");
                 Logging.Error(error.GenerateErrorReport());
-                if (Singleton<Main>.HasInstance) Singleton<Main>.Instance.PlayErrorSound();
             });
 
             return null;

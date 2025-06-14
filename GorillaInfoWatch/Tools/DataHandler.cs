@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Tools

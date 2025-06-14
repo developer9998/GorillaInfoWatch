@@ -1,7 +1,7 @@
-﻿using System.Collections;
-using System.Threading.Tasks;
-using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours;
 using GorillaLocomotion;
+using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 

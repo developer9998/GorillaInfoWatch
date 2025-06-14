@@ -1,4 +1,3 @@
-using GorillaInfoWatch.Behaviours;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +11,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         internal Image image;
 
-        public override void CreateObject(MenuLine menuLine)
+        public override void CreateObject(Behaviours.Line menuLine)
         {
             gameObject = Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
 

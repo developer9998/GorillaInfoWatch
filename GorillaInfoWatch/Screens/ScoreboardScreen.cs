@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using GorillaGameModes;
+﻿using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -31,10 +31,10 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnScreenClose();
 
-            RoomSystem.JoinedRoomEvent += OnRoomJoined;
-            RoomSystem.LeftRoomEvent += OnRoomLeft;
-            RoomSystem.PlayerJoinedEvent += OnPlayerJoined;
-            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+            RoomSystem.JoinedRoomEvent -= OnRoomJoined;
+            RoomSystem.LeftRoomEvent -= OnRoomLeft;
+            RoomSystem.PlayerJoinedEvent -= OnPlayerJoined;
+            RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
         }
 
         public override ScreenContent GetContent()
@@ -52,7 +52,7 @@ namespace GorillaInfoWatch.Screens
                 return lines;
             }
 
-            Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{PhotonNetworkController.Instance.GetRoomSize(NetworkSystem.Instance.GameModeString)} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
+            Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{NetworkSystem.Instance.config.MaxPlayerCount} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
 
             var hashSet = new HashSet<NetPlayer>(NetworkSystem.Instance.AllNetPlayers);
             hashSet.UnionWith(includedPlayers);
