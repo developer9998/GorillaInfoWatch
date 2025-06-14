@@ -6,8 +6,6 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public class SnapSlider : Widget
     {
-        public override EWidgetType WidgetType => EWidgetType.Interaction;
-
         public int Value;
 
         public Action<int> Command;

@@ -6,8 +6,6 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public class PushButton : Widget
     {
-        public override EWidgetType WidgetType => EWidgetType.Interaction;
-
         public Action<object[]> Command;
 
         public object[] Parameters;

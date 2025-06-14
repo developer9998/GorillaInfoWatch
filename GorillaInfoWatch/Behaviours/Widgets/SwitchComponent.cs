@@ -22,7 +22,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         private bool bumped;
 
-        private float currentValue, targetValue;
+        private float currentValue = -1, targetValue;
 
         public void Awake()
         {
@@ -56,10 +56,17 @@ namespace GorillaInfoWatch.Behaviours.Widgets
                 OnPressed = () => currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
                 bumped = widget.Value;
 
-                currentValue = bumped ? 1 : 0;
-                targetValue = currentValue;
-                needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
-                renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
+                // currentValue = bumped ? 1 : 0;
+                targetValue = bumped ? 1 : 0;
+                if (currentValue == -1)
+                {
+                    currentValue = targetValue;
+                    needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
+                    renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
+                }
+
+                // needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
+                // renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
 
                 return;
             }

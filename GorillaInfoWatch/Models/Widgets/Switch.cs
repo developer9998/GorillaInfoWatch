@@ -6,8 +6,6 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public class Switch : Widget
     {
-        public override EWidgetType WidgetType => EWidgetType.Interaction;
-
         public bool Value;
 
         public readonly Action<bool, object[]> Command;

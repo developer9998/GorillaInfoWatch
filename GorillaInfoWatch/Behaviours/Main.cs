@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Behaviours
         public Dictionary<Type, WatchScreen> ScreenRegistry = [];
 
         public WatchScreen CurrentScreen;
-        private readonly List<WatchScreen> screen_history = [];
+        private readonly List<WatchScreen> history = [];
 
         // Assets
         public GameObject WatchAsset;
@@ -244,9 +244,9 @@ namespace GorillaInfoWatch.Behaviours
             button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButtonComponent>();
             button_return_screen.OnPressed = () =>
             {
-                if (screen_history.Count > 0)
+                if (history.Count > 0)
                 {
-                    SwitchScreen(screen_history[^1]);
+                    SwitchScreen(history[^1]);
                 }
             };
 
@@ -279,12 +279,13 @@ namespace GorillaInfoWatch.Behaviours
                 CurrentScreen.enabled = false;
                 CurrentScreen.OnScreenClose();
 
-                if (screen_history.Count == 0 || screen_history[^1] != newScreen) screen_history.Add(CurrentScreen);
+                if (history.Count == 0 || history[^1] != newScreen) history.Add(CurrentScreen);
             }
 
             CurrentScreen = newScreen;
 
-            if (screen_history.Count > 0 && screen_history[^1] == newScreen) screen_history.RemoveAt(screen_history.Count - 1);
+            if (newScreen == HomePage) history.Clear();
+            else if (history.Count > 0 && history[^1] == newScreen) history.RemoveAt(history.Count - 1);
 
             newScreen.enabled = true;
             newScreen.RequestScreenSwitch += SwitchScreen;
@@ -302,7 +303,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void DisplayScreen(bool includeWidgets = true)
         {
-            button_return_screen.gameObject.SetActive(screen_history.Count > 0);
+            button_return_screen.gameObject.SetActive(history.Count > 0);
 
             var content = CurrentScreen.GetContent();
             if (content == null) return;

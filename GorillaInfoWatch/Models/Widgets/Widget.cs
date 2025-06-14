@@ -4,8 +4,6 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public abstract class Widget
     {
-        public abstract EWidgetType WidgetType { get; }
-
         public virtual bool AllowModification { get; } = true;
 
         public GameObject gameObject;

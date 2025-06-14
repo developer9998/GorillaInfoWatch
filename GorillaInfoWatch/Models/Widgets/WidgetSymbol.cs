@@ -5,8 +5,6 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public class WidgetSymbol(Symbol symbol) : Widget
     {
-        public override EWidgetType WidgetType => EWidgetType.Symbol;
-
         public Symbol Value = symbol;
 
         internal Image image;

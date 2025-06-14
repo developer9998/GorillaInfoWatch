@@ -1,4 +1,5 @@
 ﻿using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Utilities;
 using GorillaLocomotion;
 using UnityEngine;
@@ -36,6 +37,14 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     InfoWatch.LocalWatch.RedirectPrep?.Invoke();
                     Main.Instance.SwitchScreen(newScreen);
+
+                    if (InfoWatch.LocalWatch.stateMachine.CurrentState is Menu_SubState subState)
+                    {
+                        InfoWatch.LocalWatch.stateMachine.SwitchState(subState.previousState);
+                    }
+
+                    InfoWatch.LocalWatch.RedirectScreen = null;
+                    InfoWatch.LocalWatch.RedirectPrep = null;
                 }
 
                 Menu.SetActive(!Menu.activeSelf);
