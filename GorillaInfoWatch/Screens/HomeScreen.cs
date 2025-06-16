@@ -7,14 +7,14 @@ using System.Reflection;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class HomeScreen : Screen
+    public class HomeScreen : InfoWatchScreen
     {
         public override string Title => Constants.Name;
         public override string Description => "Created by dev9998 and gizmogoat";
 
-        private Dictionary<string, Screen> entries;
+        private Dictionary<string, InfoWatchScreen> entries;
 
-        public void SetEntries(List<Screen> screens)
+        public void SetEntries(List<InfoWatchScreen> screens)
         {
             Assembly nativeAssembly = Assembly.GetExecutingAssembly();
             var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly).ToList();
@@ -29,8 +29,8 @@ namespace GorillaInfoWatch.Screens
 
             for (int i = 0; i < entries.Count; i++)
             {
-                (string entry_name, Screen screen) = entries.ElementAt(i);
-                lines.AddLine(entry_name, new PushButton(EntrySelected, screen));
+                (string entry_name, InfoWatchScreen screen) = entries.ElementAt(i);
+                lines.Add(entry_name, new PushButton(EntrySelected, screen));
             }
 
             return lines;
@@ -38,7 +38,7 @@ namespace GorillaInfoWatch.Screens
 
         public void EntrySelected(object[] args)
         {
-            if (args.ElementAtOrDefault(0) is Screen screen)
+            if (args.ElementAtOrDefault(0) is InfoWatchScreen screen)
             {
                 SetScreen(screen.GetType());
             }

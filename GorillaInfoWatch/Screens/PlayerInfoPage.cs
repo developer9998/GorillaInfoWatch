@@ -11,7 +11,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
 
-    public class PlayerInfoPage : Models.Screen
+    public class PlayerInfoPage : InfoWatchScreen
     {
         public override string Title => "Player Inspector";
 
@@ -25,19 +25,8 @@ namespace GorillaInfoWatch.Screens
 
         public PlayerInfoPage()
         {
-            muteColour = new Gradient();
-            muteColour.SetKeys
-            (
-                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(new Color32(255, 0, 0, 255), 1)],
-                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
-            );
-
-            friendColour = new Gradient();
-            friendColour.SetKeys
-            (
-                [new GradientColorKey(new Color32(191, 188, 170, 255), 0), new GradientColorKey(FriendUtilities.FriendColour, 1)],
-                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
-            );
+            muteColour = GradientUtils.FromColour(Gradients.Button.colorKeys[0].color, Color.red);
+            friendColour = GradientUtils.FromColour(Gradients.Button.colorKeys[0].color, GFriendUtils.FriendColour);
         }
 
         public override void OnScreenOpen()
@@ -80,35 +69,35 @@ namespace GorillaInfoWatch.Screens
             string playerName = hasPermission ? player.NickName : player.DefaultName;
             string playerNameSanitized = playerName.SanitizeName().LimitLength(12);
 
-            basicInfoLines.AddLine($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new WidgetPlayerSwatch(player, 520f, 90, 90), new WidgetPlayerSpeaker(player, 620f, 100, 100), new WidgetSpecialPlayerSwatch(player, 520f, 80, 70));
+            basicInfoLines.Add($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new WidgetPlayerSwatch(player, 520f, 90, 90), new WidgetPlayerSpeaker(player, 620f, 100, 100), new WidgetSpecialPlayerSwatch(player, 520f, 80, 70));
 
-            basicInfoLines.AddLine($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
+            basicInfoLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
 
-            basicInfoLines.AddLines(1);
-            basicInfoLines.AddLine(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
+            basicInfoLines.Repeat(1);
+            basicInfoLines.Add(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
                 Mathf.RoundToInt(rig.playerColor.r * 9f),
                 Mathf.RoundToInt(rig.playerColor.g * 9f),
                 Mathf.RoundToInt(rig.playerColor.b * 9f),
                 Mathf.RoundToInt(rig.playerColor.r * 255f),
                 Mathf.RoundToInt(rig.playerColor.g * 255f),
                 Mathf.RoundToInt(rig.playerColor.b * 255f)));
-            basicInfoLines.AddLine($"Points: {rig.currentQuestScore}");
-            basicInfoLines.AddLine($"Voice Type: {(rig.localUseReplacementVoice || rig.remoteUseReplacementVoice ? "MONKE" : "HUMAN")}");
-            basicInfoLines.AddLine($"Is Master Client: {(player.IsMasterClient ? "Yes" : "No")}");
+            basicInfoLines.Add($"Points: {rig.currentQuestScore}");
+            basicInfoLines.Add($"Voice Type: {(rig.localUseReplacementVoice || rig.remoteUseReplacementVoice ? "MONKE" : "HUMAN")}");
+            basicInfoLines.Add($"Is Master Client: {(player.IsMasterClient ? "Yes" : "No")}");
 
             if (!player.IsLocal)
             {
-                basicInfoLines.AddLines(1);
-                basicInfoLines.AddLine(Container.Muted ? "Unmute" : "Mute", new Switch(OnMuteButtonClick, player)
+                basicInfoLines.Repeat(1);
+                basicInfoLines.Add(Container.Muted ? "Unmute" : "Mute", new Switch(OnMuteButtonClick, player)
                 {
                     Value = Container.Muted,
                     Colour = muteColour
                 });
 
-                if (FriendUtilities.FriendCompatible)
+                if (GFriendUtils.FriendCompatible)
                 {
-                    bool isFriend = FriendUtilities.IsFriend(player.UserId);
-                    basicInfoLines.AddLine(FriendUtilities.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
+                    bool isFriend = GFriendUtils.IsFriend(player.UserId);
+                    basicInfoLines.Add(GFriendUtils.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
                     {
                         Value = isFriend,
                         Colour = friendColour
@@ -125,10 +114,10 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is NetPlayer netPlayer)
             {
-                if (FriendUtilities.IsFriend(netPlayer.UserId))
-                    FriendUtilities.RemoveFriend(netPlayer);
+                if (GFriendUtils.IsFriend(netPlayer.UserId))
+                    GFriendUtils.RemoveFriend(netPlayer);
                 else
-                    FriendUtilities.AddFriend(netPlayer);
+                    GFriendUtils.AddFriend(netPlayer);
 
                 SetText();
             }

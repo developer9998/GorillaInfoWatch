@@ -1,84 +1,98 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<LangVersion>8.0</LangVersion>
+		<RootNamespace>GorillaInfoWatch_Editor</RootNamespace>
+		<AssemblyName>GorillaInfoWatch</AssemblyName>
+	</PropertyGroup>
 
-  <PropertyGroup>
-	  <TargetFramework>netstandard2.1</TargetFramework>
-	  <LangVersion>8.0</LangVersion>
-	  <RootNamespace>GorillaInfoWatch_Editor</RootNamespace>
-	  <AssemblyName>GorillaInfoWatch</AssemblyName>
-  </PropertyGroup>
+	<ItemGroup>
+		<Compile Include="..\GorillaInfoWatch\Models\InfoWatchSymbol.cs">
+			<Link>InfoWatchSymbol.cs</Link>
+		</Compile>
+		<Compile Include="..\GorillaInfoWatch\Models\InfoWatchData.cs">
+			<Link>InfoWatchData.cs</Link>
+		</Compile>
+		<Compile Include="..\GorillaInfoWatch\Models\Logic\FigurePredicateObject.cs">
+			<Link>FigurePredicateObject.cs</Link>
+		</Compile>
+		<Compile Include="..\GorillaInfoWatch\Models\Logic\ItemPredicateObject.cs">
+			<Link>ItemPredicateObject.cs</Link>
+		</Compile>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>$(BepInExAssemblyPath)\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>$(BepInExAssemblyPath)\BepInEx.dll</HintPath>
-    </Reference>
-    <Reference Include="Fusion.Runtime">
-      <HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>$(GameAssemblyPath)\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Photon3Unity3D">
-      <HintPath>$(GameAssemblyPath)\Photon3Unity3D.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonRealtime">
-      <HintPath>$(GameAssemblyPath)\PhotonRealtime.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonUnityNetworking">
-      <HintPath>$(GameAssemblyPath)\PhotonUnityNetworking.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonUnityNetworking.Utilities">
-      <HintPath>$(GameAssemblyPath)\PhotonUnityNetworking.Utilities.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonVoice">
-      <HintPath>$(GameAssemblyPath)\PhotonVoice.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonVoice.API">
-      <HintPath>$(GameAssemblyPath)\PhotonVoice.API.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonVoice.PUN">
-      <HintPath>$(GameAssemblyPath)\PhotonVoice.PUN.dll</HintPath>
-    </Reference>
-    <Reference Include="PlayFab">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PlayFab.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(GameAssemblyPath)\Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.AssetBundleModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AudioModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.AudioModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.PhysicsModule.dll</HintPath>
-	  </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.UnityWebRequestModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.XRModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SubsystemsModule">
-      <HintPath>$(GameAssemblyPath)\UnityEngine.SubsystemsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Utilla">
-      <HintPath>$(PluginsPath)\Utilla\Utilla.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="0Harmony">
+			<HintPath>$(BepInExAssemblyPath)\0Harmony.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp">
+			<HintPath>$(GameAssemblyPath)\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="BepInEx">
+			<HintPath>$(BepInExAssemblyPath)\BepInEx.dll</HintPath>
+		</Reference>
+		<Reference Include="Fusion.Runtime">
+			<HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>$(GameAssemblyPath)\Newtonsoft.Json.dll</HintPath>
+		</Reference>
+		<Reference Include="Photon3Unity3D">
+			<HintPath>$(GameAssemblyPath)\Photon3Unity3D.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonRealtime">
+			<HintPath>$(GameAssemblyPath)\PhotonRealtime.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonUnityNetworking">
+			<HintPath>$(GameAssemblyPath)\PhotonUnityNetworking.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonUnityNetworking.Utilities">
+			<HintPath>$(GameAssemblyPath)\PhotonUnityNetworking.Utilities.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonVoice">
+			<HintPath>$(GameAssemblyPath)\PhotonVoice.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonVoice.API">
+			<HintPath>$(GameAssemblyPath)\PhotonVoice.API.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonVoice.PUN">
+			<HintPath>$(GameAssemblyPath)\PhotonVoice.PUN.dll</HintPath>
+		</Reference>
+		<Reference Include="PlayFab">
+			<HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PlayFab.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.TextMeshPro">
+			<HintPath>$(GameAssemblyPath)\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AssetBundleModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.AssetBundleModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AudioModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.AudioModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.PhysicsModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.PhysicsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UI">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.UI.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UnityWebRequestModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.UnityWebRequestModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.XRModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.XRModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SubsystemsModule">
+			<HintPath>$(GameAssemblyPath)\UnityEngine.SubsystemsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="Utilla">
+			<HintPath>$(PluginsPath)\Utilla\Utilla.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 </Project>

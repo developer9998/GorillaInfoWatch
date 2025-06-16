@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours.Widgets
+namespace GorillaInfoWatch.Behaviours.UI
 {
     [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
     public class SwitchComponent : MonoBehaviour

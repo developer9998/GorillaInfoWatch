@@ -1,6 +1,6 @@
 namespace GorillaInfoWatch.Utilities
 {
-    public static class RigUtilities
+    public static class RigUtils
     {
         public static bool HasItem(RigContainer playerRig, string item_name, bool wearing_item = true, bool item_allowed = true)
         {

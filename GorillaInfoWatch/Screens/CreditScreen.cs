@@ -5,23 +5,30 @@ using GorillaInfoWatch.Models.Widgets;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class CreditScreen : Screen
+    public class CreditScreen : InfoWatchScreen
     {
         public override string Title => "Credits";
+        public override string Description => $"Credits for {Constants.Name} v{Constants.Version}";
+
+        private readonly string creditFormat = "<line-indent=3em><line-height=45%>{0}<br><size=3.5>{1}: {2}";
 
         public override ScreenContent GetContent()
         {
             LineBuilder lines = new();
 
-            lines.AddLine("<line-indent=3em><line-height=110%>Dev\n<size=40%>dev9998: Lead Developer, Designer", new WidgetSymbolSwatch(new(EDefaultSymbol.DevSprite)));
-            lines.AddLine("<line-indent=3em><line-height=110%>Gizmo\n<size=40%>gizmogoat: Lead Developer, Tester", new WidgetSymbolSwatch(new(EDefaultSymbol.KaylieSprite)));
-            lines.AddLine("<line-indent=3em><line-height=110%>Staircase\n<size=40%>spiralingstaircases: Lead Artist", new WidgetSymbolSwatch(new(EDefaultSymbol.StaircaseSprite)));
-            lines.AddLines(1);
-            lines.AddLine("<line-indent=3em><line-height=110%>H4RNS\n<size=40%>Modeler", new WidgetSymbolSwatch(new(EDefaultSymbol.H4rnsSprite)));
-            lines.AddLines(1);
-            lines.AddLine("<line-indent=3em><line-height=110%>Astrid\n<size=40%>astridgt: Tester", new WidgetSymbolSwatch(new(EDefaultSymbol.AstridSprite)));
-            lines.AddLine("<line-indent=3em><line-height=110%>Cyan\n<size=40%>cyangt: Tester", new WidgetSymbolSwatch(new(EDefaultSymbol.CyanSprite)));
-            lines.AddLine("<line-indent=3em><line-height=110%>Deactivated\n<size=40%>knownperson: Tester", new WidgetSymbolSwatch(new(EDefaultSymbol.DeactivatedSprite)));
+            lines.Add(string.Format(creditFormat, "Dev", "dev9998", "Creator and Developer"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Dev)));
+            lines.Add(string.Format(creditFormat, "Gizmo", "gizmogoat", "Creator and Developer"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Gizmo)));
+            lines.Add(string.Format(creditFormat, "Cresmondo", "crescent.mondo", "2D Artist"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Cresmondo)));
+            lines.Add(string.Format(creditFormat, "H4RNS", "hr4ns", "3D Artist"), new WidgetSymbolSwatch(new(InfoWatchSymbol.H4RNS)));
+
+            lines.Skip();
+
+            lines.Add(string.Format(creditFormat, "Astrid", "astridgt", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Astrid)));
+            lines.Add(string.Format(creditFormat, "Cyan", "cyangt", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Cyan)));
+            lines.Add(string.Format(creditFormat, "Deactivated", "knownperson", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Deactivated)));
+            //lines.Add(string.Format(creditFormat, "Will", "will_0x40", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Will)));
+            //lines.Add(string.Format(creditFormat, "Lapis", "lapisgt", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Lapis)));
+            //lines.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Kronicahl)));
 
             return lines;
         }

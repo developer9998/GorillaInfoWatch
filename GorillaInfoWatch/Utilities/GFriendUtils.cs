@@ -6,9 +6,9 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace GorillaInfoWatch
+namespace GorillaInfoWatch.Utilities
 {
-    public static class FriendUtilities
+    public static class GFriendUtils
     {
         private const string GorillaFriendsGUID = "net.rusjj.gorillafriends";
 

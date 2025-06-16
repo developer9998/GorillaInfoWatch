@@ -8,7 +8,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class DetailsScreen : Models.Screen
+    public class DetailsScreen : Models.InfoWatchScreen
     {
         public override string Title => "Details";
 
@@ -20,10 +20,10 @@ namespace GorillaInfoWatch.Screens
 
             VRRig localRig = GorillaTagger.Instance.offlineVRRig;
 
-            profileLines.AddLine($"Name: {localRig.playerNameVisible}");
+            profileLines.Add($"Name: {localRig.playerNameVisible}");
 
             Color playerColour = localRig.playerColor;
-            profileLines.AddLine(string.Format("Colour: [{0}, {1}, {2} / {3}, {4}, {5}]",
+            profileLines.Add(string.Format("Colour: [{0}, {1}, {2} / {3}, {4}, {5}]",
                 Mathf.RoundToInt(playerColour.r * 9f),
                 Mathf.RoundToInt(playerColour.g * 9f),
                 Mathf.RoundToInt(playerColour.b * 9f),
@@ -32,13 +32,13 @@ namespace GorillaInfoWatch.Screens
                 Mathf.RoundToInt(playerColour.r * 255f)));
 
             var accountInfo = NetworkSystem.Instance.GetLocalPlayer().GetAccountInfo(result => SetContent());
-            profileLines.AddLine($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
+            profileLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
 
             LineBuilder economyLines = new();
 
-            economyLines.AddLine($"Shiny Rocks: {CosmeticsController.instance.CurrencyBalance}");
-            economyLines.AddLine($"+ 100 Shiny Rocks in: {TimeSpan.FromSeconds(CosmeticsController.instance.secondsUntilTomorrow):h\\:mm\\:ss}");
-            economyLines.AddLine();
+            economyLines.Add($"Shiny Rocks: {CosmeticsController.instance.CurrencyBalance}");
+            economyLines.Add($"+ 100 Shiny Rocks in: {TimeSpan.FromSeconds(CosmeticsController.instance.secondsUntilTomorrow):h\\:mm\\:ss}");
+            economyLines.Skip();
 
             var currentWornSet = CosmeticsController.instance.currentWornSet;
             for (int i = 0; i < currentWornSet.items.Length; i++)
@@ -46,6 +46,7 @@ namespace GorillaInfoWatch.Screens
                 var item = currentWornSet.items[i];
                 if (item.isNullItem)
                     continue;
+
                 string displayName = CosmeticsController.instance.GetItemDisplayName(item);
                 CosmeticsController.CosmeticSlots slot = (CosmeticsController.CosmeticSlots)i;
                 string displaySlot = slot switch
@@ -59,23 +60,24 @@ namespace GorillaInfoWatch.Screens
                     CosmeticsController.CosmeticSlots.TagEffect => "Tag Effect",
                     _ => slot.ToString()
                 };
-                economyLines.AddLine($"{displaySlot}: {displayName}");
+                economyLines.Add($"{displaySlot}: {displayName}");
             }
 
             LineBuilder progressionLines = new();
 
-            progressionLines.AddLine($"Tutorial Completion: {NetworkSystem.Instance.GetMyTutorialCompletion()}");
-            progressionLines.AddLine($"Total Points: {ProgressionController._gInstance.totalPointsRaw}");
-            progressionLines.AddLine($"Unclaimed Points: {ProgressionController._gInstance.unclaimedPoints}");
+            progressionLines.Add($"Tutorial Completion: {NetworkSystem.Instance.GetMyTutorialCompletion()}");
+            progressionLines.Add($"Total Points: {ProgressionController._gInstance.totalPointsRaw}");
+            progressionLines.Add($"Unclaimed Points: {ProgressionController._gInstance.unclaimedPoints}");
 
             if (localRig.TryGetComponent(out GRPlayer grPlayer))
             {
-                progressionLines.AddLine();
+                progressionLines.Skip();
+
                 var grProgression = grPlayer.CurrentProgression;
                 int nextTier = GhostReactorProgression.TotalPointsForNextGrade(grProgression.redeemedPoints);
-                progressionLines.AddLine($"Employment: {GhostReactorProgression.GetTitleNameAndGrade(grProgression.redeemedPoints)}");
-                progressionLines.AddLine($"Earned: {grProgression.points} out of {nextTier} / {Mathf.FloorToInt((float)grProgression.points / nextTier * 100f)}%");
-                progressionLines.AddLine($"Promotion: {(grProgression.points - nextTier) >= 0}");
+                progressionLines.Add($"Employment: {GhostReactorProgression.GetTitleNameAndGrade(grProgression.redeemedPoints)}");
+                progressionLines.Add($"Earned: {grProgression.points} out of {nextTier} / {Mathf.FloorToInt((float)grProgression.points / nextTier * 100f)}%");
+                progressionLines.Add($"Promotion: {(grProgression.points - nextTier) >= 0}");
             }
 
             /*

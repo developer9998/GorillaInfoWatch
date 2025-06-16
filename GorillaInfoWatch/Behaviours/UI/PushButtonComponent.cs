@@ -1,9 +1,10 @@
-﻿using GorillaInfoWatch.Models.Widgets;
+﻿using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using System;
 using TMPro;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours.Widgets
+namespace GorillaInfoWatch.Behaviours.UI
 {
     public class PushButtonComponent : MonoBehaviour
     {
@@ -13,12 +14,15 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         private BoxCollider collider;
         private MeshRenderer renderer;
-        private TMP_Text text;
-        private Color colour, bumped_colour;
+
+        private Gradient colour;
+        // private Color colour, bumped_colour;
 
         private bool bumped;
 
         public static float PressTime;
+
+        private float currentValue = -1, targetValue;
 
         public void Awake()
         {
@@ -27,12 +31,9 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
 
             renderer = GetComponent<MeshRenderer>();
-            renderer.materials[1] = new Material(renderer.materials[1]) { color = colour };
+            renderer.materials[1] = new Material(renderer.materials[1]);
 
-            text = GetComponentInChildren<TMP_Text>();
-
-            colour = new Color32(191, 188, 170, 255);
-            bumped_colour = new Color32(132, 131, 119, 255);
+            colour = Gradients.Button;
         }
 
         public void ApplyButton(PushButton widget)
@@ -41,7 +42,7 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             if (Widget is not null)
             {
                 bumped = false;
-                renderer.materials[1].color = colour;
+                renderer.materials[1].color = colour.Evaluate(0);
             }
 
             // apply transition
@@ -50,9 +51,15 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             {
                 Widget = widget;
                 gameObject.SetActive(true);
-                if (text) text.text = "";
                 OnPressed = () => Widget.Command?.Invoke(Widget.Parameters ?? []);
-                renderer.materials[1].color = colour;
+                colour = Widget.Colour ?? Gradients.Button;
+                targetValue = bumped ? 1 : 0;
+                if (currentValue == -1)
+                {
+                    currentValue = targetValue;
+                    renderer.materials[1].color = colour.Evaluate(currentValue);
+                }
+
                 return;
             }
 
@@ -64,10 +71,17 @@ namespace GorillaInfoWatch.Behaviours.Widgets
 
         public void LateUpdate()
         {
+            if (currentValue != targetValue)
+            {
+                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.15f);
+                float animatedValue = AnimationCurves.EaseInSine.Evaluate(currentValue);
+                renderer.materials[1].color = colour.Evaluate(animatedValue);
+            }
+
             if (bumped && Time.unscaledTime > PressTime)
             {
                 bumped = false;
-                renderer.materials[1].color = colour;
+                targetValue = 0;
                 OnReleased?.Invoke();
             }
         }
@@ -80,8 +94,12 @@ namespace GorillaInfoWatch.Behaviours.Widgets
             PressTime = Time.realtimeSinceStartup + 0.25f;
 
             // base functionality
+
             bumped = true;
-            renderer.materials[1].color = bumped ? bumped_colour : colour;
+            targetValue = 1;
+            currentValue = targetValue;
+            renderer.materials[1].color = colour.Evaluate(targetValue);
+
             Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
             GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 

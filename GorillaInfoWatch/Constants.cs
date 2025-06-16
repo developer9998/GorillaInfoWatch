@@ -6,7 +6,7 @@
         public const string Name = "GorillaInfoWatch";
         public const string Version = "1.0.0.0";
 
-        public const int LinesPerPage = 13;
+        public const int SectionCapacity = 14;
 
         public const float NetworkSetInterval = 0.1f;
         public const string NetworkPropertyKey = "InfoWatch";

@@ -7,13 +7,13 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using PushButton = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
-using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
-using Switch = GorillaInfoWatch.Behaviours.Widgets.SwitchComponent;
+using PushButton = GorillaInfoWatch.Behaviours.UI.PushButtonComponent;
+using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSliderComponent;
+using Switch = GorillaInfoWatch.Behaviours.UI.SwitchComponent;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours.UI
 {
-    public class Line : MonoBehaviour
+    public class InfoWatchLine : MonoBehaviour
     {
         public TMP_Text Text;
         public PushButton Button;
@@ -56,14 +56,15 @@ namespace GorillaInfoWatch.Behaviours
                 int intake = newWidgets.Count - currentWidgets.Count;
                 if (intake > 0)
                 {
-                    // Logging.Info($"Extending widget list +{intake}");
+                    Logging.Info($"Extending widget list +{intake}");
                     currentWidgets.AddRange(Enumerable.Repeat<Widget>(null, intake));
-                    // Logging.Info($"Total count of {currentWidgets.Count}");
+                    Logging.Info($"Total count of {currentWidgets.Count}");
                 }
 
                 for (int i = 0; i < currentWidgets.Count; i++)
                 {
                     Widget currentWidget = currentWidgets.ElementAtOrDefault(i);
+
                     Widget newWidget = newWidgets.ElementAtOrDefault(i);
 
                     if (newWidget is null)
@@ -72,7 +73,7 @@ namespace GorillaInfoWatch.Behaviours
 
                         if (currentWidget is not null)
                         {
-                            // Logging.Info("Clearing existing widget");
+                            Logging.Info("Clearing existing widget");
                             if (currentWidget.gameObject is not null)
                                 Destroy(currentWidget.gameObject);
                             if (regularWidgets.Contains(currentWidget))
@@ -85,15 +86,15 @@ namespace GorillaInfoWatch.Behaviours
 
                     bool equivalent = currentWidget is not null && newWidget.Equals(currentWidget);
 
-                    Logging.Info($"{i} : {newWidget.GetType().Name} with {((newWidget is not null && newWidget.gameObject is not null) ? newWidget.gameObject.name : "null object/widget")}: {equivalent}");
+                    Logging.Info($"{i} : {newWidget.GetType().Name} with {(newWidget is not null && newWidget.gameObject is not null ? newWidget.gameObject.name : "null object/widget")}: {equivalent}");
 
                     if (/*!equivalent*/true)
                     {
-                        // Logging.Info("Not equivalent");
+                        Logging.Info("Not equivalent");
 
                         if (currentWidget is not null && currentWidget.gameObject is not null)
                         {
-                            // Logging.Info("Clearing existing widget");
+                            Logging.Info("Clearing existing widget");
                             if (currentWidget.gameObject is not null)
                                 Destroy(currentWidget.gameObject);
                             if (regularWidgets.Contains(currentWidget))
@@ -103,13 +104,13 @@ namespace GorillaInfoWatch.Behaviours
                         newWidget.CreateObject(this);
                         currentWidgets[i] = newWidget;
                         currentWidget = newWidget;
-                        //  Logging.Info("Updated current widget");
+                        Logging.Info("Updated current widget");
 
                         if (currentWidget.Init())
                         {
                             regularWidgets.Add(currentWidget);
                         }
-                        // Logging.Info("Initialized new widget");
+                        Logging.Info("Initialized new widget");
                     }
 
                     if (currentWidget.AllowModification)

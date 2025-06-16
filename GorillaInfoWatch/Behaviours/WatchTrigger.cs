@@ -22,7 +22,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             AudioSource = GetComponent<AudioSource>();
 
-            Menu.SetActive(!RuntimeUtils.InVR);
+            Menu.SetActive(!GeneralUtils.InVR);
         }
 
         public void OnTriggerEnter(Collider other)
@@ -35,7 +35,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (InfoWatch.LocalWatch is InfoWatch watch && watch.stateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
                 {
-                    Events.OpenNotification(notification);
+                    Events.OpenNotification(notification, true);
 
                     watch.stateMachine.SwitchState(subState.previousState);
 

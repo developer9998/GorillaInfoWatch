@@ -3,7 +3,7 @@ using System;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class ModInfoPage : Screen
+    public class ModInfoPage : InfoWatchScreen
     {
         public override string Title => throw new NotImplementedException();
 

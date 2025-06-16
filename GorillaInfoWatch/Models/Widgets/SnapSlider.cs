@@ -1,4 +1,4 @@
-using GorillaInfoWatch.Behaviours.Widgets;
+using GorillaInfoWatch.Behaviours.UI;
 using System;
 using UnityEngine;
 
@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Models.Widgets
             );
         }
 
-        public override void CreateObject(Behaviours.Line menuLine)
+        public override void CreateObject(InfoWatchLine menuLine)
         {
             gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
 

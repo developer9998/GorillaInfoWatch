@@ -7,14 +7,14 @@ namespace GorillaInfoWatch.Models
         /// <summary>
         /// All lines at a specified page
         /// </summary>
-        public abstract IEnumerable<ScreenLine> GetPageLines(int page);
+        public abstract IEnumerable<ScreenLine> SectionLines(int page);
 
         // Given title at a specified page
-        public abstract string GetPageTitle(int page);
+        public abstract string SectionTitle(int page);
 
         /// <summary>
         /// Total page count
         /// </summary>
-        public abstract int GetPageCount();
+        public abstract int SectionCount();
     }
 }

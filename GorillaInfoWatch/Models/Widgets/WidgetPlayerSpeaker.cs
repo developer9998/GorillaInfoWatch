@@ -1,7 +1,6 @@
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Tools;
-using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using Photon.Voice.Unity;
 using UnityEngine;
@@ -9,7 +8,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetPlayerSpeaker(NetPlayer player, float offset = 620, int scaleX = 100, int scaleY = 100) : WidgetSymbol(new Symbol(null))
+    public class WidgetPlayerSpeaker(NetPlayer player, float offset = 620, int scaleX = 100, int scaleY = 100) : WidgetSymbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
 
@@ -23,9 +22,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override bool Init()
         {
-            Main.Instance.Sprites.TryGetValue(EDefaultSymbol.OpenSpeaker, out open_speaker);
-            Main.Instance.Sprites.TryGetValue(EDefaultSymbol.MutedSpeaker, out muted_speaker);
-            Main.Instance.Sprites.TryGetValue(EDefaultSymbol.ForceMuteSpeaker, out force_mute_speaker);
+            Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.OpenSpeaker, out open_speaker);
+            Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.MutedSpeaker, out muted_speaker);
+            Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.ForceMuteSpeaker, out force_mute_speaker);
 
             recorder = NetworkSystem.Instance.LocalRecorder;
 

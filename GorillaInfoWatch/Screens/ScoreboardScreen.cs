@@ -3,7 +3,6 @@ using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +10,7 @@ using System.Linq;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ScoreboardScreen : Screen
+    public class ScoreboardScreen : InfoWatchScreen
     {
         public override string Title => "Scoreboard";
 
@@ -45,9 +44,9 @@ namespace GorillaInfoWatch.Screens
             {
                 Description = string.Empty;
 
-                lines.AddLine("You aren't connected to a room!");
-                lines.AddLines(1);
-                lines.AddLine("Join a room to view scoreboard.");
+                lines.Add("You aren't connected to a room!");
+                lines.Skip();
+                lines.Add("Join a room to view scoreboard.");
 
                 return lines;
             }
@@ -63,7 +62,7 @@ namespace GorillaInfoWatch.Screens
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
-                lines.AddLine((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !VRRigCache.Instance.TryGetVrrig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new PushButton(TryInspectPlayer, player));
+                lines.Add((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !VRRigCache.Instance.TryGetVrrig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new PushButton(TryInspectPlayer, player));
             }
 
             return lines;

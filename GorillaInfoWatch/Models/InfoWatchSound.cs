@@ -1,6 +1,6 @@
 ﻿namespace GorillaInfoWatch.Models
 {
-    public enum EWatchSound
+    public enum InfoWatchSound
     {
         widgetButton,
         widgetSlider,

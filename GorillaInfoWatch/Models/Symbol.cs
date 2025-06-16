@@ -23,7 +23,7 @@ namespace GorillaInfoWatch.Models
             Sprite = sprite;
         }
 
-        public Symbol(EDefaultSymbol symbol)
+        public Symbol(InfoWatchSymbol symbol)
         {
             if (Main.Instance is Main main && main.Sprites.TryGetValue(symbol, out Sprite sprite))
             {
@@ -43,7 +43,7 @@ namespace GorillaInfoWatch.Models
             return new Symbol(sprite);
         }
 
-        public static explicit operator Symbol(Texture2D texture)
+        public static implicit operator Symbol(Texture2D texture)
         {
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
             return sprite;

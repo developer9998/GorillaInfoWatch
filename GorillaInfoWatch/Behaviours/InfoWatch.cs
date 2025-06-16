@@ -1,8 +1,6 @@
 ﻿using GorillaExtensions;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
-using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;

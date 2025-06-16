@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class FriendScreen : Screen
+    public class FriendScreen : InfoWatchScreen
     {
         public override string Title => "Friends";
 
@@ -94,16 +94,16 @@ namespace GorillaInfoWatch.Screens
                     bool joinable = !has_vstump_prepend && !is_in_room && (!is_public_room || in_zone);
                     if (joinable)
                     {
-                        lines.AddLine(line_content, new PushButton(FriendButtonClick, presence));
+                        lines.Add(line_content, new PushButton(FriendButtonClick, presence));
                     }
                     else
                     {
-                        lines.AddLine(line_content);
+                        lines.Add(line_content);
                     }
                     continue;
                 }
 
-                lines.AddLine($"{(string.IsNullOrEmpty(presence.UserName) || string.IsNullOrWhiteSpace(presence.UserName) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4] : presence.UserName)}: OFFLINE");
+                lines.Add($"{(string.IsNullOrEmpty(presence.UserName) || string.IsNullOrWhiteSpace(presence.UserName) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4] : presence.UserName)}: OFFLINE");
             }
 
             return lines;

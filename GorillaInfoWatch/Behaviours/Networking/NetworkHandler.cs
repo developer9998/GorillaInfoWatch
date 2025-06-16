@@ -67,7 +67,11 @@ namespace GorillaInfoWatch.Behaviours.Networking
 
             if (changedProps.TryGetValue(Constants.NetworkPropertyKey, out object props_object) && props_object is Dictionary<string, object> properties)
             {
-                networkedPlayer.HasInfoWatch = true;
+                if (!networkedPlayer.HasInfoWatch)
+                {
+                    networkedPlayer.HasInfoWatch = true;
+                    Main.Instance.CheckPlayer(netPlayer);
+                }
 
                 Logging.Info($"Recieved properties from {netPlayer.NickName}: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
                 OnPlayerPropertyChanged?.Invoke(netPlayer, properties);

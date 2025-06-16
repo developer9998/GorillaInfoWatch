@@ -1,12 +1,11 @@
 using GorillaExtensions;
 using GorillaInfoWatch.Tools;
-using GorillaInfoWatch.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : WidgetSymbol(new Symbol(null))
+    public class WidgetPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : WidgetSymbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
 

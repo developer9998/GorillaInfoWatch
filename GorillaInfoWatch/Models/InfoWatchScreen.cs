@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public abstract class Screen : MonoBehaviour
+    public abstract class InfoWatchScreen : MonoBehaviour
     {
         public abstract string Title { get; }
 
@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Models
         }
         */
 
-        public int PageNumber = 0;
+        public int Section = 0;
 
         // public ScreenContent Content;
 
@@ -37,7 +37,7 @@ namespace GorillaInfoWatch.Models
 
         public void ReturnToHomePage() => SetScreen<HomeScreen>();
 
-        public void SetScreen<T>() where T : Screen => SetScreen(typeof(T));
+        public void SetScreen<T>() where T : InfoWatchScreen => SetScreen(typeof(T));
 
         public void SetScreen(Type type) => RequestScreenSwitch?.Invoke(type);
 

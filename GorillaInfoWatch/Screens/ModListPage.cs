@@ -11,7 +11,7 @@ using System.Linq;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ModListPage : Screen
+    public class ModListPage : InfoWatchScreen
     {
         public override string Title => "Mod Status";
 
@@ -44,14 +44,14 @@ namespace GorillaInfoWatch.Screens
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    lines.AddLine(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Switch(OnButtonSelect, i)
+                    lines.Add(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Switch(OnButtonSelect, i)
                     {
                         Value = isEnabled
                     });
                     continue;
                 }
 
-                lines.AddLine(info.Metadata.Name);
+                lines.Add(info.Metadata.Name);
             }
 
             return lines;

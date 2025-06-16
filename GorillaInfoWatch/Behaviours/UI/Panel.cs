@@ -2,7 +2,7 @@
 using GorillaLocomotion;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours.UI
 {
     public class Panel : MonoBehaviour
     {
@@ -28,12 +28,12 @@ namespace GorillaInfoWatch.Behaviours
             Head = GTPlayer.Instance.headCollider.transform;
             startup = true;
 
-            if (!RuntimeUtils.InVR)
+            if (!GeneralUtils.InVR)
             {
                 enabled = false;
                 gameObject.SetActive(true);
                 SetPosition();
-                transform.position += (GTPlayer.Instance.headCollider.transform.forward * 0.35f) + (Vector3.up * (GTPlayer.Instance.headCollider.radius * 3f));
+                transform.position += GTPlayer.Instance.headCollider.transform.forward * 0.35f + Vector3.up * (GTPlayer.Instance.headCollider.radius * 3f);
                 transform.rotation = Quaternion.identity;
             }
         }

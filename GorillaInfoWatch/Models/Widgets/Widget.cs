@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using GorillaInfoWatch.Behaviours.UI;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
@@ -15,7 +16,7 @@ namespace GorillaInfoWatch.Models.Widgets
             return false;
         }
 
-        public virtual void CreateObject(Behaviours.Line menuLine)
+        public virtual void CreateObject(InfoWatchLine menuLine)
         {
 
         }

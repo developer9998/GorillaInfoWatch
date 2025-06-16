@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Behaviours.Widgets;
+﻿using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Utilities;
 using System;
 using UnityEngine;
 
@@ -19,12 +20,7 @@ namespace GorillaInfoWatch.Models.Widgets
             Command = action;
             Parameters = parameters ?? [];
 
-            Colour = new Gradient();
-            Colour.SetKeys
-            (
-                [new GradientColorKey(new Color32(188, 67, 67, 255), 0), new GradientColorKey(new Color32(67, 188, 84, 255), 1)],
-                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
-            );
+            Colour = GradientUtils.FromColour(Gradients.Red.colorKeys[0].color, Gradients.Green.colorKeys[0].color);
         }
 
         public Switch(Action<bool> action) : this((value, args) => action(value), [])
@@ -37,7 +33,7 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void CreateObject(Behaviours.Line menuLine)
+        public override void CreateObject(InfoWatchLine menuLine)
         {
             gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
             gameObject.name = "Switch";

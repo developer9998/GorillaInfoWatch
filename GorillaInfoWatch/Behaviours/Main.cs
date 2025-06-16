@@ -1,12 +1,14 @@
 ﻿using BepInEx.Bootstrap;
 using GorillaInfoWatch.Behaviours.Networking;
-using GorillaInfoWatch.Behaviours.Widgets;
+using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Logic;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
+using GorillaNetworking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +18,10 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using PushButton = GorillaInfoWatch.Behaviours.Widgets.PushButtonComponent;
-using Screen = GorillaInfoWatch.Models.Screen;
-using SnapSlider = GorillaInfoWatch.Behaviours.Widgets.SnapSliderComponent;
+using InfoWatchScreen = GorillaInfoWatch.Models.InfoWatchScreen;
+using PushButton = GorillaInfoWatch.Behaviours.UI.PushButtonComponent;
+using Random = UnityEngine.Random;
+using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSliderComponent;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -34,12 +37,20 @@ namespace GorillaInfoWatch.Behaviours
 
         private GameObject container;
 
-        public Dictionary<Type, Models.Screen> ScreenRegistry = [];
+        private readonly Dictionary<Type, InfoWatchScreen> registry = [];
 
-        public Screen CurrentScreen;
-        private readonly List<Screen> history = [];
+        public InfoWatchScreen CurrentScreen;
+        private readonly List<InfoWatchScreen> history = [];
 
         private readonly List<Notification> notifications = [];
+
+        private InfoWatchData data;
+
+        private FigurePredicate[] figures;
+
+        private ItemPredicate[] cosmetics;
+
+        private PlayerPredicate watch;
 
         // Assets
         public GameObject WatchAsset;
@@ -53,70 +64,24 @@ namespace GorillaInfoWatch.Behaviours
         private TMP_Text menu_header;
         private TMP_Text menu_description;
         private Transform menu_line_tform;
-        private List<Line> menu_lines;
+        private List<InfoWatchLine> menu_lines;
 
         // Display
         private TMP_Text menu_page_text;
         private PushButton button_prev_page, button_next_page, button_return_screen, button_reload_screen, buttonOpenInbox;
 
         // Assets
-        public readonly Dictionary<EWatchSound, AudioClip> Sounds = [];
+        public readonly Dictionary<InfoWatchSound, AudioClip> Sounds = [];
 
-        public Dictionary<EDefaultSymbol, Sprite> Sprites;
+        public Dictionary<InfoWatchSymbol, Sprite> Sprites;
 
-        public Dictionary<Predicate<NetPlayer>, EDefaultSymbol> SpecialSprites = new()
-        {
-            {
-                (netPlayer) => netPlayer != null && (netPlayer.UserId == "E354E818871BD1D8" || netPlayer.UserId == "91902A4E2624708F"),
-                EDefaultSymbol.DevSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "FBE3EE50747CB892",
-                EDefaultSymbol.KaylieSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "AA30186DA3713730" && UnityEngine.Random.value <= 0.01f,
-                EDefaultSymbol.BloodJmanSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "AA30186DA3713730",
-                EDefaultSymbol.StaircaseSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "149657534CA679F",
-                EDefaultSymbol.AstridSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "95ACF372B189C4EB",
-                EDefaultSymbol.DeactivatedSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && (netPlayer.UserId == "412602E3586FEF3A" || netPlayer.UserId == "383A50F9EB1ACD5A"),
-                EDefaultSymbol.CyanSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && netPlayer.UserId == "82CDEE6EC76948D",
-                EDefaultSymbol.H4rnsSprite
-            },
-            {
-                (netPlayer) => netPlayer != null && VRRigCache.Instance.TryGetVrrig(netPlayer, out var playerRig) && RigUtilities.HasItem(playerRig, "LBAAK.", false),
-                EDefaultSymbol.StickCosmetic
-            },
-            {
-                (netPlayer) => netPlayer != null && VRRigCache.Instance.TryGetVrrig(netPlayer, out var playerRig) && RigUtilities.HasItem(playerRig, "LBADE.", false),
-                EDefaultSymbol.FingerPainterBadge
-            },
-            {
-                (netPlayer) => netPlayer != null && VRRigCache.Instance.TryGetVrrig(netPlayer, out var playerRig) && RigUtilities.HasItem(playerRig, "LBAGS.", false),
-                EDefaultSymbol.IllustratorBadge
-            }
-        };
+        public readonly Dictionary<NetPlayer, InfoWatchSymbol> PlayerSymbol = [];
 
         public async override void Initialize()
         {
             enabled = false;
 
-            FriendUtilities.InitializeLib(Chainloader.PluginInfos);
+            GFriendUtils.InitializeLib(Chainloader.PluginInfos);
 
             // Screens
 
@@ -137,7 +102,7 @@ namespace GorillaInfoWatch.Behaviours
 
             builtinPages.ForEach(page => RegisterScreen(page));
 
-            Type baseScreen = typeof(Screen);
+            Type baseScreen = typeof(InfoWatchScreen);
 
             try
             {
@@ -176,19 +141,29 @@ namespace GorillaInfoWatch.Behaviours
 
             // Assets
 
-            foreach (string watchSoundName in Enum.GetNames(typeof(EWatchSound)))
+            data = await AssetLoader.LoadAsset<InfoWatchData>("Data");
+
+            figures = Array.ConvertAll(data.Figures, figure => (FigurePredicate)figure);
+
+            cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemPredicate)item);
+
+            watch = new(InfoWatchSymbol.InfoWatch);
+
+            CheckPlayer(NetworkSystem.Instance.LocalPlayer);
+
+            foreach (string watchSoundName in Enum.GetNames(typeof(InfoWatchSound)))
             {
                 AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(watchSoundName);
                 if (clip)
                 {
-                    Sounds.TryAdd(Enum.Parse<EWatchSound>(watchSoundName), clip);
+                    Sounds.TryAdd(Enum.Parse<InfoWatchSound>(watchSoundName), clip);
                     continue;
                 }
                 Logging.Warning($"Missing AudioClip asset for sound: {watchSoundName}");
             }
 
             var sprite_assets = AssetLoader.Bundle.LoadAssetWithSubAssets<Sprite>("Sheet");
-            Sprites = Array.FindAll(sprite_assets, sprite => Enum.IsDefined(typeof(EDefaultSymbol), sprite.name)).ToDictionary(sprite => (EDefaultSymbol)Enum.Parse(typeof(EDefaultSymbol), sprite.name), sprite => sprite);
+            Sprites = Array.FindAll(sprite_assets, sprite => Enum.IsDefined(typeof(InfoWatchSymbol), sprite.name)).ToDictionary(sprite => (InfoWatchSymbol)Enum.Parse(typeof(InfoWatchSymbol), sprite.name), sprite => sprite);
 
             // Objects
 
@@ -213,17 +188,14 @@ namespace GorillaInfoWatch.Behaviours
             menu_header = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
             menu_description = menu.transform.Find("Canvas/Header/Description").GetComponent<TMP_Text>();
             menu_line_tform = menu.transform.Find("Canvas/Lines");
-            menu_lines = new(Constants.LinesPerPage);
+            menu_lines = new(Constants.SectionCapacity);
 
             foreach (Transform line_tform in menu_line_tform)
             {
                 line_tform.gameObject.SetActive(true);
-                var line_component = line_tform.gameObject.AddComponent<Line>();
+                var line_component = line_tform.gameObject.AddComponent<InfoWatchLine>();
                 menu_lines.Add(line_component);
             }
-
-            localPanel = menu.AddComponent<Panel>();
-            localPanel.Origin = watchObject.transform.Find("Point");
 
             // Components
 
@@ -235,34 +207,27 @@ namespace GorillaInfoWatch.Behaviours
             button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
             button_next_page.OnPressed = () =>
             {
-                CurrentScreen.PageNumber++;
+                CurrentScreen.Section++;
                 RefreshScreen();
             };
 
             button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
             button_prev_page.OnPressed = () =>
             {
-                CurrentScreen.PageNumber--;
+                CurrentScreen.Section--;
                 RefreshScreen();
             };
 
             button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
             button_return_screen.OnPressed = () =>
             {
-                if (CurrentScreen is Screen screen && screen.CallerType is Type callerType)
-                {
-                    SwitchScreen(callerType);
-                }
-                else
-                {
-                    SwitchScreen(Home);
-                }
+                SwitchScreen(CurrentScreen.CallerType);
             };
 
             button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
             button_reload_screen.OnPressed = () =>
             {
-                if (CurrentScreen is Screen screen)
+                if (CurrentScreen is InfoWatchScreen screen)
                 {
                     screen.OnScreenRefresh();
                     RefreshScreen();
@@ -275,23 +240,31 @@ namespace GorillaInfoWatch.Behaviours
                 SwitchScreen(Inbox);
             };
 
+            localPanel = menu.AddComponent<Panel>();
+            localPanel.Origin = watchObject.transform.Find("Point");
+
             Events.OnNotificationSent = SendNotification;
             Events.OnNotificationOpened = OpenNotification;
 
             // Multicasted delegates aka. Events
+            RoomSystem.JoinedRoomEvent += OnJoinedRoom;
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
             Events.OnCompleteQuest += OnQuestCompleted;
+            CosmeticsController.instance.OnCosmeticsUpdated += delegate ()
+            {
+                CheckPlayer(NetworkSystem.Instance.LocalPlayer);
+            };
 
-            Home.SetEntries([.. ScreenRegistry.Values]);
+            Home.SetEntries([.. registry.Values]);
             SwitchScreen(Home);
 
             enabled = true;
         }
 
-        public void SwitchScreen(Screen newScreen)
+        public void SwitchScreen(InfoWatchScreen newScreen)
         {
-            if (CurrentScreen is Screen lastScreen)
+            if (CurrentScreen is InfoWatchScreen lastScreen)
             {
                 CurrentScreen.RequestScreenSwitch -= SwitchScreen;
                 CurrentScreen.RequestSetLines -= RefreshScreen;
@@ -321,7 +294,9 @@ namespace GorillaInfoWatch.Behaviours
 
         public void SwitchScreen(Type type)
         {
-            if (GetScreen(type) is Screen screen)
+            if (type is null)
+                SwitchScreen(Home);
+            else if (GetScreen(type) is InfoWatchScreen screen)
                 SwitchScreen(screen);
         }
 
@@ -330,20 +305,21 @@ namespace GorillaInfoWatch.Behaviours
             buttonOpenInbox.gameObject.SetActive(CurrentScreen == Home);
             button_return_screen.gameObject.SetActive(CurrentScreen != Home);
 
-            var content = CurrentScreen.GetContent();
-            if (content is null) return;
+            var content = CurrentScreen.GetContent() ?? new LineBuilder();
 
             try
             {
-                int page_count = content.GetPageCount();
-                CurrentScreen.PageNumber = page_count != 0 ? CurrentScreen.PageNumber.Wrap(0, page_count) : 0;
+                int sectionCount = content.SectionCount();
+                CurrentScreen.Section = sectionCount != 0 ? CurrentScreen.Section.Wrap(0, sectionCount) : 0;
 
-                button_next_page.gameObject.SetActive(page_count > 1);
-                button_prev_page.gameObject.SetActive(page_count > 1);
-                menu_page_text.text = (button_next_page.gameObject.activeSelf || button_prev_page.gameObject.activeSelf) ? $"{CurrentScreen.PageNumber + 1}/{page_count}" : "";
+                bool multiSection = sectionCount > 1;
+                button_next_page.gameObject.SetActive(multiSection);
+                button_prev_page.gameObject.SetActive(multiSection);
+                menu_page_text.text = multiSection ? $"{CurrentScreen.Section + 1}/{sectionCount}" : string.Empty;
 
-                string page_title = content.GetPageTitle(CurrentScreen.PageNumber);
-                menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(page_title) ? "" : $" - {page_title}")}";
+                string sectionTitle = content.SectionTitle(CurrentScreen.Section);
+                menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(sectionTitle) ? "" : $" - {sectionTitle}")}";
+
                 if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
                 {
                     menu_description.gameObject.SetActive(false);
@@ -362,17 +338,18 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                var lines = content.GetPageLines(CurrentScreen.PageNumber);
+                IEnumerable<ScreenLine> lines = content.SectionLines(CurrentScreen.Section);
 
-                for (int i = 0; i < Constants.LinesPerPage; i++)
+                for (int i = 0; i < Constants.SectionCapacity; i++)
                 {
-                    var menu_line = menu_lines[i];
+                    InfoWatchLine menu_line = menu_lines[i];
 
                     if (lines.ElementAtOrDefault(i) is ScreenLine line)
                     {
                         bool wasLineActive = menu_line.gameObject.activeSelf;
                         menu_line.gameObject.SetActive(true);
                         menu_line.Build(line, !wasLineActive || includeWidgets);
+
                         continue;
                     }
 
@@ -390,13 +367,13 @@ namespace GorillaInfoWatch.Behaviours
         {
             Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
 
-            if (ScreenRegistry.ContainsKey(type))
+            if (registry.ContainsKey(type))
             {
                 Logging.Warning("Registry contains key");
                 return false;
             }
 
-            Type baseScreen = typeof(Screen);
+            Type baseScreen = typeof(InfoWatchScreen);
 
             if (!type.IsSubclassOf(baseScreen))
             {
@@ -412,9 +389,9 @@ namespace GorillaInfoWatch.Behaviours
 
             Component component = container.AddComponent(type);
 
-            if (component is Screen screen)
+            if (component is InfoWatchScreen screen)
             {
-                if (ScreenRegistry.ContainsValue(screen))
+                if (registry.ContainsValue(screen))
                 {
                     Logging.Warning("Registry contains value (component of type)");
                     Destroy(component);
@@ -423,7 +400,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 screen.enabled = false;
 
-                ScreenRegistry[type] = screen;
+                registry[type] = screen;
 
                 Logging.Info("Register success");
                 return true;
@@ -434,21 +411,30 @@ namespace GorillaInfoWatch.Behaviours
             return false;
         }
 
-        public Screen GetScreen(Type type, bool registerFallback = true)
+        public InfoWatchScreen GetScreen(Type type, bool registerFallback = true)
         {
-            return (ScreenRegistry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? ScreenRegistry[type] : null;
+            return (registry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? registry[type] : null;
         }
 
         public void PlayErrorSound()
         {
-            if (Enum.Parse<EWatchSound>(string.Concat("error", UnityEngine.Random.Range(1, 6))) is EWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
+            if (Enum.Parse<InfoWatchSound>(string.Concat("error", Random.Range(1, 6))) is InfoWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
                 localInfoWatch.AudioDevice.PlayOneShot(audioClip);
         }
 
         public void SendNotification(Notification notification)
         {
-            if (notification is null || notification.IsOpened || notifications.Contains(notification))
+            if (notification is null || notification.Opened || notifications.Contains(notification))
                 return;
+
+            for (int i = 0; i < notifications.Count; i++)
+            {
+                if (notifications[i].Content == notification.Content)
+                {
+                    notifications.RemoveAt(i);
+                    i--;
+                }
+            }
 
             notifications.Add(notification);
 
@@ -464,14 +450,14 @@ namespace GorillaInfoWatch.Behaviours
             RefreshInbox();
         }
 
-        public void OpenNotification(Notification notification)
+        public void OpenNotification(Notification notification, bool digest)
         {
-            if (notification is null || notification.IsOpened || !notifications.Contains(notification))
+            if (notification is null || notification.Opened || !notifications.Contains(notification))
                 return;
 
-            notification.IsOpened = true;
+            notification.Opened = true;
 
-            if (notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is Screen screen)
+            if (digest && notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is InfoWatchScreen screen)
             {
                 if (notification.Screen.Task is Task task)
                 {
@@ -493,15 +479,25 @@ namespace GorillaInfoWatch.Behaviours
 
         public void RefreshInbox()
         {
-            Inbox.Inbox = [.. notifications.Where(notif => !notif.IsOpened).OrderBy(notif => notif.Created)];
+            Inbox.Inbox = [.. notifications.Where(notif => !notif.Opened).OrderBy(notif => notif.Created)];
 
             if (CurrentScreen == Inbox)
                 RefreshScreen();
         }
 
+        public void OnJoinedRoom()
+        {
+            foreach(NetPlayer player in NetworkSystem.Instance.AllNetPlayers)
+            {
+                CheckPlayer(player);
+            }
+        }
+
         public void OnPlayerJoined(NetPlayer player)
         {
-            if (FriendUtilities.IsFriend(player.UserId))
+            CheckPlayer(player);
+
+            if (GFriendUtils.IsFriend(player.UserId))
             {
                 Events.SendNotification
                 (
@@ -511,15 +507,15 @@ namespace GorillaInfoWatch.Behaviours
                         string.Format
                         (
                             "<color=#{0}>{1}</color>",
-                            ColorUtility.ToHtmlStringRGB(FriendUtilities.FriendColour),
+                            ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour),
                             player.NickName.SanitizeName()
                         ),
-                        5, EWatchSound.notificationPositive,
+                        5, InfoWatchSound.notificationPositive,
                         new Notification.ExternalScreen
                         (
                             typeof(PlayerInfoPage),
                             $"Inspect {player.NickName.SanitizeName()}",
-                            delegate()
+                            delegate ()
                             {
                                 if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
                                     PlayerInfoPage.Container = playerRig;
@@ -532,7 +528,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnPlayerLeft(NetPlayer player)
         {
-            if (FriendUtilities.IsFriend(player.UserId))
+            if (GFriendUtils.IsFriend(player.UserId))
             {
                 Events.SendNotification
                 (
@@ -542,12 +538,35 @@ namespace GorillaInfoWatch.Behaviours
                         string.Format
                         (
                             "<color=#{0}>{1}</color>",
-                            ColorUtility.ToHtmlStringRGB(FriendUtilities.FriendColour),
+                            ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour),
                             player.NickName.SanitizeName()
                         ),
-                        5, EWatchSound.notificationNegative
+                        5, InfoWatchSound.notificationNegative
                     )
                 );
+            }
+        }
+
+        public void CheckPlayer(NetPlayer player)
+        {
+            if (player is null || player.IsNull)
+                return;
+
+            PlayerPredicate predicate = null;
+
+            if (Array.Find(figures, figure => figure.IsValid(player)) is FigurePredicate figure)
+                predicate = figure;
+            else if (Array.Find(cosmetics, cosmetic => cosmetic.IsValid(player)) is ItemPredicate cosmetic)
+                predicate = cosmetic;
+            else if (player.IsLocal || VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component) && component.HasInfoWatch)
+                predicate = watch;
+
+            if (predicate is not null)
+            {
+                if (PlayerSymbol.ContainsKey(player))
+                    PlayerSymbol[player] = predicate.Symbol;
+                else
+                    PlayerSymbol.Add(player, predicate.Symbol);
             }
         }
 
@@ -559,7 +578,7 @@ namespace GorillaInfoWatch.Behaviours
                 (
                     "You completed a quest",
                     quest.GetTextDescription(),
-                    5, EWatchSound.notificationNeutral
+                    5, InfoWatchSound.notificationNeutral
                 )
             );
         }
@@ -572,7 +591,7 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.widgetButton];
+                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[InfoWatchSound.widgetButton];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }
@@ -585,7 +604,7 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = Sounds[EWatchSound.widgetButton];
+                AudioClip clip = Sounds[InfoWatchSound.widgetButton];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }
@@ -598,7 +617,7 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[EWatchSound.widgetSwitch];
+                AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : Sounds[InfoWatchSound.widgetSwitch];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }

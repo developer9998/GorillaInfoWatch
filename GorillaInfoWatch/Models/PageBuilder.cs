@@ -13,13 +13,13 @@ namespace GorillaInfoWatch.Models
             Pages.Add((title, lines));
         }
 
-        public override int GetPageCount()
-            => Pages.Sum(page => Mathf.CeilToInt(page.lines.Count / (float)Constants.LinesPerPage));
+        public override int SectionCount()
+            => Pages.Sum(page => Mathf.CeilToInt(page.lines.Count / (float)Constants.SectionCapacity));
 
-        public override string GetPageTitle(int page)
+        public override string SectionTitle(int page)
              => GetPageContent(page).page_title;
 
-        public override IEnumerable<ScreenLine> GetPageLines(int page)
+        public override IEnumerable<ScreenLine> SectionLines(int page)
             => GetPageContent(page).content;
 
         public (string page_title, IEnumerable<ScreenLine> content) GetPageContent(int page)
@@ -27,11 +27,11 @@ namespace GorillaInfoWatch.Models
             int overall_page_count = 0;
             foreach (var (title, lines) in Pages)
             {
-                int section_page_count = Mathf.CeilToInt(lines.Count / (float)Constants.LinesPerPage);
+                int section_page_count = Mathf.CeilToInt(lines.Count / (float)Constants.SectionCapacity);
                 if (overall_page_count + section_page_count > page)
                 {
                     int sub_page = page - overall_page_count;
-                    return (title, lines.Skip(sub_page * Constants.LinesPerPage).Take(Constants.LinesPerPage));
+                    return (title, lines.Skip(sub_page * Constants.SectionCapacity).Take(Constants.SectionCapacity));
                 }
                 overall_page_count += section_page_count;
             }

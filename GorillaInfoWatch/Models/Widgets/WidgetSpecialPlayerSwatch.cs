@@ -1,13 +1,14 @@
+using AA;
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Utilities;
 using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetSpecialPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 80, int scaleY = 70) : WidgetSymbol(new Symbol(null))
+    public class WidgetSpecialPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 80, int scaleY = 70) : WidgetSymbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
 
@@ -31,6 +32,7 @@ namespace GorillaInfoWatch.Models.Widgets
                     rectTransform.sizeDelta = new Vector2(scaleX, scaleY); // speaker is default i think, 120x100
                 }
 
+                /*
                 if (Singleton<Main>.HasInstance)
                 {
                     Predicate<NetPlayer> match = null;
@@ -46,9 +48,15 @@ namespace GorillaInfoWatch.Models.Widgets
 
                     if (match is not null && Singleton<Main>.Instance.Sprites.TryGetValue(Singleton<Main>.Instance.SpecialSprites[match], out var sprite))
                     {
-                        image.enabled = true;
-                        image.sprite = sprite;
+                        
                     }
+                }
+                */
+
+                if (Main.Instance.PlayerSymbol.TryGetValue(Player, out InfoWatchSymbol symbol) && Singleton<Main>.Instance.Sprites.TryGetValue(symbol, out var sprite))
+                {
+                    image.enabled = true;
+                    image.sprite = sprite;
                 }
             }
 

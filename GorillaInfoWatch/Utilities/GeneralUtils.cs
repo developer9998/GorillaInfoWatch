@@ -4,7 +4,7 @@ using UnityEngine.XR;
 
 namespace GorillaInfoWatch.Utilities
 {
-    public static class RuntimeUtils
+    public static class GeneralUtils
     {
         public static bool InVR
         {

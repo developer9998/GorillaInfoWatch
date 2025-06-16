@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours.Widgets
+namespace GorillaInfoWatch.Behaviours.UI
 {
     // TODO: make sliders based on a generic class, int for snap, float for smooth
     /// <summary>
