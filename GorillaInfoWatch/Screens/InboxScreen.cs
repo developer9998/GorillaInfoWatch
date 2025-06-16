@@ -34,17 +34,17 @@ namespace GorillaInfoWatch.Screens
 
                 if (notification.Screen is not null)
                 {
-                    lines.Add(content, new PushButton(OpenNotification, notification, true)
+                    lines.Add(content, new Widget_PushButton(OpenNotification, notification, true)
                     {
                         Colour = Gradients.Green
-                    }, new PushButton(OpenNotification, notification, false)
+                    }, new Widget_PushButton(OpenNotification, notification, false)
                     {
                         Colour = Gradients.Red
                     });
                 }
                 else
                 {
-                    lines.Add(content, new PushButton(OpenNotification, notification, true));
+                    lines.Add(content, new Widget_PushButton(OpenNotification, notification, true));
                 }
             }
 

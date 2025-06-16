@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class PushButton(Action<object[]> action, params object[] parameters) : Widget
+    public class Widget_PushButton(Action<object[]> action, params object[] parameters) : Widget_Base
     {
         public Action<object[]> Command = action;
 
@@ -12,33 +12,33 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public Gradient Colour = Gradients.Button;
 
-        public PushButton(Action action) : this(args => action(), [])
+        public Widget_PushButton(Action action) : this(args => action(), [])
         {
             // Must declare a body
         }
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null)
+            if (Object is null)
             {
-                gameObject = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
-                gameObject.name = "Button";
-                gameObject.SetActive(true);
+                Object = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
+                Object.name = "Button";
+                Object.SetActive(true);
             }
         }
 
         public override void Object_Modify()
         {
-            if (gameObject is not null && gameObject.TryGetComponent(out PushButtonComponent component))
+            if (Object is not null && Object.TryGetComponent(out PushButtonComponent component))
                 component.ApplyButton(this);
         }
 
-        public override bool Equals(Widget widget)
+        public override bool Equals(Widget_Base widget)
         {
             if (widget is null)
                 return false;
 
-            if (widget is not PushButton widgetButton)
+            if (widget is not Widget_PushButton widgetButton)
                 return false;
 
             return Command.Target == widgetButton.Command.Target && Command.Method.Equals(widgetButton.Command.Method);

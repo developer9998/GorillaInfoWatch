@@ -16,14 +16,15 @@ namespace GorillaInfoWatch.Behaviours.UI
     public class InfoWatchLine : MonoBehaviour
     {
         public TMP_Text Text;
+
         public PushButton Button;
         public SnapSlider SnapSlider;
         public Switch Switch;
         public GameObject Symbol;
 
-        private readonly List<Widget> currentWidgets = [];
+        private readonly List<Widget_Base> currentWidgets = [];
 
-        private readonly HashSet<Widget> regularWidgets = [];
+        private readonly HashSet<Widget_Base> regularWidgets = [];
 
         private readonly int widgetsPerFrame = 2;
 
@@ -49,7 +50,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             if (applyWidgets)
             {
-                List<Widget> newWidgets = line.Widgets;
+                List<Widget_Base> newWidgets = line.Widgets;
 
                 if (newWidgets is null)
                 {
@@ -61,15 +62,15 @@ namespace GorillaInfoWatch.Behaviours.UI
                 if (intake > 0)
                 {
                     Logging.Info($"Extending widget list +{intake}");
-                    currentWidgets.AddRange(Enumerable.Repeat<Widget>(null, intake));
+                    currentWidgets.AddRange(Enumerable.Repeat<Widget_Base>(null, intake));
                     Logging.Info($"Total count of {currentWidgets.Count}");
                 }
 
                 for (int i = 0; i < currentWidgets.Count; i++)
                 {
-                    Widget currentWidget = currentWidgets.ElementAtOrDefault(i);
+                    Widget_Base currentWidget = currentWidgets.ElementAtOrDefault(i);
 
-                    Widget newWidget = newWidgets.ElementAtOrDefault(i);
+                    Widget_Base newWidget = newWidgets.ElementAtOrDefault(i);
 
                     if (newWidget is null)
                     {
@@ -78,8 +79,8 @@ namespace GorillaInfoWatch.Behaviours.UI
                         if (currentWidget is not null)
                         {
                             Logging.Info("Clearing existing widget");
-                            if (currentWidget.gameObject is not null)
-                                Destroy(currentWidget.gameObject);
+                            if (currentWidget.Object is not null)
+                                Destroy(currentWidget.Object);
                             if (regularWidgets.Contains(currentWidget))
                             {
                                 currentWidget.Behaviour_Disable();
@@ -91,61 +92,50 @@ namespace GorillaInfoWatch.Behaviours.UI
                         continue;
                     }
 
-                    bool equivalent = currentWidget is not null && newWidget.GetType() == currentWidget.GetType() && newWidget.Equals(currentWidget);
-
                     Logging.Info($"add {i} : {newWidget.GetType().Name}");
-                    Logging.Info($"pos {i} : {(currentWidget is not null && currentWidget.gameObject is not null ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
+                    Logging.Info($"pos {i} : {(currentWidget is not null && currentWidget.Object is not null ? currentWidget.Object.name : "null widget/object")}");
 
-                    if (equivalent)
+                    bool equivalent = currentWidget is not null && newWidget.GetType() == currentWidget.GetType() && newWidget.Equals(currentWidget);
+                    Logging.Info($"equivalent: {equivalent}");
+
+                    if (!equivalent && currentWidget is not null && currentWidget.Object is not null)
                     {
-                        newWidget.gameObject = currentWidget.gameObject;
-
+                        Logging.Info("Clearing existing widget");
+                        
                         if (regularWidgets.Contains(currentWidget))
                         {
                             currentWidget.Behaviour_Disable();
                             regularWidgets.Remove(currentWidget);
                         }
 
-                        currentWidgets[i] = newWidget;
-                        currentWidget = newWidget;
-
-                        newWidget.Object_Construct(this);
-
-                        if (newWidget.UseBehaviour)
-                        {
-                            newWidget.Behaviour_Enable();
-                            regularWidgets.Add(currentWidget);
-                        }
+                        if (currentWidget.Object is not null)
+                            Destroy(currentWidget.Object);
                     }
-                    else
+                    else if (equivalent)
                     {
-                        Logging.Info("Not equivalent");
+                        newWidget.Object = currentWidget.Object;
 
-                        if (currentWidget is not null && currentWidget.gameObject is not null)
+                        if (regularWidgets.Contains(currentWidget))
                         {
-                            Logging.Info("Clearing existing widget");
-                            if (currentWidget.gameObject is not null)
-                                Destroy(currentWidget.gameObject);
-                            if (regularWidgets.Contains(currentWidget))
-                            {
-                                currentWidget.Behaviour_Disable();
-                                regularWidgets.Remove(currentWidget);
-                            }
+                            currentWidget.Behaviour_Disable();
+                            regularWidgets.Remove(currentWidget);
                         }
-
-                        newWidget.Object_Construct(this);
-                        currentWidgets[i] = newWidget;
-                        currentWidget = newWidget;
-                        Logging.Info("Updated current widget");
-
-                        if(newWidget.UseBehaviour)
-                        {
-                            newWidget.Behaviour_Enable();
-                            regularWidgets.Add(currentWidget);
-                        }
-
-                        Logging.Info("Initialized new widget");
                     }
+                   
+                    currentWidgets[i] = newWidget;
+                    currentWidget = newWidget;
+
+                    Logging.Info("Updated current widget");
+
+                    newWidget.Object_Construct(this);
+
+                    if (newWidget.UseBehaviour)
+                    {
+                        newWidget.Behaviour_Enable();
+                        regularWidgets.Add(currentWidget);
+                    }
+
+                    Logging.Info(equivalent ? "Recycled existing widget" : "Initialized new widget");
 
                     if (currentWidget.AllowModification)
                     {

@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Behaviours.UI
     {
         public Action OnPressed, OnReleased;
 
-        public PushButton Widget;
+        public Widget_PushButton Widget;
 
         private BoxCollider collider;
         private MeshRenderer renderer;
@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             colour = Gradients.Button;
         }
 
-        public void ApplyButton(PushButton widget)
+        public void ApplyButton(Widget_PushButton widget)
         {
             // prepare transition
             if (Widget is not null)

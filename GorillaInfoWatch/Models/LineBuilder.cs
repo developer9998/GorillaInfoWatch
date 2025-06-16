@@ -23,13 +23,13 @@ namespace GorillaInfoWatch.Models
         public void Skip()
             => Add(string.Empty);
 
-        public void Add(string text, params List<Widget> widgets)
+        public void Add(string text, params List<Widget_Base> widgets)
             => Lines.Add(new(text, widgets));
 
-        public void Insert(int position, string text, params List<Widget> widgets)
+        public void Insert(int position, string text, params List<Widget_Base> widgets)
             => Lines.Insert(position, new(text, widgets));
 
-        public void Repeat(int amount, string text = "", params List<Widget> widgets)
+        public void Repeat(int amount, string text = "", params List<Widget_Base> widgets)
             => Lines.AddRange(Enumerable.Repeat<ScreenLine>(new(text, widgets), amount));
 
         public static implicit operator List<ScreenLine>(LineBuilder lines)

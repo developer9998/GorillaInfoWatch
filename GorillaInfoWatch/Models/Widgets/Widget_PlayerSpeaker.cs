@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetPlayerSpeaker(NetPlayer player, float offset = 620, int scaleX = 100, int scaleY = 100) : WidgetSymbol(new Models.Symbol(null))
+    public class Widget_PlayerSpeaker(NetPlayer player, float offset = 620, int scaleX = 100, int scaleY = 100) : Widget_Symbol(new Symbol(null))
     {
         public override bool AllowModification => false;
         public override bool UseBehaviour => true;

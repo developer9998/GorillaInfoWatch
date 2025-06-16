@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : WidgetSymbol(new Models.Symbol(null))
+    public class Widget_PlayerSymbol(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : Widget_Symbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
         public override bool UseBehaviour => true;

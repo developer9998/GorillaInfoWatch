@@ -3,17 +3,12 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public abstract class Widget
+    public abstract class Widget_Base
     {
         public virtual bool AllowModification { get; } = true;
         public virtual bool UseBehaviour { get; } = false;
 
-        public GameObject gameObject;
-
-        public virtual bool Equals(Widget widget)
-        {
-            return false;
-        }
+        public GameObject Object;
 
         public virtual void Object_Construct(InfoWatchLine menuLine)
         {
@@ -43,6 +38,11 @@ namespace GorillaInfoWatch.Models.Widgets
         public virtual void Behaviour_FixedUpdate()
         {
 
+        }
+
+        public virtual bool Equals(Widget_Base widget)
+        {
+            return false;
         }
     }
 }

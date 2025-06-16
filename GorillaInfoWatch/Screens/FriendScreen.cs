@@ -94,7 +94,7 @@ namespace GorillaInfoWatch.Screens
                     bool joinable = !has_vstump_prepend && !is_in_room && (!is_public_room || in_zone);
                     if (joinable)
                     {
-                        lines.Add(line_content, new PushButton(FriendButtonClick, presence));
+                        lines.Add(line_content, new Widget_PushButton(FriendButtonClick, presence));
                     }
                     else
                     {

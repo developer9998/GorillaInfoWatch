@@ -11,7 +11,7 @@ namespace GorillaInfoWatch.Behaviours.UI
     {
         public Action OnApplied;
 
-        public Models.Widgets.SnapSlider Widget;
+        public Models.Widgets.Widget_SnapSlider Widget;
 
         private BoxCollider collider;
 
@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             max = transform.Find("Max");
         }
 
-        public void ApplySlider(Models.Widgets.SnapSlider widget)
+        public void ApplySlider(Models.Widgets.Widget_SnapSlider widget)
         {
             if (Widget == widget && widget != null) return;
 

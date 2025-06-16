@@ -62,7 +62,7 @@ namespace GorillaInfoWatch.Screens
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
-                lines.Add((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !VRRigCache.Instance.TryGetVrrig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new WidgetPlayerSwatch(player), new WidgetPlayerSpeaker(player), new WidgetSpecialPlayerSwatch(player), new PushButton(TryInspectPlayer, player));
+                lines.Add((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !VRRigCache.Instance.TryGetVrrig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new Widget_PlayerSymbol(player), new Widget_PlayerSpeaker(player), new Widget_SignificantSymbol(player), new Widget_PushButton(TryInspectPlayer, player));
             }
 
             return lines;

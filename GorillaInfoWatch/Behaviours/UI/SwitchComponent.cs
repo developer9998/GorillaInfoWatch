@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Behaviours.UI
     {
         public Action OnPressed, OnReleased;
 
-        private Switch currentWidget;
+        private Widget_Switch currentWidget;
 
         private Transform needle, min, max;
 
@@ -34,7 +34,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             renderer.materials[1] = new Material(renderer.materials[1]);
         }
 
-        public void SetWidget(Switch widget)
+        public void SetWidget(Widget_Switch widget)
         {
             if (widget != null && currentWidget == widget) return;
 

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetSymbolSwatch(Symbol symbol, float offset = 44) : WidgetSymbol(symbol)
+    public class Widget_AnchoredSymbol(Symbol symbol, float offset = 44) : Widget_Symbol(symbol)
     {
         public override bool UseBehaviour => true;
 

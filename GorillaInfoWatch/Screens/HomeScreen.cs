@@ -30,7 +30,7 @@ namespace GorillaInfoWatch.Screens
             for (int i = 0; i < entries.Count; i++)
             {
                 (string entry_name, InfoWatchScreen screen) = entries.ElementAt(i);
-                lines.Add(entry_name, new PushButton(EntrySelected, screen));
+                lines.Add(entry_name, new Widget_PushButton(EntrySelected, screen));
             }
 
             return lines;

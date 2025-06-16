@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class WidgetSymbol(Symbol symbol) : Widget
+    public class Widget_Symbol(Symbol symbol) : Widget_Base
     {
         public Symbol Value = symbol;
 
@@ -12,20 +12,20 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null)
+            if (Object is null)
             {
-                gameObject = Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
-                gameObject.name = "Symbol";
-                gameObject.SetActive(true);
+                Object = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
+                Object.name = "Symbol";
+                Object.SetActive(true);
             }
 
-            if (gameObject.TryGetComponent(out image))
+            if (Object.TryGetComponent(out image))
                 image.enabled = true;
         }
 
         public override void Object_Modify()
         {
-            if (image || gameObject.TryGetComponent(out image))
+            if (image || Object.TryGetComponent(out image))
             {
                 image.sprite = Value.Sprite;
                 image.material = Value.Material;
@@ -33,12 +33,12 @@ namespace GorillaInfoWatch.Models.Widgets
             }
         }
 
-        public override bool Equals(Widget widget)
+        public override bool Equals(Widget_Base widget)
         {
             if (widget is null)
                 return false;
 
-            if (widget is not WidgetSymbol widgetSymbol)
+            if (widget is not Widget_Symbol widgetSymbol)
                 return false;
 
             return Value.Sprite == widgetSymbol.Value.Sprite && Value.Material == widgetSymbol.Value.Material && Value.Colour == widgetSymbol.Value.Colour;

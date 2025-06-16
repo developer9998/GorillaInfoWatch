@@ -69,7 +69,7 @@ namespace GorillaInfoWatch.Screens
             string playerName = hasPermission ? player.NickName : player.DefaultName;
             string playerNameSanitized = playerName.SanitizeName().LimitLength(12);
 
-            basicInfoLines.Add($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new WidgetPlayerSwatch(player, 520f, 90, 90), new WidgetPlayerSpeaker(player, 620f, 100, 100), new WidgetSpecialPlayerSwatch(player, 520f, 80, 70));
+            basicInfoLines.Add($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new Widget_PlayerSymbol(player, 520f, 90, 90), new Widget_PlayerSpeaker(player, 620f, 100, 100), new Widget_SignificantSymbol(player, 520f, 80, 70));
 
             basicInfoLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
 
@@ -88,7 +88,7 @@ namespace GorillaInfoWatch.Screens
             if (!player.IsLocal)
             {
                 basicInfoLines.Repeat(1);
-                basicInfoLines.Add(Container.Muted ? "Unmute" : "Mute", new Switch(OnMuteButtonClick, player)
+                basicInfoLines.Add(Container.Muted ? "Unmute" : "Mute", new Widget_Switch(OnMuteButtonClick, player)
                 {
                     Value = Container.Muted,
                     Colour = muteColour
@@ -97,7 +97,7 @@ namespace GorillaInfoWatch.Screens
                 if (GFriendUtils.FriendCompatible)
                 {
                     bool isFriend = GFriendUtils.IsFriend(player.UserId);
-                    basicInfoLines.Add(GFriendUtils.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Switch(OnFriendButtonClick, player)
+                    basicInfoLines.Add(GFriendUtils.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Widget_Switch(OnFriendButtonClick, player)
                     {
                         Value = isFriend,
                         Colour = friendColour
