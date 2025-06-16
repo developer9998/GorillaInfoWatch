@@ -53,6 +53,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 gameObject.SetActive(true);
                 OnPressed = () => Widget.Command?.Invoke(Widget.Parameters ?? []);
                 colour = Widget.Colour ?? Gradients.Button;
+
                 targetValue = bumped ? 1 : 0;
                 if (currentValue == -1)
                 {
@@ -67,6 +68,11 @@ namespace GorillaInfoWatch.Behaviours.UI
             gameObject.SetActive(false);
             OnPressed = null;
             OnReleased = null;
+        }
+
+        public void OnDisable()
+        {
+            currentValue = -1;
         }
 
         public void LateUpdate()

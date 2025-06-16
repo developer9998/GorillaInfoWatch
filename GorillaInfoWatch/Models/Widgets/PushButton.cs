@@ -17,17 +17,19 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void CreateObject(InfoWatchLine menuLine)
+        public override void Object_Construct(InfoWatchLine menuLine)
         {
-            gameObject = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
-
-            gameObject.name = "Button";
-            gameObject.SetActive(true);
+            if (gameObject is null)
+            {
+                gameObject = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
+                gameObject.name = "Button";
+                gameObject.SetActive(true);
+            }
         }
 
-        public override void ModifyObject()
+        public override void Object_Modify()
         {
-            if (gameObject.TryGetComponent(out PushButtonComponent component))
+            if (gameObject is not null && gameObject.TryGetComponent(out PushButtonComponent component))
                 component.ApplyButton(this);
         }
 

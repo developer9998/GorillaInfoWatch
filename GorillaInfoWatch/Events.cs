@@ -1,5 +1,6 @@
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Significance;
 using System;
 using static RotatingQuestsManager;
 
@@ -20,6 +21,8 @@ namespace GorillaInfoWatch
         public static Action<Notification> OnNotificationSent;
 
         public static Action<Notification, bool> OnNotificationOpened;
+
+        public static Action<NetPlayer, PlayerSignificance> OnSignificanceChanged;
 
         public static void SendNotification(Notification notification)
         {

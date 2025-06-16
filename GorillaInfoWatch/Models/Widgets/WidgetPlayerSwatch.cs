@@ -8,12 +8,13 @@ namespace GorillaInfoWatch.Models.Widgets
     public class WidgetPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : WidgetSymbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
+        public override bool UseBehaviour => true;
 
         public NetPlayer Player = player;
 
         private RigContainer playerRig;
 
-        public override bool Init()
+        public override void Behaviour_Enable()
         {
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
@@ -31,11 +32,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
                 SetSwatchColour();
             }
-
-            return true;
         }
 
-        public override void Update()
+        public override void Behaviour_Update()
         {
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {

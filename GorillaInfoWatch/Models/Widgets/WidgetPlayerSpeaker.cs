@@ -11,6 +11,7 @@ namespace GorillaInfoWatch.Models.Widgets
     public class WidgetPlayerSpeaker(NetPlayer player, float offset = 620, int scaleX = 100, int scaleY = 100) : WidgetSymbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
+        public override bool UseBehaviour => true;
 
         public NetPlayer Player = player;
 
@@ -20,7 +21,7 @@ namespace GorillaInfoWatch.Models.Widgets
         private Sprite open_speaker, muted_speaker, force_mute_speaker;
         private bool is_mute_manual;
 
-        public override bool Init()
+        public override void Behaviour_Enable()
         {
             Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.OpenSpeaker, out open_speaker);
             Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.MutedSpeaker, out muted_speaker);
@@ -48,11 +49,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
                 SetSpeakerState();
             }
-
-            return true;
         }
 
-        public override void Update()
+        public override void Behaviour_Update()
         {
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {

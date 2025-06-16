@@ -25,6 +25,10 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private readonly HashSet<Widget> regularWidgets = [];
 
+        private readonly int widgetsPerFrame = 2;
+
+        private int widgetIndex = 0;
+
         public void Awake()
         {
             Text = transform.Find("Text").GetComponent<TMP_Text>();
@@ -77,18 +81,43 @@ namespace GorillaInfoWatch.Behaviours.UI
                             if (currentWidget.gameObject is not null)
                                 Destroy(currentWidget.gameObject);
                             if (regularWidgets.Contains(currentWidget))
+                            {
+                                currentWidget.Behaviour_Disable();
                                 regularWidgets.Remove(currentWidget);
+                            }
                             currentWidgets[i] = null;
                         }
 
                         continue;
                     }
 
-                    bool equivalent = currentWidget is not null && newWidget.Equals(currentWidget);
+                    bool equivalent = currentWidget is not null && newWidget.GetType() == currentWidget.GetType() && newWidget.Equals(currentWidget);
 
-                    Logging.Info($"{i} : {newWidget.GetType().Name} with {(newWidget is not null && newWidget.gameObject is not null ? newWidget.gameObject.name : "null object/widget")}: {equivalent}");
+                    Logging.Info($"add {i} : {newWidget.GetType().Name}");
+                    Logging.Info($"pos {i} : {(currentWidget is not null && currentWidget.gameObject is not null ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
 
-                    if (/*!equivalent*/true)
+                    if (equivalent)
+                    {
+                        newWidget.gameObject = currentWidget.gameObject;
+
+                        if (regularWidgets.Contains(currentWidget))
+                        {
+                            currentWidget.Behaviour_Disable();
+                            regularWidgets.Remove(currentWidget);
+                        }
+
+                        currentWidgets[i] = newWidget;
+                        currentWidget = newWidget;
+
+                        newWidget.Object_Construct(this);
+
+                        if (newWidget.UseBehaviour)
+                        {
+                            newWidget.Behaviour_Enable();
+                            regularWidgets.Add(currentWidget);
+                        }
+                    }
+                    else
                     {
                         Logging.Info("Not equivalent");
 
@@ -98,18 +127,23 @@ namespace GorillaInfoWatch.Behaviours.UI
                             if (currentWidget.gameObject is not null)
                                 Destroy(currentWidget.gameObject);
                             if (regularWidgets.Contains(currentWidget))
+                            {
+                                currentWidget.Behaviour_Disable();
                                 regularWidgets.Remove(currentWidget);
+                            }
                         }
 
-                        newWidget.CreateObject(this);
+                        newWidget.Object_Construct(this);
                         currentWidgets[i] = newWidget;
                         currentWidget = newWidget;
                         Logging.Info("Updated current widget");
 
-                        if (currentWidget.Init())
+                        if(newWidget.UseBehaviour)
                         {
+                            newWidget.Behaviour_Enable();
                             regularWidgets.Add(currentWidget);
                         }
+
                         Logging.Info("Initialized new widget");
                     }
 
@@ -117,7 +151,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                     {
                         try
                         {
-                            currentWidget.ModifyObject();
+                            currentWidget.Object_Modify();
                         }
                         catch (Exception ex)
                         {
@@ -135,12 +169,15 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Update()
         {
-            if (regularWidgets.Count > 0)
+            if (regularWidgets.Count == 0)
+                return;
+
+            for(int i = 0; i < widgetsPerFrame; i++)
             {
-                foreach (var widget in regularWidgets)
-                {
-                    widget.Update();
-                }
+                if (widgetIndex >= regularWidgets.Count)
+                    widgetIndex = 0;
+                regularWidgets.ElementAt(i).Behaviour_Update();
+                widgetIndex++;
             }
         }
     }

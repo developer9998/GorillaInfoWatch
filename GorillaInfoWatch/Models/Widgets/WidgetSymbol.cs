@@ -10,18 +10,20 @@ namespace GorillaInfoWatch.Models.Widgets
 
         internal Image image;
 
-        public override void CreateObject(InfoWatchLine menuLine)
+        public override void Object_Construct(InfoWatchLine menuLine)
         {
-            gameObject = Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
-
-            gameObject.name = "Symbol";
-            gameObject.SetActive(true);
+            if (gameObject is null)
+            {
+                gameObject = Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
+                gameObject.name = "Symbol";
+                gameObject.SetActive(true);
+            }
 
             if (gameObject.TryGetComponent(out image))
                 image.enabled = true;
         }
 
-        public override void ModifyObject()
+        public override void Object_Modify()
         {
             if (image || gameObject.TryGetComponent(out image))
             {

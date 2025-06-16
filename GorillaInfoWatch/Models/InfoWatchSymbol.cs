@@ -18,6 +18,7 @@ namespace GorillaInfoWatch.Models
         Lapis,
         Kronicahl,
         // Icons
+        Verified,
         Patreon,
         KoFi,
         OpenSpeaker,

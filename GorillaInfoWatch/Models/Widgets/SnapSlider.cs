@@ -1,5 +1,7 @@
 using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Utilities;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
@@ -23,26 +25,22 @@ namespace GorillaInfoWatch.Models.Widgets
             Command = action;
             StartValue = start;
             EndValue = end;
-
-            Colour = new Gradient();
-            Colour.SetKeys
-            (
-                [new GradientColorKey(Color.HSVToRGB(0f / 360f, 64f / 100f, 73f / 100f), 0), new GradientColorKey(Color.HSVToRGB(128f / 255, 64f / 255, 73f / 255), 1)],
-                [new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1)]
-            );
+            Colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
         }
 
-        public override void CreateObject(InfoWatchLine menuLine)
+        public override void Object_Construct(InfoWatchLine menuLine)
         {
-            gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
-
-            gameObject.name = "SnapSlider";
-            gameObject.SetActive(true);
+            if (gameObject is null)
+            {
+                gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
+                gameObject.name = "SnapSlider";
+                gameObject.SetActive(true);
+            }
         }
 
-        public override void ModifyObject()
+        public override void Object_Modify()
         {
-            if (gameObject.TryGetComponent(out SnapSliderComponent component))
+            if (gameObject is not null && gameObject.TryGetComponent(out SnapSliderComponent component))
                 component.ApplySlider(this);
         }
 

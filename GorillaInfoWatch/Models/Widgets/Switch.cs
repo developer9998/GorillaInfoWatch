@@ -19,8 +19,7 @@ namespace GorillaInfoWatch.Models.Widgets
         {
             Command = action;
             Parameters = parameters ?? [];
-
-            Colour = GradientUtils.FromColour(Gradients.Red.colorKeys[0].color, Gradients.Green.colorKeys[0].color);
+            Colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
         }
 
         public Switch(Action<bool> action) : this((value, args) => action(value), [])
@@ -33,16 +32,19 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void CreateObject(InfoWatchLine menuLine)
+        public override void Object_Construct(InfoWatchLine menuLine)
         {
-            gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
-            gameObject.name = "Switch";
-            gameObject.SetActive(true);
+            if (gameObject is null)
+            {
+                gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
+                gameObject.name = "Switch";
+                gameObject.SetActive(true);
+            }
         }
 
-        public override void ModifyObject()
+        public override void Object_Modify()
         {
-            if (gameObject.TryGetComponent(out SwitchComponent component))
+            if (gameObject is not null && gameObject.TryGetComponent(out SwitchComponent component))
                 component.SetWidget(this);
         }
 

@@ -13,11 +13,11 @@
 		<Compile Include="..\GorillaInfoWatch\Models\InfoWatchData.cs">
 			<Link>InfoWatchData.cs</Link>
 		</Compile>
-		<Compile Include="..\GorillaInfoWatch\Models\Logic\FigurePredicateObject.cs">
-			<Link>FigurePredicateObject.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Models\Significance\FigureSignificanceObject.cs">
+			<Link>FigureSignificanceObject.cs</Link>
 		</Compile>
-		<Compile Include="..\GorillaInfoWatch\Models\Logic\ItemPredicateObject.cs">
-			<Link>ItemPredicateObject.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Models\Significance\ItemSignificanceObject.cs">
+			<Link>ItemSignificanceObject.cs</Link>
 		</Compile>
 	</ItemGroup>
 

@@ -1,8 +1,6 @@
-using AA;
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
-using System;
-using System.Text.RegularExpressions;
+using GorillaInfoWatch.Models.Significance;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,12 +9,13 @@ namespace GorillaInfoWatch.Models.Widgets
     public class WidgetSpecialPlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 80, int scaleY = 70) : WidgetSymbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
+        public override bool UseBehaviour => true;
 
         public NetPlayer Player = player;
 
         private RigContainer playerRig;
 
-        public override bool Init()
+        public override void Behaviour_Enable()
         {
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
@@ -32,38 +31,15 @@ namespace GorillaInfoWatch.Models.Widgets
                     rectTransform.sizeDelta = new Vector2(scaleX, scaleY); // speaker is default i think, 120x100
                 }
 
-                /*
-                if (Singleton<Main>.HasInstance)
-                {
-                    Predicate<NetPlayer> match = null;
-
-                    foreach (var predicate in Singleton<Main>.Instance.SpecialSprites.Keys)
-                    {
-                        if (predicate(Player))
-                        {
-                            match = predicate;
-                            break;
-                        }
-                    }
-
-                    if (match is not null && Singleton<Main>.Instance.Sprites.TryGetValue(Singleton<Main>.Instance.SpecialSprites[match], out var sprite))
-                    {
-                        
-                    }
-                }
-                */
-
-                if (Main.Instance.PlayerSymbol.TryGetValue(Player, out InfoWatchSymbol symbol) && Singleton<Main>.Instance.Sprites.TryGetValue(symbol, out var sprite))
+                if (Main.Instance.Significance.TryGetValue(Player, out PlayerSignificance significance) && Singleton<Main>.Instance.Sprites.TryGetValue(significance.Symbol, out Sprite sprite))
                 {
                     image.enabled = true;
                     image.sprite = sprite;
                 }
             }
-
-            return true;
         }
 
-        public override void Update()
+        public override void Behaviour_Update()
         {
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {

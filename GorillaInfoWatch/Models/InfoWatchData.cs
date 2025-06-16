@@ -1,4 +1,4 @@
-﻿using GorillaInfoWatch.Models.Logic;
+﻿using GorillaInfoWatch.Models.Significance;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -6,8 +6,8 @@ namespace GorillaInfoWatch.Models
     [CreateAssetMenu(fileName = "Data", menuName = "GorillaInfoWatch/InfoWatchData", order = -1)]
     public class InfoWatchData : ScriptableObject
     {
-        public FigurePredicateObject[] Figures;
+        public FigureSignificanceObject[] Figures;
 
-        public ItemPredicateObject[] Cosmetics;
+        public ItemSignificanceObject[] Cosmetics;
     }
 }

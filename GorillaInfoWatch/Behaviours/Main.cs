@@ -3,7 +3,7 @@ using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Models.Logic;
+using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
@@ -46,11 +46,11 @@ namespace GorillaInfoWatch.Behaviours
 
         private InfoWatchData data;
 
-        private FigurePredicate[] figures;
+        private FigureSignificance[] figures;
 
-        private ItemPredicate[] cosmetics;
+        private ItemSignificance[] cosmetics;
 
-        private PlayerPredicate watch;
+        private PlayerSignificance watch, verified;
 
         // Assets
         public GameObject WatchAsset;
@@ -75,7 +75,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public Dictionary<InfoWatchSymbol, Sprite> Sprites;
 
-        public readonly Dictionary<NetPlayer, InfoWatchSymbol> PlayerSymbol = [];
+        public readonly Dictionary<NetPlayer, PlayerSignificance> Significance = [];
 
         public async override void Initialize()
         {
@@ -143,11 +143,11 @@ namespace GorillaInfoWatch.Behaviours
 
             data = await AssetLoader.LoadAsset<InfoWatchData>("Data");
 
-            figures = Array.ConvertAll(data.Figures, figure => (FigurePredicate)figure);
-
-            cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemPredicate)item);
-
+            figures = Array.ConvertAll(data.Figures, figure => (FigureSignificance)figure);
+            cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemSignificance)item);
+            cosmetics = [.. cosmetics, new(InfoWatchSymbol.OpenSpeaker, "LHAAC.")]; // quick test for cosmetic recodnizion
             watch = new(InfoWatchSymbol.InfoWatch);
+            verified = new(InfoWatchSymbol.Verified);
 
             CheckPlayer(NetworkSystem.Instance.LocalPlayer);
 
@@ -427,14 +427,16 @@ namespace GorillaInfoWatch.Behaviours
             if (notification is null || notification.Opened || notifications.Contains(notification))
                 return;
 
+            /*
             for (int i = 0; i < notifications.Count; i++)
             {
-                if (notifications[i].Content == notification.Content)
+                if (notifications[i].Content == notification.Content && notifications[i] != notification)
                 {
                     notifications.RemoveAt(i);
                     i--;
                 }
             }
+            */
 
             notifications.Add(notification);
 
@@ -487,7 +489,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnJoinedRoom()
         {
-            foreach(NetPlayer player in NetworkSystem.Instance.AllNetPlayers)
+            foreach(NetPlayer player in NetworkSystem.Instance.PlayerListOthers)
             {
                 CheckPlayer(player);
             }
@@ -497,32 +499,32 @@ namespace GorillaInfoWatch.Behaviours
         {
             CheckPlayer(player);
 
+            if (player.IsLocal)
+                return;
+
             if (GFriendUtils.IsFriend(player.UserId))
             {
-                Events.SendNotification
-                (
-                    new
-                    (
-                        "Your friend has joined",
-                        string.Format
-                        (
-                            "<color=#{0}>{1}</color>",
-                            ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour),
-                            player.NickName.SanitizeName()
-                        ),
-                        5, InfoWatchSound.notificationPositive,
-                        new Notification.ExternalScreen
-                        (
-                            typeof(PlayerInfoPage),
-                            $"Inspect {player.NickName.SanitizeName()}",
-                            delegate ()
-                            {
-                                if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-                                    PlayerInfoPage.Container = playerRig;
-                            }
-                        )
-                    )
-                );
+                Events.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
+            else if (GFriendUtils.FriendCompatible && GFriendUtils.IsVerified(player.UserId))
+            {
+                Events.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.VerifiedColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
+            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+            {
+                Events.SendNotification(new("A significant user has joined", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
             }
         }
 
@@ -530,57 +532,85 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (GFriendUtils.IsFriend(player.UserId))
             {
-                Events.SendNotification
-                (
-                    new
-                    (
-                        "Your friend has left",
-                        string.Format
-                        (
-                            "<color=#{0}>{1}</color>",
-                            ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour),
-                            player.NickName.SanitizeName()
-                        ),
-                        5, InfoWatchSound.notificationNegative
-                    )
-                );
+                Events.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationNegative));
             }
+            else if (GFriendUtils.IsVerified(player.UserId))
+            {
+                Events.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.VerifiedColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationNegative));
+            }
+            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+            {
+                Events.SendNotification(new("A significant user has left", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationNegative));
+            }
+
+            CheckPlayer(player);
         }
 
-        public void CheckPlayer(NetPlayer player)
+        public bool CheckPlayer(NetPlayer player)
         {
-            if (player is null || player.IsNull)
-                return;
+            if (player is null || player.IsNull || (!player.IsLocal && !player.InRoom))
+                return false;
 
-            PlayerPredicate predicate = null;
+            PlayerSignificance predicate = null;
 
-            if (Array.Find(figures, figure => figure.IsValid(player)) is FigurePredicate figure)
+            if (Array.Find(figures, figure => figure.IsValid(player)) is FigureSignificance figure)
                 predicate = figure;
-            else if (Array.Find(cosmetics, cosmetic => cosmetic.IsValid(player)) is ItemPredicate cosmetic)
+            else if (Array.Find(cosmetics, cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic)
                 predicate = cosmetic;
             else if (player.IsLocal || VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component) && component.HasInfoWatch)
                 predicate = watch;
+            else if (GFriendUtils.FriendCompatible && GFriendUtils.IsVerified(player.UserId))
+                predicate = verified;
 
             if (predicate is not null)
             {
-                if (PlayerSymbol.ContainsKey(player))
-                    PlayerSymbol[player] = predicate.Symbol;
-                else
-                    PlayerSymbol.Add(player, predicate.Symbol);
+                if (!Significance.ContainsKey(player))
+                {
+                    Significance[player] = predicate;
+                    Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
+                    return true;
+                }
+
+                if (Significance[player] != predicate)
+                {
+                    Significance[player] = predicate;
+                    Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
+                    return true;
+                }
             }
+            else if (Significance.ContainsKey(player))
+            {
+                Significance.Remove(player);
+            }
+
+            return false;
         }
 
         public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
         {
-            Events.SendNotification
-            (
-                new
-                (
-                    "You completed a quest",
-                    quest.GetTextDescription(),
-                    5, InfoWatchSound.notificationNeutral
-                )
-            );
+            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
+            Events.SendNotification(new("You completed a quest", quest.questType != QuestType.none ? quest.questName : "OH NO!", 5, InfoWatchSound.notificationNeutral));
+        }
+
+        public void OnSignificanceChanged(NetPlayer player, PlayerSignificance significance)
+        {
+
+        }
+
+        public void OnGetUserCosmetics(NetPlayer player)
+        {
+            if (player is null || player.IsNull || (!player.IsLocal && !player.InRoom))
+                return;
+
+            if (CheckPlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
+            {
+                string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
+                Events.SendNotification(new($"A significant user was detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
         }
 
         public void PressButton(PushButton button, bool isLeftHand)
