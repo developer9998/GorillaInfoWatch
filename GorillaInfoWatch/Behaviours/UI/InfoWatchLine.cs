@@ -166,7 +166,8 @@ namespace GorillaInfoWatch.Behaviours.UI
             {
                 if (widgetIndex >= regularWidgets.Count)
                     widgetIndex = 0;
-                regularWidgets.ElementAt(i).Behaviour_Update();
+                if (regularWidgets.ElementAtOrDefault(i) is Widget_Base widget)
+                    widget.Behaviour_Update();
                 widgetIndex++;
             }
         }
