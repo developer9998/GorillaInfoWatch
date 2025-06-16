@@ -427,17 +427,6 @@ namespace GorillaInfoWatch.Behaviours
             if (notification is null || notification.Opened || notifications.Contains(notification))
                 return;
 
-            /*
-            for (int i = 0; i < notifications.Count; i++)
-            {
-                if (notifications[i].Content == notification.Content && notifications[i] != notification)
-                {
-                    notifications.RemoveAt(i);
-                    i--;
-                }
-            }
-            */
-
             notifications.Add(notification);
 
             if (Sounds.TryGetValue(notification.Sound, out AudioClip audio))
@@ -481,7 +470,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void RefreshInbox()
         {
-            Inbox.Inbox = [.. notifications.Where(notif => !notif.Opened).OrderBy(notif => notif.Created)];
+            Inbox.Notifications = [.. notifications.Where(notif => !notif.Opened).OrderBy(notif => notif.Created).Reverse()];
 
             if (CurrentScreen == Inbox)
                 RefreshScreen();
@@ -489,17 +478,14 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnJoinedRoom()
         {
-            foreach(NetPlayer player in NetworkSystem.Instance.PlayerListOthers)
-            {
-                CheckPlayer(player);
-            }
+            NetworkSystem.Instance.PlayerListOthers.ForEach(player => CheckPlayer(player));
         }
 
         public void OnPlayerJoined(NetPlayer player)
         {
             CheckPlayer(player);
 
-            if (player.IsLocal)
+            if (player.IsLocal) // called for the local player when marked "InGame" / connected to a room
                 return;
 
             if (GFriendUtils.IsFriend(player.UserId))
@@ -559,20 +545,22 @@ namespace GorillaInfoWatch.Behaviours
                 predicate = cosmetic;
             else if (player.IsLocal || VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component) && component.HasInfoWatch)
                 predicate = watch;
-            else if (GFriendUtils.FriendCompatible && GFriendUtils.IsVerified(player.UserId))
+            else if (GFriendUtils.IsVerified(player.UserId))
                 predicate = verified;
 
             if (predicate is not null)
             {
                 if (!Significance.ContainsKey(player))
                 {
-                    Significance[player] = predicate;
+                    Logging.Info($"Added significant player {player.NickName}: {predicate.Symbol}");
+                    Significance.Add(player, predicate);
                     Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
                     return true;
                 }
 
                 if (Significance[player] != predicate)
                 {
+                    Logging.Info($"Changed significant player {player.NickName}: from {Significance[player].Symbol} to {predicate.Symbol}");
                     Significance[player] = predicate;
                     Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
                     return true;
@@ -580,6 +568,7 @@ namespace GorillaInfoWatch.Behaviours
             }
             else if (Significance.ContainsKey(player))
             {
+                Logging.Info($"Removed significant player {player.NickName}");
                 Significance.Remove(player);
             }
 
