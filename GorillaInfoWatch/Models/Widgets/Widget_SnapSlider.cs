@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_SnapSlider(int start, int end, Action<int, object[]> action, params object[] parameters) : Widget_Base
+    public class Widget_SnapSlider(int value, int start, int end, Action<int, object[]> action, params object[] parameters) : Widget_Base
     {
-        public int Value;
+        public int Value = value;
 
         public Action<int, object[]> Command = action;
 
@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public bool ReadOnly;
 
-        public Widget_SnapSlider(int start, int end, Action<int> action): this(start, end, (value, parameters) => action(value))
+        public Widget_SnapSlider(int value, int start, int end, Action<int> action) : this(value, start, end, (value, parameters) => action(value))
         {
             // Must declare a body
         }

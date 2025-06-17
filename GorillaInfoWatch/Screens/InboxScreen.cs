@@ -1,5 +1,8 @@
-﻿using GorillaInfoWatch.Models;
+﻿using GameObjectScheduling;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Tools;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,6 +14,10 @@ namespace GorillaInfoWatch.Screens
 
         public List<Notification> Notifications = [];
 
+        private readonly string formatMultiPlayer = "<line-height=45%><size=50%>{0} in {1}</size><br>{2}";
+
+        private readonly string formatSinglePlayer = "<line-height=45%><size=50%>{0}</size><br>{1}";
+
         public override ScreenContent GetContent()
         {
             LineBuilder lines = new();
@@ -20,7 +27,9 @@ namespace GorillaInfoWatch.Screens
                 Description = string.Empty;
 
                 lines.Add("<align=\"center\">Inbox is empty - no new notifications.</align>");
+
                 lines.Skip();
+
                 lines.Add("<align=\"center\">You're all caught up!</align>");
 
                 return lines;
@@ -30,7 +39,14 @@ namespace GorillaInfoWatch.Screens
 
             foreach (var notification in Notifications)
             {
-                string content = string.Format("<line-height=45%><size=65%>{0} in {1}</size><br>{2}", notification.Created.ToLongTimeString(), notification.SessionIsPrivate ? "private room" : notification.RoomName, notification.DisplayText);
+                TimeSpan timeSpan = DateTime.Now - notification.Created;
+                string timeDisplay = CountdownText.GetTimeDisplay(timeSpan, "{0} {1} ago").ToLower();
+                string content = string.Format(formatSinglePlayer, timeDisplay, notification.DisplayText);
+                if (!string.IsNullOrEmpty(notification.RoomName))
+                {
+                    string roomName = notification.SessionIsPrivate ? "private session" : notification.RoomName;
+                    content = string.Format(formatMultiPlayer, timeDisplay, roomName, notification.DisplayText);
+                }
 
                 if (notification.Screen is not null)
                 {
@@ -60,7 +76,10 @@ namespace GorillaInfoWatch.Screens
         public void OpenNotification(Notification notification, bool digest)
         {
             if (Notifications.Contains(notification))
+            {
+                Logging.Info($"OpenNotification \"{notification.DisplayText}\"");
                 Events.OpenNotification(notification, digest);
+            }
         }
     }
 }

@@ -38,13 +38,6 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (widget != null && currentWidget == widget) return;
 
-            // prepare transition
-            if (currentWidget != null)
-            {
-                currentWidget.Value = false;
-                //renderer.materials[1].color = unpressedColour;
-            }
-
             // apply transition
             currentWidget = widget;
             if (currentWidget != null)
@@ -61,6 +54,8 @@ namespace GorillaInfoWatch.Behaviours.UI
                     needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
                     renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
                 }
+
+                Update();
 
                 // needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
                 // renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);

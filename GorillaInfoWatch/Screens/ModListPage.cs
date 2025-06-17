@@ -13,33 +13,32 @@ namespace GorillaInfoWatch.Screens
     [ShowOnHomeScreen]
     public class ModListPage : InfoWatchScreen
     {
-        public override string Title => "Mod Status";
+        public override string Title => "Mods";
 
-        private static PluginInfo[] _eligiblePlugins, _modEntries;
+        private PluginInfo[] stateSupportedMods, mods;
 
         public void Awake()
         {
             Dictionary<string, PluginInfo> _loadedPlugins = Chainloader.PluginInfos;
             PluginInfo[] _pluginInfos = [.. _loadedPlugins.Values];
 
-            _eligiblePlugins = [.. _pluginInfos.Where(plugin =>
+            stateSupportedMods = [.. _pluginInfos.Where(plugin =>
             {
                 List<string> _instanceMethods = AccessTools.GetMethodNames(plugin.Instance);
                 return _instanceMethods.Contains("OnEnable") || _instanceMethods.Contains("OnDisable");
             })];
-            _modEntries = [.. _eligiblePlugins.Concat(_pluginInfos.Except(_eligiblePlugins))]; // sort
+            mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods))]; // sort
         }
 
-        private bool IsEligible(PluginInfo info) => _eligiblePlugins.Contains(info);
-
+        private bool IsEligible(PluginInfo info) => stateSupportedMods.Contains(info);
 
         public override ScreenContent GetContent()
         {
             LineBuilder lines = new();
 
-            for (int i = 0; i < _modEntries.Length; i++)
+            for (int i = 0; i < mods.Length; i++)
             {
-                PluginInfo info = _modEntries[i];
+                PluginInfo info = mods[i];
 
                 Widget_PushButton pushButton = new(OpenModInfo, info);
 
@@ -60,7 +59,7 @@ namespace GorillaInfoWatch.Screens
         {
             if (args[0] is int mod_index)
             {
-                _modEntries[mod_index].Instance.enabled = value;
+                mods[mod_index].Instance.enabled = value;
                 SetText();
             }
         }

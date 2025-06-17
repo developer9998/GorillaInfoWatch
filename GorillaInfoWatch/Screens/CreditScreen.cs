@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Credits";
         public override string Description => $"Credits for {Constants.Name} v{Constants.Version}";
 
-        private readonly string creditFormat = "<line-indent=3em><line-height=65%>{0}<br><size=3.5>{1}: {2}";
+        private readonly string creditFormat = "<line-indent=3em><line-height=45%>{0}<br><size=60%>{1}: {2}";
 
         public override ScreenContent GetContent()
         {
@@ -26,9 +26,9 @@ namespace GorillaInfoWatch.Screens
             lines.Add(string.Format(creditFormat, "Astrid", "astridgt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Astrid)));
             lines.Add(string.Format(creditFormat, "Cyan", "cyangt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Cyan)));
             lines.Add(string.Format(creditFormat, "Deactivated", "knownperson", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Deactivated)));
-            //lines.Add(string.Format(creditFormat, "Will", "will_0x40", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Will)));
-            //lines.Add(string.Format(creditFormat, "Lapis", "lapisgt", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Lapis)));
-            //lines.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new WidgetSymbolSwatch(new(InfoWatchSymbol.Kronicahl)));
+            lines.Add(string.Format(creditFormat, "Will", "will_0x40", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Will)));
+            lines.Add(string.Format(creditFormat, "Lapis", "lapisgt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Lapis)));
+            lines.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Kronicahl)));
 
             return lines;
         }

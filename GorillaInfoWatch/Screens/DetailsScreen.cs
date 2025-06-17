@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Attributes;
+﻿using GameObjectScheduling;
+using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaNetworking;
@@ -8,7 +9,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class DetailsScreen : Models.InfoWatchScreen
+    public class DetailsScreen : InfoWatchScreen
     {
         public override string Title => "Details";
 
@@ -37,7 +38,10 @@ namespace GorillaInfoWatch.Screens
             LineBuilder economyLines = new();
 
             economyLines.Add($"Shiny Rocks: {CosmeticsController.instance.CurrencyBalance}");
-            economyLines.Add($"+ 100 Shiny Rocks in: {TimeSpan.FromSeconds(CosmeticsController.instance.secondsUntilTomorrow):h\\:mm\\:ss}");
+
+            TimeSpan whenShinyRocks = TimeSpan.FromSeconds(CosmeticsController.instance.secondsUntilTomorrow);
+            economyLines.Add($"+ 100 Shiny Rocks in: {CountdownText.GetTimeDisplay(whenShinyRocks, "{0} {1}").ToLower()} ({(DateTime.Now + whenShinyRocks).ToShortTimeString()})");
+
             economyLines.Skip();
 
             var currentWornSet = CosmeticsController.instance.currentWornSet;

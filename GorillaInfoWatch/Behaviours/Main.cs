@@ -135,9 +135,9 @@ namespace GorillaInfoWatch.Behaviours
 
             container.SetActive(true);
 
-            Home = GetScreen(typeof(HomeScreen)) as HomeScreen;
-            Warning = GetScreen(typeof(WarningScreen)) as WarningScreen;
-            Inbox = GetScreen(typeof(InboxScreen)) as InboxScreen;
+            Home = GetScreen<HomeScreen>();
+            Warning = GetScreen<WarningScreen>();
+            Inbox = GetScreen<InboxScreen>();
 
             // Assets
 
@@ -145,11 +145,11 @@ namespace GorillaInfoWatch.Behaviours
 
             figures = Array.ConvertAll(data.Figures, figure => (FigureSignificance)figure);
             cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemSignificance)item);
-            // cosmetics = [.. cosmetics, new(InfoWatchSymbol.OpenSpeaker, "LHAAC.")]; // quick test for cosmetic recodnizion
+            // cosmetics = [.. cosmetics, new(InfoWatchSymbol.OpenSpeaker, "LHAAC.")]; // quick test for cosmetic recognition
             watch = new(InfoWatchSymbol.InfoWatch);
             verified = new(InfoWatchSymbol.Verified);
 
-            CheckPlayer(NetworkSystem.Instance.LocalPlayer);
+            CheckPlayer(NetworkSystem.Instance.GetLocalPlayer());
 
             foreach (string watchSoundName in Enum.GetNames(typeof(InfoWatchSound)))
             {
@@ -179,6 +179,10 @@ namespace GorillaInfoWatch.Behaviours
             float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
             localInfoWatch.TimeOffset = timeOffset;
             NetworkHandler.Instance.SetProperty("TimeOffset", timeOffset);
+
+            // The majority of the code below comes from when my main computer broke down
+            // I wasn't able to work on C# as much as before, and most of my coding was done in Python in a robotics class in high school
+            // Hence the amount of underscores used every five lines, because that's how it was done in Python I suppose
 
             menu = Instantiate(await AssetLoader.LoadAsset<GameObject>("Menu"));
             menu.name = "InfoMenu";
@@ -254,7 +258,7 @@ namespace GorillaInfoWatch.Behaviours
             Events.OnGetUserCosmetics += OnGetUserCosmetics;
             CosmeticsController.instance.OnCosmeticsUpdated += delegate ()
             {
-                CheckPlayer(NetworkSystem.Instance.LocalPlayer);
+                CheckPlayer(NetworkSystem.Instance.GetLocalPlayer());
             };
 
             Home.SetEntries([.. registry.Values]);
@@ -421,6 +425,11 @@ namespace GorillaInfoWatch.Behaviours
             return false;
         }
 
+        public T GetScreen<T>(bool registerFallback = true) where T : InfoWatchScreen
+        {
+            return (T)GetScreen(typeof(T), registerFallback);
+        }
+
         public InfoWatchScreen GetScreen(Type type, bool registerFallback = true)
         {
             return (registry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? registry[type] : null;
@@ -453,25 +462,49 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OpenNotification(Notification notification, bool digest)
         {
-            if (notification is null || notification.Opened || !notifications.Contains(notification))
+            if (notification is null || notification.Opened || !notifications.Contains(notification) || notification.Processing)
+            {
+                Logging.Warning($"OpenNotification \"{(notification is not null ? notification.DisplayText : "Null")}\"");
+                if (notification is not null)
+                {
+                    Logging.Warning($"Processing: {notification.Processing}");
+                    Logging.Warning($"Opened: {notification.Opened}");
+                    Logging.Warning($"Known: {notifications.Contains(notification)}");
+                    if (Inbox.Notifications.Contains(notification))
+                    {
+                        Logging.Info("Exists in inbox, correcting error");
+                        RefreshInbox();
+                    }
+                }
                 return;
+            }
 
             notification.Opened = true;
 
             if (digest && notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is InfoWatchScreen screen)
             {
-                if (notification.Screen.Task is Task task)
+                try
                 {
-                    TaskAwaiter awaiter = task.GetAwaiter();
-                    awaiter.OnCompleted(delegate ()
+                    if (notification.Screen.Task is Task task)
+                    {
+                        notification.Processing = true;
+                        TaskAwaiter awaiter = task.GetAwaiter();
+                        awaiter.OnCompleted(delegate ()
+                        {
+                            notification.Processing = false;
+                            SwitchScreen(screen);
+                        });
+                        awaiter.GetResult();
+                    }
+                    else
                     {
                         SwitchScreen(screen);
-                    });
-                    awaiter.GetResult();
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    SwitchScreen(screen);
+                    Logging.Fatal($"Unable to open notification \"{notification.DisplayText}\"");
+                    Logging.Error(ex);
                 }
             }
 
@@ -516,7 +549,7 @@ namespace GorillaInfoWatch.Behaviours
             }
             else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
             {
-                Events.SendNotification(new("A significant user has joined", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                Events.SendNotification(new("A notible user has joined", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
                     if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
                         PlayerInfoPage.Container = playerRig;
@@ -536,7 +569,7 @@ namespace GorillaInfoWatch.Behaviours
             }
             else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
             {
-                Events.SendNotification(new("A significant user has left", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationNegative));
+                Events.SendNotification(new("A notible user has left", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationNegative));
             }
 
             CheckPlayer(player);
@@ -600,7 +633,7 @@ namespace GorillaInfoWatch.Behaviours
             if (CheckPlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
             {
                 string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
-                Events.SendNotification(new($"A significant user was detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                Events.SendNotification(new($"A notible cosmetic is detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
                     if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
                         PlayerInfoPage.Container = playerRig;

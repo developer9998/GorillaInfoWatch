@@ -2,6 +2,7 @@ using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using PlayFab.ClientModels;
 using System.Collections.Generic;
@@ -59,19 +60,43 @@ namespace GorillaInfoWatch.Screens
 
         public override ScreenContent GetContent()
         {
+            LineBuilder lines = new();
+
+            // FriendSystem.PlayerPrivacy is more readable to users
+            FriendSystem.PlayerPrivacy localPlayerPrivacy = (FriendSystem.PlayerPrivacy)(int)FriendBackendController.Instance.MyPrivacyState;
+
+            lines.Add($"Privacy: {localPlayerPrivacy}", new Widget_SnapSlider((int)localPlayerPrivacy, 0, 2, selection =>
+            {
+                FriendBackendController.Instance.lastPrivacyState = (FriendBackendController.PrivacyState)selection;
+                FriendBackendController.Instance.SetPrivacyState((FriendBackendController.PrivacyState)selection);
+                SetContent();
+            })
+            {
+                Colour = GradientUtils.FromColour(Gradients.Green.Evaluate(0), Gradients.Red.Evaluate(0))
+            });
+            lines.Skip();
+
             if (FriendsList == null)
-                return new LineBuilder("<align=\"center\">Retrieving friends list</align>");
+            {
+                lines.Add("<align=\"center\">Refreshing friends list</align>");
+                return lines;
+            }
 
             var list = FriendsList.Where(friend => friend is not null).Select(friend => friend.Presence).ToArray();
 
             if (list.Length == 0)
-                return new LineBuilder("<align=\"center\">No friends are currently active</align>");
+            {
+                lines.Add("<align=\"center\">No friends were found</align>");
+                return lines;
+            }
 
-            var lines = new LineBuilder($"<align=\"center\">Showing {list.Length} friends:</align>");
+            lines.Add($"<align=\"center\">Showing {list.Length} friends:</align>");
 
+            // TODO: clean this up, cuz oh my buckets!
             foreach (FriendBackendController.FriendPresence presence in list)
             {
                 GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(presence.FriendLinkId, null);
+
                 if (accountInfo is null)
                     continue;
 

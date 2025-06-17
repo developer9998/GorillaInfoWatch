@@ -7,9 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using PushButton = GorillaInfoWatch.Behaviours.UI.PushButton;
-using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSlider;
-using Switch = GorillaInfoWatch.Behaviours.UI.Switch;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
@@ -132,7 +129,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                         {
                             //Logging.Info("Clearing existing widget");
                             if (currentWidget.gameObject is not null)
-                            { 
+                            {
                                 Destroy(currentWidget.gameObject);
                                 currentWidget.gameObject = null;
                             }

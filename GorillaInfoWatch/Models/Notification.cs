@@ -11,12 +11,12 @@ namespace GorillaInfoWatch.Models
         public InfoWatchSound Sound { get; } = sound;
         public ExternalScreen Screen { get; } = screen;
 
-        public bool Opened = false, Expired = false;
+        public bool Opened = false, Processing = false;
 
         public string DisplayText = content;
 
         public DateTime Created = DateTime.Now;
-        public string RoomName = NetworkSystem.Instance.InRoom ? NetworkSystem.Instance.RoomName : string.Empty;
+        public string RoomName = NetworkSystem.Instance.InRoom ? NetworkSystem.Instance.RoomName : null;
         public bool SessionIsPrivate = NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate;
 
         public Notification(string head, string body, float duration, InfoWatchSound sound, ExternalScreen screen = null) : this(string.Format("<size=6>{0}:</size><br><b>{1}</b>", head, body), duration, sound, screen)

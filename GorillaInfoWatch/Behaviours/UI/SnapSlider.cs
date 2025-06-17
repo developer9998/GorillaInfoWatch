@@ -1,25 +1,26 @@
-﻿using System;
+﻿using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
+using System;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
-    // TODO: make sliders based on a generic class, int for snap, float for smooth
-    /// <summary>
-    /// A snap slider, used commonly alongside a WidgetSnapSlider, though can be used down to the OnApplied action
-    /// </summary>
     public class SnapSlider : MonoBehaviour
     {
         public Action OnApplied;
 
-        public Models.Widgets.Widget_SnapSlider Widget;
+        public Widget_SnapSlider Widget;
 
         private BoxCollider collider;
+        private MeshRenderer renderer;
 
         private Transform needle, min, max;
 
         private GorillaTriggerColliderHandIndicator index_finger;
 
         public static SnapSlider Current;
+
+        private Gradient colour;
 
         public void Awake()
         {
@@ -28,26 +29,25 @@ namespace GorillaInfoWatch.Behaviours.UI
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
 
             needle = transform.Find("Button");
+
+            renderer = needle.GetComponent<MeshRenderer>();
+            renderer.materials[1] = new Material(renderer.materials[1]);
+
             min = transform.Find("Min");
             max = transform.Find("Max");
+
+            colour = Gradients.Button;
         }
 
-        public void ApplySlider(Models.Widgets.Widget_SnapSlider widget)
+        public void ApplySlider(Widget_SnapSlider widget)
         {
-            if (Widget == widget && widget != null) return;
-
-            // prepare transition
-            if (Widget != null && Widget.Command != null && widget.Command != null && Widget.Command.Target == widget.Command.Target && Widget.Command.Method == widget.Command.Method)
-            {
-                widget.Value = Widget.Value;
-            }
-
             // apply transition
             Widget = widget;
             if (Widget != null)
             {
                 gameObject.SetActive(true);
                 OnApplied = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
+                colour = Widget.Colour ?? Gradients.Button;
                 SetNeedlePosition();
                 return;
             }
@@ -99,7 +99,9 @@ namespace GorillaInfoWatch.Behaviours.UI
         private void SetNeedlePosition()
         {
             int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
-            needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, Widget.Value / (float)split);
+            float value = Widget.Value / (float)split;
+            needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, value);
+            renderer.materials[1].color = colour.Evaluate(value);
         }
     }
 }

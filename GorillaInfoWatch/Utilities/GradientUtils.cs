@@ -18,7 +18,10 @@ namespace GorillaInfoWatch.Utilities
             if (colours.Count == 1)
                 colours.Add(colours.First());
 
-            Gradient gradient = new();
+            Gradient gradient = new()
+            {
+                mode = GradientMode.PerceptualBlend
+            };
 
             List<GradientColorKey> colourKeys = [];
             List<GradientAlphaKey> alphaKeys = [];

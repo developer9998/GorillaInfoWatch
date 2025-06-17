@@ -31,6 +31,12 @@ namespace GorillaInfoWatch.Models
         FingerPainter,
         Illustrator,
         ForestGuideStick,
-        InfoWatch
+        InfoWatch,
+        TemplateHead,
+        TemplateFace,
+        Ignore,
+        Image,
+        Bell,
+        BellRing
     }
 }

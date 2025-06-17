@@ -5,6 +5,7 @@ using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace GorillaInfoWatch.Screens
@@ -46,7 +47,7 @@ namespace GorillaInfoWatch.Screens
 
             var entries = Mod.Instance.Config.Keys.Select(key => Mod.Instance.Config[key]);
 
-            foreach(var configEntry in entries)
+            foreach (var configEntry in entries)
             {
                 Type settingType = configEntry.SettingType;
 
@@ -60,18 +61,12 @@ namespace GorillaInfoWatch.Screens
                 if (configEntry.SettingType.IsEnum)
                 {
                     var names = Enum.GetNames(settingType);
-                    widgets.Add(new Widget_SnapSlider(0, names.Length - 1, ConfigureEntry, configEntry)
-                    {
-                        Value = Array.IndexOf(names, configEntry.SettingType) is int value && value != -1 ? value : 0
-                    });
+                    widgets.Add(new Widget_SnapSlider(Array.IndexOf(names, configEntry.GetSerializedValue()) is int value && value != -1 ? value : 0, 0, names.Length - 1, ConfigureEntry, configEntry));
                 }
                 else if (configEntry.SettingType == typeof(int))
                 {
                     if (configEntry.Description.AcceptableValues is AcceptableValueRange<int> range)
-                        widgets.Add(new Widget_SnapSlider(range.MinValue, range.MaxValue, ConfigureEntry, configEntry)
-                        {
-                            Value = int.Parse(configEntry.BoxedValue.ToString(), System.Globalization.CultureInfo.InvariantCulture)
-                        });
+                        widgets.Add(new Widget_SnapSlider(int.Parse(configEntry.BoxedValue.ToString(), CultureInfo.InvariantCulture), range.MinValue, range.MaxValue, ConfigureEntry, configEntry));
                     else
                     {
                         // TODO: add +/- buttons for adjusting integer
@@ -86,7 +81,7 @@ namespace GorillaInfoWatch.Screens
 
                 lines.Skip();
 
-                lines.Add($"Value: {configEntry.BoxedValue}", widgets);
+                lines.Add($"Value: {configEntry.GetSerializedValue()}", widgets);
 
                 pages.AddPage(configEntry.Definition.Section, lines);
             }
