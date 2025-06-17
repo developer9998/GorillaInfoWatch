@@ -2,6 +2,7 @@
 using GorillaInfoWatch.Models.Widgets;
 using System;
 using UnityEngine;
+using HandIndicator = GorillaTriggerColliderHandIndicator;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
@@ -13,15 +14,16 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private BoxCollider collider;
         private MeshRenderer renderer;
+        private Material material;
 
         private Gradient colour;
-        // private Color colour, bumped_colour;
 
         private bool bumped;
 
         public static float PressTime;
 
-        private float currentValue = -1, targetValue;
+        private float? currentValue = null;
+        private float targetValue;
 
         public void Awake()
         {
@@ -30,40 +32,35 @@ namespace GorillaInfoWatch.Behaviours.UI
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
 
             renderer = GetComponent<MeshRenderer>();
-            renderer.materials[1] = new Material(renderer.materials[1]);
+            material = new Material(renderer.materials[1]);
+            renderer.materials[1] = material;
 
             colour = Gradients.Button;
         }
 
         public void ApplyButton(Widget_PushButton widget)
         {
-            // prepare transition
-            if (Widget is not null)
-            {
-                bumped = false;
-                renderer.materials[1].color = colour.Evaluate(0);
-            }
-
-            // apply transition
-
             if (widget is not null)
             {
                 Widget = widget;
                 gameObject.SetActive(true);
-                OnPressed = () => Widget.Command?.Invoke(Widget.Parameters ?? []);
+                OnPressed = delegate ()
+                {
+                    Widget.Command?.Invoke(Widget.Parameters ?? []);
+                };
+
                 colour = Widget.Colour ?? Gradients.Button;
 
-                targetValue = bumped ? 1 : 0;
-                if (currentValue == -1)
-                {
+                if (!currentValue.HasValue)
                     currentValue = targetValue;
-                    renderer.materials[1].color = colour.Evaluate(currentValue);
-                }
+
+                material.color = colour.Evaluate(currentValue.GetValueOrDefault(0));
 
                 return;
             }
 
             Widget = null;
+            currentValue = null;
             gameObject.SetActive(false);
             OnPressed = null;
             OnReleased = null;
@@ -71,16 +68,16 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnDisable()
         {
-            currentValue = -1;
+            currentValue = null;
         }
 
-        public void LateUpdate()
+        public void Update()
         {
-            if (currentValue != targetValue)
+            if (currentValue.HasValue && currentValue != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.2f);
-                float animatedValue = AnimationCurves.EaseInSine.Evaluate(currentValue);
-                renderer.materials[1].color = colour.Evaluate(animatedValue);
+                currentValue = Mathf.MoveTowards(currentValue.Value, targetValue, Time.deltaTime / 0.1f);
+                float animatedValue = Mathf.Clamp01(AnimationCurves.EaseInSine.Evaluate(currentValue.Value));
+                material.color = colour.Evaluate(animatedValue);
             }
 
             if (bumped && Time.realtimeSinceStartup > PressTime)
@@ -93,7 +90,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (PressTime > Time.realtimeSinceStartup || !collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) || component.isLeftHand == InfoWatch.LocalWatch.InLeftHand)
+            if (PressTime > Time.realtimeSinceStartup || !collider.TryGetComponent(out HandIndicator component) || component.isLeftHand == InfoWatch.LocalWatch.InLeftHand)
                 return;
 
             PressTime = Time.realtimeSinceStartup + 0.25f;
@@ -103,7 +100,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             bumped = true;
             targetValue = 1;
             currentValue = 1;
-            renderer.materials[1].color = colour.Evaluate(targetValue);
+            material.color = colour.Evaluate(targetValue);
 
             Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
             GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);

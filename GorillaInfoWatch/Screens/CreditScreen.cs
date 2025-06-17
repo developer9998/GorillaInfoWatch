@@ -27,7 +27,7 @@ namespace GorillaInfoWatch.Screens
             lines.Add(string.Format(creditFormat, "Cyan", "cyangt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Cyan)));
             lines.Add(string.Format(creditFormat, "Deactivated", "knownperson", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Deactivated)));
             lines.Add(string.Format(creditFormat, "Will", "will_0x40", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Will)));
-            lines.Add(string.Format(creditFormat, "Lapis", "lapisgt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Lapis)));
+            lines.Add(string.Format(creditFormat, "Lapis", "lapisgit", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Lapis)));
             lines.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Kronicahl)));
 
             return lines;

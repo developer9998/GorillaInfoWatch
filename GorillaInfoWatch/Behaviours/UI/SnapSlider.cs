@@ -13,6 +13,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private BoxCollider collider;
         private MeshRenderer renderer;
+        private Material material;
 
         private Transform needle, min, max;
 
@@ -31,7 +32,8 @@ namespace GorillaInfoWatch.Behaviours.UI
             needle = transform.Find("Button");
 
             renderer = needle.GetComponent<MeshRenderer>();
-            renderer.materials[1] = new Material(renderer.materials[1]);
+            material = new(renderer.materials[1]);
+            renderer.materials[1] = material;
 
             min = transform.Find("Min");
             max = transform.Find("Max");
@@ -41,10 +43,10 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void ApplySlider(Widget_SnapSlider widget)
         {
-            // apply transition
-            Widget = widget;
-            if (Widget != null)
+            if (widget is not null)
             {
+                Widget = widget;
+
                 gameObject.SetActive(true);
                 OnApplied = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
                 colour = Widget.Colour ?? Gradients.Button;
@@ -52,6 +54,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 return;
             }
 
+            Widget = null;
             gameObject.SetActive(false);
             OnApplied = null;
         }
@@ -101,7 +104,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
             float value = Widget.Value / (float)split;
             needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, value);
-            renderer.materials[1].color = colour.Evaluate(value);
+            material.color = colour.Evaluate(value);
         }
     }
 }

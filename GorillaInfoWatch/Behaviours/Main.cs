@@ -225,7 +225,7 @@ namespace GorillaInfoWatch.Behaviours
             button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
             button_return_screen.OnPressed = () =>
             {
-                SwitchScreen(CurrentScreen.CallerType);
+                SwitchScreen(history.Last());
             };
 
             button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
@@ -289,7 +289,7 @@ namespace GorillaInfoWatch.Behaviours
             else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
             newScreen.enabled = true;
-            newScreen.CallerType = history.Count > 0 ? history.Last().GetType() : null;
+            //newScreen.CallerType = history.Count > 0 ? history.Last().GetType() : null;
 
             newScreen.RequestScreenSwitch += SwitchScreen;
             newScreen.RequestSetLines += delegate (bool includeWidgets)

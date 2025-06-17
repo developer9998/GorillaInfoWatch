@@ -42,27 +42,29 @@ namespace GorillaInfoWatch.Screens
 
             if (!NetworkSystem.Instance.InRoom)
             {
-                Description = string.Empty;
-
-                lines.Add("You aren't connected to a room!");
+                lines.Add("<align=center>You are not in a Room!</align>");
                 lines.Skip();
-                lines.Add("Join a room to view scoreboard.");
+                lines.Add("Join a Room to access the <u>Scoreboard</u>.");
 
                 return lines;
             }
 
-            Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{NetworkSystem.Instance.config.MaxPlayerCount} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
+            string gameModeString = NetworkSystem.Instance.GameModeString;
+            string gameTypeName = GameMode.FindGameModeInString(gameModeString);
 
-            var hashSet = new HashSet<NetPlayer>(NetworkSystem.Instance.AllNetPlayers);
-            hashSet.UnionWith(includedPlayers);
+            lines.Add($"Room: {(NetworkSystem.Instance.SessionIsPrivate ? "-PRIVATE-" : NetworkSystem.Instance.RoomName)} ({NetworkSystem.Instance.RoomPlayerCount} of {RoomSystem.GetRoomSize(gameModeString)})");
+            lines.Add($"Game Mode: {(GameMode.gameModeKeyByName.TryGetValue(gameTypeName, out int key) && GameMode.gameModeTable.TryGetValue(key, out GorillaGameManager manager) ? manager.GameModeName() : gameTypeName)}");
+            lines.Skip();
 
-            var players_in_room = hashSet.ToList();
+            //Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{NetworkSystem.Instance.config.MaxPlayerCount} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
+
+            var players_in_room = NetworkSystem.Instance.AllNetPlayers.ToHashSet().ToList();
             players_in_room.Sort((x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
 
             foreach (NetPlayer player in players_in_room)
             {
                 if (player == null || player.IsNull) continue;
-                lines.Add((GorillaComputer.instance.friendJoinCollider.playerIDsCurrentlyTouching.Contains(player.UserId) || !VRRigCache.Instance.TryGetVrrig(player, out RigContainer container)) ? player.NickName.SanitizeName() : container.Rig.playerNameVisible, new Widget_PlayerSymbol(player), new Widget_PlayerSpeaker(player), new Widget_SignificantSymbol(player), new Widget_PushButton(TryInspectPlayer, player));
+                lines.Add(string.IsNullOrEmpty(player.SanitizedNickName) ? player.NickName.SanitizeName() : player.SanitizedNickName, new Widget_PlayerSymbol(player), new Widget_PlayerSpeaker(player), new Widget_SignificantSymbol(player), new Widget_PushButton(TryInspectPlayer, player));
             }
 
             return lines;

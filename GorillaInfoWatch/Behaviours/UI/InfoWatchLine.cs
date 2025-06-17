@@ -1,5 +1,4 @@
-﻿using GorillaExtensions;
-using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using System;
@@ -7,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using GorillaExtensions;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
@@ -42,7 +42,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Build(ScreenLine line, bool applyWidgets)
         {
-            // Logging.Info($"Text: \"{line.Text}\" Apply Widgets: {applyWidgets}");
+            Logging.Info($"Text: \"{line.Text}\" Apply Widgets: {applyWidgets}");
             Text.text = line.Text;
 
             if (applyWidgets)
@@ -51,16 +51,16 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                 if (newWidgets is null)
                 {
-                    Logging.Fatal("newWidgets is null!!! It should at least be an empty collection");
+                    //Logging.Fatal("newWidgets is null!!! It should at least be an empty collection");
                     return;
                 }
 
                 int intake = newWidgets.Count - currentWidgets.Count;
                 if (intake > 0)
                 {
-                    Logging.Info($"Extending widget list +{intake}");
+                    //Logging.Info($"Extending widget list +{intake}");
                     currentWidgets.AddRange(Enumerable.Repeat<Widget_Base>(null, intake));
-                    Logging.Info($"Total count of {currentWidgets.Count}");
+                    //Logging.Info($"Total count of {currentWidgets.Count}");
                 }
 
                 for (int i = 0; i < currentWidgets.Count; i++)
@@ -71,37 +71,40 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                     if (newWidget is null)
                     {
-                        Logging.Info($"{i} : null widget");
+                        //Logging.Info($"{i} : null widget");
 
                         if (currentWidget is not null)
                         {
-                            Logging.Info("Clearing existing widget");
-                            if (currentWidget.gameObject is not null)
-                            {
-                                Destroy(currentWidget.gameObject);
-                                currentWidget.gameObject = null;
-                            }
+                           // Logging.Info("Clearing existing widget");
+                            
                             if (regularWidgets.Contains(currentWidget))
                             {
                                 currentWidget.Behaviour_Disable();
                                 regularWidgets.Remove(currentWidget);
                             }
+
+                            if (currentWidget.gameObject is not null && currentWidget.gameObject)
+                            {
+                                Destroy(currentWidget.gameObject);
+                                currentWidget.gameObject = null;
+                            }
+
                             currentWidgets[i] = null;
                         }
 
                         continue;
                     }
 
-                    bool equivalent = currentWidget is not null && newWidget.GetType() == currentWidget.GetType() && newWidget.Equals(currentWidget);
+                    bool equivalent = currentWidget is not null && currentWidget.gameObject is not null && currentWidget.gameObject && newWidget.GetType() == currentWidget.GetType();// && newWidget.Equals(currentWidget);
 
-                    Logging.Info($"add {i} : {newWidget.GetType().Name}");
-                    Logging.Info($"pos {i} : {(currentWidget is not null && currentWidget.gameObject is not null ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
+                    //Logging.Info($"add {i} : {newWidget.GetType().Name}");
+                    //Logging.Info($"pos {i} : {(currentWidget != null && currentWidget.gameObject is not null && currentWidget.gameObject ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
 
                     if (equivalent)
                     {
                         //Destroy(newWidget.gameObject);
                         newWidget.gameObject = currentWidget.gameObject;
-                        Logging.Info(newWidget.gameObject.name);
+                        //Logging.Info(newWidget.gameObject.name);
                         newWidget.gameObject.SetActive(true);
 
                         if (regularWidgets.Contains(currentWidget))
@@ -128,15 +131,17 @@ namespace GorillaInfoWatch.Behaviours.UI
                         if (currentWidget is not null && currentWidget.gameObject is not null)
                         {
                             //Logging.Info("Clearing existing widget");
-                            if (currentWidget.gameObject is not null)
-                            {
-                                Destroy(currentWidget.gameObject);
-                                currentWidget.gameObject = null;
-                            }
+                            
                             if (regularWidgets.Contains(currentWidget))
                             {
                                 currentWidget.Behaviour_Disable();
                                 regularWidgets.Remove(currentWidget);
+                            }
+
+                            if (currentWidget.gameObject is not null && currentWidget.gameObject)
+                            {
+                                Destroy(currentWidget.gameObject);
+                                currentWidget.gameObject = null;
                             }
                         }
 
@@ -168,7 +173,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                         }
                         finally
                         {
-                            Logging.Info("Modified widget");
+                            //Logging.Info("Modified widget");
                         }
                     }
                 }

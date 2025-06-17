@@ -50,36 +50,34 @@ namespace GorillaInfoWatch.Screens
 
                 if (notification.Screen is not null)
                 {
-                    lines.Add(content, new Widget_PushButton(OpenNotification, notification, true)
+                    lines.Add(content, new Widget_PushButton(OpenFunction, notification, true)
                     {
                         Colour = Gradients.Green
-                    }, new Widget_PushButton(OpenNotification, notification, false)
+                    }, new Widget_PushButton(OpenFunction, notification, false)
                     {
                         Colour = Gradients.Red
                     });
                 }
                 else
                 {
-                    lines.Add(content, new Widget_PushButton(OpenNotification, notification, true));
+                    lines.Add(content, new Widget_PushButton(OpenFunction, notification, true));
                 }
             }
 
             return lines;
         }
 
-        public void OpenNotification(object[] args)
+        public void OpenFunction(object[] args)
         {
+            Logging.Info(string.Join(", ", args.Select(arg => arg.GetType().Name)));
             if (args.ElementAtOrDefault(0) is Notification notification && args.ElementAtOrDefault(1) is bool digest)
                 OpenNotification(notification, digest);
         }
 
         public void OpenNotification(Notification notification, bool digest)
         {
-            if (Notifications.Contains(notification))
-            {
-                Logging.Info($"OpenNotification \"{notification.DisplayText}\"");
-                Events.OpenNotification(notification, digest);
-            }
+            Logging.Info($"OpenNotification \"{notification.DisplayText}\"");
+            Events.OpenNotification(notification, digest);
         }
     }
 }

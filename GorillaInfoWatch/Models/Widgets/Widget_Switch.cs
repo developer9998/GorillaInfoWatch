@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Behaviours.UI;
+﻿using GorillaExtensions;
+using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Utilities;
 using System;
 using UnityEngine;
@@ -27,7 +28,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null)
+            if (gameObject.IsNull())
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
                 gameObject.name = "Switch";

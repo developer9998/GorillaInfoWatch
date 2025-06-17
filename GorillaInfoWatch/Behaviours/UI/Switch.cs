@@ -15,11 +15,10 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private MeshRenderer renderer;
 
-        //private Color unpressedColour, pressedColour;
-
         private bool bumped;
 
-        private float currentValue = -1, targetValue;
+        private float? currentValue;
+        private float targetValue;
 
         public void Awake()
         {
@@ -46,34 +45,34 @@ namespace GorillaInfoWatch.Behaviours.UI
                 OnPressed = () => currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
                 bumped = widget.Value;
 
-                // currentValue = bumped ? 1 : 0;
-                targetValue = bumped ? 1 : 0;
-                if (currentValue == -1)
-                {
+                targetValue = Convert.ToInt32(bumped);
+
+                if (!currentValue.HasValue)
                     currentValue = targetValue;
-                    needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
-                    renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
-                }
 
-                Update();
-
-                // needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue);
-                // renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue);
+                needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue.Value);
+                renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue.Value);
 
                 return;
             }
 
             gameObject.SetActive(false);
+            currentValue = null;
             OnPressed = null;
             OnReleased = null;
         }
 
+        public void OnDisable()
+        {
+            currentValue = null;
+        }
+
         public void Update()
         {
-            if (currentValue != targetValue)
+            if (currentValue.HasValue && currentValue != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.15f);
-                float animatedValue = AnimationCurves.EaseInOutSine.Evaluate(currentValue);
+                currentValue = Mathf.MoveTowards(currentValue.Value, targetValue, Time.deltaTime / 0.15f);
+                float animatedValue = AnimationCurves.EaseInOutSine.Evaluate(currentValue.Value);
                 needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, animatedValue);
                 renderer.materials[1].color = currentWidget.Colour.Evaluate(animatedValue);
             }
@@ -88,9 +87,10 @@ namespace GorillaInfoWatch.Behaviours.UI
             {
                 PushButton.PressTime = Time.realtimeSinceStartup + 0.25f;
 
-                // base functionality
                 bumped ^= true;
-                targetValue = bumped ? 1 : 0;
+                targetValue = Convert.ToInt32(bumped);
+                currentValue = currentValue.GetValueOrDefault(0);
+                Update();
 
                 Singleton<Main>.Instance.PressSwitch(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);

@@ -19,8 +19,6 @@ namespace GorillaInfoWatch.Models
 
         public event Action<Type> RequestScreenSwitch;
 
-        public Type CallerType;
-
         public void ReturnToHomePage() => SetScreen<HomeScreen>();
 
         public void SetScreen<T>() where T : InfoWatchScreen => SetScreen(typeof(T));
