@@ -17,18 +17,18 @@ namespace GorillaInfoWatch.Screens
 
         public List<FriendBackendController.Friend> FriendsList;
 
-        public override void OnScreenOpen()
+        public override void OnShow()
         {
             FriendSystem.Instance.OnFriendListRefresh += OnGetFriendsReceived;
             RequestFriendsList();
         }
 
-        public override void OnScreenClose()
+        public override void OnClose()
         {
             FriendSystem.Instance.OnFriendListRefresh -= OnGetFriendsReceived;
         }
 
-        public override void OnScreenRefresh()
+        public override void OnRefresh()
         {
             RequestFriendsList();
         }

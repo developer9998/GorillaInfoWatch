@@ -41,28 +41,36 @@ namespace GorillaInfoWatch.Screens
             {
                 PluginInfo info = _modEntries[i];
 
+                Widget_PushButton pushButton = new(OpenModInfo, info);
+
                 if (IsEligible(info))
                 {
                     bool isEnabled = info.Instance.enabled;
-                    lines.Add(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Widget_Switch(OnButtonSelect, i)
-                    {
-                        Value = isEnabled
-                    });
+                    lines.Add(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Widget_Switch(isEnabled, ToggleMod, i), pushButton);
                     continue;
                 }
 
-                lines.Add(info.Metadata.Name);
+                lines.Add(info.Metadata.Name, pushButton);
             }
 
             return lines;
         }
 
-        private void OnButtonSelect(bool value, object[] args)
+        private void ToggleMod(bool value, object[] args)
         {
             if (args[0] is int mod_index)
             {
                 _modEntries[mod_index].Instance.enabled = value;
                 SetText();
+            }
+        }
+
+        private void OpenModInfo(object[] args)
+        {
+            if (args.ElementAtOrDefault(0) is PluginInfo info)
+            {
+                ModInfoPage.Mod = info;
+                SetScreen<ModInfoPage>();
             }
         }
     }

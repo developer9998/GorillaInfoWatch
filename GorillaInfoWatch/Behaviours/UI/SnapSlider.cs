@@ -7,7 +7,7 @@ namespace GorillaInfoWatch.Behaviours.UI
     /// <summary>
     /// A snap slider, used commonly alongside a WidgetSnapSlider, though can be used down to the OnApplied action
     /// </summary>
-    public class SnapSliderComponent : MonoBehaviour
+    public class SnapSlider : MonoBehaviour
     {
         public Action OnApplied;
 
@@ -19,7 +19,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private GorillaTriggerColliderHandIndicator index_finger;
 
-        public static SnapSliderComponent Current;
+        public static SnapSlider Current;
 
         public void Awake()
         {
@@ -47,7 +47,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             if (Widget != null)
             {
                 gameObject.SetActive(true);
-                OnApplied = () => Widget.Command?.Invoke(Widget.Value);
+                OnApplied = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
                 SetNeedlePosition();
                 return;
             }
@@ -58,7 +58,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerStay(Collider other)
         {
-            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > PushButtonComponent.PressTime)
+            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > PushButton.PressTime)
             {
                 Vector3 local = transform.InverseTransformPoint(component.transform.position);
                 float clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
@@ -92,7 +92,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             {
                 index_finger = null;
                 Current = null;
-                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.5f;
+                PushButton.PressTime = Time.realtimeSinceStartup + 0.5f;
             }
         }
 

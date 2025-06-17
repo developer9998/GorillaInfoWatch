@@ -30,7 +30,7 @@ namespace GorillaInfoWatch.Screens
 
             foreach (var notification in Notifications)
             {
-                string content = string.Format("<line-height=45%><size=3.5>{0} in {1}</size><br>{2}", notification.Created.ToLongTimeString(), notification.SessionIsPrivate ? "private room" : notification.RoomName, notification.DisplayText);
+                string content = string.Format("<line-height=45%><size=65%>{0} in {1}</size><br>{2}", notification.Created.ToLongTimeString(), notification.SessionIsPrivate ? "private room" : notification.RoomName, notification.DisplayText);
 
                 if (notification.Screen is not null)
                 {

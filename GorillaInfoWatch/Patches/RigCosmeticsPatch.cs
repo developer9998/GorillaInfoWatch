@@ -1,5 +1,5 @@
-﻿using HarmonyLib;
-using GorillaInfoWatch.Extensions;
+﻿using GorillaInfoWatch.Extensions;
+using HarmonyLib;
 
 namespace GorillaInfoWatch.Patches
 {

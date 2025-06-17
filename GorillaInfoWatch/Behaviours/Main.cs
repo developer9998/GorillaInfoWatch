@@ -19,9 +19,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using InfoWatchScreen = GorillaInfoWatch.Models.InfoWatchScreen;
-using PushButton = GorillaInfoWatch.Behaviours.UI.PushButtonComponent;
+using PushButton = GorillaInfoWatch.Behaviours.UI.PushButton;
 using Random = UnityEngine.Random;
-using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSliderComponent;
+using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -145,7 +145,7 @@ namespace GorillaInfoWatch.Behaviours
 
             figures = Array.ConvertAll(data.Figures, figure => (FigureSignificance)figure);
             cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemSignificance)item);
-            cosmetics = [.. cosmetics, new(InfoWatchSymbol.OpenSpeaker, "LHAAC.")]; // quick test for cosmetic recodnizion
+            // cosmetics = [.. cosmetics, new(InfoWatchSymbol.OpenSpeaker, "LHAAC.")]; // quick test for cosmetic recodnizion
             watch = new(InfoWatchSymbol.InfoWatch);
             verified = new(InfoWatchSymbol.Verified);
 
@@ -229,7 +229,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (CurrentScreen is InfoWatchScreen screen)
                 {
-                    screen.OnScreenRefresh();
+                    screen.OnRefresh();
                     RefreshScreen();
                 }
             };
@@ -251,6 +251,7 @@ namespace GorillaInfoWatch.Behaviours
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
             Events.OnCompleteQuest += OnQuestCompleted;
+            Events.OnGetUserCosmetics += OnGetUserCosmetics;
             CosmeticsController.instance.OnCosmeticsUpdated += delegate ()
             {
                 CheckPlayer(NetworkSystem.Instance.LocalPlayer);
@@ -271,7 +272,9 @@ namespace GorillaInfoWatch.Behaviours
 
                 CurrentScreen.enabled = false;
 
-                CurrentScreen.OnScreenClose();
+                CurrentScreen.OnClose();
+
+                CurrentScreen.Content = null;
 
                 if (history.Count == 0 || history.Last() != newScreen) history.Add(CurrentScreen);
             }
@@ -285,10 +288,15 @@ namespace GorillaInfoWatch.Behaviours
             newScreen.CallerType = history.Count > 0 ? history.Last().GetType() : null;
 
             newScreen.RequestScreenSwitch += SwitchScreen;
-            newScreen.RequestSetLines += RefreshScreen;
+            newScreen.RequestSetLines += delegate (bool includeWidgets)
+            {
+                newScreen.Content = newScreen.GetContent();
+                RefreshScreen(includeWidgets);
+            };
 
-            newScreen.OnScreenOpen();
+            newScreen.OnShow();
 
+            newScreen.Content = newScreen.GetContent();
             RefreshScreen();
         }
 
@@ -305,11 +313,13 @@ namespace GorillaInfoWatch.Behaviours
             buttonOpenInbox.gameObject.SetActive(CurrentScreen == Home);
             button_return_screen.gameObject.SetActive(CurrentScreen != Home);
 
-            var content = CurrentScreen.GetContent() ?? new LineBuilder();
+            CurrentScreen.Content ??= CurrentScreen.GetContent();
+
+            ScreenContent content = CurrentScreen.Content ?? new LineBuilder();
 
             try
             {
-                int sectionCount = content.SectionCount();
+                int sectionCount = content.GetSectionCount();
                 CurrentScreen.Section = sectionCount != 0 ? CurrentScreen.Section.Wrap(0, sectionCount) : 0;
 
                 bool multiSection = sectionCount > 1;
@@ -317,7 +327,7 @@ namespace GorillaInfoWatch.Behaviours
                 button_prev_page.gameObject.SetActive(multiSection);
                 menu_page_text.text = multiSection ? $"{CurrentScreen.Section + 1}/{sectionCount}" : string.Empty;
 
-                string sectionTitle = content.SectionTitle(CurrentScreen.Section);
+                string sectionTitle = content.GetTitleOfSection(CurrentScreen.Section);
                 menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(sectionTitle) ? "" : $" - {sectionTitle}")}";
 
                 if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
@@ -338,7 +348,7 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                IEnumerable<ScreenLine> lines = content.SectionLines(CurrentScreen.Section);
+                IEnumerable<ScreenLine> lines = content.GetLinesAtSection(CurrentScreen.Section);
 
                 for (int i = 0; i < Constants.SectionCapacity; i++)
                 {
@@ -570,6 +580,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Logging.Info($"Removed significant player {player.NickName}");
                 Significance.Remove(player);
+                Events.OnSignificanceChanged?.SafeInvoke(player, null);
             }
 
             return false;
@@ -581,14 +592,9 @@ namespace GorillaInfoWatch.Behaviours
             Events.SendNotification(new("You completed a quest", quest.questType != QuestType.none ? quest.questName : "OH NO!", 5, InfoWatchSound.notificationNeutral));
         }
 
-        public void OnSignificanceChanged(NetPlayer player, PlayerSignificance significance)
+        public void OnGetUserCosmetics(VRRig rig)
         {
-
-        }
-
-        public void OnGetUserCosmetics(NetPlayer player)
-        {
-            if (player is null || player.IsNull || (!player.IsLocal && !player.InRoom))
+            if (rig.Creator is not NetPlayer player || player.IsNull)
                 return;
 
             if (CheckPlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
@@ -628,7 +634,7 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void PressSwitch(SwitchComponent button, bool isLeftHand)
+        public void PressSwitch(Switch button, bool isLeftHand)
         {
             if (button)
             {

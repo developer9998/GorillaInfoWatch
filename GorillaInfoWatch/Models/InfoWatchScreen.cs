@@ -11,23 +11,9 @@ namespace GorillaInfoWatch.Models
 
         public virtual string Description { get; set; }
 
-        /*
-        public LineBuilder LineBuilder
-        {
-            get => (Content is LineBuilder line_builder) ? line_builder : null;
-            set => Content = value;
-        }
-
-        public PageBuilder PageBuilder
-        {
-            get => (Content is PageBuilder page_builder) ? page_builder : null;
-            set => Content = value;
-        }
-        */
-
         public int Section = 0;
 
-        // public ScreenContent Content;
+        public ScreenContent Content;
 
         public event Action<bool> RequestSetLines;
 
@@ -45,19 +31,19 @@ namespace GorillaInfoWatch.Models
 
         public void SetContent(bool setWidgets = true) => RequestSetLines?.Invoke(setWidgets);
 
-        public virtual void OnScreenOpen()
+        public virtual void OnShow()
         {
-            Logging.Info($"OnScreenOpen: {Title} / {GetType().Name})");
+            Logging.Info($"Show: {Title} / {GetType().Name})");
         }
 
-        public virtual void OnScreenClose()
+        public virtual void OnClose()
         {
-            Logging.Info($"OnScreenClose: {Title} / {GetType().Name})");
+            Logging.Info($"Close: {Title} / {GetType().Name})");
         }
 
-        public virtual void OnScreenRefresh()
+        public virtual void OnRefresh()
         {
-            Logging.Info($"OnScreenRefresh: {Title} / {GetType().Name})");
+            Logging.Info($"Refresh: {Title} / {GetType().Name})");
         }
 
         public abstract ScreenContent GetContent();

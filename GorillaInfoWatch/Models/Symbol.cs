@@ -1,6 +1,5 @@
 using GorillaInfoWatch.Behaviours;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models
 {
@@ -9,12 +8,6 @@ namespace GorillaInfoWatch.Models
         public Sprite Sprite;
 
         public Color Colour = Color.white;
-
-        public Color Color
-        {
-            get => Colour;
-            set => Colour = value;
-        }
 
         public Material Material;
 
@@ -25,17 +18,10 @@ namespace GorillaInfoWatch.Models
 
         public Symbol(InfoWatchSymbol symbol)
         {
-            if (Main.Instance is Main main && main.Sprites.TryGetValue(symbol, out Sprite sprite))
+            if (Main.Instance.Sprites.TryGetValue(symbol, out Sprite sprite))
             {
                 Sprite = sprite;
             }
-        }
-
-        public void Set(Image image)
-        {
-            image.sprite = Sprite;
-            image.color = Colour;
-            image.material = Material;
         }
 
         public static implicit operator Symbol(Sprite sprite)

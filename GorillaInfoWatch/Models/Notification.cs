@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Models
 
             public ExternalScreen(Type screen, string displayText, Action action) : this(screen, displayText, Task.Run(action))
             {
-
+                // Must require a body
             }
         }
     }

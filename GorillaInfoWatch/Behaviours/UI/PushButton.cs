@@ -1,12 +1,11 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using System;
-using TMPro;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
-    public class PushButtonComponent : MonoBehaviour
+    public class PushButton : MonoBehaviour
     {
         public Action OnPressed, OnReleased;
 
@@ -79,12 +78,12 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (currentValue != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.15f);
+                currentValue = Mathf.MoveTowards(currentValue, targetValue, Time.deltaTime / 0.2f);
                 float animatedValue = AnimationCurves.EaseInSine.Evaluate(currentValue);
                 renderer.materials[1].color = colour.Evaluate(animatedValue);
             }
 
-            if (bumped && Time.unscaledTime > PressTime)
+            if (bumped && Time.realtimeSinceStartup > PressTime)
             {
                 bumped = false;
                 targetValue = 0;
@@ -103,7 +102,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             bumped = true;
             targetValue = 1;
-            currentValue = targetValue;
+            currentValue = 1;
             renderer.materials[1].color = colour.Evaluate(targetValue);
 
             Singleton<Main>.Instance.PressButton(this, component.isLeftHand);

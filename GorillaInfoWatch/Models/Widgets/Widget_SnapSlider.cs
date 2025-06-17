@@ -5,11 +5,13 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_SnapSlider(Action<int> action, int start = 0, int end = 100) : Widget_Base
+    public class Widget_SnapSlider(int start, int end, Action<int, object[]> action, params object[] parameters) : Widget_Base
     {
         public int Value;
 
-        public Action<int> Command = action;
+        public Action<int, object[]> Command = action;
+
+        public readonly object[] Parameters = parameters ?? [];
 
         public int StartValue = start;
 
@@ -19,19 +21,24 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public bool ReadOnly;
 
+        public Widget_SnapSlider(int start, int end, Action<int> action): this(start, end, (value, parameters) => action(value))
+        {
+            // Must declare a body
+        }
+
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (Object is null)
+            if (gameObject is null)
             {
-                Object = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
-                Object.name = "SnapSlider";
-                Object.SetActive(true);
+                gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
+                gameObject.name = "SnapSlider";
+                gameObject.SetActive(true);
             }
         }
 
         public override void Object_Modify()
         {
-            if (Object is not null && Object.TryGetComponent(out SnapSliderComponent component))
+            if (gameObject is not null && gameObject.TryGetComponent(out SnapSlider component))
                 component.ApplySlider(this);
         }
 

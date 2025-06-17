@@ -16,9 +16,9 @@ namespace GorillaInfoWatch.Screens
 
         public HashSet<NetPlayer> includedPlayers = [];
 
-        public override void OnScreenOpen()
+        public override void OnShow()
         {
-            base.OnScreenOpen();
+            base.OnShow();
 
             RoomSystem.JoinedRoomEvent += OnRoomJoined;
             RoomSystem.LeftRoomEvent += OnRoomLeft;
@@ -26,9 +26,9 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
         }
 
-        public override void OnScreenClose()
+        public override void OnClose()
         {
-            base.OnScreenClose();
+            base.OnClose();
 
             RoomSystem.JoinedRoomEvent -= OnRoomJoined;
             RoomSystem.LeftRoomEvent -= OnRoomLeft;

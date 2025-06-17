@@ -29,16 +29,16 @@ namespace GorillaInfoWatch.Screens
             friendColour = GradientUtils.FromColour(Gradients.Button.colorKeys[0].color, GFriendUtils.FriendColour);
         }
 
-        public override void OnScreenOpen()
+        public override void OnShow()
         {
-            base.OnScreenOpen();
+            base.OnShow();
 
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
         }
 
-        public override void OnScreenClose()
+        public override void OnClose()
         {
-            base.OnScreenClose();
+            base.OnClose();
 
             playerActorNum = -1;
             RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
@@ -88,18 +88,16 @@ namespace GorillaInfoWatch.Screens
             if (!player.IsLocal)
             {
                 basicInfoLines.Repeat(1);
-                basicInfoLines.Add(Container.Muted ? "Unmute" : "Mute", new Widget_Switch(OnMuteButtonClick, player)
+                basicInfoLines.Add(Container.Muted ? "Unmute" : "Mute", new Widget_Switch(Container.Muted, OnMuteButtonClick, player)
                 {
-                    Value = Container.Muted,
                     Colour = muteColour
                 });
 
                 if (GFriendUtils.FriendCompatible)
                 {
                     bool isFriend = GFriendUtils.IsFriend(player.UserId);
-                    basicInfoLines.Add(GFriendUtils.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Widget_Switch(OnFriendButtonClick, player)
+                    basicInfoLines.Add(GFriendUtils.IsFriend(player.UserId) ? "Remove Friend" : "Add Friend", new Widget_Switch(isFriend, OnFriendButtonClick, player)
                     {
-                        Value = isFriend,
                         Colour = friendColour
                     });
                 }

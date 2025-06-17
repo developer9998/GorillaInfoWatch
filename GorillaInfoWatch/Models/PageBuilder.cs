@@ -1,3 +1,4 @@
+using GorillaInfoWatch.Tools;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,28 +14,29 @@ namespace GorillaInfoWatch.Models
             Pages.Add((title, lines));
         }
 
-        public override int SectionCount()
+        public override int GetSectionCount()
             => Pages.Sum(page => Mathf.CeilToInt(page.lines.Count / (float)Constants.SectionCapacity));
 
-        public override string SectionTitle(int page)
-             => GetPageContent(page).page_title;
+        public override string GetTitleOfSection(int section)
+             => GetSection(section).title;
 
-        public override IEnumerable<ScreenLine> SectionLines(int page)
-            => GetPageContent(page).content;
+        public override IEnumerable<ScreenLine> GetLinesAtSection(int section)
+            => GetSection(section).lines;
 
-        public (string page_title, IEnumerable<ScreenLine> content) GetPageContent(int page)
+        public (string title, IEnumerable<ScreenLine> lines) GetSection(int section)
         {
-            int overall_page_count = 0;
+            int totalCount = 0;
             foreach (var (title, lines) in Pages)
             {
-                int section_page_count = Mathf.CeilToInt(lines.Count / (float)Constants.SectionCapacity);
-                if (overall_page_count + section_page_count > page)
+                int sectionCount = Mathf.CeilToInt(lines.Count / (float)Constants.SectionCapacity);
+                if (totalCount + sectionCount > section)
                 {
-                    int sub_page = page - overall_page_count;
-                    return (title, lines.Skip(sub_page * Constants.SectionCapacity).Take(Constants.SectionCapacity));
+                    int subSection = section - totalCount;
+                    return (title, lines.Skip(subSection * Constants.SectionCapacity).Take(Constants.SectionCapacity));
                 }
-                overall_page_count += section_page_count;
+                totalCount += sectionCount;
             }
+            Logging.Warning("Empty section");
             return (string.Empty, Enumerable.Empty<ScreenLine>());
         }
     }

@@ -9,6 +9,6 @@ namespace GorillaInfoWatch.Models
 
         public string Text = text;
 
-        public List<Widget_Base> Widgets = widgets != null && widgets.Count > 0 ? widgets : [];
+        public List<Widget_Base> Widgets = widgets is not null ? widgets : [];
     }
 }

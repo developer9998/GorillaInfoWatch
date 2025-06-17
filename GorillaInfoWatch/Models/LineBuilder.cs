@@ -37,13 +37,13 @@ namespace GorillaInfoWatch.Models
             return lines.Lines;
         }
 
-        public override int SectionCount()
+        public override int GetSectionCount()
             => Mathf.CeilToInt(Lines.Count / (float)Constants.SectionCapacity);
 
-        public override IEnumerable<ScreenLine> SectionLines(int section)
+        public override IEnumerable<ScreenLine> GetLinesAtSection(int section)
             => Lines.Skip(section * Constants.SectionCapacity).Take(Constants.SectionCapacity);
 
-        public override string SectionTitle(int section)
+        public override string GetTitleOfSection(int section)
             => string.Empty;
     }
 }

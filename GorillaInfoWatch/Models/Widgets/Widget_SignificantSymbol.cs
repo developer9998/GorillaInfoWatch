@@ -37,6 +37,8 @@ namespace GorillaInfoWatch.Models.Widgets
                     image.sprite = sprite;
                 }
             }
+
+            Events.OnSignificanceChanged += OnSignificanceChanged;
         }
 
         public override void Behaviour_Update()
@@ -44,6 +46,24 @@ namespace GorillaInfoWatch.Models.Widgets
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
                 playerRig = null;
+                image.enabled = false;
+            }
+        }
+
+        public override void Behaviour_Disable()
+        {
+            Events.OnSignificanceChanged -= OnSignificanceChanged;
+        }
+
+        public void OnSignificanceChanged(NetPlayer player, PlayerSignificance significance)
+        {
+            if (Player == player && significance is not null && Singleton<Main>.Instance.Sprites.TryGetValue(significance.Symbol, out Sprite sprite))
+            {
+                image.enabled = true;
+                image.sprite = sprite;
+            }
+            else if (Player == player)
+            {
                 image.enabled = false;
             }
         }

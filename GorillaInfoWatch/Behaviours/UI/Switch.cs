@@ -5,7 +5,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Behaviours.UI
 {
     [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
-    public class SwitchComponent : MonoBehaviour
+    public class Switch : MonoBehaviour
     {
         public Action OnPressed, OnReleased;
 
@@ -89,9 +89,9 @@ namespace GorillaInfoWatch.Behaviours.UI
             if (currentWidget is null)
                 return;
 
-            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > PushButtonComponent.PressTime)
+            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > PushButton.PressTime)
             {
-                PushButtonComponent.PressTime = Time.realtimeSinceStartup + 0.25f;
+                PushButton.PressTime = Time.realtimeSinceStartup + 0.25f;
 
                 // base functionality
                 bumped ^= true;

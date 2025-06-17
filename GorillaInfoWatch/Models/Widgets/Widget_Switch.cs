@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_Switch(Action<bool, object[]> action, params object[] parameters) : Widget_Base
+    public class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
     {
-        public bool Value;
+        public bool Value = value;
 
         public readonly Action<bool, object[]> Command = action;
 
@@ -15,29 +15,29 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public Gradient Colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
 
-        public Widget_Switch(Action<bool> action) : this((value, args) => action(value), [])
+        public Widget_Switch(bool value, Action<bool> action) : this(value, (value, args) => action(value), [])
         {
             // Must declare a body
         }
 
-        public Widget_Switch(Action<object[]> action, params object[] parameters) : this((value, args) => action(args), parameters)
+        public Widget_Switch(bool value, Action<object[]> action, params object[] parameters) : this(value, (value, args) => action(args), parameters)
         {
             // Must declare a body
         }
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (Object is null)
+            if (gameObject is null)
             {
-                Object = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
-                Object.name = "Switch";
-                Object.SetActive(true);
+                gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
+                gameObject.name = "Switch";
+                gameObject.SetActive(true);
             }
         }
 
         public override void Object_Modify()
         {
-            if (Object is not null && Object.TryGetComponent(out SwitchComponent component))
+            if (gameObject is not null && gameObject.TryGetComponent(out Switch component))
                 component.SetWidget(this);
         }
 
