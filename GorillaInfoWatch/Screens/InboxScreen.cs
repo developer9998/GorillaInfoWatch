@@ -52,10 +52,12 @@ namespace GorillaInfoWatch.Screens
                 {
                     lines.Add(content, new Widget_PushButton(OpenFunction, notification, true)
                     {
-                        Colour = Gradients.Green
+                        Colour = Gradients.Green,
+                        Symbol = InfoWatchSymbol.Verified
                     }, new Widget_PushButton(OpenFunction, notification, false)
                     {
-                        Colour = Gradients.Red
+                        Colour = Gradients.Red,
+                        Symbol = InfoWatchSymbol.Ignore
                     });
                 }
                 else

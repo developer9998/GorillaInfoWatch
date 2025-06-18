@@ -12,6 +12,8 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public Gradient Colour = Gradients.Button;
 
+        public Symbol Symbol;
+
         public Widget_PushButton(Action action) : this(args => action(), [])
         {
             // Must declare a body
@@ -19,7 +21,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null)
+            if (gameObject is null && !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
                 gameObject.name = "Button";
@@ -29,8 +31,8 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Modify()
         {
-            if (gameObject is not null && gameObject.TryGetComponent(out PushButton component))
-                component.ApplyButton(this);
+            if (gameObject && gameObject.TryGetComponent(out PushButton component))
+                component.AssignWidget(this);
         }
 
         public override bool Equals(Widget_Base widget)

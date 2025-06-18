@@ -1,4 +1,3 @@
-using GorillaExtensions;
 using GorillaInfoWatch.Behaviours.UI;
 using UnityEngine.UI;
 
@@ -12,7 +11,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject.IsNull())
+            if (gameObject is null && !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
                 gameObject.name = "Symbol";
@@ -25,7 +24,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Modify()
         {
-            if (image || gameObject.TryGetComponent(out image))
+            if (image || (gameObject && gameObject.TryGetComponent(out image)))
             {
                 image.sprite = Value.Sprite;
                 image.material = Value.Material;

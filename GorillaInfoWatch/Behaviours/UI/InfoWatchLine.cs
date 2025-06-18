@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Models;
+﻿using GorillaExtensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using System;
@@ -6,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using GorillaExtensions;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
@@ -42,7 +42,9 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Build(ScreenLine line, bool applyWidgets)
         {
-            Logging.Info($"Text: \"{line.Text}\" Apply Widgets: {applyWidgets}");
+            Logging.Info($"Text: \"{line.Text}\"");
+            Logging.Info($"Apply Widgets: {applyWidgets}");
+
             Text.text = line.Text;
 
             if (applyWidgets)
@@ -54,6 +56,8 @@ namespace GorillaInfoWatch.Behaviours.UI
                     //Logging.Fatal("newWidgets is null!!! It should at least be an empty collection");
                     return;
                 }
+
+                Logging.Info($"Widgets: {string.Join(", ", newWidgets.Select(widget => widget.GetType().Name))}");
 
                 int intake = newWidgets.Count - currentWidgets.Count;
                 if (intake > 0)
@@ -75,8 +79,8 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                         if (currentWidget is not null)
                         {
-                           // Logging.Info("Clearing existing widget");
-                            
+                            // Logging.Info("Clearing existing widget");
+
                             if (regularWidgets.Contains(currentWidget))
                             {
                                 currentWidget.Behaviour_Disable();
@@ -131,7 +135,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                         if (currentWidget is not null && currentWidget.gameObject is not null)
                         {
                             //Logging.Info("Clearing existing widget");
-                            
+
                             if (regularWidgets.Contains(currentWidget))
                             {
                                 currentWidget.Behaviour_Disable();
@@ -189,6 +193,8 @@ namespace GorillaInfoWatch.Behaviours.UI
             {
                 if (widgetIndex >= regularWidgets.Count)
                     widgetIndex = 0;
+                if (widgetIndex >= regularWidgets.Count)
+                    break;
                 if (regularWidgets.ElementAtOrDefault(i) is Widget_Base widget)
                     widget.Behaviour_Update();
                 widgetIndex++;

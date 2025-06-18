@@ -1,5 +1,4 @@
-﻿using GorillaExtensions;
-using GorillaInfoWatch.Behaviours.UI;
+﻿using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Utilities;
 using System;
 using UnityEngine;
@@ -28,7 +27,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject.IsNull())
+            if (gameObject is null && !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
                 gameObject.name = "Switch";
@@ -38,8 +37,8 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Modify()
         {
-            if (gameObject is not null && gameObject.TryGetComponent(out Switch component))
-                component.SetWidget(this);
+            if (gameObject && gameObject.TryGetComponent(out Switch component))
+                component.AssignWidget(this);
         }
 
         public override bool Equals(Widget_Base widget)

@@ -10,17 +10,17 @@ namespace GorillaInfoWatch
     {
         // GT
 
-        public static Action<VRRig> OnGetUserCosmetics;
+        internal static Action<VRRig> OnGetUserCosmetics;
 
-        public static Action<VRRig, bool> OnSetInvisibleToLocalPlayer;
+        internal static Action<VRRig, bool> OnSetInvisibleToLocalPlayer;
 
-        public static Action<RotatingQuest> OnCompleteQuest;
+        internal static Action<RotatingQuest> OnCompleteQuest;
 
         // GorillaInfoWatch
 
-        public static Action<Notification> OnNotificationSent;
+        internal static Action<Notification> OnNotificationSent;
 
-        public static Action<Notification, bool> OnNotificationOpened;
+        internal static Action<Notification, bool> OnNotificationOpened;
 
         public static Action<NetPlayer, PlayerSignificance> OnSignificanceChanged;
 

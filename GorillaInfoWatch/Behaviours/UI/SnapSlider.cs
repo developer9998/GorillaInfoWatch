@@ -13,7 +13,6 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private BoxCollider collider;
         private MeshRenderer renderer;
-        private Material material;
 
         private Transform needle, min, max;
 
@@ -32,8 +31,8 @@ namespace GorillaInfoWatch.Behaviours.UI
             needle = transform.Find("Button");
 
             renderer = needle.GetComponent<MeshRenderer>();
-            material = new(renderer.materials[1]);
-            renderer.materials[1] = material;
+            renderer.materials[1] = new(renderer.materials[1]);
+            // TODO: use material property block
 
             min = transform.Find("Min");
             max = transform.Find("Max");
@@ -104,7 +103,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
             float value = Widget.Value / (float)split;
             needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, value);
-            material.color = colour.Evaluate(value);
+            renderer.materials[1].color = colour.Evaluate(value);
         }
     }
 }

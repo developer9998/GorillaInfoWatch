@@ -29,6 +29,11 @@ namespace GorillaInfoWatch.Models
             return new Symbol(sprite);
         }
 
+        public static implicit operator Symbol(InfoWatchSymbol enumSymbol)
+        {
+            return new Symbol(enumSymbol);
+        }
+
         public static implicit operator Symbol(Texture2D texture)
         {
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);

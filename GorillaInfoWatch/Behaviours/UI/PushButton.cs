@@ -2,6 +2,7 @@
 using GorillaInfoWatch.Models.Widgets;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 
 namespace GorillaInfoWatch.Behaviours.UI
@@ -14,7 +15,6 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private BoxCollider collider;
         private MeshRenderer renderer;
-        private Material material;
 
         private Gradient colour;
 
@@ -32,29 +32,35 @@ namespace GorillaInfoWatch.Behaviours.UI
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
 
             renderer = GetComponent<MeshRenderer>();
-            material = new Material(renderer.materials[1]);
-            renderer.materials[1] = material;
+            renderer.materials[1] = new Material(renderer.materials[1]);
+            // TODO: use material property block
 
             colour = Gradients.Button;
         }
 
-        public void ApplyButton(Widget_PushButton widget)
+        public void AssignWidget(Widget_PushButton widget)
         {
             if (widget is not null)
             {
                 Widget = widget;
                 gameObject.SetActive(true);
+
+                currentValue ??= targetValue;
+                colour = Widget.Colour ?? Gradients.Button;
+
                 OnPressed = delegate ()
                 {
                     Widget.Command?.Invoke(Widget.Parameters ?? []);
                 };
 
-                colour = Widget.Colour ?? Gradients.Button;
+                renderer.materials[1].color = colour.Evaluate(currentValue.GetValueOrDefault(0));
 
-                if (!currentValue.HasValue)
-                    currentValue = targetValue;
-
-                material.color = colour.Evaluate(currentValue.GetValueOrDefault(0));
+                if (gameObject.GetComponentInChildren<Image>(true) is Image image)
+                {
+                    image.sprite = widget.Symbol?.Sprite;
+                    image.material = widget.Symbol?.Material;
+                    image.color = widget.Symbol is not null ? widget.Symbol.Colour : Color.white;
+                }
 
                 return;
             }
@@ -69,6 +75,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         public void OnDisable()
         {
             currentValue = null;
+            targetValue = 0;
         }
 
         public void Update()
@@ -77,7 +84,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             {
                 currentValue = Mathf.MoveTowards(currentValue.Value, targetValue, Time.deltaTime / 0.1f);
                 float animatedValue = Mathf.Clamp01(AnimationCurves.EaseInSine.Evaluate(currentValue.Value));
-                material.color = colour.Evaluate(animatedValue);
+                renderer.materials[1].color = colour.Evaluate(animatedValue);
             }
 
             if (bumped && Time.realtimeSinceStartup > PressTime)
@@ -100,7 +107,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             bumped = true;
             targetValue = 1;
             currentValue = 1;
-            material.color = colour.Evaluate(targetValue);
+            renderer.materials[1].color = colour.Evaluate(targetValue);
 
             Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
             GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);

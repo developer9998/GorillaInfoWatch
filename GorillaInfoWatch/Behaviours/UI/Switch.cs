@@ -22,40 +22,38 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Awake()
         {
-            //unpressedColour = new Color32(191, 188, 170, 255);
-            //pressedColour = new Color32(132, 131, 119, 255);
-
             needle = transform.Find("Button");
             min = transform.Find("Min");
             max = transform.Find("Max");
 
             renderer = needle.GetComponent<MeshRenderer>();
             renderer.materials[1] = new Material(renderer.materials[1]);
+            // TODO: use material property block
         }
 
-        public void SetWidget(Widget_Switch widget)
+        public void AssignWidget(Widget_Switch widget)
         {
-            if (widget != null && currentWidget == widget) return;
-
-            // apply transition
-            currentWidget = widget;
-            if (currentWidget != null)
+            if (widget is not null)
             {
+                currentWidget = widget;
                 gameObject.SetActive(true);
-                OnPressed = () => currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
+
                 bumped = widget.Value;
+                targetValue = Convert.ToInt32(widget.Value);
+                currentValue ??= targetValue;
 
-                targetValue = Convert.ToInt32(bumped);
+                OnPressed = delegate ()
+                {
+                    currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
+                };
 
-                if (!currentValue.HasValue)
-                    currentValue = targetValue;
-
-                needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, currentValue.Value);
-                renderer.materials[1].color = currentWidget.Colour.Evaluate(currentValue.Value);
+                needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, targetValue);
+                renderer.materials[1].color = currentWidget.Colour.Evaluate(targetValue);
 
                 return;
             }
 
+            currentWidget = null;
             gameObject.SetActive(false);
             currentValue = null;
             OnPressed = null;
@@ -65,6 +63,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         public void OnDisable()
         {
             currentValue = null;
+            targetValue = currentWidget is not null ? Convert.ToInt32(currentWidget.Value) : 0;
         }
 
         public void Update()
@@ -89,7 +88,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                 bumped ^= true;
                 targetValue = Convert.ToInt32(bumped);
-                currentValue = currentValue.GetValueOrDefault(0);
+                currentValue = currentValue.GetValueOrDefault(targetValue);
                 Update();
 
                 Singleton<Main>.Instance.PressSwitch(this, component.isLeftHand);

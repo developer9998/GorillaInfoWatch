@@ -180,7 +180,7 @@ namespace GorillaInfoWatch.Behaviours
             localInfoWatch.TimeOffset = timeOffset;
             NetworkHandler.Instance.SetProperty("TimeOffset", timeOffset);
 
-            // The majority of the code below comes from when my main computer broke down
+            // The majority of the remaining code in this method was written at a point when my main computer broke down
             // I wasn't able to work on C# as much as before, and most of my coding was done in Python in a robotics class in high school
             // Hence the amount of underscores used every five lines, because that's how it was done in Python I suppose
 
@@ -250,13 +250,14 @@ namespace GorillaInfoWatch.Behaviours
             Events.OnNotificationSent = SendNotification;
             Events.OnNotificationOpened = OpenNotification;
 
-            // Multicasted delegates aka. Events
             RoomSystem.JoinedRoomEvent += OnJoinedRoom;
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
+
             Events.OnCompleteQuest += OnQuestCompleted;
             Events.OnGetUserCosmetics += OnGetUserCosmetics;
-            CosmeticsController.instance.OnCosmeticsUpdated += delegate ()
+
+            CosmeticsController.instance.V2_OnGetCosmeticsPlayFabCatalogData_PostSuccess += delegate ()
             {
                 CheckPlayer(NetworkSystem.Instance.GetLocalPlayer());
             };

@@ -3,7 +3,6 @@ using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaNetworking;
 using System.Collections.Generic;
 using System.Linq;
 

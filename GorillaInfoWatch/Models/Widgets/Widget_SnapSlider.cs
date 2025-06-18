@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null)
+            if (gameObject is null && !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
                 gameObject.name = "SnapSlider";
@@ -38,7 +38,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Modify()
         {
-            if (gameObject is not null && gameObject.TryGetComponent(out SnapSlider component))
+            if (gameObject && gameObject.TryGetComponent(out SnapSlider component))
                 component.ApplySlider(this);
         }
 
