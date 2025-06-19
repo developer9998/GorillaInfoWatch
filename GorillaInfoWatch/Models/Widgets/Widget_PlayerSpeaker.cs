@@ -35,15 +35,12 @@ namespace GorillaInfoWatch.Models.Widgets
 
                 image.enabled = true;
 
-                if (image.GetComponent<LayoutElement>() is null)
-                {
-                    LayoutElement layoutElement = image.gameObject.AddComponent<LayoutElement>();
-                    layoutElement.ignoreLayout = true;
+                LayoutElement layoutElement = image.gameObject.GetOrAddComponent<LayoutElement>();
+                layoutElement.ignoreLayout = true;
 
-                    RectTransform rectTransform = image.GetComponent<RectTransform>();
+RectTransform rectTransform = image.GetComponent<RectTransform>();
                     rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
                     rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
-                }
 
                 image.enabled = false;
 

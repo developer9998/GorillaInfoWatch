@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Models
 
         public Notification(string head, string body, float duration, InfoWatchSound sound, ExternalScreen screen = null) : this(string.Format("<size=6>{0}:</size><br><b>{1}</b>", head, body), duration, sound, screen)
         {
-            DisplayText = $"{head}: {body}";
+            DisplayText = $"{head.TrimEnd(':')}: {body}";
         }
 
         public class ExternalScreen(Type screen, string displayText, Task task)

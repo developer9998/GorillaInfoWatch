@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
+    public sealed class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
     {
         public bool Value = value;
 
@@ -14,6 +14,13 @@ namespace GorillaInfoWatch.Models.Widgets
         public readonly object[] Parameters = parameters ?? [];
 
         public Gradient Colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
+
+        public bool IsReadOnly => Command == null || Command.Target == null;
+
+        public Widget_Switch(bool value): this(value, (Action<bool>)null)
+        {
+            // Must declare a body
+        }
 
         public Widget_Switch(bool value, Action<bool> action) : this(value, (value, args) => action(value), [])
         {
@@ -27,7 +34,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null && !gameObject)
+            if (gameObject == null || !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
                 gameObject.name = "Switch";

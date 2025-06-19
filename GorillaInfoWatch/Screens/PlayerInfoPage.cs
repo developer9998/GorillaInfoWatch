@@ -65,29 +65,32 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder basicInfoLines = new();
 
-            bool hasPermission = GorillaComputer.instance.NametagsEnabled && KIDManager.HasPermissionToUseFeature(EKIDFeatures.Custom_Nametags);
-            string playerName = hasPermission ? player.NickName : player.DefaultName;
+            string playerName = KIDManager.HasPermissionToUseFeature(EKIDFeatures.Custom_Nametags) ? player.NickName : player.DefaultName;
             string playerNameSanitized = playerName.SanitizeName().LimitLength(12);
 
-            basicInfoLines.Add($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new Widget_PlayerSymbol(player, 520f, 90, 90), new Widget_PlayerSpeaker(player, 620f, 100, 100), new Widget_SignificantSymbol(player, 520f, 80, 70));
+            basicInfoLines.Add($"{playerNameSanitized}{(playerNameSanitized != playerName ? $" ({playerName})" : "")}", new Widget_PlayerSwatch(player, 520f, 90, 90), new Widget_PlayerSpeaker(player, 620f, 100, 100), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)));
 
             basicInfoLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
 
-            basicInfoLines.Repeat(1);
+            basicInfoLines.Skip();
+
+            Color playerColour = rig.playerColor;
+            Color32 playerColour32 = playerColour;
+
             basicInfoLines.Add(string.Format("Colour: [{0}, {1}, {2} | {3}, {4}, {5}]",
-                Mathf.RoundToInt(rig.playerColor.r * 9f),
-                Mathf.RoundToInt(rig.playerColor.g * 9f),
-                Mathf.RoundToInt(rig.playerColor.b * 9f),
-                Mathf.RoundToInt(rig.playerColor.r * 255f),
-                Mathf.RoundToInt(rig.playerColor.g * 255f),
-                Mathf.RoundToInt(rig.playerColor.b * 255f)));
+                Mathf.RoundToInt(playerColour.r * 9f),
+                Mathf.RoundToInt(playerColour.g * 9f),
+                Mathf.RoundToInt(playerColour.b * 9f),
+                Mathf.RoundToInt(playerColour32.r),
+                Mathf.RoundToInt(playerColour32.g),
+                Mathf.RoundToInt(playerColour32.b)));
             basicInfoLines.Add($"Points: {rig.currentQuestScore}");
             basicInfoLines.Add($"Voice Type: {(rig.localUseReplacementVoice || rig.remoteUseReplacementVoice ? "MONKE" : "HUMAN")}");
             basicInfoLines.Add($"Is Master Client: {(player.IsMasterClient ? "Yes" : "No")}");
 
             if (!player.IsLocal)
             {
-                basicInfoLines.Repeat(1);
+                basicInfoLines.Skip();
                 basicInfoLines.Add(Container.Muted ? "Unmute" : "Mute", new Widget_Switch(Container.Muted, OnMuteButtonClick, player)
                 {
                     Colour = muteColour

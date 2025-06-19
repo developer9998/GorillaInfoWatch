@@ -16,7 +16,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         private BoxCollider collider;
         private MeshRenderer renderer;
 
-        private Gradient colour;
+        private Gradient colour = Gradients.Button;
 
         private bool bumped;
 
@@ -34,8 +34,6 @@ namespace GorillaInfoWatch.Behaviours.UI
             renderer = GetComponent<MeshRenderer>();
             renderer.materials[1] = new Material(renderer.materials[1]);
             // TODO: use material property block
-
-            colour = Gradients.Button;
         }
 
         public void AssignWidget(Widget_PushButton widget)
@@ -53,13 +51,18 @@ namespace GorillaInfoWatch.Behaviours.UI
                     Widget.Command?.Invoke(Widget.Parameters ?? []);
                 };
 
-                renderer.materials[1].color = colour.Evaluate(currentValue.GetValueOrDefault(0));
+                if (!currentValue.HasValue || currentValue.Value == targetValue)
+                    renderer.materials[1].color = colour?.Evaluate(currentValue.Value) ?? Color.white;
 
-                if (gameObject.GetComponentInChildren<Image>(true) is Image image)
+                if (GetComponentInChildren<Image>(true) is Image image)
                 {
-                    image.sprite = widget.Symbol?.Sprite;
-                    image.material = widget.Symbol?.Material;
-                    image.color = widget.Symbol is not null ? widget.Symbol.Colour : Color.white;
+                    image.gameObject.SetActive(widget.Symbol is not null);
+                    if (image.gameObject.activeSelf)
+                    {
+                        image.sprite = widget.Symbol.Sprite;
+                        image.material = widget.Symbol.Material;
+                        image.color = widget.Symbol.Colour;
+                    }
                 }
 
                 return;
@@ -80,9 +83,9 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Update()
         {
-            if (currentValue.HasValue && currentValue != targetValue)
+            if (!currentValue.HasValue || currentValue.Value != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue.Value, targetValue, Time.deltaTime / 0.1f);
+                currentValue = Mathf.MoveTowards(currentValue.GetValueOrDefault(targetValue), targetValue, Time.deltaTime / 0.05f);
                 float animatedValue = Mathf.Clamp01(AnimationCurves.EaseInSine.Evaluate(currentValue.Value));
                 renderer.materials[1].color = colour.Evaluate(animatedValue);
             }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_PlayerSymbol(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : Widget_Symbol(new Models.Symbol(null))
+    public class Widget_PlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : Widget_Symbol(new Models.Symbol(null))
     {
         public override bool AllowModification => false;
         public override bool UseBehaviour => true;
@@ -20,17 +20,12 @@ namespace GorillaInfoWatch.Models.Widgets
             {
                 image.enabled = true;
 
-                if (image.GetComponent<LayoutElement>() is null)
-                {
-                    LayoutElement layoutElement = image.gameObject.AddComponent<LayoutElement>();
-                    layoutElement.ignoreLayout = true;
+                LayoutElement layoutElement = image.gameObject.GetOrAddComponent<LayoutElement>();
+                layoutElement.ignoreLayout = true;
 
-                    RectTransform rectTransform = image.GetComponent<RectTransform>();
-                    rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
-                    rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
-                }
-
-                SetSwatchColour();
+                RectTransform rectTransform = image.GetComponent<RectTransform>();
+                rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
+                rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
             }
         }
 
@@ -53,7 +48,10 @@ namespace GorillaInfoWatch.Models.Widgets
             if (image.material != scoreboard_material) image.material = scoreboard_material;
 
             var player_colour = playerRig.Rig.playerColor;
-            if (image.color != player_colour) image.color = player_colour;
+            if (image.color != player_colour)
+            {
+                image.color = player_colour;
+            }
         }
     }
 }

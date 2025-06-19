@@ -2,8 +2,13 @@
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
 using GorillaNetworking;
+using KID.Model;
+using Newtonsoft.Json;
 using System;
+using System.Linq;
+using System.Runtime.Serialization;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
@@ -24,13 +29,15 @@ namespace GorillaInfoWatch.Screens
             profileLines.Add($"Name: {localRig.playerNameVisible}");
 
             Color playerColour = localRig.playerColor;
+            Color32 playerColour32 = playerColour;
+
             profileLines.Add(string.Format("Colour: [{0}, {1}, {2} / {3}, {4}, {5}]",
                 Mathf.RoundToInt(playerColour.r * 9f),
                 Mathf.RoundToInt(playerColour.g * 9f),
                 Mathf.RoundToInt(playerColour.b * 9f),
-                Mathf.RoundToInt(playerColour.r * 255f),
-                Mathf.RoundToInt(playerColour.r * 255f),
-                Mathf.RoundToInt(playerColour.r * 255f)));
+                Mathf.RoundToInt(playerColour32.r),
+                Mathf.RoundToInt(playerColour32.g),
+                Mathf.RoundToInt(playerColour32.b)));
 
             var accountInfo = NetworkSystem.Instance.GetLocalPlayer().GetAccountInfo(result => SetContent());
             profileLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
@@ -67,17 +74,44 @@ namespace GorillaInfoWatch.Screens
                 economyLines.Add($"{displaySlot}: {displayName}");
             }
 
+            LineBuilder safetyLines = new();
+
+            safetyLines.Add($"K-ID Enabled: {KIDManager.KidEnabled}");
+
+            AgeStatusType accountStatus = KIDManager.GetActiveAccountStatus();
+            string serializedObject = JsonConvert.SerializeObject(accountStatus);
+            string accountStatusName = string.IsNullOrEmpty(serializedObject) ? accountStatus.ToString().ToTitleCase() : serializedObject.ToTitleCase().Replace('-', ' ').Replace('_', ' ');
+
+            safetyLines.Add($"Account Status: {(KIDManager.InitialisationSuccessful ? accountStatusName : "Not Ready")}");
+            safetyLines.Skip();
+
+            foreach (EKIDFeatures feature in Enum.GetValues(typeof(EKIDFeatures)).Cast<EKIDFeatures>())
+            {
+                if (KIDManager.GetPermissionDataByFeature(feature) is Permission permission)
+                {
+                    string permissionName = feature switch
+                    {
+                        EKIDFeatures.Mods => "Virtual Stump",
+                        EKIDFeatures.Groups => "Groups",
+                        _ => permission.Name.ToTitleCase().Replace('-', ' ').Replace('_', ' ')
+                    };
+                    string management = permission.ManagedBy == Permission.ManagedByEnum.PROHIBITED ? "<color=red>Prohibited</color>" : string.Format("Managed by {0}", permission.ManagedBy.ToString().ToTitleCase());
+
+                    safetyLines.Add($"{permissionName}: {management}", new Widget_Switch(permission.Enabled));
+                }
+            }
+
             LineBuilder progressionLines = new();
 
             progressionLines.Add($"Tutorial Completion: {NetworkSystem.Instance.GetMyTutorialCompletion()}");
-            progressionLines.Add($"Total Points: {ProgressionController._gInstance.totalPointsRaw}");
+            progressionLines.Add($"Total Points: {ProgressionController.TotalPoints}");
             progressionLines.Add($"Unclaimed Points: {ProgressionController._gInstance.unclaimedPoints}");
 
             if (localRig.TryGetComponent(out GRPlayer grPlayer))
             {
                 progressionLines.Skip();
 
-                var grProgression = grPlayer.CurrentProgression;
+                GRPlayer.ProgressionData grProgression = grPlayer.CurrentProgression;
                 int nextTier = GhostReactorProgression.TotalPointsForNextGrade(grProgression.redeemedPoints);
                 progressionLines.Add($"Employment: {GhostReactorProgression.GetTitleNameAndGrade(grProgression.redeemedPoints)}");
                 progressionLines.Add($"Earned: {grProgression.points} out of {nextTier} / {Mathf.FloorToInt((float)grProgression.points / nextTier * 100f)}%");
@@ -162,7 +196,7 @@ namespace GorillaInfoWatch.Screens
             LineBuilder platform = str;
             */
 
-            return new PageBuilder(("Profile", profileLines), ("Economy", economyLines), ("Progression", progressionLines));
+            return new PageBuilder(("Profile", profileLines), ("Economy", economyLines), ("Safety", safetyLines), ("Progression", progressionLines));
         }
 
         public void ProcessSensitiveData(bool value)

@@ -2,11 +2,16 @@
 
 namespace GorillaInfoWatch.Tools
 {
-    internal static class Logging
+    internal class Logging
     {
-        private static readonly bool DebugLogExclusive = true;
+        private static ManualLogSource logSource;
 
-        public static void Debug(object message) => LogMessage(LogLevel.Debug, message);
+        private static readonly bool debug = true;
+
+        public Logging(ManualLogSource source)
+        {
+            logSource = source;
+        }
 
         public static void Info(object message) => LogMessage(LogLevel.Info, message);
 
@@ -22,9 +27,9 @@ namespace GorillaInfoWatch.Tools
 #if DEBUG
             debug = true;
 #endif
-            if (!DebugLogExclusive || debug)
+            if (!Logging.debug || debug)
             {
-                Plugin.PluginLogger.Log(level, message);
+                logSource.Log(level, message);
             }
         }
     }

@@ -1,5 +1,3 @@
-using UnityEngine.Serialization;
-
 namespace GorillaInfoWatch.Models
 {
     public enum InfoWatchSymbol // TIP: use .meta file for looking at names for sprite sheet without having to open unity
@@ -26,7 +24,6 @@ namespace GorillaInfoWatch.Models
         OpenSpeaker,
         MutedSpeaker,
         ForceMuteSpeaker,
-        [FormerlySerializedAs("Stick")]
         ModStick,
         FingerPainter,
         Illustrator,
@@ -34,6 +31,7 @@ namespace GorillaInfoWatch.Models
         InfoWatch,
         TemplateHead,
         TemplateFace,
+        TemplateBorder,
         Ignore,
         Image,
         Bell,

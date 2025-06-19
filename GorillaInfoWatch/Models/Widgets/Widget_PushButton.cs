@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_PushButton(Action<object[]> action, params object[] parameters) : Widget_Base
+    public sealed class Widget_PushButton(Action<object[]> action, params object[] parameters) : Widget_Base
     {
         public Action<object[]> Command = action;
 
@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null && !gameObject)
+            if (gameObject == null || !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
                 gameObject.name = "Button";

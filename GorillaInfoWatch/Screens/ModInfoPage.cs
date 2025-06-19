@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
@@ -76,7 +77,7 @@ namespace GorillaInfoWatch.Screens
                     widgets.Add(new Widget_Switch(configEntry.BoxedValue.ToString() == "True", ConfigureEntry, configEntry));
 
                 lines.Add($"Key: {configEntry.Definition.Key}");
-                lines.Add($"Description: {configEntry.Description.Description}");
+                lines.Add($"Description: {configEntry.Description.Description}".ToTextArray());
                 lines.Add($"Type: {settingType.Name}");
 
                 lines.Skip();

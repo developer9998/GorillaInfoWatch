@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Credits";
         public override string Description => $"Credits for {Constants.Name} v{Constants.Version}";
 
-        private readonly string creditFormat = "<line-indent=3em><line-height=45%>{0}<br><size=60%>{1}: {2}";
+        private readonly string creditFormat = "<line-indent=4em><line-height=45%>{0}<br><size=60%>{1}: {2}";
 
         public override ScreenContent GetContent()
         {

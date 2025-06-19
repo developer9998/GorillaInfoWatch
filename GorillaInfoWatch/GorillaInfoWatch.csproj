@@ -49,6 +49,9 @@
 		<Reference Include="Fusion.Runtime">
 			<HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
 		</Reference>
+		<Reference Include="KID">
+		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\KID.dll</HintPath>
+		</Reference>
 		<Reference Include="Newtonsoft.Json">
 			<HintPath>$(GameAssemblyPath)\Newtonsoft.Json.dll</HintPath>
 		</Reference>

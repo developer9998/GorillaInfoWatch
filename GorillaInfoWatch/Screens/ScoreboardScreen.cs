@@ -1,10 +1,13 @@
-﻿using GorillaGameModes;
+﻿using BepInEx.Configuration;
+using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Tools;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -12,8 +15,6 @@ namespace GorillaInfoWatch.Screens
     public class ScoreboardScreen : InfoWatchScreen
     {
         public override string Title => "Scoreboard";
-
-        public HashSet<NetPlayer> includedPlayers = [];
 
         public override void OnShow()
         {
@@ -41,29 +42,39 @@ namespace GorillaInfoWatch.Screens
 
             if (!NetworkSystem.Instance.InRoom)
             {
-                lines.Add("<align=center>You are not in a Room!</align>");
+                lines.Add("Room: -NOT IN ROOM-");
                 lines.Skip();
-                lines.Add("Join a Room to access the <u>Scoreboard</u>.");
+                lines.Add("* Join a room to access the scoreboard");
 
                 return lines;
             }
 
+            ConfigEntry<bool> roomPrivacySetting = NetworkSystem.Instance.SessionIsPrivate ? Configuration.ShowPrivate : Configuration.ShowPublic;
+            string roomNameProtected = roomPrivacySetting.Value ? NetworkSystem.Instance.RoomName : $"-{(NetworkSystem.Instance.SessionIsPrivate ? "PRIVATE" : "PUBLIC")}-";
             string gameModeString = NetworkSystem.Instance.GameModeString;
+
+            lines.Add($"Room: {roomNameProtected} ({NetworkSystem.Instance.RoomPlayerCount} of {RoomSystem.GetRoomSize(gameModeString)})", new Widget_Switch(roomPrivacySetting.Value, (bool value) =>
+            {
+                roomPrivacySetting.Value = value;
+                if (!roomPrivacySetting.ConfigFile.SaveOnConfigSet) roomPrivacySetting.ConfigFile.Save();
+                SetContent();
+            }));
             string gameTypeName = GameMode.FindGameModeInString(gameModeString);
 
-            lines.Add($"Room: {(NetworkSystem.Instance.SessionIsPrivate ? "-PRIVATE-" : NetworkSystem.Instance.RoomName)} ({NetworkSystem.Instance.RoomPlayerCount} of {RoomSystem.GetRoomSize(gameModeString)})");
             lines.Add($"Game Mode: {(GameMode.gameModeKeyByName.TryGetValue(gameTypeName, out int key) && GameMode.gameModeTable.TryGetValue(key, out GorillaGameManager manager) ? manager.GameModeName() : gameTypeName)}");
             lines.Skip();
 
             //Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{NetworkSystem.Instance.config.MaxPlayerCount} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
 
-            var players_in_room = NetworkSystem.Instance.AllNetPlayers.ToHashSet().ToList();
+            var players_in_room = NetworkSystem.Instance.AllNetPlayers.ToList();
             players_in_room.Sort((x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
 
             foreach (NetPlayer player in players_in_room)
             {
-                if (player == null || player.IsNull) continue;
-                lines.Add(string.IsNullOrEmpty(player.SanitizedNickName) ? player.NickName.SanitizeName() : player.SanitizedNickName, new Widget_PlayerSymbol(player), new Widget_PlayerSpeaker(player), new Widget_SignificantSymbol(player), new Widget_PushButton(TryInspectPlayer, player));
+                if (player == null || player.IsNull || (!player.IsLocal && !player.InRoom)) continue;
+                List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80))];
+                if (!player.IsLocal) widgets.Add(new Widget_PushButton(InspectPlayer, player));
+                lines.Add(string.IsNullOrEmpty(player.SanitizedNickName) ? player.NickName.SanitizeName() : player.SanitizedNickName, widgets);
             }
 
             return lines;
@@ -71,29 +82,26 @@ namespace GorillaInfoWatch.Screens
 
         private void OnRoomJoined()
         {
-            includedPlayers = [.. NetworkSystem.Instance.AllNetPlayers];
             SetContent();
         }
 
         private void OnRoomLeft()
         {
-            includedPlayers.Clear();
             SetContent();
         }
 
         private void OnPlayerJoined(NetPlayer player)
         {
-            if (includedPlayers.Add(player))
-                SetContent();
+            if (player.IsLocal) return;
+            SetContent();
         }
 
         private void OnPlayerLeft(NetPlayer player)
         {
-            if (includedPlayers.Remove(player))
-                SetContent();
+            SetContent();
         }
 
-        public void TryInspectPlayer(object[] args)
+        public void InspectPlayer(object[] args)
         {
             if (args.ElementAtOrDefault(0) is NetPlayer player && VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
             {

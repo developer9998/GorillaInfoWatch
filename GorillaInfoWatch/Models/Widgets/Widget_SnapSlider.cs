@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_SnapSlider(int value, int start, int end, Action<int, object[]> action, params object[] parameters) : Widget_Base
+    public sealed class Widget_SnapSlider(int value, int start, int end, Action<int, object[]> action, params object[] parameters) : Widget_Base
     {
         public int Value = value;
 
@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null && !gameObject)
+            if (gameObject == null || !gameObject)
             {
                 gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
                 gameObject.name = "SnapSlider";

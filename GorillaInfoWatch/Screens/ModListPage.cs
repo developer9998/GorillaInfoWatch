@@ -22,12 +22,12 @@ namespace GorillaInfoWatch.Screens
             Dictionary<string, PluginInfo> _loadedPlugins = Chainloader.PluginInfos;
             PluginInfo[] _pluginInfos = [.. _loadedPlugins.Values];
 
-            stateSupportedMods = [.. _pluginInfos.Where(plugin =>
+            stateSupportedMods = [.. _pluginInfos.Where(delegate(PluginInfo pluginInfo)
             {
-                List<string> _instanceMethods = AccessTools.GetMethodNames(plugin.Instance);
+                List<string> _instanceMethods = AccessTools.GetMethodNames(pluginInfo.Instance);
                 return _instanceMethods.Contains("OnEnable") || _instanceMethods.Contains("OnDisable");
             })];
-            mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods))]; // sort
+            mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods)).Where(mod => mod.Metadata.GUID != Constants.GUID)];
         }
 
         private bool IsEligible(PluginInfo info) => stateSupportedMods.Contains(info);
@@ -38,18 +38,18 @@ namespace GorillaInfoWatch.Screens
 
             for (int i = 0; i < mods.Length; i++)
             {
-                PluginInfo info = mods[i];
+                PluginInfo pluginInfo = mods[i];
 
-                Widget_PushButton pushButton = new(OpenModInfo, info);
+                Widget_PushButton pushButton = new(OpenModInfo, pluginInfo);
 
-                if (IsEligible(info))
+                if (IsEligible(pluginInfo))
                 {
-                    bool isEnabled = info.Instance.enabled;
-                    lines.Add(string.Format("{0} [<color=#{1}>{2}</color>]", info.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Widget_Switch(isEnabled, ToggleMod, i), pushButton);
+                    bool isEnabled = pluginInfo.Instance.enabled;
+                    lines.Add(string.Format("{0} [<color=#{1}>{2}</color>]", pluginInfo.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Widget_Switch(isEnabled, ToggleMod, pluginInfo), pushButton);
                     continue;
                 }
 
-                lines.Add(info.Metadata.Name, pushButton);
+                lines.Add(pluginInfo.Metadata.Name, pushButton);
             }
 
             return lines;
@@ -57,9 +57,9 @@ namespace GorillaInfoWatch.Screens
 
         private void ToggleMod(bool value, object[] args)
         {
-            if (args[0] is int mod_index)
+            if (args.ElementAtOrDefault(0) is PluginInfo pluginInfo)
             {
-                mods[mod_index].Instance.enabled = value;
+                pluginInfo.Instance.enabled = value;
                 SetText();
             }
         }

@@ -1,4 +1,6 @@
-﻿using GameObjectScheduling;
+﻿using BepInEx.Configuration;
+using GameObjectScheduling;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
@@ -14,9 +16,8 @@ namespace GorillaInfoWatch.Screens
 
         public List<Notification> Notifications = [];
 
-        private readonly string formatMultiPlayer = "<line-height=45%><size=50%>{0} in {1}</size><br>{2}";
-
-        private readonly string formatSinglePlayer = "<line-height=45%><size=50%>{0}</size><br>{1}";
+        private readonly string formatSinglePlayer = "<line-height=45%><size=50%>{0}</size><br>";
+        private readonly string formatMultiPlayer = "<line-height=45%><size=50%>{0} in {1}</size><br>";
 
         public override ScreenContent GetContent()
         {
@@ -41,16 +42,22 @@ namespace GorillaInfoWatch.Screens
             {
                 TimeSpan timeSpan = DateTime.Now - notification.Created;
                 string timeDisplay = CountdownText.GetTimeDisplay(timeSpan, "{0} {1} ago").ToLower();
-                string content = string.Format(formatSinglePlayer, timeDisplay, notification.DisplayText);
-                if (!string.IsNullOrEmpty(notification.RoomName))
+
+                string prepend;
+
+                if (string.IsNullOrEmpty(notification.RoomName)) prepend = string.Format(formatSinglePlayer, timeDisplay);
+                else
                 {
-                    string roomName = notification.SessionIsPrivate ? "private session" : notification.RoomName;
-                    content = string.Format(formatMultiPlayer, timeDisplay, roomName, notification.DisplayText);
+                    ConfigEntry<bool> roomPrivacySetting = notification.SessionIsPrivate ? Configuration.ShowPrivate : Configuration.ShowPublic;
+                    string roomNameProtected = roomPrivacySetting.Value ? notification.RoomName : (notification.SessionIsPrivate ? "private session" : "public session");
+                    prepend = string.Format(formatMultiPlayer, timeDisplay, roomNameProtected);
                 }
+
+                string[] array = notification.DisplayText.ToTextArray(prepend);
 
                 if (notification.Screen is not null)
                 {
-                    lines.Add(content, new Widget_PushButton(OpenFunction, notification, true)
+                    lines.Add(array, new Widget_PushButton(OpenFunction, notification, true)
                     {
                         Colour = Gradients.Green,
                         Symbol = InfoWatchSymbol.Verified
@@ -62,7 +69,7 @@ namespace GorillaInfoWatch.Screens
                 }
                 else
                 {
-                    lines.Add(content, new Widget_PushButton(OpenFunction, notification, true));
+                    lines.Add(array, new Widget_PushButton(OpenFunction, notification, true));
                 }
             }
 

@@ -1,5 +1,6 @@
 using GorillaInfoWatch.Behaviours.UI;
 using UnityEngine.UI;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
@@ -11,9 +12,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(InfoWatchLine menuLine)
         {
-            if (gameObject is null && !gameObject)
+            if (gameObject == null || !gameObject)
             {
-                gameObject = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
+                gameObject = Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
                 gameObject.name = "Symbol";
                 gameObject.SetActive(true);
             }

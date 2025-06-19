@@ -1,5 +1,8 @@
-﻿using GorillaInfoWatch.Models.Widgets;
+﻿using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Utilities;
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.UI
@@ -19,6 +22,8 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private float? currentValue;
         private float targetValue;
+
+        private Gradient colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
 
         public void Awake()
         {
@@ -42,13 +47,19 @@ namespace GorillaInfoWatch.Behaviours.UI
                 targetValue = Convert.ToInt32(widget.Value);
                 currentValue ??= targetValue;
 
+                colour = widget.IsReadOnly ? GradientUtils.FromColour(colours: [.. widget.Colour.colorKeys.Select(key => key.color).Select(colour =>
+                {
+                    Color.RGBToHSV(colour, out float h, out float s, out float v);
+                    return Color.HSVToRGB(h, s * 0.4f, v);
+                })]) : widget.Colour;
+
                 OnPressed = delegate ()
                 {
                     currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
                 };
 
                 needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, targetValue);
-                renderer.materials[1].color = currentWidget.Colour.Evaluate(targetValue);
+                renderer.materials[1].color = colour.Evaluate(targetValue);
 
                 return;
             }
@@ -68,18 +79,18 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Update()
         {
-            if (currentValue.HasValue && currentValue != targetValue)
+            if (!currentValue.HasValue || currentValue.Value != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue.Value, targetValue, Time.deltaTime / 0.15f);
+                currentValue = Mathf.MoveTowards(currentValue.GetValueOrDefault(targetValue), targetValue, Time.deltaTime / 0.25f);
                 float animatedValue = AnimationCurves.EaseInOutSine.Evaluate(currentValue.Value);
                 needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, animatedValue);
-                renderer.materials[1].color = currentWidget.Colour.Evaluate(animatedValue);
+                renderer.materials[1].color = colour.Evaluate(animatedValue);
             }
         }
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (currentWidget is null)
+            if (currentWidget is null || currentWidget.IsReadOnly)
                 return;
 
             if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > PushButton.PressTime)

@@ -20,7 +20,7 @@ namespace GorillaInfoWatch.Utilities
 
             Gradient gradient = new()
             {
-                mode = GradientMode.PerceptualBlend
+                mode = GradientMode.Blend
             };
 
             List<GradientColorKey> colourKeys = [];

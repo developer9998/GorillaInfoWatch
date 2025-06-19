@@ -18,7 +18,8 @@ namespace GorillaInfoWatch.Models.Widgets
                 layoutElement.ignoreLayout = true;
 
                 RectTransform rectTransform = image.GetComponent<RectTransform>();
-                rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
+                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(offset).WithY(31.25f);
+                rectTransform.localPosition = rectTransform.localPosition.WithZ(-1);
                 // rect_tform.sizeDelta = new Vector2(90, 90);
             }
         }

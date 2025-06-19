@@ -99,7 +99,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                         continue;
                     }
 
-                    bool equivalent = currentWidget is not null && currentWidget.gameObject is not null && currentWidget.gameObject && newWidget.GetType() == currentWidget.GetType();// && newWidget.Equals(currentWidget);
+                    bool equivalent = currentWidget != null && currentWidget.gameObject != null && currentWidget.gameObject && newWidget.GetType() == currentWidget.GetType();// && newWidget.Equals(currentWidget);
 
                     //Logging.Info($"add {i} : {newWidget.GetType().Name}");
                     //Logging.Info($"pos {i} : {(currentWidget != null && currentWidget.gameObject is not null && currentWidget.gameObject ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
@@ -163,6 +163,13 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                         //Logging.Info("Initialized new widget");
                     }
+
+                    if (currentWidget.gameObject is null || !currentWidget.gameObject)
+                    {
+                        currentWidget.Object_Construct(this);
+                    }
+
+                    currentWidget.gameObject.SetActive(true);
 
                     if (currentWidget.AllowModification)
                     {

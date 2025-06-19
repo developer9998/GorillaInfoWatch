@@ -64,7 +64,7 @@ namespace GorillaInfoWatch.Behaviours
         private TMP_Text menu_header;
         private TMP_Text menu_description;
         private Transform menu_line_tform;
-        private List<InfoWatchLine> menu_lines;
+        internal List<InfoWatchLine> menu_lines;
 
         // Display
         private TMP_Text menu_page_text;
@@ -149,8 +149,6 @@ namespace GorillaInfoWatch.Behaviours
             watch = new(InfoWatchSymbol.InfoWatch);
             verified = new(InfoWatchSymbol.Verified);
 
-            CheckPlayer(NetworkSystem.Instance.GetLocalPlayer());
-
             foreach (string watchSoundName in Enum.GetNames(typeof(InfoWatchSound)))
             {
                 AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(watchSoundName);
@@ -233,7 +231,9 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (CurrentScreen is InfoWatchScreen screen)
                 {
+                    screen.Content = screen.GetContent();
                     screen.OnRefresh();
+                    menu_lines.ForEach(line => line.Build(new ScreenLine("", []), true));
                     RefreshScreen();
                 }
             };
@@ -268,6 +268,84 @@ namespace GorillaInfoWatch.Behaviours
             enabled = true;
         }
 
+        public void OnJoinedRoom()
+        {
+            NetworkSystem.Instance.PlayerListOthers.ForEach(player => CheckPlayer(player));
+        }
+
+        public void OnPlayerJoined(NetPlayer player)
+        {
+            CheckPlayer(player);
+
+            if (player.IsLocal) // called for the local player when marked "InGame" / connected to a room
+                return;
+
+            if (GFriendUtils.IsFriend(player.UserId))
+            {
+                Events.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
+            else if (GFriendUtils.FriendCompatible && GFriendUtils.IsVerified(player.UserId))
+            {
+                Events.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.VerifiedColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
+            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+            {
+                Events.SendNotification(new("A notable user has joined", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
+        }
+
+        public void OnPlayerLeft(NetPlayer player)
+        {
+            if (GFriendUtils.IsFriend(player.UserId))
+            {
+                Events.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationNegative));
+            }
+            else if (GFriendUtils.IsVerified(player.UserId))
+            {
+                Events.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.VerifiedColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationNegative));
+            }
+            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+            {
+                Events.SendNotification(new("A notable user has left", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationNegative));
+            }
+
+            CheckPlayer(player);
+        }
+
+        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
+        {
+            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
+            Events.SendNotification(new("You completed a quest", quest.questType != QuestType.none ? quest.questName : "OH NO!", 5, InfoWatchSound.notificationNeutral));
+        }
+
+        public void OnGetUserCosmetics(VRRig rig)
+        {
+            if (rig.Creator is not NetPlayer player || player.IsNull || player.IsLocal)
+                return;
+
+            if (CheckPlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
+            {
+                string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
+                Events.SendNotification(new($"A notable cosmetic is detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                {
+                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
+                        PlayerInfoPage.Container = playerRig;
+                })));
+            }
+        }
+
         public void SwitchScreen(InfoWatchScreen newScreen)
         {
             if (CurrentScreen is InfoWatchScreen lastScreen)
@@ -290,7 +368,6 @@ namespace GorillaInfoWatch.Behaviours
             else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
             newScreen.enabled = true;
-            //newScreen.CallerType = history.Count > 0 ? history.Last().GetType() : null;
 
             newScreen.RequestScreenSwitch += SwitchScreen;
             newScreen.RequestSetLines += delegate (bool includeWidgets)
@@ -349,6 +426,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Logging.Fatal($"Menu could not adjust for ({CurrentScreen.GetType().Name})");
                 Logging.Error(ex);
+                PlayErrorSound();
             }
 
             try
@@ -375,6 +453,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Logging.Fatal($"Screen contents could not be displayed ({CurrentScreen.GetType().Name})");
                 Logging.Error(ex);
+                PlayErrorSound();
             }
         }
 
@@ -434,12 +513,6 @@ namespace GorillaInfoWatch.Behaviours
         public InfoWatchScreen GetScreen(Type type, bool registerFallback = true)
         {
             return (registry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? registry[type] : null;
-        }
-
-        public void PlayErrorSound()
-        {
-            if (Enum.Parse<InfoWatchSound>(string.Concat("error", Random.Range(1, 6))) is InfoWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
-                localInfoWatch.AudioDevice.PlayOneShot(audioClip);
         }
 
         public void SendNotification(Notification notification)
@@ -506,6 +579,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     Logging.Fatal($"Unable to open notification \"{notification.DisplayText}\"");
                     Logging.Error(ex);
+                    PlayErrorSound();
                 }
             }
 
@@ -517,63 +591,13 @@ namespace GorillaInfoWatch.Behaviours
             Inbox.Notifications = [.. notifications.Where(notif => !notif.Opened).OrderBy(notif => notif.Created).Reverse()];
 
             if (CurrentScreen == Inbox)
-                RefreshScreen();
+                Inbox.SetContent();
         }
 
-        public void OnJoinedRoom()
+        public void PlayErrorSound()
         {
-            NetworkSystem.Instance.PlayerListOthers.ForEach(player => CheckPlayer(player));
-        }
-
-        public void OnPlayerJoined(NetPlayer player)
-        {
-            CheckPlayer(player);
-
-            if (player.IsLocal) // called for the local player when marked "InGame" / connected to a room
-                return;
-
-            if (GFriendUtils.IsFriend(player.UserId))
-            {
-                Events.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
-                {
-                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-                        PlayerInfoPage.Container = playerRig;
-                })));
-            }
-            else if (GFriendUtils.FriendCompatible && GFriendUtils.IsVerified(player.UserId))
-            {
-                Events.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.VerifiedColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
-                {
-                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-                        PlayerInfoPage.Container = playerRig;
-                })));
-            }
-            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
-            {
-                Events.SendNotification(new("A notible user has joined", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
-                {
-                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-                        PlayerInfoPage.Container = playerRig;
-                })));
-            }
-        }
-
-        public void OnPlayerLeft(NetPlayer player)
-        {
-            if (GFriendUtils.IsFriend(player.UserId))
-            {
-                Events.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.FriendColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationNegative));
-            }
-            else if (GFriendUtils.IsVerified(player.UserId))
-            {
-                Events.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriendUtils.VerifiedColour), player.NickName.SanitizeName()), 5, InfoWatchSound.notificationNegative));
-            }
-            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
-            {
-                Events.SendNotification(new("A notible user has left", player.NickName.SanitizeName(), 5, InfoWatchSound.notificationNegative));
-            }
-
-            CheckPlayer(player);
+            if (Enum.Parse<InfoWatchSound>(string.Concat("error", Random.Range(1, 6))) is InfoWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
+                localInfoWatch.AudioDevice.PlayOneShot(audioClip);
         }
 
         public bool CheckPlayer(NetPlayer player)
@@ -618,28 +642,6 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             return false;
-        }
-
-        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
-        {
-            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
-            Events.SendNotification(new("You completed a quest", quest.questType != QuestType.none ? quest.questName : "OH NO!", 5, InfoWatchSound.notificationNeutral));
-        }
-
-        public void OnGetUserCosmetics(VRRig rig)
-        {
-            if (rig.Creator is not NetPlayer player || player.IsNull)
-                return;
-
-            if (CheckPlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
-            {
-                string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
-                Events.SendNotification(new($"A notible cosmetic is detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
-                {
-                    if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-                        PlayerInfoPage.Container = playerRig;
-                })));
-            }
         }
 
         public void PressButton(PushButton button, bool isLeftHand)

@@ -19,7 +19,6 @@ namespace GorillaInfoWatch.Screens
             Assembly nativeAssembly = Assembly.GetExecutingAssembly();
             var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly).ToList();
             var orderedScreens = nativeScreens.Concat(screens.Except(nativeScreens)).ToList();
-
             entries = orderedScreens.Where(screen => screen.GetType().GetCustomAttributes(typeof(ShowOnHomeScreenAttribute), false).Any()).ToDictionary(screen => screen.Title, screen => screen);
         }
 
@@ -30,13 +29,13 @@ namespace GorillaInfoWatch.Screens
             for (int i = 0; i < entries.Count; i++)
             {
                 (string entry_name, InfoWatchScreen screen) = entries.ElementAt(i);
-                lines.Add(entry_name, new Widget_PushButton(EntrySelected, screen));
+                lines.Add(entry_name, new Widget_PushButton(SelectScreen, screen));
             }
 
             return lines;
         }
 
-        public void EntrySelected(object[] args)
+        public void SelectScreen(object[] args)
         {
             if (args.ElementAtOrDefault(0) is InfoWatchScreen screen)
             {
