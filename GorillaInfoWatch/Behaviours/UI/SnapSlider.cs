@@ -20,13 +20,12 @@ namespace GorillaInfoWatch.Behaviours.UI
         [SerializeField, HideInInspector]
         private Transform needle, min, max;
 
-        [SerializeField, HideInInspector]
         private GorillaTriggerColliderHandIndicator index_finger;
 
         public static SnapSlider Current;
 
         [SerializeField, HideInInspector]
-        private Gradient colour;
+        private Gradient colour = Gradients.Button;
 
         public void Awake()
         {
@@ -42,8 +41,6 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             min = transform.Find("Min");
             max = transform.Find("Max");
-
-            colour = Gradients.Button;
         }
 
         public void ApplySlider(Widget_SnapSlider widget)

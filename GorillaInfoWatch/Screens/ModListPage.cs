@@ -40,7 +40,11 @@ namespace GorillaInfoWatch.Screens
             {
                 PluginInfo pluginInfo = mods[i];
 
-                Widget_PushButton pushButton = new(OpenModInfo, pluginInfo);
+                Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
+                {
+                    Colour = Gradients.Blue,
+                    Symbol = InfoWatchSymbol.Info
+                };
 
                 if (IsEligible(pluginInfo))
                 {

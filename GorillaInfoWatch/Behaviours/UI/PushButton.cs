@@ -3,6 +3,7 @@ using GorillaInfoWatch.Models.Widgets;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using GorillaInfoWatch.Extensions;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 
 namespace GorillaInfoWatch.Behaviours.UI
@@ -13,25 +14,26 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public Widget_PushButton Widget;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private BoxCollider collider;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private MeshRenderer renderer;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private Gradient colour = Gradients.Button;
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         private bool bumped;
 
         public static float PressTime;
 
-        [SerializeField]
         private float? currentValue = null;
-
-        [SerializeField]
         private float targetValue;
+
+        [SerializeField, HideInInspector]
+        private MaterialPropertyBlock matProperties;
+        private readonly int matIndex = 1;
 
         public void Awake()
         {
@@ -40,8 +42,12 @@ namespace GorillaInfoWatch.Behaviours.UI
             gameObject.SetLayer(UnityLayer.GorillaInteractable);
 
             renderer = GetComponent<MeshRenderer>();
-            renderer.materials[1] = new Material(renderer.materials[1]);
-            // TODO: use material property block
+            renderer.materials[matIndex] = new Material(renderer.materials[matIndex]);
+
+            matProperties = new MaterialPropertyBlock();
+            matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
+            matProperties.SetColor(ShaderProps._Color, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
+            renderer.SetPropertyBlock(matProperties, matIndex);
         }
 
         public void AssignWidget(Widget_PushButton widget)
@@ -60,7 +66,11 @@ namespace GorillaInfoWatch.Behaviours.UI
                 };
 
                 if (!currentValue.HasValue || currentValue.Value == targetValue)
-                    renderer.materials[1].color = colour?.Evaluate(currentValue.Value) ?? Color.white;
+                {
+                    matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
+                    matProperties.SetColor(ShaderProps._Color, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
+                    renderer.SetPropertyBlock(matProperties, matIndex);
+                }
 
                 if (GetComponentInChildren<Image>(true) is Image image)
                 {
@@ -93,16 +103,19 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (!currentValue.HasValue || currentValue.Value != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue.GetValueOrDefault(targetValue), targetValue, Time.deltaTime / 0.05f);
+                currentValue = Mathf.MoveTowards(currentValue.GetValueOrDefault(targetValue), targetValue, Time.deltaTime / 0.2f);
                 float animatedValue = Mathf.Clamp01(AnimationCurves.EaseInSine.Evaluate(currentValue.Value));
-                renderer.materials[1].color = colour.Evaluate(animatedValue);
+                matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(animatedValue));
+                matProperties.SetColor(ShaderProps._Color, colour.Evaluate(animatedValue));
+                renderer.SetPropertyBlock(matProperties, matIndex);
+
             }
 
             if (bumped && Time.realtimeSinceStartup > PressTime)
             {
                 bumped = false;
-                targetValue = 0;
-                OnReleased?.Invoke();
+                targetValue = 0f;
+                OnReleased?.SafeInvoke();
             }
         }
 
@@ -113,18 +126,17 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             PressTime = Time.realtimeSinceStartup + 0.25f;
 
-            // base functionality
-
             bumped = true;
-            targetValue = 1;
-            currentValue = 1;
-            renderer.materials[1].color = colour.Evaluate(targetValue);
+            targetValue = 1f;
+            currentValue = 1f;
+            matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(1f));
+            matProperties.SetColor(ShaderProps._Color, colour.Evaluate(1f));
+            renderer.SetPropertyBlock(matProperties, matIndex);
 
             Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
             GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
-            // additional func
-            OnPressed?.Invoke();
+            OnPressed?.SafeInvoke();
         }
     }
 }

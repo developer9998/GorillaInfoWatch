@@ -19,6 +19,7 @@ namespace GorillaInfoWatch.Models
         Kronicahl,
         // Icons
         Verified,
+        Info,
         Patreon,
         KoFi,
         OpenSpeaker,
@@ -35,6 +36,19 @@ namespace GorillaInfoWatch.Models
         Ignore,
         Image,
         Bell,
-        BellRing
+        BellRing,
+        RedFlag,
+        GreenFlag,
+        Croptop,
+        Rainbow,
+        LightBulb,
+        Camera,
+        Vibration,
+        Gun,
+        Invisibility,
+        Particles,
+        Phone,
+        Play,
+        Stop
     }
 }

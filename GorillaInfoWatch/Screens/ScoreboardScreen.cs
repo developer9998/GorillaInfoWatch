@@ -73,7 +73,11 @@ namespace GorillaInfoWatch.Screens
             {
                 if (player == null || player.IsNull || (!player.IsLocal && !player.InRoom)) continue;
                 List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80))];
-                if (!player.IsLocal) widgets.Add(new Widget_PushButton(InspectPlayer, player));
+                if (!player.IsLocal) widgets.Add(new Widget_PushButton(InspectPlayer, player)
+                {
+                    Colour = Gradients.Blue,
+                    Symbol = InfoWatchSymbol.Info
+                });
                 lines.Add(string.IsNullOrEmpty(player.SanitizedNickName) ? player.NickName.SanitizeName() : player.SanitizedNickName, widgets);
             }
 

@@ -12,8 +12,7 @@ namespace GorillaInfoWatch.Behaviours.UI
     {
         public Action OnPressed, OnReleased;
 
-        [SerializeField, HideInInspector]
-        private Widget_Switch currentWidget;
+        public Widget_Switch currentWidget;
 
         [SerializeField, HideInInspector]
         private Transform needle, min, max;
@@ -21,12 +20,9 @@ namespace GorillaInfoWatch.Behaviours.UI
         [SerializeField, HideInInspector]
         private MeshRenderer renderer;
 
-        [SerializeField, HideInInspector]
         private bool bumped;
 
-        [SerializeField, HideInInspector]
         private float? currentValue;
-        [SerializeField, HideInInspector]
         private float targetValue;
 
         [SerializeField, HideInInspector]

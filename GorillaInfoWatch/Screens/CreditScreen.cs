@@ -14,23 +14,31 @@ namespace GorillaInfoWatch.Screens
 
         public override ScreenContent GetContent()
         {
-            LineBuilder lines = new();
+            LineBuilder baseCredits = new();
 
-            lines.Add(string.Format(creditFormat, "Dev", "dev9998", "Creator and Developer"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Dev)));
-            lines.Add(string.Format(creditFormat, "Gizmo", "gizmogoat", "Creator and Developer"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Gizmo)));
-            lines.Add(string.Format(creditFormat, "Cresmondo", "crescent.mondo", "2D Artist"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Cresmondo)));
-            lines.Add(string.Format(creditFormat, "H4RNS", "hr4ns", "3D Artist"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.H4RNS)));
+            baseCredits.Add(string.Format(creditFormat, "Dev", "dev9998", "Creator and Developer"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Dev)));
+            baseCredits.Add(string.Format(creditFormat, "Gizmo", "gizmogoat", "Creator and Developer"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Gizmo)));
+            baseCredits.Add(string.Format(creditFormat, "Cresmondo", "crescent.mondo", "2D Artist"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Cresmondo)));
+            baseCredits.Add(string.Format(creditFormat, "H4RNS", "hr4ns", "3D Artist"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.H4RNS)));
 
-            lines.Skip();
+            baseCredits.Skip();
 
-            lines.Add(string.Format(creditFormat, "Astrid", "astridgt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Astrid)));
-            lines.Add(string.Format(creditFormat, "Cyan", "cyangt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Cyan)));
-            lines.Add(string.Format(creditFormat, "Deactivated", "knownperson", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Deactivated)));
-            lines.Add(string.Format(creditFormat, "Will", "will_0x40", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Will)));
-            lines.Add(string.Format(creditFormat, "Lapis", "lapisgit", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Lapis)));
-            lines.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Kronicahl)));
+            baseCredits.Add(string.Format(creditFormat, "Astrid", "astridgt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Astrid)));
+            baseCredits.Add(string.Format(creditFormat, "Cyan", "cyangt", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Cyan)));
+            baseCredits.Add(string.Format(creditFormat, "Deactivated", "knownperson", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Deactivated)));
+            baseCredits.Add(string.Format(creditFormat, "Will", "will_0x40", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Will)));
+            baseCredits.Add(string.Format(creditFormat, "Lapis", "lapisgit", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Lapis)));
+            baseCredits.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Kronicahl)));
 
-            return lines;
+            LineBuilder supporterCredits = new();
+
+            supporterCredits.Add(string.Format(creditFormat, "Koda", "kodagtt", "Supporter since April 6, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.KoFi)));
+
+            supporterCredits.Add(string.Format(creditFormat, "Guy", "saul15.sgma", "Supporter since May 19, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Patreon)));
+
+            supporterCredits.Add(string.Format(creditFormat, "CBigback", "cbigbomb", "Supporter since March 9, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Patreon)));
+
+            return new PageBuilder((string.Empty, baseCredits), ("Supporters", supporterCredits));
         }
     }
 }
