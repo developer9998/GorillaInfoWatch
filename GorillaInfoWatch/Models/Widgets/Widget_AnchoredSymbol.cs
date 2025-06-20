@@ -12,16 +12,13 @@ namespace GorillaInfoWatch.Models.Widgets
         {
             image.enabled = true;
 
-            if (image.GetComponent<LayoutElement>() is null)
-            {
-                LayoutElement layoutElement = image.gameObject.AddComponent<LayoutElement>();
-                layoutElement.ignoreLayout = true;
+            LayoutElement layoutElement = image.gameObject.GetOrAddComponent<LayoutElement>();
+            layoutElement.ignoreLayout = true;
 
-                RectTransform rectTransform = image.GetComponent<RectTransform>();
-                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(offset).WithY(31.25f);
-                rectTransform.localPosition = rectTransform.localPosition.WithZ(-1);
-                // rect_tform.sizeDelta = new Vector2(90, 90);
-            }
+            RectTransform rectTransform = image.GetComponent<RectTransform>();
+            rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(offset).WithY(31.25f);
+            rectTransform.localPosition = rectTransform.localPosition.WithZ(-1);
+            // rect_tform.sizeDelta = new Vector2(90, 90);
         }
     }
 }

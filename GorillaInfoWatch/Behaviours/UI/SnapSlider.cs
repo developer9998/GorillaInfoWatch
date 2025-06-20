@@ -11,15 +11,21 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public Widget_SnapSlider Widget;
 
+        [SerializeField, HideInInspector]
         private BoxCollider collider;
+
+        [SerializeField, HideInInspector]
         private MeshRenderer renderer;
 
+        [SerializeField, HideInInspector]
         private Transform needle, min, max;
 
+        [SerializeField, HideInInspector]
         private GorillaTriggerColliderHandIndicator index_finger;
 
         public static SnapSlider Current;
 
+        [SerializeField, HideInInspector]
         private Gradient colour;
 
         public void Awake()

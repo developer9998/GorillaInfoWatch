@@ -13,16 +13,24 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public Widget_PushButton Widget;
 
+        [SerializeField]
         private BoxCollider collider;
+
+        [SerializeField]
         private MeshRenderer renderer;
 
+        [SerializeField]
         private Gradient colour = Gradients.Button;
 
+        [SerializeField]
         private bool bumped;
 
         public static float PressTime;
 
+        [SerializeField]
         private float? currentValue = null;
+
+        [SerializeField]
         private float targetValue;
 
         public void Awake()

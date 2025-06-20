@@ -199,6 +199,9 @@ namespace GorillaInfoWatch.Behaviours
                 menu_lines.Add(line_component);
             }
 
+            await TaskUtils.YieldInstruction(new WaitForEndOfFrame());
+            await Task.Yield();
+
             // Components
 
             WatchTrigger watchTrigger = watchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
@@ -327,7 +330,7 @@ namespace GorillaInfoWatch.Behaviours
         public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
         {
             Logging.Info($"Quest completed: {quest.GetTextDescription()}");
-            Events.SendNotification(new("You completed a quest", quest.questType != QuestType.none ? quest.questName : "OH NO!", 5, InfoWatchSound.notificationNeutral));
+            Events.SendNotification(new("You completed a quest", quest.questName, 5, InfoWatchSound.notificationNeutral));
         }
 
         public void OnGetUserCosmetics(VRRig rig)
@@ -592,6 +595,8 @@ namespace GorillaInfoWatch.Behaviours
 
             if (CurrentScreen == Inbox)
                 Inbox.SetContent();
+
+            localInfoWatch.home?.RefreshBell(Inbox.Notifications.Count);
         }
 
         public void PlayErrorSound()

@@ -31,12 +31,16 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             Text = transform.Find("Text").GetComponent<TMP_Text>();
             Button = transform.Find("Grid/Button").gameObject.GetOrAddComponent<PushButton>();
-            Button.gameObject.SetActive(false);
             SnapSlider = transform.Find("Grid/Slider").gameObject.GetOrAddComponent<SnapSlider>();
-            SnapSlider.gameObject.SetActive(false);
             Switch = transform.Find("Grid/Switch").gameObject.GetOrAddComponent<Switch>();
-            Switch.gameObject.SetActive(false);
             Symbol = transform.Find("Grid/Symbol").gameObject;
+        }
+
+        public void Start()
+        {
+            Button.gameObject.SetActive(false);
+            SnapSlider.gameObject.SetActive(false);
+            Switch.gameObject.SetActive(false);
             Symbol.SetActive(false);
         }
 

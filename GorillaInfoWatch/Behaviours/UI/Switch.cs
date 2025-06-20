@@ -12,17 +12,24 @@ namespace GorillaInfoWatch.Behaviours.UI
     {
         public Action OnPressed, OnReleased;
 
+        [SerializeField, HideInInspector]
         private Widget_Switch currentWidget;
 
+        [SerializeField, HideInInspector]
         private Transform needle, min, max;
 
+        [SerializeField, HideInInspector]
         private MeshRenderer renderer;
 
+        [SerializeField, HideInInspector]
         private bool bumped;
 
+        [SerializeField, HideInInspector]
         private float? currentValue;
+        [SerializeField, HideInInspector]
         private float targetValue;
 
+        [SerializeField, HideInInspector]
         private Gradient colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
 
         public void Awake()

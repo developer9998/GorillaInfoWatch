@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public GameObject idleMenu, messageMenu, redirectIcon;
 
-        public TMP_Text timeText, fpsText, messageText, redirectText;
+        public TMP_Text timeText,/* fpsText,*/ messageText, redirectText;
 
         public Slider messageSlider;
 
@@ -52,7 +52,7 @@ namespace GorillaInfoWatch.Behaviours
             idleMenu = head.Find("Watch GUI/IdleMenu").gameObject;
 
             timeText = idleMenu.transform.Find("TimeDate").GetComponent<TMP_Text>();
-            fpsText = idleMenu.transform.Find("FPS").GetComponent<TMP_Text>();
+            // fpsText = idleMenu.transform.Find("FPS").GetComponent<TMP_Text>();
 
             messageMenu = head.Find("Watch GUI/MessageMenu").gameObject;
 
