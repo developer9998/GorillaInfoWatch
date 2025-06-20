@@ -1,5 +1,4 @@
-﻿using Fusion;
-using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaNetworking;
 using System;

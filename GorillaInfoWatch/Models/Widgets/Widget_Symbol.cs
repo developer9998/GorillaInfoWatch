@@ -1,6 +1,6 @@
 using GorillaInfoWatch.Behaviours.UI;
-using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {

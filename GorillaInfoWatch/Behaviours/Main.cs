@@ -108,7 +108,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 // var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-                var assemblies = Chainloader.PluginInfos.Values.Select(info => info.Instance.GetType().Assembly).Distinct();
+                var assemblies = Chainloader.PluginInfos.Values.Select(info => info.Instance.GetType().Assembly).Where(assembly => assembly != typeof(Main).Assembly).Distinct();
 
                 foreach (Assembly assembly in assemblies)
                 {
@@ -141,14 +141,6 @@ namespace GorillaInfoWatch.Behaviours
 
             // Assets
 
-            data = await AssetLoader.LoadAsset<InfoWatchData>("Data");
-
-            figures = Array.ConvertAll(data.Figures, figure => (FigureSignificance)figure);
-            cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemSignificance)item);
-            // cosmetics = [.. cosmetics, new(InfoWatchSymbol.OpenSpeaker, "LHAAC.")]; // quick test for cosmetic recognition
-            watch = new(InfoWatchSymbol.InfoWatch);
-            verified = new(InfoWatchSymbol.Verified);
-
             foreach (string watchSoundName in Enum.GetNames(typeof(InfoWatchSound)))
             {
                 AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(watchSoundName);
@@ -160,8 +152,15 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Warning($"Missing AudioClip asset for sound: {watchSoundName}");
             }
 
-            var sprite_assets = AssetLoader.Bundle.LoadAssetWithSubAssets<Sprite>("Sheet");
+            var sprite_assets = await AssetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
             Sprites = Array.FindAll(sprite_assets, sprite => Enum.IsDefined(typeof(InfoWatchSymbol), sprite.name)).ToDictionary(sprite => (InfoWatchSymbol)Enum.Parse(typeof(InfoWatchSymbol), sprite.name), sprite => sprite);
+
+            data = await AssetLoader.LoadAsset<InfoWatchData>("Data");
+
+            figures = Array.ConvertAll(data.Figures, figure => (FigureSignificance)figure);
+            cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemSignificance)item);
+            watch = new(InfoWatchSymbol.InfoWatch);
+            verified = new(InfoWatchSymbol.Verified);
 
             // Objects
 
@@ -341,7 +340,7 @@ namespace GorillaInfoWatch.Behaviours
             if (CheckPlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
             {
                 string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
-                Events.SendNotification(new($"A notable cosmetic is detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                Events.SendNotification(new($"A notable cosmetic was detected", displayName, 5, InfoWatchSound.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
                     if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
                         PlayerInfoPage.Container = playerRig;
@@ -505,6 +504,8 @@ namespace GorillaInfoWatch.Behaviours
 
             Logging.Warning("Component of type is not screen (this shouldn't happen)");
             Destroy(component);
+            PlayErrorSound();
+
             return false;
         }
 
@@ -601,7 +602,9 @@ namespace GorillaInfoWatch.Behaviours
 
         public void PlayErrorSound()
         {
-            if (Enum.Parse<InfoWatchSound>(string.Concat("error", Random.Range(1, 6))) is InfoWatchSound result && Sounds.TryGetValue(result, out AudioClip audioClip))
+            // Random.Range (inclusive, exclusive)
+            // meaning Random.Range(1, 7) can give you 1, 2, 3, 4, 5, and 6
+            if (Enum.TryParse(string.Concat("error", Random.Range(1, 7)), out InfoWatchSound sound) && Sounds.TryGetValue(sound, out AudioClip audioClip))
                 localInfoWatch.AudioDevice.PlayOneShot(audioClip);
         }
 
@@ -625,7 +628,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (!Significance.ContainsKey(player))
                 {
-                    Logging.Info($"Added significant player {player.NickName}: {predicate.Symbol}");
+                    Logging.Info($"Added significant player {player.NickName}: {predicate.Sprite}");
                     Significance.Add(player, predicate);
                     Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
                     return true;
@@ -633,7 +636,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (Significance[player] != predicate)
                 {
-                    Logging.Info($"Changed significant player {player.NickName}: from {Significance[player].Symbol} to {predicate.Symbol}");
+                    Logging.Info($"Changed significant player {player.NickName}: from {Significance[player].Sprite} to {predicate.Sprite}");
                     Significance[player] = predicate;
                     Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
                     return true;

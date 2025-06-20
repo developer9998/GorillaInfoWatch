@@ -82,7 +82,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (significance != null)
             {
                 useMonkeSymbol = false;
-                image.sprite = ((Symbol)significance.Symbol).Sprite;
+                image.sprite = ((Symbol)significance.Sprite).Sprite;
                 monkeBase.enabled = false;
                 monkeFace.enabled = false;
             }

@@ -14,6 +14,13 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public Symbol Symbol;
 
+        public bool IsReadOnly => Command == null || Command.Target == null;
+
+        public Widget_PushButton(): this(null, null)
+        {
+
+        }
+
         public Widget_PushButton(Action action) : this(args => action(), [])
         {
             // Must declare a body

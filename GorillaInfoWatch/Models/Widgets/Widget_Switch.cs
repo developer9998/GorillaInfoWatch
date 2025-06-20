@@ -17,7 +17,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public bool IsReadOnly => Command == null || Command.Target == null;
 
-        public Widget_Switch(bool value): this(value, (Action<bool, object[]>)null, null)
+        public Widget_Switch(bool value) : this(value, (Action<bool, object[]>)null, null)
         {
             // Must declare a body
         }

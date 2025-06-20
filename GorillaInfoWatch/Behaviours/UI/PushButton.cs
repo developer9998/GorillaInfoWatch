@@ -1,9 +1,11 @@
-﻿using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Utilities;
 using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using GorillaInfoWatch.Extensions;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 
 namespace GorillaInfoWatch.Behaviours.UI
@@ -58,7 +60,11 @@ namespace GorillaInfoWatch.Behaviours.UI
                 gameObject.SetActive(true);
 
                 currentValue ??= targetValue;
-                colour = Widget.Colour ?? Gradients.Button;
+                colour = widget.IsReadOnly ? GradientUtils.FromColour(colours: [.. widget.Colour.colorKeys.Select(key => key.color).Select(colour =>
+                {
+                    Color.RGBToHSV(colour, out float h, out float s, out float v);
+                    return Color.HSVToRGB(h, s * 0.4f, v);
+                })]) : widget.Colour;
 
                 OnPressed = delegate ()
                 {
@@ -103,7 +109,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (!currentValue.HasValue || currentValue.Value != targetValue)
             {
-                currentValue = Mathf.MoveTowards(currentValue.GetValueOrDefault(targetValue), targetValue, Time.deltaTime / 0.2f);
+                currentValue = Mathf.MoveTowards(currentValue.GetValueOrDefault(targetValue), targetValue, Time.deltaTime / 0.05f);
                 float animatedValue = Mathf.Clamp01(AnimationCurves.EaseInSine.Evaluate(currentValue.Value));
                 matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(animatedValue));
                 matProperties.SetColor(ShaderProps._Color, colour.Evaluate(animatedValue));
@@ -121,6 +127,9 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerEnter(Collider collider)
         {
+            if (Widget != null && Widget.IsReadOnly)
+                return;
+
             if (PressTime > Time.realtimeSinceStartup || !collider.TryGetComponent(out HandIndicator component) || component.isLeftHand == InfoWatch.LocalWatch.InLeftHand)
                 return;
 
