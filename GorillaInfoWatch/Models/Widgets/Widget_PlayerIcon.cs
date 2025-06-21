@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Models.Widgets
                 CreateSubSymbol(ref monkeBase, InfoWatchSymbol.TemplateHead);
                 CreateSubSymbol(ref monkeFace, InfoWatchSymbol.TemplateFace);
 
-                OnSignificanceChanged(Player, Main.Instance.Significance.TryGetValue(Player, out PlayerSignificance significance) ? significance : null);
+                OnSignificanceChanged(Player, Main.Significance.TryGetValue(Player, out PlayerSignificance significance) ? significance : null);
 
                 playerRig.Rig.OnColorChanged += OnColourChanged;
                 Events.OnSignificanceChanged += OnSignificanceChanged;
@@ -82,7 +82,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (significance != null)
             {
                 useMonkeSymbol = false;
-                image.sprite = ((Symbol)significance.Sprite).Sprite;
+                image.sprite = ((Symbol)significance.Symbol).Sprite;
                 monkeBase.enabled = false;
                 monkeFace.enabled = false;
             }

@@ -13,8 +13,6 @@ namespace GorillaInfoWatch.Models
 
         public int Section = 0;
 
-        public ScreenContent Content;
-
         public event Action<bool> RequestSetLines;
 
         public event Action<Type> RequestScreenSwitch;

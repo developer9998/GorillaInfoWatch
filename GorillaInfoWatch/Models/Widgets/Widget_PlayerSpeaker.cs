@@ -23,9 +23,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Behaviour_Enable()
         {
-            Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.OpenSpeaker, out open_speaker);
-            Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.MutedSpeaker, out muted_speaker);
-            Main.Instance.Sprites.TryGetValue(InfoWatchSymbol.ForceMuteSpeaker, out force_mute_speaker);
+            Main.Sprites.TryGetValue(InfoWatchSymbol.OpenSpeaker, out open_speaker);
+            Main.Sprites.TryGetValue(InfoWatchSymbol.MutedSpeaker, out muted_speaker);
+            Main.Sprites.TryGetValue(InfoWatchSymbol.ForceMuteSpeaker, out force_mute_speaker);
 
             recorder = NetworkSystem.Instance.LocalRecorder;
 

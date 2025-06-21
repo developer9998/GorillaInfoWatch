@@ -17,8 +17,6 @@ namespace GorillaInfoWatch.Screens
     {
         public override string Title => "Details";
 
-        private bool show_sensitive_data = false;
-
         public override ScreenContent GetContent()
         {
             LineBuilder profileLines = new();
@@ -40,6 +38,8 @@ namespace GorillaInfoWatch.Screens
 
             var accountInfo = NetworkSystem.Instance.GetLocalPlayer().GetAccountInfo(result => SetContent());
             profileLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
+
+
 
             LineBuilder economyLines = new();
 
@@ -102,7 +102,7 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder progressionLines = new();
 
-            progressionLines.Add($"Tutorial Completion: {NetworkSystem.Instance.GetMyTutorialCompletion()}");
+            progressionLines.Add($"Tutorial Completion: {(NetworkSystem.Instance.GetMyTutorialCompletion() ? "Complete" : "Incomplete")}");
             progressionLines.Add($"Total Points: {ProgressionController.TotalPoints}");
             progressionLines.Add($"Unclaimed Points: {ProgressionController._gInstance.unclaimedPoints}");
 
@@ -196,12 +196,6 @@ namespace GorillaInfoWatch.Screens
             */
 
             return new PageBuilder(("Profile", profileLines), ("Economy", economyLines), ("Safety", safetyLines), ("Progression", progressionLines));
-        }
-
-        public void ProcessSensitiveData(bool value)
-        {
-            show_sensitive_data = value;
-            SetText();
         }
     }
 }

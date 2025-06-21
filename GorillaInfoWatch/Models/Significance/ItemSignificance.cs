@@ -1,9 +1,8 @@
 ﻿using GorillaNetworking;
-using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Significance
 {
-    public class ItemSignificance(Sprite sprite, string itemId) : PlayerSignificance(sprite)
+    public class ItemSignificance(InfoWatchSymbol symbol, string itemId) : PlayerSignificance(symbol)
     {
         public string ItemId { get; } = itemId;
 

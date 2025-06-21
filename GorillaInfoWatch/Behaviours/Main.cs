@@ -70,12 +70,14 @@ namespace GorillaInfoWatch.Behaviours
         private TMP_Text menu_page_text;
         private PushButton button_prev_page, button_next_page, button_return_screen, button_reload_screen, buttonOpenInbox;
 
-        // Assets
-        public readonly Dictionary<InfoWatchSound, AudioClip> Sounds = [];
 
-        public Dictionary<InfoWatchSymbol, Sprite> Sprites;
+        public static Dictionary<InfoWatchSymbol, Sprite> Sprites;
 
-        public readonly Dictionary<NetPlayer, PlayerSignificance> Significance = [];
+        public static Dictionary<InfoWatchSound, AudioClip> Sounds = [];
+
+        public static Dictionary<NetPlayer, PlayerSignificance> Significance = [];
+
+        private readonly Dictionary<InfoWatchScreen, ScreenContent> contentCache = [];
 
         public async override void Initialize()
         {
@@ -141,26 +143,26 @@ namespace GorillaInfoWatch.Behaviours
 
             // Assets
 
-            foreach (string watchSoundName in Enum.GetNames(typeof(InfoWatchSound)))
-            {
-                AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(watchSoundName);
-                if (clip)
-                {
-                    Sounds.TryAdd(Enum.Parse<InfoWatchSound>(watchSoundName), clip);
-                    continue;
-                }
-                Logging.Warning($"Missing AudioClip asset for sound: {watchSoundName}");
-            }
-
-            var sprite_assets = await AssetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
-            Sprites = Array.FindAll(sprite_assets, sprite => Enum.IsDefined(typeof(InfoWatchSymbol), sprite.name)).ToDictionary(sprite => (InfoWatchSymbol)Enum.Parse(typeof(InfoWatchSymbol), sprite.name), sprite => sprite);
-
             data = await AssetLoader.LoadAsset<InfoWatchData>("Data");
 
             figures = Array.ConvertAll(data.Figures, figure => (FigureSignificance)figure);
             cosmetics = Array.ConvertAll(data.Cosmetics, item => (ItemSignificance)item);
             watch = new(InfoWatchSymbol.InfoWatch);
             verified = new(InfoWatchSymbol.Verified);
+
+            foreach (InfoWatchSound enumWeNeverReallyKnewEachotherAnyway in Enum.GetValues(typeof(InfoWatchSound)).Cast<InfoWatchSound>())
+            {
+                AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(enumWeNeverReallyKnewEachotherAnyway.ToString());
+                if (clip)
+                {
+                    Sounds.Add(enumWeNeverReallyKnewEachotherAnyway, clip);
+                    continue;
+                }
+                Logging.Warning($"Missing AudioClip asset for sound: {enumWeNeverReallyKnewEachotherAnyway}");
+            }
+
+            Sprite[] spriteArray = await AssetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
+            Sprites = Array.FindAll(spriteArray, sprite => Enum.IsDefined(typeof(InfoWatchSymbol), sprite.name)).ToDictionary(sprite => (InfoWatchSymbol)Enum.Parse(typeof(InfoWatchSymbol), sprite.name), sprite => sprite);
 
             // Objects
 
@@ -233,9 +235,9 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (CurrentScreen is InfoWatchScreen screen)
                 {
-                    screen.Content = screen.GetContent();
-                    screen.OnRefresh();
                     menu_lines.ForEach(line => line.Build(new ScreenLine("", []), true));
+                    screen.OnRefresh();
+                    contentCache.AddOrUpdate(screen, screen.GetContent());
                     RefreshScreen();
                 }
             };
@@ -359,7 +361,8 @@ namespace GorillaInfoWatch.Behaviours
 
                 CurrentScreen.OnClose();
 
-                CurrentScreen.Content = null;
+                if (contentCache.ContainsKey(CurrentScreen))
+                    contentCache.Remove(CurrentScreen);
 
                 if (history.Count == 0 || history.Last() != newScreen) history.Add(CurrentScreen);
             }
@@ -374,13 +377,13 @@ namespace GorillaInfoWatch.Behaviours
             newScreen.RequestScreenSwitch += SwitchScreen;
             newScreen.RequestSetLines += delegate (bool includeWidgets)
             {
-                newScreen.Content = newScreen.GetContent();
+                contentCache.AddOrUpdate(newScreen, newScreen.GetContent());
                 RefreshScreen(includeWidgets);
             };
 
             newScreen.OnShow();
 
-            newScreen.Content = newScreen.GetContent();
+            contentCache.AddOrUpdate(newScreen, newScreen.GetContent());
             RefreshScreen();
         }
 
@@ -397,9 +400,8 @@ namespace GorillaInfoWatch.Behaviours
             buttonOpenInbox.gameObject.SetActive(CurrentScreen == Home);
             button_return_screen.gameObject.SetActive(CurrentScreen != Home);
 
-            CurrentScreen.Content ??= CurrentScreen.GetContent();
-
-            ScreenContent content = CurrentScreen.Content ?? new LineBuilder();
+            if (!contentCache.ContainsKey(CurrentScreen)) contentCache.Add(CurrentScreen, CurrentScreen.GetContent());
+            ScreenContent content = contentCache[CurrentScreen] ?? new LineBuilder();
 
             try
             {
@@ -628,7 +630,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (!Significance.ContainsKey(player))
                 {
-                    Logging.Info($"Added significant player {player.NickName}: {predicate.Sprite}");
+                    Logging.Info($"Added significant player {player.NickName}: {predicate.Symbol}");
                     Significance.Add(player, predicate);
                     Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
                     return true;
@@ -636,7 +638,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (Significance[player] != predicate)
                 {
-                    Logging.Info($"Changed significant player {player.NickName}: from {Significance[player].Sprite} to {predicate.Sprite}");
+                    Logging.Info($"Changed significant player {player.NickName}: from {Significance[player].Symbol} to {predicate.Symbol}");
                     Significance[player] = predicate;
                     Events.OnSignificanceChanged?.SafeInvoke(player, predicate);
                     return true;
@@ -673,7 +675,7 @@ namespace GorillaInfoWatch.Behaviours
                     ? GorillaTagger.Instance.offlineVRRig.leftHandPlayer
                     : GorillaTagger.Instance.offlineVRRig.rightHandPlayer;
 
-                AudioClip clip = Sounds[InfoWatchSound.widgetButton];
+                AudioClip clip = Sounds[InfoWatchSound.widgetSlider];
                 handSource.PlayOneShot(clip, 0.2f);
             }
         }

@@ -16,7 +16,7 @@ namespace GorillaInfoWatch.Screens
 
         public void SetEntries(List<InfoWatchScreen> screens)
         {
-            Assembly nativeAssembly = Assembly.GetExecutingAssembly();
+            Assembly nativeAssembly = typeof(Plugin).Assembly;
             var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly).ToList();
             var orderedScreens = nativeScreens.Concat(screens.Except(nativeScreens)).ToList();
             entries = orderedScreens.Where(screen => screen.GetType().GetCustomAttributes(typeof(ShowOnHomeScreenAttribute), false).Any()).ToDictionary(screen => screen.Title, screen => screen);

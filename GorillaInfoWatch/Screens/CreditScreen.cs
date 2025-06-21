@@ -32,11 +32,11 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder supporterCredits = new();
 
+            supporterCredits.Add(string.Format(creditFormat, "CBigback", "cbigbomb", "Supporter since March 9, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Patreon)));
+
             supporterCredits.Add(string.Format(creditFormat, "Koda", "kodagtt", "Supporter since April 6, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.KoFi)));
 
             supporterCredits.Add(string.Format(creditFormat, "Guy", "saul15.sgma", "Supporter since May 19, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Patreon)));
-
-            supporterCredits.Add(string.Format(creditFormat, "CBigback", "cbigbomb", "Supporter since March 9, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Patreon)));
 
             return new PageBuilder((string.Empty, baseCredits), ("Supporters", supporterCredits));
         }

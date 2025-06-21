@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
-using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Significance
 {
-    public class FigureSignificance(Sprite sprite, string[] userIds) : PlayerSignificance(sprite)
+    public class FigureSignificance(InfoWatchSymbol symbol, string[] userIds) : PlayerSignificance(symbol)
     {
         public string[] UserIDs { get; } = Array.ConvertAll(userIds, userId => userId.Contains(" ") ? userId.Split(" ").First() : userId);
 

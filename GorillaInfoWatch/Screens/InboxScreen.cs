@@ -71,7 +71,7 @@ namespace GorillaInfoWatch.Screens
                 {
                     lines.Add(array, new Widget_PushButton(OpenFunction, notification, true)
                     {
-                        Colour = Gradients.Button, // TODO: implement greyscale gradient (white to black)
+                        Colour = Gradients.Black,
                         Symbol = InfoWatchSymbol.Invisibility
                     });
                 }

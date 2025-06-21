@@ -18,7 +18,7 @@ namespace GorillaInfoWatch.Models
 
         public Symbol(InfoWatchSymbol symbol)
         {
-            if (Main.Instance.Sprites.TryGetValue(symbol, out Sprite sprite))
+            if (Main.Sprites.TryGetValue(symbol, out Sprite sprite))
             {
                 Sprite = sprite;
             }
