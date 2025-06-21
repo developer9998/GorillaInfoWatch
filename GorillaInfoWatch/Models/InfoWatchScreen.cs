@@ -11,7 +11,8 @@ namespace GorillaInfoWatch.Models
 
         public virtual string Description { get; set; }
 
-        public int Section = 0;
+        public int Section;
+        public ScreenContent Content;
 
         public event Action<bool> RequestSetLines;
 

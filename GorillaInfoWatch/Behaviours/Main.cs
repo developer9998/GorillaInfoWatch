@@ -77,8 +77,6 @@ namespace GorillaInfoWatch.Behaviours
 
         public static Dictionary<NetPlayer, PlayerSignificance> Significance = [];
 
-        private readonly Dictionary<InfoWatchScreen, ScreenContent> contentCache = [];
-
         public async override void Initialize()
         {
             enabled = false;
@@ -237,7 +235,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     menu_lines.ForEach(line => line.Build(new ScreenLine("", []), true));
                     screen.OnRefresh();
-                    contentCache.AddOrUpdate(screen, screen.GetContent());
+                    screen.Content = screen.GetContent();
                     RefreshScreen();
                 }
             };
@@ -358,11 +356,9 @@ namespace GorillaInfoWatch.Behaviours
                 CurrentScreen.RequestSetLines -= RefreshScreen;
 
                 CurrentScreen.enabled = false;
+                CurrentScreen.Content = null;
 
                 CurrentScreen.OnClose();
-
-                if (contentCache.ContainsKey(CurrentScreen))
-                    contentCache.Remove(CurrentScreen);
 
                 if (history.Count == 0 || history.Last() != newScreen) history.Add(CurrentScreen);
             }
@@ -372,18 +368,17 @@ namespace GorillaInfoWatch.Behaviours
             if (newScreen == Home) history.Clear();
             else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
-            newScreen.enabled = true;
-
             newScreen.RequestScreenSwitch += SwitchScreen;
             newScreen.RequestSetLines += delegate (bool includeWidgets)
             {
-                contentCache.AddOrUpdate(newScreen, newScreen.GetContent());
+                newScreen.Content = newScreen.GetContent();
                 RefreshScreen(includeWidgets);
             };
 
+            newScreen.enabled = true;
             newScreen.OnShow();
 
-            contentCache.AddOrUpdate(newScreen, newScreen.GetContent());
+            newScreen.Content = newScreen.GetContent();
             RefreshScreen();
         }
 
@@ -391,7 +386,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (type is null)
                 SwitchScreen(Home);
-            else if (GetScreen(type) is InfoWatchScreen screen)
+            else if (GetScreen(type, false) is InfoWatchScreen screen)
                 SwitchScreen(screen);
         }
 
@@ -400,12 +395,11 @@ namespace GorillaInfoWatch.Behaviours
             buttonOpenInbox.gameObject.SetActive(CurrentScreen == Home);
             button_return_screen.gameObject.SetActive(CurrentScreen != Home);
 
-            if (!contentCache.ContainsKey(CurrentScreen)) contentCache.Add(CurrentScreen, CurrentScreen.GetContent());
-            ScreenContent content = contentCache[CurrentScreen] ?? new LineBuilder();
+            CurrentScreen.Content ??= CurrentScreen.GetContent();
 
             try
             {
-                int sectionCount = content.GetSectionCount();
+                int sectionCount = CurrentScreen.Content.GetSectionCount();
                 CurrentScreen.Section = sectionCount != 0 ? CurrentScreen.Section.Wrap(0, sectionCount) : 0;
 
                 bool multiSection = sectionCount > 1;
@@ -413,7 +407,7 @@ namespace GorillaInfoWatch.Behaviours
                 button_prev_page.gameObject.SetActive(multiSection);
                 menu_page_text.text = multiSection ? $"{CurrentScreen.Section + 1}/{sectionCount}" : string.Empty;
 
-                string sectionTitle = content.GetTitleOfSection(CurrentScreen.Section);
+                string sectionTitle = CurrentScreen.Content.GetTitleOfSection(CurrentScreen.Section);
                 menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(sectionTitle) ? "" : $" - {sectionTitle}")}";
 
                 if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
@@ -435,7 +429,7 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                IEnumerable<ScreenLine> lines = content.GetLinesAtSection(CurrentScreen.Section);
+                IEnumerable<ScreenLine> lines = CurrentScreen.Content.GetLinesAtSection(CurrentScreen.Section);
 
                 for (int i = 0; i < Constants.SectionCapacity; i++)
                 {
@@ -567,9 +561,8 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     if (notification.Screen.Task is Task task)
                     {
-                        notification.Processing = true;
                         TaskAwaiter awaiter = task.GetAwaiter();
-                        awaiter.OnCompleted(delegate ()
+                        awaiter.UnsafeOnCompleted(delegate ()
                         {
                             notification.Processing = false;
                             SwitchScreen(screen);

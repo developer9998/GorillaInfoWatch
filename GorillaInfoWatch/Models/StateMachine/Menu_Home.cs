@@ -111,7 +111,7 @@ namespace GorillaInfoWatch.Models.StateMachine
                 }
 
                 if (micSymbol != null && micIcon.sprite != micSymbol.Sprite) micIcon.sprite = micSymbol.Sprite;
-                if (micFloatingPoint != null && micIcon.color.r != micFloatingPoint) micIcon.color = new Color(micFloatingPoint.GetValueOrDefault(1f), micFloatingPoint.GetValueOrDefault(1f), micFloatingPoint.GetValueOrDefault(1f), 1f);
+                if (micFloatingPoint != null && micIcon.color.r != micFloatingPoint) micIcon.color = new Color(1f, 1f, 1f, micFloatingPoint.GetValueOrDefault(1f));
             }
             else if (micIcon.enabled)
             {
@@ -138,7 +138,7 @@ namespace GorillaInfoWatch.Models.StateMachine
             float floatingPoint = hasUnread ? 1f : 0.5f;
             Symbol symbol = hasUnread ? bellRingSymbol : bellIdleSymbol;
             bellIcon.sprite = symbol.Sprite;
-            bellIcon.color = new Color(floatingPoint, floatingPoint, floatingPoint, 1f);
+            bellIcon.color = new Color(1f, 1f, 1f, floatingPoint);
         }
 
         public void RefreshMic()

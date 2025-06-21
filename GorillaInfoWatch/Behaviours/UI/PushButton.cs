@@ -16,10 +16,10 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public Widget_PushButton Widget;
 
-        [SerializeField, HideInInspector]
+        [SerializeField]
         private BoxCollider collider;
 
-        [SerializeField, HideInInspector]
+        [SerializeField]
         private MeshRenderer renderer;
 
         [SerializeField, HideInInspector]
@@ -33,18 +33,29 @@ namespace GorillaInfoWatch.Behaviours.UI
         private float? currentValue = null;
         private float targetValue;
 
+        [SerializeField]
+        private Image image;
+
         [SerializeField, HideInInspector]
         private MaterialPropertyBlock matProperties;
         private readonly int matIndex = 1;
 
         public void Awake()
         {
-            collider = GetComponent<BoxCollider>();
-            collider.isTrigger = true;
-            gameObject.SetLayer(UnityLayer.GorillaInteractable);
+            if (!collider)
+            {
+                collider = GetComponent<BoxCollider>();
+                collider.isTrigger = true;
+                gameObject.SetLayer(UnityLayer.GorillaInteractable);
+            }
 
-            renderer = GetComponent<MeshRenderer>();
-            renderer.materials[matIndex] = new Material(renderer.materials[matIndex]);
+            if (!renderer)
+            {
+                renderer = GetComponent<MeshRenderer>();
+                renderer.materials[matIndex] = new Material(renderer.materials[matIndex]);
+            }
+
+            if (!image) image = GetComponentInChildren<Image>(true);
 
             matProperties = new MaterialPropertyBlock();
             matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
@@ -78,10 +89,11 @@ namespace GorillaInfoWatch.Behaviours.UI
                     renderer.SetPropertyBlock(matProperties, matIndex);
                 }
 
-                if (GetComponentInChildren<Image>(true) is Image image)
+                if (image)
                 {
-                    image.gameObject.SetActive(widget.Symbol is not null);
-                    if (image.gameObject.activeSelf)
+                    bool hasSymbol = widget.Symbol != null;
+                    image.gameObject.SetActive(hasSymbol);
+                    if (hasSymbol)
                     {
                         image.sprite = widget.Symbol.Sprite;
                         image.material = widget.Symbol.Material;
@@ -114,7 +126,6 @@ namespace GorillaInfoWatch.Behaviours.UI
                 matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(animatedValue));
                 matProperties.SetColor(ShaderProps._Color, colour.Evaluate(animatedValue));
                 renderer.SetPropertyBlock(matProperties, matIndex);
-
             }
 
             if (bumped && Time.realtimeSinceStartup > PressTime)
