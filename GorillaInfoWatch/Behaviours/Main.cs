@@ -399,58 +399,103 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                int sectionCount = CurrentScreen.Content.GetSectionCount();
-                CurrentScreen.Section = sectionCount != 0 ? CurrentScreen.Section.Wrap(0, sectionCount) : 0;
+                int sectionCount = 0;
+
+                try
+                {
+                    sectionCount = CurrentScreen.Content.GetSectionCount();
+                }
+                catch(Exception ex)
+                {
+                    Logging.Fatal("Screen section count method threw exception");
+                    Logging.Error(ex);
+                    PlayErrorSound();
+                }
+
+                int currentSection = sectionCount != 0 ? CurrentScreen.Section.Wrap(0, sectionCount) : 0;
+                CurrentScreen.Section = currentSection;
 
                 bool multiSection = sectionCount > 1;
                 button_next_page.gameObject.SetActive(multiSection);
                 button_prev_page.gameObject.SetActive(multiSection);
-                menu_page_text.text = multiSection ? $"{CurrentScreen.Section + 1}/{sectionCount}" : string.Empty;
+                
+                menu_page_text.text = multiSection ? $"{currentSection  + 1}/{sectionCount}" : string.Empty;
 
-                string sectionTitle = CurrentScreen.Content.GetTitleOfSection(CurrentScreen.Section);
+                string sectionTitle = null;
+
+                try
+                {
+                    sectionTitle = CurrentScreen.Content.GetTitleOfSection(currentSection);
+                }
+                catch(Exception ex)
+                {
+                    Logging.Fatal("Screen section title method threw exception");
+                    Logging.Error(ex);
+                    PlayErrorSound();
+                }
+
                 menu_header.text = $"{CurrentScreen.Title}{(string.IsNullOrEmpty(sectionTitle) ? "" : $" - {sectionTitle}")}";
 
-                if (string.IsNullOrEmpty(CurrentScreen.Description) && menu_description.gameObject.activeSelf)
+                string description = null;
+               
+                try
+                {
+                    description = CurrentScreen.Description;
+                }
+                catch(Exception ex)
+                {
+                    Logging.Fatal("Screen section description property threw exception");
+                    Logging.Error(ex);
+                    PlayErrorSound();
+                }
+
+                if (string.IsNullOrEmpty(description) && menu_description.gameObject.activeSelf)
                 {
                     menu_description.gameObject.SetActive(false);
                 }
-                else if (!string.IsNullOrEmpty(CurrentScreen.Description))
+                else if (!string.IsNullOrEmpty(description))
                 {
                     menu_description.gameObject.SetActive(true);
                     menu_description.text = CurrentScreen.Description;
                 }
-            }
-            catch (Exception ex)
-            {
-                Logging.Fatal($"Menu could not adjust for ({CurrentScreen.GetType().Name})");
-                Logging.Error(ex);
-                PlayErrorSound();
-            }
 
-            try
-            {
-                IEnumerable<ScreenLine> lines = CurrentScreen.Content.GetLinesAtSection(CurrentScreen.Section);
+                IEnumerable<ScreenLine> lines = [];
 
-                for (int i = 0; i < Constants.SectionCapacity; i++)
+                try
                 {
-                    InfoWatchLine menu_line = menu_lines[i];
+                    lines = CurrentScreen.Content.GetLinesAtSection(CurrentScreen.Section);
+                }
+                catch(Exception ex)
+                {
+                    lines = Enumerable.Repeat<ScreenLine>(new("null"), Constants.SectionCapacity);
 
-                    if (lines.ElementAtOrDefault(i) is ScreenLine line)
+                    Logging.Fatal("Screen section lines method threw exception");
+                    Logging.Error(ex);
+                }
+
+                for (int i = 0; i < menu_lines.Count; i++)
+                {
+                    InfoWatchLine menuLine = menu_lines[i];
+
+                    if (i >= Constants.SectionCapacity)
+                        Logging.Warning($"{i} >= {Constants.SectionCapacity}");
+
+                    if (lines.ElementAtOrDefault(i) is ScreenLine screenLine)
                     {
-                        bool wasLineActive = menu_line.gameObject.activeSelf;
-                        menu_line.gameObject.SetActive(true);
-                        menu_line.Build(line, !wasLineActive || includeWidgets);
-
+                        bool wasLineActive = menuLine.gameObject.activeSelf;
+                        menuLine.gameObject.SetActive(true);
+                        menuLine.Build(screenLine, !wasLineActive || includeWidgets);
                         continue;
                     }
 
-                    menu_line.gameObject.SetActive(false);
+                    menuLine.gameObject.SetActive(false);
                 }
             }
             catch (Exception ex)
             {
-                Logging.Fatal($"Screen contents could not be displayed ({CurrentScreen.GetType().Name})");
+                Logging.Fatal($"Displaying screen contents of {CurrentScreen.GetType().Name} threw exception");
                 Logging.Error(ex);
+
                 PlayErrorSound();
             }
         }
@@ -612,10 +657,10 @@ namespace GorillaInfoWatch.Behaviours
 
             if (Array.Find(figures, figure => figure.IsValid(player)) is FigureSignificance figure)
                 predicate = figure;
-            else if (Array.Find(cosmetics, cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic)
-                predicate = cosmetic;
             else if (player.IsLocal || VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component) && component.HasInfoWatch)
                 predicate = watch;
+            else if (Array.Find(cosmetics, cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic)
+                predicate = cosmetic;
             else if (GFriendUtils.IsVerified(player.UserId))
                 predicate = verified;
 

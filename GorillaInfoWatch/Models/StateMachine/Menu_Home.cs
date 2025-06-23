@@ -111,7 +111,7 @@ namespace GorillaInfoWatch.Models.StateMachine
                 }
 
                 if (micSymbol != null && micIcon.sprite != micSymbol.Sprite) micIcon.sprite = micSymbol.Sprite;
-                if (micFloatingPoint != null && micIcon.color.r != micFloatingPoint) micIcon.color = new Color(1f, 1f, 1f, micFloatingPoint.GetValueOrDefault(1f));
+                if (micFloatingPoint != null && micIcon.color.a != micFloatingPoint) micIcon.color = new Color(1f, 1f, 1f, micFloatingPoint.GetValueOrDefault(1f));
             }
             else if (micIcon.enabled)
             {

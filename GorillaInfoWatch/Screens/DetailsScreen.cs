@@ -3,6 +3,7 @@ using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using KID.Model;
 using Newtonsoft.Json;
@@ -38,8 +39,53 @@ namespace GorillaInfoWatch.Screens
 
             var accountInfo = NetworkSystem.Instance.GetLocalPlayer().GetAccountInfo(result => SetContent());
             profileLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
+            profileLines.Skip();
 
+            if (KIDManager.HasPermissionToUseFeature(EKIDFeatures.Voice_Chat))
+            {
+                profileLines.Add($"Voice: {GorillaComputer.instance.voiceChatOn switch
+                {
+                    "TRUE" => "Human",
+                    "FALSE" => "Monke",
+                    "OFF" => "Off",
+                    _ => "N/A"
+                }}", new Widget_Switch(GorillaComputer.instance.voiceChatOn == "TRUE", value =>
+                {
+                    GorillaComputer.instance.ProcessVoiceState(value ? GorillaKeyboardBindings.option1 : GorillaKeyboardBindings.option2);
+                    GorillaComputer.instance.UpdateScreen();
+                    SetContent();
+                }));
 
+                profileLines.Add($"Transmission: {GorillaComputer.instance.pttType.ToTitleCase()}", new Widget_SnapSlider(GorillaComputer.instance.pttType switch
+                {
+                    "PUSH TO TALK" => 1,
+                    "PUSH TO MUTE" => 2,
+                    _ => 0
+                }, 0, 2, value =>
+                {
+                    if (Enum.TryParse(string.Concat("option", value + 1), out GorillaKeyboardBindings binding))
+                    {
+                        GorillaComputer.instance.ProcessMicState(binding);
+                        GorillaComputer.instance.UpdateScreen();
+                        SetContent();
+                    }
+                }));
+
+                profileLines.Add($"Auto Mute: {GorillaComputer.instance.autoMuteType.ToTitleCase()}", new Widget_SnapSlider(GorillaComputer.instance.autoMuteType switch
+                {
+                    "AGGRESSIVE" => 0,
+                    "MODERATE" => 1,
+                    _ => 2
+                }, 0, 2, value =>
+                {
+                    if (Enum.TryParse(string.Concat("option", value + 1), out GorillaKeyboardBindings binding))
+                    {
+                        GorillaComputer.instance.ProcessAutoMuteState(binding);
+                        GorillaComputer.instance.UpdateScreen();
+                        SetContent();
+                    }
+                }));
+            }
 
             LineBuilder economyLines = new();
 
