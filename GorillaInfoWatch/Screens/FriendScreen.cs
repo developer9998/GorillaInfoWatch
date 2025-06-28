@@ -98,12 +98,15 @@ namespace GorillaInfoWatch.Screens
 
             foreach (FriendBackendController.FriendPresence presence in list)
             {
-                GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(presence.FriendLinkId, null);
-
-                if (accountInfo is null)
+                if (presence is null)
                     continue;
 
-                string userName = (string.IsNullOrEmpty(presence.UserName) || presence.UserName.Length == 0) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].SanitizeName() : presence.UserName;
+                GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(presence.FriendLinkId, null);
+
+                if (accountInfo is null || accountInfo.AccountInfo is null || accountInfo.AccountInfo.TitleInfo is null)
+                    continue;
+
+                string userName = ((string.IsNullOrEmpty(presence.UserName) || string.IsNullOrWhiteSpace(presence.UserName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].SanitizeName() : presence.UserName;
 
                 string roomName = presence.RoomId;
                 bool isRoomPublic = presence.IsPublic.GetValueOrDefault(false);

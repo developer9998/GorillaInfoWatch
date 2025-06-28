@@ -3,7 +3,6 @@ using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using KID.Model;
 using Newtonsoft.Json;
@@ -125,7 +124,7 @@ namespace GorillaInfoWatch.Screens
 
             AgeStatusType accountStatus = KIDManager.GetActiveAccountStatus();
             string serializedObject = JsonConvert.SerializeObject(accountStatus);
-            string accountStatusName = string.IsNullOrEmpty(serializedObject) ? accountStatus.ToString().ToTitleCase() : serializedObject.ToTitleCase().Replace('-', ' ').Replace('_', ' ');
+            string accountStatusName = string.IsNullOrEmpty(serializedObject) ? accountStatus.ToString().ToTitleCase() : serializedObject.ToTitleCase().Replace('-', ' ').Replace('_', ' ').TrimStart('"').TrimEnd('"');
 
             safetyLines.Add($"Account Status: {(KIDManager.InitialisationSuccessful ? accountStatusName : "Not Ready")}");
             safetyLines.Skip();
