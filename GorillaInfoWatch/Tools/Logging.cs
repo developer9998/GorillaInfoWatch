@@ -15,6 +15,8 @@ namespace GorillaInfoWatch.Tools
 
         public static void Info(object message) => LogMessage(LogLevel.Info, message);
 
+        public static void Message(object message) => LogMessage(LogLevel.Message, message);
+
         public static void Warning(object message) => LogMessage(LogLevel.Warning, message);
 
         public static void Error(object message) => LogMessage(LogLevel.Error, message);

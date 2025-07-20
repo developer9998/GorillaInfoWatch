@@ -1,7 +1,6 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Utilities;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -12,7 +11,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 {
     public class PushButton : MonoBehaviour
     {
-        public Action OnPressed, OnReleased;
+        public Action OnButtonPressed, OnReleased;
 
         public Widget_PushButton Widget;
 
@@ -23,7 +22,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         private MeshRenderer renderer;
 
         [SerializeField, HideInInspector]
-        private Gradient colour = Gradients.Button;
+        private Gradient colour = ColourPalette.Button;
 
         [SerializeField, HideInInspector]
         private bool bumped;
@@ -36,7 +35,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         [SerializeField]
         private Image image;
 
-        [SerializeField, HideInInspector]
+        [HideInInspector]
         private MaterialPropertyBlock matProperties;
         private readonly int matIndex = 1;
 
@@ -71,25 +70,30 @@ namespace GorillaInfoWatch.Behaviours.UI
                 gameObject.SetActive(true);
 
                 currentValue ??= targetValue;
-                colour = widget.IsReadOnly ? GradientUtils.FromColour(colours: [.. widget.Colour.colorKeys.Select(key => key.color).Select(colour =>
-                {
-                    Color.RGBToHSV(colour, out float h, out float s, out float v);
-                    return Color.HSVToRGB(h, s * 0.4f, v);
-                })]) : widget.Colour;
+                colour = widget.Colour;
 
-                OnPressed = delegate ()
+                OnButtonPressed = () =>
                 {
                     Widget.Command?.Invoke(Widget.Parameters ?? []);
                 };
 
                 if (!currentValue.HasValue || currentValue.Value == targetValue)
                 {
-                    matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
-                    matProperties.SetColor(ShaderProps._Color, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
-                    renderer.SetPropertyBlock(matProperties, matIndex);
+                    matProperties ??= new MaterialPropertyBlock();
+                    renderer.GetPropertyBlock(matProperties, matIndex);
+                    try
+                    {
+                        matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
+                        matProperties.SetColor(ShaderProps._Color, colour.Evaluate(currentValue.GetValueOrDefault(0f)));
+                        renderer.SetPropertyBlock(matProperties, matIndex);
+                    }
+                    catch
+                    {
+
+                    }
                 }
 
-                if (image)
+                if (image is not null && image)
                 {
                     bool hasSymbol = widget.Symbol != null;
                     image.gameObject.SetActive(hasSymbol);
@@ -107,7 +111,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             Widget = null;
             currentValue = null;
             gameObject.SetActive(false);
-            OnPressed = null;
+            OnButtonPressed = null;
             OnReleased = null;
         }
 
@@ -138,25 +142,28 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (Widget != null && Widget.IsReadOnly)
-                return;
+            if (Time.realtimeSinceStartup > PressTime && collider.TryGetComponent(out HandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand)
+            {
+                PressTime = Time.realtimeSinceStartup + 0.25f;
 
-            if (PressTime > Time.realtimeSinceStartup || !collider.TryGetComponent(out HandIndicator component) || component.isLeftHand == InfoWatch.LocalWatch.InLeftHand)
-                return;
+                if (Widget is not null && Widget.IsReadOnly)
+                {
+                    GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength, GorillaTagger.Instance.tapHapticDuration / 2f);
+                    return;
+                }
 
-            PressTime = Time.realtimeSinceStartup + 0.25f;
+                bumped = true;
+                targetValue = 1f;
+                currentValue = 1f;
+                matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(1f));
+                matProperties.SetColor(ShaderProps._Color, colour.Evaluate(1f));
+                renderer.SetPropertyBlock(matProperties, matIndex);
 
-            bumped = true;
-            targetValue = 1f;
-            currentValue = 1f;
-            matProperties.SetColor(ShaderProps._BaseColor, colour.Evaluate(1f));
-            matProperties.SetColor(ShaderProps._Color, colour.Evaluate(1f));
-            renderer.SetPropertyBlock(matProperties, matIndex);
+                Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
+                GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
-            Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
-            GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
-
-            OnPressed?.SafeInvoke();
+                OnButtonPressed?.SafeInvoke();
+            }
         }
     }
 }

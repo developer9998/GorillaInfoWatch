@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
@@ -26,11 +27,10 @@ namespace GorillaInfoWatch.Screens
             {
                 List<string> _instanceMethods = AccessTools.GetMethodNames(pluginInfo.Instance);
                 return _instanceMethods.Contains("OnEnable") || _instanceMethods.Contains("OnDisable");
-            })];
-            mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods)).Where(mod => mod.Metadata.GUID != Constants.GUID)];
-        }
+            }).OrderBy(pluginInfo => pluginInfo.Metadata.Name)];
 
-        private bool IsEligible(PluginInfo info) => stateSupportedMods.Contains(info);
+            mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods).OrderBy(pluginInfo => pluginInfo.Metadata.Name).OrderByDescending(pluginInfo => pluginInfo.Instance.Config is ConfigFile config ? config.Count : -1)).Where(pluginInfo => pluginInfo.Metadata.GUID != Constants.GUID)];
+        }
 
         public override ScreenContent GetContent()
         {
@@ -42,14 +42,14 @@ namespace GorillaInfoWatch.Screens
 
                 Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
                 {
-                    Colour = Gradients.Blue,
+                    Colour = ColourPalette.Blue,
                     Symbol = InfoWatchSymbol.Info
                 };
 
-                if (IsEligible(pluginInfo))
+                if (stateSupportedMods.Contains(pluginInfo))
                 {
                     bool isEnabled = pluginInfo.Instance.enabled;
-                    lines.Add(string.Format("{0} [<color=#{1}>{2}</color>]", pluginInfo.Metadata.Name, isEnabled ? "00FF00" : "FF0000", isEnabled ? "E" : "D"), new Widget_Switch(isEnabled, ToggleMod, pluginInfo), pushButton);
+                    lines.Append(pluginInfo.Metadata.Name).Append(": ").AppendColour(isEnabled ? "Enabled" : "Disabled", isEnabled ? ColourPalette.Green.Evaluate(0) : ColourPalette.Red.Evaluate(0)).Add(new Widget_Switch(isEnabled, ToggleMod, pluginInfo), pushButton);
                     continue;
                 }
 

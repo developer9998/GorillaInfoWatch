@@ -27,8 +27,6 @@ namespace GorillaInfoWatch.Models.Widgets
             Main.Sprites.TryGetValue(InfoWatchSymbol.MutedSpeaker, out muted_speaker);
             Main.Sprites.TryGetValue(InfoWatchSymbol.ForceMuteSpeaker, out force_mute_speaker);
 
-            recorder = NetworkSystem.Instance.LocalRecorder;
-
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
                 is_mute_manual = PlayerPrefs.HasKey(Player.UserId);
@@ -52,13 +50,13 @@ namespace GorillaInfoWatch.Models.Widgets
         {
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
-                Logging.Info($"PlayerSwatch for {Player.NickName} will be shut off");
+                Logging.Info($"PlayerSpeaker for {Player.NickName} will be shut off");
+                Enabled = false;
                 playerRig = null;
                 return;
             }
 
-            if (playerRig is not null)
-                SetSpeakerState();
+            if (playerRig is not null) SetSpeakerState();
         }
 
         public void SetSpeakerState()
@@ -98,7 +96,9 @@ namespace GorillaInfoWatch.Models.Widgets
                 goto HideSpeaker;
             }
 
-            if ((playerRig.Voice != null && playerRig.Voice.IsSpeaking) || ((playerRig.Rig.isOfflineVRRig || playerRig.Rig.Creator.IsLocal) && recorder != null && recorder.IsCurrentlyTransmitting))
+            if (recorder == null) recorder = NetworkSystem.Instance.LocalRecorder; ;
+
+            if ((playerRig.Voice != null && playerRig.Voice.IsSpeaking) || (playerRig.Rig.isLocal && recorder.IsCurrentlyTransmitting))
             {
                 if (!image.enabled || image.sprite != open_speaker)
                 {

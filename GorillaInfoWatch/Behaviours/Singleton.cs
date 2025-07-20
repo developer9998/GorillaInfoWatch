@@ -6,25 +6,31 @@ namespace GorillaInfoWatch.Behaviours
     public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         public static T Instance { get; private set; }
-
-        public static bool HasInstance => Instance;
-
-        private T GenericComponent => gameObject.GetComponent<T>();
+        public static bool HasInstance => Instance != null && (bool)Instance;
 
         public void Awake()
         {
-            if (HasInstance && Instance != GenericComponent)
+            T component = gameObject.GetComponent<T>();
+
+            if (HasInstance && Instance != component)
             {
-                Destroy(GenericComponent);
+                Destroy(component);
+                return;
             }
 
-            Instance = GenericComponent;
+            Instance = component;
             Initialize();
         }
 
         public virtual void Initialize()
         {
-            Logging.Info($"Initializing {typeof(T).Name} singleton");
+            Logging.Message($"{typeof(T).Name}: Singleton initializing");
+        }
+
+        public static bool TryGetInstance(out T instance)
+        {
+            instance = Instance;
+            return HasInstance;
         }
     }
 }

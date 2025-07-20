@@ -3,7 +3,6 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
-using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using GorillaTagScripts.ModIO;
 using PlayFab.ClientModels;
@@ -46,7 +45,7 @@ namespace GorillaInfoWatch.Screens
 
         public async void OnGetFriendsReceived(List<FriendBackendController.Friend> friendsList)
         {
-            foreach (var friend in friendsList)
+            foreach (FriendBackendController.Friend friend in friendsList)
             {
                 if (friend is null || friend.Presence is not FriendBackendController.FriendPresence presence) continue;
 
@@ -67,67 +66,74 @@ namespace GorillaInfoWatch.Screens
             LineBuilder lines = new();
 
             // FriendSystem.PlayerPrivacy is more readable to users
-            FriendSystem.PlayerPrivacy localPlayerPrivacy = (FriendSystem.PlayerPrivacy)(int)FriendBackendController.Instance.MyPrivacyState;
+            FriendBackendController.PrivacyState localPlayerPrivacy = FriendBackendController.Instance.MyPrivacyState;
 
-            lines.Add($"Privacy: {localPlayerPrivacy}", new Widget_SnapSlider((int)localPlayerPrivacy, 0, 2, selection =>
+            lines.Add($"Privacy: {localPlayerPrivacy.GetName().Replace('_', ' ').ToTitleCase()}", new Widget_SnapSlider((int)localPlayerPrivacy, 0, 2, selection =>
             {
-                FriendBackendController.Instance.lastPrivacyState = (FriendBackendController.PrivacyState)selection;
-                FriendBackendController.Instance.SetPrivacyState((FriendBackendController.PrivacyState)selection);
+                localPlayerPrivacy = (FriendBackendController.PrivacyState)selection;
+                FriendBackendController.Instance.lastPrivacyState = localPlayerPrivacy;
+                FriendBackendController.Instance.SetPrivacyState(localPlayerPrivacy);
                 SetContent();
-            })
+            }) 
             {
-                Colour = GradientUtils.FromColour(Gradients.Green.Evaluate(0), Gradients.Red.Evaluate(0))
+                Colour = ColourPalette.CreatePalette(ColourPalette.Green.Evaluate(0), ColourPalette.Red.Evaluate(0))
             });
             lines.Skip();
 
             if (FriendsList == null)
             {
-                lines.Add("<align=\"center\">Refreshing friends list</align>");
+                lines.BeginCentre().Append("Loading friends list...").EndAlign().AppendLine();
                 return lines;
             }
 
-            var list = FriendsList.Where(friend => friend is not null).Select(friend => friend.Presence).ToArray();
+            FriendBackendController.Friend[] friendsList = [.. FriendsList.Where(friend => friend is not null).OrderBy(friend => friend.Created)];
 
-            if (list.Length == 0)
+            if (friendsList.Length == 0)
             {
-                lines.Add("<align=\"center\">No friends were found</align>");
+                lines.BeginCentre().Append("Friends list is empty.").EndAlign().AppendLine();
+
+                lines.Skip().Add("\"Jump on in and make some friends!\"");
+
                 return lines;
             }
 
-            lines.Add($"<align=\"center\">Showing {list.Length} friends:</align>");
+            lines.BeginCentre().Append("Showing ").Append(friendsList.Length).Append(" friends:").EndAlign().AppendLine();
 
-            foreach (FriendBackendController.FriendPresence presence in list)
+            foreach (FriendBackendController.Friend friend in friendsList)
             {
-                if (presence is null)
-                    continue;
+                if (friend.Presence is not FriendBackendController.FriendPresence presence) continue;
 
-                GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(presence.FriendLinkId, null);
+                string userId = presence.FriendLinkId;
+
+                GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(userId, null);
 
                 if (accountInfo is null || accountInfo.AccountInfo is null || accountInfo.AccountInfo.TitleInfo is null)
                     continue;
 
-                string userName = ((string.IsNullOrEmpty(presence.UserName) || string.IsNullOrWhiteSpace(presence.UserName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].SanitizeName() : presence.UserName;
+                string userName = presence.UserName;
+                string roomId = presence.RoomId;
+                bool? isPublic = presence.IsPublic;
+                string zoneName = presence.Zone;
 
-                string roomName = presence.RoomId;
-                bool isRoomPublic = presence.IsPublic.GetValueOrDefault(false);
-                bool isOffline = string.IsNullOrEmpty(roomName) || roomName.Length == 0;
-                bool inVirtualStump = !isOffline && roomName.StartsWith(GorillaComputer.instance.VStumpRoomPrepend);
-                bool inZone = presence.Zone != null && ZoneManagement.instance.activeZones.Select(zone => zone.GetName().ToLower()).Any(zone => zone == presence.Zone);
-
-                string roomText = isOffline ? "Offline" : (inVirtualStump ? $"{roomName} in Virtual Stump" : ((isRoomPublic && presence.Zone != null) ? $"{roomName} in {presence.Zone.ToUpper()}" : roomName));
-                string text = string.Format("{0}: {1}", userName, roomText);
+                string playerName = ((string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].EnforceLength(12) : userName;
+                
+                bool isRoomPublic = isPublic.GetValueOrDefault(false);
+                bool isOffline = string.IsNullOrEmpty(roomId) || roomId.Length == 0;
+                bool inVirtualStump = !isOffline && (roomId.StartsWith(GorillaComputer.instance.VStumpRoomPrepend) || (zoneName != null && zoneName.ToLower().Contains(GTZone.customMaps.GetName().ToLower())));
+                bool inZone = !string.IsNullOrEmpty(zoneName) && ZoneManagement.instance.activeZones.Exists(zone => zoneName.ToLower().Contains(zone.GetName().ToLower()));
+                string playerStatus = isOffline ? "Offline" : (inVirtualStump ? $"{roomId} in Virtual Stump" : ((isRoomPublic && presence.Zone != null) ? $"{roomId} in {presence.Zone.ToUpper()}" : roomId));
 
                 if (isOffline)
                 {
-                    lines.Add(text);
+                    lines.Append(playerName).Append(": ").Append(playerStatus).AppendLine();
                     continue;
                 }
 
-                if (roomName.Equals(NetworkSystem.Instance.RoomName))
+                if (roomId.Equals(NetworkSystem.Instance.RoomName))
                 {
-                    lines.Add(text, new Widget_PushButton()
+                    lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                     {
-                        Colour = Gradients.Yellow,
+                        Colour = ColourPalette.Yellow,
                         Symbol = InfoWatchSymbol.LightBulb
                     });
                     continue;
@@ -135,17 +141,17 @@ namespace GorillaInfoWatch.Screens
 
                 if ((!isRoomPublic || inZone) && !inVirtualStump)
                 {
-                    lines.Add(text, new Widget_PushButton(JoinFriend, presence, inVirtualStump)
+                    lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton(JoinFriend, friend, inVirtualStump)
                     {
-                        Colour = Gradients.Green,
+                        Colour = ColourPalette.Green,
                         Symbol = InfoWatchSymbol.GreenFlag
                     });
                     continue;
                 }
 
-                lines.Add(text, new Widget_PushButton()
+                lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                 {
-                    Colour = Gradients.Red,
+                    Colour = ColourPalette.Red,
                     Symbol = InfoWatchSymbol.RedFlag
                 });
             }
@@ -168,7 +174,7 @@ namespace GorillaInfoWatch.Screens
                             if (success) JoinFriend(args);
                         }, teleporter.entrancePoint, teleporter.mySerializer));
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Logging.Fatal("Teleporting player to virtual stump");
                         Logging.Error(ex);

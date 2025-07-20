@@ -1,4 +1,5 @@
 using ExitGames.Client.Photon;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
 using Photon.Pun;
 using Photon.Realtime;
@@ -9,7 +10,6 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Networking
 {
-    // https://github.com/KyleTheScientist/Bark/blob/3de171aca033d45f464a5120fb1932c9a0d2a3af/Networking/NetworkPropertyHandler.cs
     public class NetworkHandler : Singleton<NetworkHandler>, IInRoomCallbacks
     {
         public Action<NetPlayer, Dictionary<string, object>> OnPlayerPropertyChanged;
@@ -20,16 +20,22 @@ namespace GorillaInfoWatch.Behaviours.Networking
 
         public override void Initialize()
         {
-            if (NetworkSystem.Instance && NetworkSystem.Instance is NetworkSystemPUN)
+            if (NetworkSystem.Instance is NetworkSystem netSys && netSys is NetworkSystemPUN)
             {
+                Logging.Message("Setting up NetworkHandler");
                 SetProperty("Version", Constants.Version);
 
                 PhotonNetwork.AddCallbackTarget(this);
-                Application.quitting += () => PhotonNetwork.RemoveCallbackTarget(this);
+                Application.quitting += delegate ()
+                {
+                    Logging.Message("Disabling NetworkHandler");
+                    PhotonNetwork.RemoveCallbackTarget(this);
+                };
                 return;
             }
 
-            enabled = false; // either no netsys or not in a pun environment - i doubt fusion will ever come
+            Logging.Warning("Disabling NetworkHandler, either NetworkSystem.Instance is null or isn't based on NetworkSystemPUN");
+            enabled = false;
         }
 
         public void Update()
@@ -47,7 +53,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
                 });
 
                 set_properties = false;
-                properties_timer = Constants.NetworkSetInterval;
+                properties_timer = Constants.NetworkRaiseInterval;
             }
         }
 
@@ -65,15 +71,17 @@ namespace GorillaInfoWatch.Behaviours.Networking
             if (netPlayer.IsLocal || !VRRigCache.Instance.TryGetVrrig(netPlayer, out RigContainer playerRig) || !playerRig.TryGetComponent(out NetworkedPlayer networkedPlayer))
                 return;
 
-            if (changedProps.TryGetValue(Constants.NetworkPropertyKey, out object props_object) && props_object is Dictionary<string, object> properties)
+            if (changedProps.TryGetValue(Constants.NetworkPropertyKey, out object propertiesObject) && propertiesObject is Dictionary<string, object> properties)
             {
                 if (!networkedPlayer.HasInfoWatch)
                 {
+                    Logging.Message($"{netPlayer.GetNameRef()} has GorillaInfoWatch");
                     networkedPlayer.HasInfoWatch = true;
                     Main.Instance.CheckPlayer(netPlayer);
                 }
 
-                Logging.Info($"Recieved properties from {netPlayer.NickName}: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
+                Logging.Message($"Recieved properties from {netPlayer.NickName}");
+                Logging.Info(string.Join(Environment.NewLine, properties.Select(prop => $"[{prop.Key}, {prop.Value}]")));
                 OnPlayerPropertyChanged?.Invoke(netPlayer, properties);
 
                 return;

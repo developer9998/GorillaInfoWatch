@@ -1,13 +1,17 @@
 ﻿using BepInEx.Configuration;
-using GorillaGameModes;
 using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
+using Photon.Pun;
+using Photon.Realtime;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Utilla.Models;
+using Utilla.Utils;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -24,6 +28,7 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.LeftRoomEvent += OnRoomLeft;
             RoomSystem.PlayerJoinedEvent += OnPlayerJoined;
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+            Events.OnUpdateName += OnRigNameUpdate;
         }
 
         public override void OnClose()
@@ -34,6 +39,7 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.LeftRoomEvent -= OnRoomLeft;
             RoomSystem.PlayerJoinedEvent -= OnPlayerJoined;
             RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
+            Events.OnUpdateName -= OnRigNameUpdate;
         }
 
         public override ScreenContent GetContent()
@@ -42,10 +48,9 @@ namespace GorillaInfoWatch.Screens
 
             if (!NetworkSystem.Instance.InRoom)
             {
-                lines.Add("Room: -NOT IN ROOM-");
-                lines.Skip();
-                lines.Add("* Join a room to access the scoreboard");
-
+                lines.Add("Room: -NOT IN ROOM-").Skip();
+                lines.Add("You must be in a room to use the scoreboard.");
+                lines.Add("From there, you can view and manage players!");
                 return lines;
             }
 
@@ -53,35 +58,41 @@ namespace GorillaInfoWatch.Screens
             string roomNameProtected = roomPrivacySetting.Value ? NetworkSystem.Instance.RoomName : $"-{(NetworkSystem.Instance.SessionIsPrivate ? "PRIVATE" : "PUBLIC")}-";
             string gameModeString = NetworkSystem.Instance.GameModeString;
 
-            lines.Add($"Room: {roomNameProtected} ({NetworkSystem.Instance.RoomPlayerCount} of {RoomSystem.GetRoomSize(gameModeString)})", new Widget_Switch(roomPrivacySetting.Value, (bool value) =>
+            lines.Add($"Room: {roomNameProtected} ({NetworkSystem.Instance.RoomPlayerCount} of {(/*PhotonNetwork.CurrentRoom is Room currentRoom ? (int)currentRoom.MaxPlayers : */RoomSystem.GetRoomSize(gameModeString))} players)", new Widget_Switch(roomPrivacySetting.Value, value =>
             {
                 roomPrivacySetting.Value = value;
                 if (!roomPrivacySetting.ConfigFile.SaveOnConfigSet) roomPrivacySetting.ConfigFile.Save();
                 SetContent();
-            }));
-            string gameTypeName = GameMode.FindGameModeInString(gameModeString);
+            })).Add($"Game Mode: {(GameModeUtils.CurrentGamemode is Gamemode gamemode ? gamemode.DisplayName : GorillaScoreBoard.error.ToTitleCase())}").Skip();
 
-            lines.Add($"Game Mode: {(GameMode.gameModeKeyByName.TryGetValue(gameTypeName, out int key) && GameMode.gameModeTable.TryGetValue(key, out GorillaGameManager manager) ? manager.GameModeName() : gameTypeName)}");
-            lines.Skip();
+            NetPlayer[] players = NetworkSystem.Instance.AllNetPlayers;
+            Array.Sort(players, (x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
 
-            //Description = $"{NetworkSystem.Instance.RoomPlayerCount}/{NetworkSystem.Instance.config.MaxPlayerCount} Room ID: {(NetworkSystem.Instance.SessionIsPrivate ? "-Private-" : NetworkSystem.Instance.RoomName)} Game Mode: {((GameMode.ActiveGameMode != null) ? GameMode.ActiveGameMode.GameModeName() : "ERROR")}";
-
-            var players_in_room = NetworkSystem.Instance.AllNetPlayers.ToList();
-            players_in_room.Sort((x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
-
-            foreach (NetPlayer player in players_in_room)
+            foreach (NetPlayer player in players)
             {
                 if (player == null || player.IsNull || (!player.IsLocal && !player.InRoom)) continue;
-                List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80))];
-                if (!player.IsLocal) widgets.Add(new Widget_PushButton(InspectPlayer, player)
+
+                List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)), new Widget_PushButton(InspectPlayer, player)
                 {
-                    Colour = Gradients.Blue,
+                    Colour = ColourPalette.Blue,
                     Symbol = InfoWatchSymbol.Info
-                });
-                lines.Add(string.IsNullOrEmpty(player.SanitizedNickName) ? player.NickName.SanitizeName() : player.SanitizedNickName, widgets);
+                }];
+
+                lines.AppendColour(player.GetNameRef().EnforceLength(12), ColorUtility.ToHtmlStringRGB(GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white));
+                lines.Add(widgets);
             }
 
             return lines;
+        }
+
+        public void InspectPlayer(object[] args)
+        {
+            if (args.ElementAtOrDefault(0) is NetPlayer player)
+            {
+                PlayerInfoPage.RoomName = NetworkSystem.Instance.RoomName;
+                PlayerInfoPage.ActorNumber = player.ActorNumber;
+                SetScreen<PlayerInfoPage>();
+            }
         }
 
         private void OnRoomJoined()
@@ -105,13 +116,10 @@ namespace GorillaInfoWatch.Screens
             SetContent();
         }
 
-        public void InspectPlayer(object[] args)
+        private void OnRigNameUpdate(VRRig targetRig)
         {
-            if (args.ElementAtOrDefault(0) is NetPlayer player && VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-            {
-                PlayerInfoPage.Container = playerRig;
-                SetScreen<PlayerInfoPage>();
-            }
+            if (targetRig.isLocal || targetRig.Creator is null || !targetRig.Creator.InRoom) return;
+            SetContent();
         }
     }
 }

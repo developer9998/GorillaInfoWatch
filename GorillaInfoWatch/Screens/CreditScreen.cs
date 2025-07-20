@@ -38,6 +38,8 @@ namespace GorillaInfoWatch.Screens
 
             supporterCredits.Add(string.Format(creditFormat, "Guy", "saul15.sgma", "Supporter since May 19, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.Patreon)));
 
+            supporterCredits.Add(string.Format(creditFormat, "iceyonly yapps", "icey_yapps", "Supporter since June 30, 2025"), new Widget_AnchoredSymbol(new(InfoWatchSymbol.KoFi)));
+
             return new PageBuilder((string.Empty, baseCredits), ("Supporters", supporterCredits));
         }
     }

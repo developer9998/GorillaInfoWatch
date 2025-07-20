@@ -8,11 +8,10 @@
 
         public const int SectionCapacity = 14;
 
-        public const float NetworkSetInterval = 0.1f;
+        public const float NetworkRaiseInterval = 0.25f;
         public const string NetworkPropertyKey = "InfoWatch";
 
-        // TODO: make these not constant
-
+        // TODO: make the menu tilt members configurable
         public const float MenuTiltAngle = 80; // calculated menu angle after this will start to visually tilt it
         public const float MenuTiltMinimum = 7.5f; // angle after previous
         public const float MenuTiltAmount = 0.95f; // angle factor after that

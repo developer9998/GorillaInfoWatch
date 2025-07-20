@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         internal Image image;
 
-        public override void Object_Construct(InfoWatchLine menuLine)
+        public override void Object_Construct(WatchLine menuLine)
         {
             if (gameObject == null || !gameObject)
             {

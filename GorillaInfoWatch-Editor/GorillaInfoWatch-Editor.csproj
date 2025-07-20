@@ -19,6 +19,9 @@
 		<Compile Include="..\GorillaInfoWatch\Models\Significance\ItemSignificanceObject.cs">
 			<Link>ItemSignificanceObject.cs</Link>
 		</Compile>
+		<Compile Include="..\GorillaInfoWatch\Behaviours\InfoWatch.cs">
+			<Link>Important\InfoWatch.cs</Link>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>

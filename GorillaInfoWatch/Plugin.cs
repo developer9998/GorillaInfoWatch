@@ -8,6 +8,8 @@ using UnityEngine;
 namespace GorillaInfoWatch
 {
     [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
+    [BepInDependency("net.rusjj.gorillafriends", "1.2.3")]
+    [BepInDependency("org.legoandmars.gorillatag.utilla", "1.6.18")]
     public class Plugin : BaseUnityPlugin
     {
         public void Awake()
@@ -16,7 +18,7 @@ namespace GorillaInfoWatch
             new Configuration(Config);
 
             Harmony.CreateAndPatchAll(typeof(Plugin).Assembly, Constants.GUID);
-            GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(Main), typeof(NetworkHandler), typeof(DataHandler)));
+            GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(Main), typeof(NetworkHandler), typeof(DataManager)));
         }
     }
 }

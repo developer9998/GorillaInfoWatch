@@ -1,3 +1,4 @@
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
 using Photon.Realtime;
 using System.Collections.Generic;
@@ -9,18 +10,15 @@ namespace GorillaInfoWatch.Behaviours.Networking
     [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
     public class NetworkedPlayer : MonoBehaviour
     {
-        public InfoWatch InfoWatch => watch;
-
         public bool HasInfoWatch;
 
         public VRRig Rig;
         public NetPlayer Owner;
 
-        private InfoWatch watch;
+        private InfoWatch playerInfoWatch;
 
         public void Start()
         {
-            // https://github.com/The-Graze/Grate/blob/9dddf2084a75f22cc45024f38d564f788db661d6/Networking/NetworkedPlayer.cs#L39
             NetworkHandler.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
 
             if (!HasInfoWatch && Owner is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef)
@@ -31,35 +29,33 @@ namespace GorillaInfoWatch.Behaviours.Networking
         {
             NetworkHandler.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
 
-            if (HasInfoWatch)
-            {
-                HasInfoWatch = false;
-                Destroy(watch.gameObject);
-            }
+            if (!HasInfoWatch) return;
+            HasInfoWatch = false;
+
+            if (playerInfoWatch is not null && playerInfoWatch) Destroy(playerInfoWatch.gameObject);
         }
 
         public void OnPlayerPropertyChanged(NetPlayer player, Dictionary<string, object> properties)
         {
             if (player == Owner)
             {
-                Logging.Info($"{player.NickName} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
+                Logging.Info($"{player.GetNameRef().SanitizeName()} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
 
-                if (watch is null)
-                {
-                    CreateWatch();
-                }
+                if (playerInfoWatch is null) CreateWatch();
 
-                if (properties.TryGetValue("TimeOffset", out object time_offset_object) && time_offset_object is float time_offset)
-                {
-                    watch.TimeOffset = time_offset;
-                }
+                if (properties.TryGetValue("TimeOffset", out object timeOffsetObj) && timeOffsetObj is float timeObject)
+                    playerInfoWatch.TimeOffset = timeObject;
             }
         }
 
         public void CreateWatch()
         {
-            watch = Instantiate(Singleton<Main>.Instance.WatchAsset).AddComponent<InfoWatch>();
-            watch.Rig = Rig;
+            if (playerInfoWatch is not null && playerInfoWatch) return;
+
+            GameObject gameObject = Instantiate(Singleton<Main>.Instance.WatchAsset);
+            playerInfoWatch = gameObject.GetComponent<InfoWatch>();
+            playerInfoWatch.Rig = Rig;
+            gameObject.SetActive(true);
         }
     }
 }

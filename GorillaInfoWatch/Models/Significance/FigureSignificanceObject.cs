@@ -12,7 +12,7 @@ namespace GorillaInfoWatch.Models.Significance
 #if PLUGIN
         public static explicit operator FigureSignificance(FigureSignificanceObject scriptableObject)
         {
-            return new FigureSignificance(scriptableObject.Symbol, scriptableObject.UserIds);
+            return new FigureSignificance(scriptableObject.name, scriptableObject.Symbol, scriptableObject.UserIds);
         }
 #endif
     }

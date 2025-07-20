@@ -9,9 +9,12 @@ namespace GorillaInfoWatch.Models
     {
         public List<(string title, List<ScreenLine> lines)> Pages = pages ?? [];
 
-        public void AddPage(string title = "", params List<ScreenLine> lines)
+        public PageBuilder AddPage(params List<ScreenLine> lines) => AddPage(string.Empty, lines);
+
+        public PageBuilder AddPage(string title = "", params List<ScreenLine> lines)
         {
             Pages.Add((title, lines));
+            return this;
         }
 
         public override int GetSectionCount()

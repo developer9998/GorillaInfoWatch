@@ -8,9 +8,11 @@ namespace GorillaInfoWatch.Models.Widgets
         public virtual bool AllowModification { get; } = true;
         public virtual bool UseBehaviour { get; } = false;
 
+        public bool Enabled = true;
+
         public GameObject gameObject;
 
-        public virtual void Object_Construct(InfoWatchLine menuLine)
+        public virtual void Object_Construct(WatchLine menuLine)
         {
 
         }

@@ -6,17 +6,15 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public sealed class Widget_PushButton(Action<object[]> action, params object[] parameters) : Widget_Base
     {
-        public Action<object[]> Command = action;
-
-        public object[] Parameters = parameters;
-
-        public Gradient Colour = Gradients.Button;
-
-        public Symbol Symbol;
-
         public bool IsReadOnly => Command == null || Command.Target == null;
 
-        public Widget_PushButton(): this(null, null)
+        public Action<object[]> Command = action;
+        public object[] Parameters = parameters;
+
+        public Gradient Colour = ColourPalette.Button;
+        public Symbol Symbol;
+
+        public Widget_PushButton() : this(null, null)
         {
 
         }
@@ -26,7 +24,7 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void Object_Construct(InfoWatchLine menuLine)
+        public override void Object_Construct(WatchLine menuLine)
         {
             if (gameObject == null || !gameObject)
             {

@@ -1,5 +1,6 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using Photon.Pun;
+using Photon.Voice.PUN;
 using Photon.Voice.Unity;
 using System;
 using TMPro;
@@ -19,6 +20,12 @@ namespace GorillaInfoWatch.Models.StateMachine
         private Image micIcon, bellIcon;
 
         private Symbol micSpeakSymbol, micMuteSymbol, micTimeoutSymbol, bellIdleSymbol, bellRingSymbol;
+
+        private Recorder recorder;
+
+        bool micEnabled;
+        Symbol micSymbol = null;
+        float? micFloatingPoint = null;
 
         public override void Enter()
         {
@@ -79,7 +86,7 @@ namespace GorillaInfoWatch.Models.StateMachine
         {
             base.Update();
 
-            if (timeCount < 0.5f) // shorter time = less accurate results (zero would defy this logic completely haha)
+            if (timeCount < 0.5f)
             {
                 timeCount += Time.unscaledDeltaTime;
                 frameCount++;
@@ -93,30 +100,38 @@ namespace GorillaInfoWatch.Models.StateMachine
 
             if (NetworkSystem.Instance.InRoom)
             {
-                bool micEnabled;
-                Symbol micSymbol = null;
-                float? micFloatingPoint = null;
-
-                if (Watch.Rig.isOfflineVRRig && NetworkSystem.Instance.LocalRecorder is Recorder recorder)
+                try
                 {
-                    micEnabled = Watch.Rig.mySpeakerLoudness.IsMicEnabled && recorder.TransmitEnabled;
-                    micSymbol = GorillaTagger.moderationMutedTime > 0 ? micTimeoutSymbol : (micEnabled ? micSpeakSymbol : micMuteSymbol);
-                    micFloatingPoint = (!micEnabled || recorder.IsCurrentlyTransmitting) ? 1f : 0.5f;
+                    if (recorder is null)
+                    {
+                        recorder = NetworkSystem.Instance.LocalRecorder;
+                    }
+
+                    if (Watch.Rig.isOfflineVRRig)
+                    {
+                        micEnabled = Watch.Rig.mySpeakerLoudness.IsMicEnabled && recorder != null && recorder.TransmitEnabled;
+                        micSymbol = GorillaTagger.moderationMutedTime > 0 ? micTimeoutSymbol : (micEnabled ? micSpeakSymbol : micMuteSymbol);
+                        micFloatingPoint = (!micEnabled || (recorder != null && recorder.IsCurrentlyTransmitting)) ? 1f : 0.2f;
+                    }
+                    else if (!Watch.Rig.isOfflineVRRig && Watch.Rig.rigContainer is RigContainer playerRig)
+                    {
+                        micEnabled = Watch.Rig.mySpeakerLoudness.IsMicEnabled;
+                        micSymbol = playerRig.GetIsPlayerAutoMuted() ? micTimeoutSymbol : (micEnabled ? micSpeakSymbol : micMuteSymbol);
+                        micFloatingPoint = (!micEnabled || (playerRig.Voice is PhotonVoiceView voice && voice.IsSpeaking)) ? 1f : 0.2f;
+                    }
+
+                    if (micSymbol != null && micIcon.sprite != micSymbol.Sprite) micIcon.sprite = micSymbol.Sprite;
+                    if (micFloatingPoint != null && micIcon.color.a != micFloatingPoint) micIcon.color = new Color(1f, 1f, 1f, micFloatingPoint.GetValueOrDefault(1f));
                 }
-                else if (!Watch.Rig.isOfflineVRRig && Watch.Rig.rigContainer is RigContainer playerRig)
+                catch (Exception)
                 {
-                    micEnabled = Watch.Rig.mySpeakerLoudness.IsMicEnabled;
-                    micSymbol = playerRig.GetIsPlayerAutoMuted() ? micTimeoutSymbol : (micEnabled ? micSpeakSymbol : micMuteSymbol);
-                    micFloatingPoint = (!micEnabled || (playerRig.Voice is var voice && voice.IsSpeaking)) ? 1f : 0.5f;
+
                 }
 
-                if (micSymbol != null && micIcon.sprite != micSymbol.Sprite) micIcon.sprite = micSymbol.Sprite;
-                if (micFloatingPoint != null && micIcon.color.a != micFloatingPoint) micIcon.color = new Color(1f, 1f, 1f, micFloatingPoint.GetValueOrDefault(1f));
+                return;
             }
-            else if (micIcon.enabled)
-            {
-                micIcon.enabled = false;
-            }
+
+            if (micIcon.enabled) micIcon.enabled = false;
         }
 
         public void InfrequentUpdate()
@@ -135,7 +150,7 @@ namespace GorillaInfoWatch.Models.StateMachine
         public void RefreshBell(int notificationCount)
         {
             bool hasUnread = notificationCount > 0;
-            float floatingPoint = hasUnread ? 1f : 0.5f;
+            float floatingPoint = hasUnread ? 1f : 0.2f;
             Symbol symbol = hasUnread ? bellRingSymbol : bellIdleSymbol;
             bellIcon.sprite = symbol.Sprite;
             bellIcon.color = new Color(1f, 1f, 1f, floatingPoint);

@@ -14,6 +14,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
         private RigContainer playerRig;
 
+        private Material material;
+        private Color colour;
+
         public override void Behaviour_Enable()
         {
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
@@ -26,6 +29,8 @@ namespace GorillaInfoWatch.Models.Widgets
                 RectTransform rectTransform = image.GetComponent<RectTransform>();
                 rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
                 rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
+
+                SetSwatchColour();
             }
         }
 
@@ -44,14 +49,23 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public void SetSwatchColour()
         {
-            var scoreboard_material = playerRig.Rig.scoreboardMaterial;
-            if (image.material != scoreboard_material) image.material = scoreboard_material;
+            VRRig vrRig = playerRig.Rig;
+            int setMatIndex = vrRig.setMatIndex;
 
-            var player_colour = playerRig.Rig.playerColor;
-            if (image.color != player_colour)
+            if (setMatIndex == 0)
             {
-                image.color = player_colour;
+                material = vrRig.scoreboardMaterial;
+                colour = vrRig.playerColor;
             }
+            else
+            {
+                Material designatedMaterial = vrRig.materialsToChangeTo[setMatIndex];
+                material = designatedMaterial;
+                colour = designatedMaterial.color;
+            }
+
+            if (image.material != material) image.material = material;
+            if (image.color != colour) image.color = colour;
         }
     }
 }

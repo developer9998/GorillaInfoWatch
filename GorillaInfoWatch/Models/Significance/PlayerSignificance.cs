@@ -1,14 +1,10 @@
 ﻿namespace GorillaInfoWatch.Models.Significance
 {
-    public class PlayerSignificance(InfoWatchSymbol symbol)
+    public class PlayerSignificance(string title, InfoWatchSymbol symbol)
     {
+        public string Title { get; } = title;
         public InfoWatchSymbol Symbol { get; } = symbol;
 
-        public virtual bool IsValid(NetPlayer player)
-        {
-            return false;
-        }
-
-        public override string ToString() => Symbol.ToString();
+        public virtual bool IsValid(NetPlayer player) => false;
     }
 }

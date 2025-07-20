@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
-    public class InfoWatchLine : MonoBehaviour
+    public class WatchLine : MonoBehaviour
     {
         public TMP_Text Text;
 
@@ -46,8 +46,8 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Build(ScreenLine line, bool applyWidgets)
         {
-            Logging.Info($"Text: \"{line.Text}\"");
-            Logging.Info($"Apply Widgets: {applyWidgets}");
+            // Logging.Info($"Text: \"{line.Text}\"");
+            // Logging.Info($"Apply Widgets: {applyWidgets}");
 
             Text.text = line.Text;
 
@@ -61,7 +61,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                     return;
                 }
 
-                Logging.Info($"Widgets: {string.Join(", ", newWidgets.Select(widget => widget.GetType().Name))}");
+                // Logging.Info($"Widgets: {string.Join(", ", newWidgets.Select(widget => widget.GetType().Name))}");
 
                 int intake = newWidgets.Count - currentWidgets.Count;
                 if (intake > 0)
@@ -183,7 +183,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                         }
                         catch (Exception ex)
                         {
-                            Logging.Fatal($"Widget could not modify");
+                            // Logging.Fatal($"Widget could not modify");
                             Logging.Error(ex);
                         }
                         finally
@@ -198,17 +198,23 @@ namespace GorillaInfoWatch.Behaviours.UI
         public void Update()
         {
             if (regularWidgets.Count == 0)
+            {
+                widgetIndex = 0;
                 return;
+            }
 
             for (int i = 0; i < widgetsPerFrame; i++)
             {
-                if (widgetIndex >= regularWidgets.Count)
-                    widgetIndex = 0;
-                if (widgetIndex >= regularWidgets.Count)
-                    break;
-                if (regularWidgets.ElementAtOrDefault(i) is Widget_Base widget)
-                    widget.Behaviour_Update();
-                widgetIndex++;
+                try
+                {
+                    if (regularWidgets.ElementAtOrDefault(i) is Widget_Base widget && widget.Enabled) widget.Behaviour_Update();
+                }
+                catch (Exception ex)
+                {
+                    // Logging.Fatal("Exception due to widget update");
+                    Logging.Error(ex);
+                }
+                widgetIndex = (widgetIndex + 1) % regularWidgets.Count;
             }
         }
     }

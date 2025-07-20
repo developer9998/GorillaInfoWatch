@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaInfoWatch.Utilities;
 using System;
 using System.Linq;
 using UnityEngine;
@@ -10,7 +9,7 @@ namespace GorillaInfoWatch.Behaviours.UI
     [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
     public class Switch : MonoBehaviour
     {
-        public Action OnPressed, OnReleased;
+        public Action OnSwitchFlipped, OnReleased;
 
         public Widget_Switch currentWidget;
 
@@ -26,7 +25,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         private float targetValue;
 
         [SerializeField, HideInInspector]
-        private Gradient colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
+        private Gradient colour = ColourPalette.CreatePalette(ColourPalette.Red.Evaluate(0), ColourPalette.Green.Evaluate(0));
 
         public void Awake()
         {
@@ -50,13 +49,9 @@ namespace GorillaInfoWatch.Behaviours.UI
                 targetValue = Convert.ToInt32(widget.Value);
                 currentValue ??= targetValue;
 
-                colour = widget.IsReadOnly ? GradientUtils.FromColour(colours: [.. widget.Colour.colorKeys.Select(key => key.color).Select(colour =>
-                {
-                    Color.RGBToHSV(colour, out float h, out float s, out float v);
-                    return Color.HSVToRGB(h, s * 0.4f, v);
-                })]) : widget.Colour;
+                colour = widget.Colour;
 
-                OnPressed = delegate ()
+                OnSwitchFlipped = () =>
                 {
                     currentWidget.Command?.Invoke(currentWidget.Value, currentWidget.Parameters ?? []);
                 };
@@ -70,7 +65,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             currentWidget = null;
             gameObject.SetActive(false);
             currentValue = null;
-            OnPressed = null;
+            OnSwitchFlipped = null;
             OnReleased = null;
         }
 
@@ -93,12 +88,15 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (currentWidget is null || currentWidget.IsReadOnly)
-                return;
-
-            if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && Time.realtimeSinceStartup > PushButton.PressTime)
+            if (Time.realtimeSinceStartup > PushButton.PressTime && collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand)
             {
                 PushButton.PressTime = Time.realtimeSinceStartup + 0.25f;
+
+                if (currentWidget is not null && currentWidget.IsReadOnly)
+                {
+                    GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength, GorillaTagger.Instance.tapHapticDuration / 2f);
+                    return;
+                }
 
                 bumped ^= true;
                 targetValue = Convert.ToInt32(bumped);
@@ -108,12 +106,8 @@ namespace GorillaInfoWatch.Behaviours.UI
                 Singleton<Main>.Instance.PressSwitch(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
-                // additional func
-                if (currentWidget != null)
-                {
-                    currentWidget.Value = bumped;
-                }
-                OnPressed?.Invoke();
+                if (currentWidget is not null) currentWidget.Value = bumped;
+                OnSwitchFlipped?.Invoke();
             }
         }
     }

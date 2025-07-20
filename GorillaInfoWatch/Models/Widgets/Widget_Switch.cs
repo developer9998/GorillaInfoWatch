@@ -1,5 +1,4 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
-using GorillaInfoWatch.Utilities;
 using System;
 using UnityEngine;
 
@@ -7,15 +6,13 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public sealed class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
     {
+        public bool IsReadOnly => Command == null || Command.Target == null;
+
         public bool Value = value;
-
         public readonly Action<bool, object[]> Command = action;
-
         public readonly object[] Parameters = parameters ?? [];
 
-        public Gradient Colour = GradientUtils.FromColour(Gradients.Red.Evaluate(0), Gradients.Green.Evaluate(0));
-
-        public bool IsReadOnly => Command == null || Command.Target == null;
+        public Gradient Colour = ColourPalette.CreatePalette(ColourPalette.Red.Evaluate(0), ColourPalette.Green.Evaluate(0));
 
         public Widget_Switch(bool value) : this(value, (Action<bool, object[]>)null, null)
         {
@@ -32,7 +29,7 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void Object_Construct(InfoWatchLine menuLine)
+        public override void Object_Construct(WatchLine menuLine)
         {
             if (gameObject == null || !gameObject)
             {

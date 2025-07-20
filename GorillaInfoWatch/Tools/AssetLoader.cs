@@ -1,4 +1,4 @@
-﻿using GorillaInfoWatch.Utilities;
+﻿using GorillaInfoWatch.Extensions;
 using GorillaNetworking;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Tools
             var bundleLoadRequest = AssetBundle.LoadFromStreamAsync(stream);
 
             // AssetBundleCreateRequest is a YieldInstruction !!
-            await TaskUtils.YieldInstruction(bundleLoadRequest);
+            await bundleLoadRequest.YieldAsync();
 
             asset_bundle = bundleLoadRequest.assetBundle;
             is_bundle_loaded = true;
@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Tools
             var assetLoadRequest = asset_bundle.LoadAssetAsync<T>(name);
 
             // AssetBundleRequest is a YieldInstruction !!
-            await TaskUtils.YieldInstruction(assetLoadRequest);
+            await assetLoadRequest.YieldAsync();
 
             var asset = assetLoadRequest.asset as T;
             loaded_assets.AddOrUpdate(name, asset);
@@ -62,7 +62,7 @@ namespace GorillaInfoWatch.Tools
             }
 
             var assetLoadRequest = asset_bundle.LoadAssetWithSubAssetsAsync<T>(name);
-            await TaskUtils.YieldInstruction(assetLoadRequest);
+            await assetLoadRequest.YieldAsync();
 
             var assets = assetLoadRequest.allAssets.Cast<T>().ToArray();
             loaded_assets.AddOrUpdate(name, assets);

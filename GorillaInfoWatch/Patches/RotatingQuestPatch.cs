@@ -4,15 +4,15 @@ using static RotatingQuestsManager;
 
 namespace GorillaInfoWatch.Patches
 {
-    [HarmonyPatch(typeof(RotatingQuest), nameof(RotatingQuest.Complete)), HarmonyWrapSafe]
-    public class RotatingQuestCompletePatch
+    [HarmonyPatch(typeof(RotatingQuest), nameof(RotatingQuest.Complete)), HarmonyPriority(Priority.HigherThanNormal)]
+    public class RotatingQuestPatch
     {
         public static void Prefix(RotatingQuest __instance)
         {
             if (__instance.isQuestComplete)
                 return;
 
-            Events.OnCompleteQuest?.SafeInvoke(__instance);
+            Events.OnQuestCompleted?.SafeInvoke(__instance);
         }
     }
 }

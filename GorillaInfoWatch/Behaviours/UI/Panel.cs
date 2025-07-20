@@ -1,4 +1,4 @@
-﻿using GorillaInfoWatch.Utilities;
+﻿using GorillaInfoWatch.Tools;
 using GorillaLocomotion;
 using UnityEngine;
 
@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             Head = GTPlayer.Instance.headCollider.transform;
             startup = true;
 
-            if (!GeneralUtils.InVR)
+            if (!ContextInfo.InVR)
             {
                 enabled = false;
                 gameObject.SetActive(true);

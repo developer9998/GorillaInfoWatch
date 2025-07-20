@@ -7,7 +7,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 {
     public class SnapSlider : MonoBehaviour
     {
-        public Action OnApplied;
+        public Action OnSliderAdjusted;
 
         public Widget_SnapSlider Widget;
 
@@ -20,12 +20,12 @@ namespace GorillaInfoWatch.Behaviours.UI
         [SerializeField, HideInInspector]
         private Transform needle, min, max;
 
-        private GorillaTriggerColliderHandIndicator index_finger;
+        private GorillaTriggerColliderHandIndicator currentHandIndicator;
 
-        public static SnapSlider Current;
+        public static SnapSlider currentSnapSlider;
 
         [SerializeField, HideInInspector]
-        private Gradient colour = Gradients.Button;
+        private Gradient colour = ColourPalette.Button;
 
         public void Awake()
         {
@@ -50,20 +50,25 @@ namespace GorillaInfoWatch.Behaviours.UI
                 Widget = widget;
 
                 gameObject.SetActive(true);
-                OnApplied = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
-                colour = Widget.Colour ?? Gradients.Button;
+                OnSliderAdjusted = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
+                colour = Widget.Colour ?? ColourPalette.Button;
                 SetNeedlePosition();
                 return;
             }
 
             Widget = null;
             gameObject.SetActive(false);
-            OnApplied = null;
+            OnSliderAdjusted = null;
         }
 
         public void OnTriggerStay(Collider other)
         {
-            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && !component.isLeftHand && (index_finger == null || index_finger == component) && (Current == null || Current == this) && Time.realtimeSinceStartup > PushButton.PressTime)
+            if 
+            (
+                Time.realtimeSinceStartup > PushButton.PressTime
+                && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand
+                && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this) 
+            )
             {
                 Vector3 local = transform.InverseTransformPoint(component.transform.position);
                 float clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
@@ -75,28 +80,32 @@ namespace GorillaInfoWatch.Behaviours.UI
                 {
                     Widget.Value = targetValue;
 
-                    OnApplied?.Invoke();
+                    OnSliderAdjusted?.Invoke();
 
                     SetNeedlePosition();
 
-                    if (index_finger != null) GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.2f, 0.02f);
+                    if (currentHandIndicator is not null)
+                    {
+                        GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.2f, 0.02f);
+                        if (Main.TryGetInstance(out Main main)) main.PressSlider(this, component.isLeftHand);
+                    }
                 }
 
-                if (index_finger == null)
+                if (currentHandIndicator is null)
                 {
-                    index_finger = component;
-                    Current = this;
-                    GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.25f, 0.05f);
+                    currentHandIndicator = component;
+                    currentSnapSlider = this;
+                    GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
                 }
             }
         }
 
         public void OnTriggerExit(Collider other)
         {
-            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && index_finger == component)
+            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && currentHandIndicator == component)
             {
-                index_finger = null;
-                Current = null;
+                currentHandIndicator = null;
+                currentSnapSlider = null;
                 PushButton.PressTime = Time.realtimeSinceStartup + 0.5f;
             }
         }

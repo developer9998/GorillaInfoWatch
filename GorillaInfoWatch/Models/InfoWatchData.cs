@@ -9,5 +9,9 @@ namespace GorillaInfoWatch.Models
         public FigureSignificanceObject[] Figures;
 
         public ItemSignificanceObject[] Cosmetics;
+
+        public GameObject WatchPrefab;
+
+        public GameObject MenuPrefab;
     }
 }
