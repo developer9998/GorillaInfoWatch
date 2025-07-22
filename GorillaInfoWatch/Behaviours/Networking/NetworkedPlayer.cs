@@ -19,15 +19,15 @@ namespace GorillaInfoWatch.Behaviours.Networking
 
         public void Start()
         {
-            NetworkHandler.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
+            NetworkManager.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
 
             if (!HasInfoWatch && Owner is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef)
-                NetworkHandler.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
+                NetworkManager.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
         }
 
         public void OnDestroy()
         {
-            NetworkHandler.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
+            NetworkManager.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
 
             if (!HasInfoWatch) return;
             HasInfoWatch = false;
@@ -52,7 +52,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
         {
             if (playerInfoWatch is not null && playerInfoWatch) return;
 
-            GameObject gameObject = Instantiate(Singleton<Main>.Instance.WatchAsset);
+            GameObject gameObject = Instantiate(Main.Instance.WatchAsset);
             playerInfoWatch = gameObject.GetComponent<InfoWatch>();
             playerInfoWatch.Rig = Rig;
             gameObject.SetActive(true);

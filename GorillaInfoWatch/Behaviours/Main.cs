@@ -1,4 +1,6 @@
-﻿using BepInEx.Bootstrap;
+﻿using BepInEx;
+using BepInEx.Bootstrap;
+using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
@@ -16,16 +18,19 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using GFriends = GorillaFriends.Main;
 using InfoWatchScreen = GorillaInfoWatch.Models.InfoWatchScreen;
 using PushButton = GorillaInfoWatch.Behaviours.UI.PushButton;
 using Random = UnityEngine.Random;
 using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSlider;
-using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class Main : Singleton<Main>
+    public class Main : MonoBehaviour
     {
+        public static Main Instance { get; private set; }
+        public static bool HasInstance => Instance is not null && (bool)Instance;
+
         // Pages
 
         private HomeScreen Home;
@@ -34,7 +39,7 @@ namespace GorillaInfoWatch.Behaviours
 
         private InboxScreen Inbox;
 
-        private GameObject container;
+        private GameObject screenObject;
 
         private readonly Dictionary<Type, InfoWatchScreen> registry = [];
 
@@ -53,7 +58,7 @@ namespace GorillaInfoWatch.Behaviours
 
         // Assets
         public GameObject WatchAsset;
-        private GameObject watchObject, menu;
+        private GameObject localWatchObject, menu;
 
         private InfoWatch localInfoWatch;
         private Panel localPanel;
@@ -75,15 +80,22 @@ namespace GorillaInfoWatch.Behaviours
 
         public static Dictionary<NetPlayer, PlayerSignificance> Significance = [];
 
-        public async override void Initialize()
+        public async void Awake()
         {
+            if (HasInstance && Instance != this)
+            {
+                Destroy(this);
+                return;
+            }
+
+            Instance = this;
             enabled = false;
 
             // Screens
 
-            container = new GameObject("ScreenContainer");
-            container.transform.SetParent(transform);
-            container.SetActive(false);
+            screenObject = new GameObject("ScreenContainer");
+            screenObject.SetActive(false);
+            screenObject.transform.SetParent(transform);
 
             List<Type> builtinPages =
             [
@@ -102,24 +114,79 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                // var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                List<Assembly> assemblies = [];
 
-                var assemblies = Chainloader.PluginInfos.Values.Select(info => info.Instance.GetType().Assembly).Where(assembly => assembly != typeof(Main).Assembly).Distinct();
-
-                foreach (Assembly assembly in assemblies)
+                foreach (var pluginInfo in Chainloader.PluginInfos.Values)
                 {
                     try
                     {
-                        if (assembly is null) continue;
+                        if (pluginInfo.Metadata?.GUID == Constants.GUID) continue;
 
-                        Logging.Info($"Searching assembly {assembly.GetName().Name}");
+                        if (pluginInfo.Instance is BaseUnityPlugin plugin && plugin.GetType()?.Assembly is Assembly assembly)
+                        {
+                            assemblies.Add(assembly);
+                        }
+                    }
+                    catch
+                    {
+                        // TODO: write literally anything here
+                        // "I guess you got better things, better things to do"
+                    }
+                }
 
-                        assembly.GetTypes().Where(type => type.IsSubclassOf(baseScreen) && baseScreen.IsAssignableFrom(baseScreen)).ForEach(page => RegisterScreen(page));
+                foreach (Assembly assembly in assemblies.Distinct())
+                {
+                    string assemblyName = assembly.GetName().Name;
+
+                    if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() == null)
+                    {
+                        //Logging.Warning("Assembly missing InfoWatchCompatibleAttribute, which is probably okay, not every mod has to be compatible!");
+                        continue;
+                    }
+
+                    Logging.Info(assemblyName);
+
+                    List<Type> screenTypes = [];
+
+                    try
+                    {
+                        Type[] assemblyTypes = assembly.GetTypes();
+
+                        foreach (Type type in assemblyTypes)
+                        {
+                            if (type is null) continue;
+
+                            try
+                            {
+                                if (type.IsSubclassOf(baseScreen) && baseScreen.IsAssignableFrom(type))
+                                {
+                                    screenTypes.Add(type);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Fatal($"Type {type.Name} could not be filtered");
+                                Logging.Error(ex);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Logging.Fatal($"Could not search assembly {assembly.GetName().Name}");
+                        Logging.Fatal($"Assembly {assemblyName} likely had one or more types that failed to load");
                         Logging.Error(ex);
+                        continue;
+                    }
+
+                    if (screenTypes.Count == 0)
+                    {
+                        Logging.Warning("Assembly contains no types valid for registration");
+                        continue;
+                    }
+
+                    foreach (Type type in screenTypes)
+                    {
+                        if (RegisterScreen(type)) continue;
+                        Logging.Warning($"Type {type.Name} could not be registered as a screen");
                     }
                 }
             }
@@ -128,8 +195,6 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Fatal("Exception thrown when performing initial assembly search");
                 Logging.Error(ex);
             }
-
-            container.SetActive(true);
 
             Home = GetScreen<HomeScreen>();
             Warning = GetScreen<WarningScreen>();
@@ -165,16 +230,16 @@ namespace GorillaInfoWatch.Behaviours
 
             WatchAsset = data.WatchPrefab;
             WatchAsset.SetActive(false);
-            watchObject = Instantiate(WatchAsset);
-            watchObject.name = "InfoWatch";
+            localWatchObject = Instantiate(WatchAsset);
+            localWatchObject.name = "InfoWatch";
 
-            localInfoWatch = watchObject.GetComponent<InfoWatch>();
+            localInfoWatch = localWatchObject.GetComponent<InfoWatch>();
             localInfoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
-            watchObject.SetActive(true);
+            localWatchObject.SetActive(true);
 
             float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
             localInfoWatch.TimeOffset = timeOffset;
-            NetworkHandler.Instance.SetProperty("TimeOffset", timeOffset);
+            NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
 
             // The majority of the remaining code in this method was written at a point when my main computer broke down
             // I wasn't able to work on C# as much as before, and most of my coding was done in Python in a robotics class in high school
@@ -202,7 +267,7 @@ namespace GorillaInfoWatch.Behaviours
 
             // Components
 
-            WatchTrigger watchTrigger = watchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
+            WatchTrigger watchTrigger = localWatchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<WatchTrigger>();
             watchTrigger.Menu = menu;
 
             menu_page_text = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
@@ -246,7 +311,7 @@ namespace GorillaInfoWatch.Behaviours
             };
 
             localPanel = menu.AddComponent<Panel>();
-            localPanel.Origin = watchObject.transform.Find("Point");
+            localPanel.Origin = localWatchObject.transform.Find("Point");
 
             Events.OnNotificationSent = OnNotificationSent;
             Events.OnNotificationOpened = OnNotifcationOpened;
@@ -258,6 +323,7 @@ namespace GorillaInfoWatch.Behaviours
             Events.OnQuestCompleted += OnQuestCompleted;
             Events.OnGetUserCosmetics += OnGetUserCosmetics;
 
+            screenObject.SetActive(true);
             Home.SetEntries([.. registry.Values]);
             SwitchScreen(Home);
 
@@ -371,8 +437,8 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (CurrentScreen is InfoWatchScreen lastScreen)
             {
-                CurrentScreen.RequestScreenSwitch -= SwitchScreen;
-                CurrentScreen.RequestSetLines -= RefreshScreen;
+                CurrentScreen.ScreenSwitchEvent -= SwitchScreen;
+                CurrentScreen.UpdateScreenEvent -= RefreshScreen;
 
                 CurrentScreen.enabled = false;
                 CurrentScreen.Content = null;
@@ -387,8 +453,8 @@ namespace GorillaInfoWatch.Behaviours
             if (newScreen == Home) history.Clear();
             else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
-            newScreen.RequestScreenSwitch += SwitchScreen;
-            newScreen.RequestSetLines += delegate (bool includeWidgets)
+            newScreen.ScreenSwitchEvent += SwitchScreen;
+            newScreen.UpdateScreenEvent += delegate (bool includeWidgets)
             {
                 newScreen.Content = newScreen.GetContent();
                 RefreshScreen(includeWidgets);
@@ -543,7 +609,7 @@ namespace GorillaInfoWatch.Behaviours
                 return false;
             }
 
-            Component component = container.AddComponent(type);
+            Component component = screenObject.AddComponent(type);
 
             if (component is InfoWatchScreen screen)
             {

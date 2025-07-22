@@ -64,6 +64,7 @@ namespace GorillaInfoWatch.Models
         Particles,
         Phone,
         Play,
-        Stop
+        Stop,
+        ExternalLink
     }
 }

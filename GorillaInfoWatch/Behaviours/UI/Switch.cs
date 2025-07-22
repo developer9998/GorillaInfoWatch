@@ -1,7 +1,6 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using System;
-using System.Linq;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.UI
@@ -103,7 +102,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 currentValue = currentValue.GetValueOrDefault(targetValue);
                 Update();
 
-                Singleton<Main>.Instance.PressSwitch(this, component.isLeftHand);
+                Main.Instance.PressSwitch(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
                 if (currentWidget is not null) currentWidget.Value = bumped;

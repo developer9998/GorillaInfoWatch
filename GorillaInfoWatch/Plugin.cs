@@ -18,7 +18,7 @@ namespace GorillaInfoWatch
             new Configuration(Config);
 
             Harmony.CreateAndPatchAll(typeof(Plugin).Assembly, Constants.GUID);
-            GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(Main), typeof(NetworkHandler), typeof(DataManager)));
+            GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(Main), typeof(NetworkManager), typeof(DataManager)));
         }
     }
 }

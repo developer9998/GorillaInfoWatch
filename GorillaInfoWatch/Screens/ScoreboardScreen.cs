@@ -4,8 +4,6 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
-using Photon.Pun;
-using Photon.Realtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;

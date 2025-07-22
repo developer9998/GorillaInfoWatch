@@ -12,15 +12,15 @@ namespace GorillaInfoWatch.Models
         public int Section;
         public ScreenContent Content;
 
-        public event Action<bool> RequestSetLines;
-        public event Action<Type> RequestScreenSwitch;
+        public event Action<bool> UpdateScreenEvent;
+        public event Action<Type> ScreenSwitchEvent;
 
         public void ReturnToHomePage() => SetScreen<HomeScreen>();
         public void SetScreen<T>() where T : InfoWatchScreen => SetScreen(typeof(T));
-        public void SetScreen(Type type) => RequestScreenSwitch?.Invoke(type);
+        public void SetScreen(Type type) => ScreenSwitchEvent?.Invoke(type);
 
         public void SetText() => SetContent(false);
-        public void SetContent(bool setWidgets = true) => RequestSetLines?.Invoke(setWidgets);
+        public void SetContent(bool setWidgets = true) => UpdateScreenEvent?.Invoke(setWidgets);
         public abstract ScreenContent GetContent();
 
         public virtual void OnShow()

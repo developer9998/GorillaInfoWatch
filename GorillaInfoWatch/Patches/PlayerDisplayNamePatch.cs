@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Patches
     {
         public static void Prefix()
         {
-            if (NetworkSystem.Instance is NetworkSystem netSys && Main.TryGetInstance(out Main main)) main.CheckPlayer(netSys.GetLocalPlayer());
+            if (NetworkSystem.Instance is NetworkSystem netSys && Main.HasInstance) Main.Instance.CheckPlayer(netSys.GetLocalPlayer());
         }
     }
 }

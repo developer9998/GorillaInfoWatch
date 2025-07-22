@@ -8,16 +8,26 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class DataManager : Singleton<DataManager>
+    public class DataManager : MonoBehaviour
     {
+        public static DataManager Instance { get; private set; }
+
         private string dataLocation;
 
         private Dictionary<DataType, Dictionary<string, object>> dataPerTypeDict;
 
         private JsonSerializerSettings serializeSettings, deserializeSettings;
 
-        public override void Initialize()
+        public void Awake()
         {
+            if (Instance != null && (bool)Instance && Instance != this)
+            {
+                Destroy(this);
+                return;
+            }
+
+            Instance = this;
+
             var converter = new Vector3Converter();
 
             serializeSettings = new JsonSerializerSettings

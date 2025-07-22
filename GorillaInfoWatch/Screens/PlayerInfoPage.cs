@@ -13,7 +13,6 @@ using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Screens
 {
-
     public class PlayerInfoPage : InfoWatchScreen
     {
         public override string Title => "Player Inspector";

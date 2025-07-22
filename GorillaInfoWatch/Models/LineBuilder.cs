@@ -85,6 +85,12 @@ namespace GorillaInfoWatch.Models
             return this;
         }
 
+        public LineBuilder Clear()
+        {
+            Lines.Clear();
+            return this;
+        }
+
         public override int GetSectionCount() => Mathf.CeilToInt(Lines.Count / (float)Constants.SectionCapacity);
 
         public override IEnumerable<ScreenLine> GetLinesAtSection(int section) => Lines.Skip(section * Constants.SectionCapacity).Take(Constants.SectionCapacity);

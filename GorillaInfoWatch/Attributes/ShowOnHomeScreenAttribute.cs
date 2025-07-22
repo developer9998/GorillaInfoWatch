@@ -3,5 +3,8 @@
 namespace GorillaInfoWatch.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class ShowOnHomeScreenAttribute : Attribute;
+    public class ShowOnHomeScreenAttribute : Attribute
+    {
+        public string DisplayTitle;
+    }
 }

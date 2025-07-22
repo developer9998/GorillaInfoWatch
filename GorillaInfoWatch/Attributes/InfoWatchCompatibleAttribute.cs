@@ -2,6 +2,6 @@
 
 namespace GorillaInfoWatch.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     public class InfoWatchCompatibleAttribute : Attribute;
 }

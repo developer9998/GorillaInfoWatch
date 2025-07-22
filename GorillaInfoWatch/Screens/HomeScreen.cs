@@ -12,27 +12,38 @@ namespace GorillaInfoWatch.Screens
         public override string Title => Constants.Name;
         public override string Description => "Created by dev9998 and gizmogoat";
 
-        private Dictionary<string, InfoWatchScreen> entries;
+        private readonly Dictionary<string, InfoWatchScreen> entries = [];
+        private readonly LineBuilder lineBuilder = new();
 
         public void SetEntries(List<InfoWatchScreen> screens)
         {
             Assembly nativeAssembly = typeof(Plugin).Assembly;
-            var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly).ToList();
+
+            var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly);
             var orderedScreens = nativeScreens.Concat(screens.Except(nativeScreens)).ToList();
-            entries = orderedScreens.Where(screen => screen.GetType().GetCustomAttributes(typeof(ShowOnHomeScreenAttribute), false).Any()).ToDictionary(screen => screen.Title, screen => screen);
+
+            if (entries.Count > 0) entries.Clear();
+            foreach (var screen in orderedScreens)
+            {
+                if (screen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute && attribute != null)
+                {
+                    string title = (string.IsNullOrEmpty(attribute.DisplayTitle) || string.IsNullOrWhiteSpace(attribute.DisplayTitle)) ? screen.Title : attribute.DisplayTitle;
+                    entries.Add(title, screen);
+                }
+            }
         }
 
         public override ScreenContent GetContent()
         {
-            var lines = new LineBuilder();
+            lineBuilder.Clear();
 
             for (int i = 0; i < entries.Count; i++)
             {
-                (string entry_name, InfoWatchScreen screen) = entries.ElementAt(i);
-                lines.Add(entry_name, new Widget_PushButton(SelectScreen, screen));
+                (string title, InfoWatchScreen screen) = entries.ElementAt(i);
+                lineBuilder.Add(title, new Widget_PushButton(SelectScreen, screen));
             }
 
-            return lines;
+            return lineBuilder;
         }
 
         public void SelectScreen(object[] args)

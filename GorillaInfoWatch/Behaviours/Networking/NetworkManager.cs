@@ -10,16 +10,26 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Networking
 {
-    public class NetworkHandler : Singleton<NetworkHandler>, IInRoomCallbacks
+    public class NetworkManager : MonoBehaviourPunCallbacks
     {
+        public static NetworkManager Instance { get; private set; }
+
         public Action<NetPlayer, Dictionary<string, object>> OnPlayerPropertyChanged;
 
         private readonly Dictionary<string, object> properties = [];
         private bool set_properties = false;
         private float properties_timer;
 
-        public override void Initialize()
+        public void Awake()
         {
+            if (Instance != null && (bool)Instance && Instance != this)
+            {
+                Destroy(this);
+                return;
+            }
+
+            Instance = this;
+
             if (NetworkSystem.Instance is NetworkSystem netSys && netSys is NetworkSystemPUN)
             {
                 Logging.Message("Setting up NetworkHandler");
@@ -64,7 +74,8 @@ namespace GorillaInfoWatch.Behaviours.Networking
             set_properties = true;
         }
 
-        public void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
         {
             NetPlayer netPlayer = NetworkSystem.Instance.GetPlayer(targetPlayer.ActorNumber);
 
@@ -86,26 +97,6 @@ namespace GorillaInfoWatch.Behaviours.Networking
 
                 return;
             }
-        }
-
-        public void OnPlayerEnteredRoom(Player newPlayer)
-        {
-
-        }
-
-        public void OnPlayerLeftRoom(Player otherPlayer)
-        {
-
-        }
-
-        public void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
-        {
-
-        }
-
-        public void OnMasterClientSwitched(Player newMasterClient)
-        {
-
         }
     }
 }

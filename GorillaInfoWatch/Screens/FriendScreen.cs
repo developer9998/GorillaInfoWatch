@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Screens
                 FriendBackendController.Instance.lastPrivacyState = localPlayerPrivacy;
                 FriendBackendController.Instance.SetPrivacyState(localPlayerPrivacy);
                 SetContent();
-            }) 
+            })
             {
                 Colour = ColourPalette.CreatePalette(ColourPalette.Green.Evaluate(0), ColourPalette.Red.Evaluate(0))
             });
@@ -116,7 +116,7 @@ namespace GorillaInfoWatch.Screens
                 string zoneName = presence.Zone;
 
                 string playerName = ((string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].EnforceLength(12) : userName;
-                
+
                 bool isRoomPublic = isPublic.GetValueOrDefault(false);
                 bool isOffline = string.IsNullOrEmpty(roomId) || roomId.Length == 0;
                 bool inVirtualStump = !isOffline && (roomId.StartsWith(GorillaComputer.instance.VStumpRoomPrepend) || (zoneName != null && zoneName.ToLower().Contains(GTZone.customMaps.GetName().ToLower())));

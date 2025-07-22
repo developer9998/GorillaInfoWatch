@@ -63,11 +63,11 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerStay(Collider other)
         {
-            if 
+            if
             (
                 Time.realtimeSinceStartup > PushButton.PressTime
                 && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand
-                && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this) 
+                && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this)
             )
             {
                 Vector3 local = transform.InverseTransformPoint(component.transform.position);
@@ -87,7 +87,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                     if (currentHandIndicator is not null)
                     {
                         GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.2f, 0.02f);
-                        if (Main.TryGetInstance(out Main main)) main.PressSlider(this, component.isLeftHand);
+                        Main.Instance.PressSlider(this, component.isLeftHand);
                     }
                 }
 

@@ -2,7 +2,6 @@
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using System;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
@@ -159,7 +158,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 matProperties.SetColor(ShaderProps._Color, colour.Evaluate(1f));
                 renderer.SetPropertyBlock(matProperties, matIndex);
 
-                Singleton<Main>.Instance.PressButton(this, component.isLeftHand);
+                Main.Instance.PressButton(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
                 OnButtonPressed?.SafeInvoke();
