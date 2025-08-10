@@ -1,5 +1,6 @@
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using Photon.Voice.Unity;
@@ -23,9 +24,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Behaviour_Enable()
         {
-            Main.Sprites.TryGetValue(InfoWatchSymbol.OpenSpeaker, out open_speaker);
-            Main.Sprites.TryGetValue(InfoWatchSymbol.MutedSpeaker, out muted_speaker);
-            Main.Sprites.TryGetValue(InfoWatchSymbol.ForceMuteSpeaker, out force_mute_speaker);
+            Main.EnumToSprite.TryGetValue(Symbols.OpenSpeaker, out open_speaker);
+            Main.EnumToSprite.TryGetValue(Symbols.MutedSpeaker, out muted_speaker);
+            Main.EnumToSprite.TryGetValue(Symbols.ForceMuteSpeaker, out force_mute_speaker);
 
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {

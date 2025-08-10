@@ -1,6 +1,7 @@
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
@@ -13,7 +14,7 @@ using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class PlayerInfoPage : InfoWatchScreen
+    public class PlayerInfoPage : Models.Screen
     {
         public override string Title => "Player Inspector";
 
@@ -47,7 +48,7 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
         }
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             if (!IsValid || !VRRigCache.Instance.TryGetVrrig(ActorNumber, out RigContainer rigContainer))
             {
@@ -79,16 +80,17 @@ namespace GorillaInfoWatch.Screens
             List<string> significance = [];
 
             if (GFriends.IsInFriendList(player.UserId)) significance.Add("Friend");
-            if (Main.Significance.TryGetValue(player, out PlayerSignificance plrSignificance)) significance.Add(plrSignificance.Symbol switch
+            if (PlayerHandler.Significance.TryGetValue(player, out PlayerSignificance plrSignificance)) significance.Add(plrSignificance.Symbol switch
             {
-                InfoWatchSymbol.Dev => "dev9998",
-                InfoWatchSymbol.Gizmo => "gizmogoat",
-                InfoWatchSymbol.ModStick => "Moderator",
-                InfoWatchSymbol.ForestGuideStick => "Forest Guide",
-                InfoWatchSymbol.FingerPainter => "Finger Painter",
-                InfoWatchSymbol.Illustrator => "Illustrator",
+                Symbols.Dev => "dev9998",
+                Symbols.Gizmo => "gizmogoat",
+                Symbols.ModStick => "Moderator",
+                Symbols.ForestGuideStick => "Forest Guide",
+                Symbols.FingerPainter => "Finger Painter",
+                Symbols.Illustrator => "Illustrator",
                 _ => plrSignificance.Title
             });
+
             if (player.IsMasterClient) significance.Add("Master Client");
             if (!NetworkSystem.Instance.GetPlayerTutorialCompletion(ActorNumber)) significance.Add("Noob");
 

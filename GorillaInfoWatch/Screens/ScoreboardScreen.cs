@@ -1,7 +1,8 @@
 ﻿using BepInEx.Configuration;
-using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Attributes;
+using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using System;
@@ -14,7 +15,7 @@ using Utilla.Utils;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ScoreboardScreen : InfoWatchScreen
+    public class ScoreboardScreen : Models.Screen
     {
         public override string Title => "Scoreboard";
 
@@ -26,7 +27,7 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.LeftRoomEvent += OnRoomLeft;
             RoomSystem.PlayerJoinedEvent += OnPlayerJoined;
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
-            Events.OnUpdateName += OnRigNameUpdate;
+            Events.OnRigNameUpdate += OnRigNameUpdate;
         }
 
         public override void OnClose()
@@ -37,10 +38,10 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.LeftRoomEvent -= OnRoomLeft;
             RoomSystem.PlayerJoinedEvent -= OnPlayerJoined;
             RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
-            Events.OnUpdateName -= OnRigNameUpdate;
+            Events.OnRigNameUpdate -= OnRigNameUpdate;
         }
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             LineBuilder lines = new();
 
@@ -73,7 +74,7 @@ namespace GorillaInfoWatch.Screens
                 List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)), new Widget_PushButton(InspectPlayer, player)
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = InfoWatchSymbol.Info
+                    Symbol = Symbols.Info
                 }];
 
                 lines.AppendColour(player.GetNameRef().EnforceLength(12), ColorUtility.ToHtmlStringRGB(GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white));

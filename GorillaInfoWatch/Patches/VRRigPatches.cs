@@ -30,19 +30,19 @@ namespace GorillaInfoWatch.Patches
         [HarmonyPatch("IUserCosmeticsCallback.OnGetUserCosmetics"), HarmonyPostfix, HarmonyPriority(Priority.Low), HarmonyWrapSafe]
         public static void GetCosmeticsPatch(VRRig __instance)
         {
-            if (IsValid(__instance)) Events.OnGetUserCosmetics?.SafeInvoke(__instance);
+            if (IsValid(__instance)) Events.OnRigRecievedCosmetics?.SafeInvoke(__instance);
         }
 
         [HarmonyPatch(nameof(VRRig.UpdateName), typeof(bool)), HarmonyPostfix, HarmonyPriority(Priority.Low), HarmonyWrapSafe]
         public static void UpdateNamePatch(VRRig __instance)
         {
-            if (IsValid(__instance)) Events.OnUpdateName?.SafeInvoke(__instance);
+            if (IsValid(__instance)) Events.OnRigNameUpdate?.SafeInvoke(__instance);
         }
 
         [HarmonyPatch(nameof(VRRig.SetInvisibleToLocalPlayer)), HarmonyPostfix]
         public static void LocalInvisiblePatch(VRRig __instance, bool invisible)
         {
-            if (IsValid(__instance)) Events.OnSetInvisibleToLocalPlayer?.SafeInvoke(__instance, invisible);
+            if (IsValid(__instance)) Events.OnRigSetLocallyInvisible?.SafeInvoke(__instance, invisible);
         }
     }
 }

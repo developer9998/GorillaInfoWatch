@@ -1,4 +1,6 @@
 ﻿using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Models.Enumerations;
+using GorillaInfoWatch.Tools;
 using Photon.Pun;
 using Photon.Voice.PUN;
 using Photon.Voice.Unity;
@@ -21,11 +23,10 @@ namespace GorillaInfoWatch.Models.StateMachine
 
         private Symbol micSpeakSymbol, micMuteSymbol, micTimeoutSymbol, bellIdleSymbol, bellRingSymbol;
 
-        private Recorder recorder;
+        private Recorder recorder = null;
 
-        bool micEnabled;
-        Symbol micSymbol = null;
-        float? micFloatingPoint = null;
+        private bool isLocalWatch;
+        private RigContainer targetRig;
 
         public override void Enter()
         {
@@ -38,6 +39,9 @@ namespace GorillaInfoWatch.Models.StateMachine
                 NetworkSystem.Instance.OnMultiplayerStarted += RefreshMic;
                 NetworkSystem.Instance.OnReturnedToSinglePlayer += RefreshMic;
             }
+
+            isLocalWatch = InfoWatch.LocalWatch == Watch;
+            targetRig = isLocalWatch ? VRRigCache.Instance.localRig : (Watch.Rig.rigContainer ?? Watch.Rig.GetComponent<RigContainer>());
         }
 
         public override void Initialize()
@@ -52,11 +56,11 @@ namespace GorillaInfoWatch.Models.StateMachine
             bellIcon = Watch.idleMenu.transform.Find("Bell").GetComponent<Image>();
             bellIcon.enabled = Watch.Rig.isOfflineVRRig;
 
-            micSpeakSymbol = InfoWatchSymbol.OpenSpeaker;
-            micMuteSymbol = InfoWatchSymbol.MutedSpeaker;
-            micTimeoutSymbol = InfoWatchSymbol.ForceMuteSpeaker;
-            bellIdleSymbol = InfoWatchSymbol.Bell;
-            bellRingSymbol = InfoWatchSymbol.BellRing;
+            micSpeakSymbol = Symbols.OpenSpeaker;
+            micMuteSymbol = Symbols.MutedSpeaker;
+            micTimeoutSymbol = Symbols.ForceMuteSpeaker;
+            bellIdleSymbol = Symbols.Bell;
+            bellRingSymbol = Symbols.BellRing;
         }
 
         public override void Resume()
@@ -102,35 +106,48 @@ namespace GorillaInfoWatch.Models.StateMachine
             {
                 try
                 {
-                    if (recorder is null)
+                    if (!micIcon.enabled) micIcon.enabled = true;
+
+                    if (isLocalWatch && recorder == null)
                     {
                         recorder = NetworkSystem.Instance.LocalRecorder;
                     }
 
-                    if (Watch.Rig.isOfflineVRRig)
+                    if (isLocalWatch && GorillaTagger.moderationMutedTime > 0)
                     {
-                        micEnabled = Watch.Rig.mySpeakerLoudness.IsMicEnabled && recorder != null && recorder.TransmitEnabled;
-                        micSymbol = GorillaTagger.moderationMutedTime > 0 ? micTimeoutSymbol : (micEnabled ? micSpeakSymbol : micMuteSymbol);
-                        micFloatingPoint = (!micEnabled || (recorder != null && recorder.IsCurrentlyTransmitting)) ? 1f : 0.2f;
-                    }
-                    else if (!Watch.Rig.isOfflineVRRig && Watch.Rig.rigContainer is RigContainer playerRig)
-                    {
-                        micEnabled = Watch.Rig.mySpeakerLoudness.IsMicEnabled;
-                        micSymbol = playerRig.GetIsPlayerAutoMuted() ? micTimeoutSymbol : (micEnabled ? micSpeakSymbol : micMuteSymbol);
-                        micFloatingPoint = (!micEnabled || (playerRig.Voice is PhotonVoiceView voice && voice.IsSpeaking)) ? 1f : 0.2f;
+                        if (micIcon.sprite != micTimeoutSymbol.Sprite)
+                        {
+                            micIcon.sprite = micTimeoutSymbol.Sprite;
+                            micIcon.color = Color.white;
+                        }
+                        return;
                     }
 
-                    if (micSymbol != null && micIcon.sprite != micSymbol.Sprite) micIcon.sprite = micSymbol.Sprite;
-                    if (micFloatingPoint != null && micIcon.color.a != micFloatingPoint) micIcon.color = new Color(1f, 1f, 1f, micFloatingPoint.GetValueOrDefault(1f));
+                    if (isLocalWatch ? (!targetRig.Rig.mySpeakerLoudness.IsMicEnabled || !recorder.TransmitEnabled) : (targetRig.Muted || !targetRig.Rig.mySpeakerLoudness.IsMicEnabled))
+                    {
+                        if (micIcon.sprite != micMuteSymbol.Sprite)
+                        {
+                            micIcon.sprite = micMuteSymbol.Sprite;
+                            micIcon.color = Color.white;
+                        }
+                        return;
+                    }
+
+                    bool isSpeaking = isLocalWatch ? (recorder.IsCurrentlyTransmitting) : (targetRig.Voice is PhotonVoiceView voice && voice.IsSpeaking);
+                    float value = isSpeaking ? 1f : 0.5f;
+
+                    if (micIcon.sprite != micSpeakSymbol.Sprite) micIcon.sprite = micSpeakSymbol.Sprite;
+                    if (micIcon.color.r != value) micIcon.color = new Color(value, value, value);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-
+                    Logging.Error(ex);
                 }
 
                 return;
             }
 
+            recorder = null;
             if (micIcon.enabled) micIcon.enabled = false;
         }
 
@@ -144,7 +161,7 @@ namespace GorillaInfoWatch.Models.StateMachine
                 Watch.timeText.text = string.Format("<cspace=0.1em>{0}</cspace><br><size=50%>{1}</size>", time, date);
             }
 
-            fpsText.text = (Watch.Rig.isOfflineVRRig ? Mathf.FloorToInt(frameCount / timeCount) : Watch.Rig.fps).ToString();
+            fpsText.text = (isLocalWatch ? Mathf.FloorToInt(frameCount / timeCount) : Watch.Rig.fps).ToString();
         }
 
         public void RefreshBell(int notificationCount)

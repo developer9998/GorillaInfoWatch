@@ -1,19 +1,18 @@
-﻿using UnityEngine;
+﻿using GorillaInfoWatch.Models.Enumerations;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Significance
 {
-    [CreateAssetMenu(fileName = "Figure", menuName = "GorillaInfoWatch/Figure (significance)", order = 0)]
+    [CreateAssetMenu(fileName = "Figure", menuName = "Info Watch/Figure (significance)", order = 0)]
     public class FigureSignificanceObject : ScriptableObject
     {
-        public InfoWatchSymbol Symbol;
+        public Symbols Symbol;
 
         public string[] UserIds;
 
 #if PLUGIN
         public static explicit operator FigureSignificance(FigureSignificanceObject scriptableObject)
-        {
-            return new FigureSignificance(scriptableObject.name, scriptableObject.Symbol, scriptableObject.UserIds);
-        }
+            => new(scriptableObject.name, scriptableObject.Symbol, scriptableObject.UserIds);
 #endif
     }
 }

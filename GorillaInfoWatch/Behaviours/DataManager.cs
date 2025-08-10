@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Models;
+﻿using BepInEx;
+using GorillaInfoWatch.Models.Enumerations;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -12,9 +13,9 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static DataManager Instance { get; private set; }
 
-        private string dataLocation;
+        private static string dataLocation;
 
-        private Dictionary<DataType, Dictionary<string, object>> dataPerTypeDict;
+        private static Dictionary<DataLocation, Dictionary<string, object>> dataPerTypeDict;
 
         private JsonSerializerSettings serializeSettings, deserializeSettings;
 
@@ -44,14 +45,14 @@ namespace GorillaInfoWatch.Behaviours
             };
             deserializeSettings.Converters.Add(converter);
 
-            dataPerTypeDict = Enum.GetValues(typeof(DataType)).Cast<DataType>().ToDictionary(type => type, type => new Dictionary<string, object>());
+            dataPerTypeDict = Enum.GetValues(typeof(DataLocation)).Cast<DataLocation>().ToDictionary(type => type, type => new Dictionary<string, object>());
 
-            dataLocation = Path.Combine(Application.persistentDataPath, $"{Constants.Name}.json");
+            dataLocation = Path.Combine(Application.persistentDataPath, $"InfoWatch.json");
 
             ReadPersistentData();
         }
 
-        public void AddItem(string key, object value, DataType dataType = DataType.Persistent)
+        public void SetItem(string key, object value, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -59,10 +60,10 @@ namespace GorillaInfoWatch.Behaviours
             if (dictionary.ContainsKey(key)) dictionary[key] = value;
             else dictionary.Add(key, value);
 
-            if (dataType == DataType.Persistent) WritePersistentData();
+            if (dataType == DataLocation.Persistent) WritePersistentData();
         }
 
-        public void RemoveItem(string key, DataType dataType = DataType.Persistent)
+        public void RemoveItem(string key, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -70,39 +71,63 @@ namespace GorillaInfoWatch.Behaviours
             if (dictionary.ContainsKey(key))
             {
                 dictionary.Remove(key);
-                if (dataType == DataType.Persistent) WritePersistentData();
+                if (dataType == DataLocation.Persistent) WritePersistentData();
             }
         }
 
-        public T GetItem<T>(string key, T defaultValue = default, DataType dataType = DataType.Persistent)
+        public T GetItem<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default, bool setDefaultValue = true)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
 
             if (dictionary.TryGetValue(key, out object value))
             {
-                return (T)value;
+                if (value is T item) return item;
+
+                TypeCode typeCode = Type.GetTypeCode(typeof(T));
+
+                if (typeCode != TypeCode.Int64 && value is long deserializedLong)
+                {
+                    switch (typeCode)
+                    {
+                        case TypeCode.Int16:
+                            short int16 = Convert.ToInt16(deserializedLong);
+                            dictionary[key] = int16;
+                            return (T)(object)int16;
+                        case TypeCode.Int32:
+                            int int32 = Convert.ToInt32(deserializedLong);
+                            dictionary[key] = int32;
+                            return (T)(object)int32;
+                    }
+                }
             }
 
+            if (setDefaultValue) SetItem(key, defaultValue);
             return defaultValue;
         }
 
         public void ReadPersistentData()
         {
-            EnsureDataCollection(DataType.Persistent);
+            EnsureDataCollection(DataLocation.Persistent);
 
-            if (File.Exists(dataLocation)) dataPerTypeDict[DataType.Persistent] = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(dataLocation));
+            if (File.Exists(dataLocation)) dataPerTypeDict[DataLocation.Persistent] = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(dataLocation));
             else WritePersistentData();
         }
 
         public void WritePersistentData()
         {
-            EnsureDataCollection(DataType.Persistent);
+            EnsureDataCollection(DataLocation.Persistent);
 
-            File.WriteAllText(dataLocation, JsonConvert.SerializeObject(dataPerTypeDict[DataType.Persistent], serializeSettings));
+            string serialized = JsonConvert.SerializeObject(dataPerTypeDict[DataLocation.Persistent], serializeSettings);
+
+            ThreadingHelper.Instance.StartAsyncInvoke(() =>
+            {
+                File.WriteAllText(dataLocation, serialized);
+                return null;
+            });
         }
 
-        public void EnsureDataCollection(DataType dataType)
+        public void EnsureDataCollection(DataLocation dataType)
         {
             if (dataPerTypeDict.ContainsKey(dataType)) return;
             dataPerTypeDict.Add(dataType, []);

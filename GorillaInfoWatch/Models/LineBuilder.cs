@@ -7,9 +7,11 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public class LineBuilder(List<ScreenLine> lines) : ScreenContent
+    public class LineBuilder(List<InfoLine> lines) : ScreenLines
     {
-        public List<ScreenLine> Lines = lines ?? [];
+        public override int SectionCount => Mathf.CeilToInt(Lines.Count / (float)Constants.SectionCapacity);
+
+        public List<InfoLine> Lines = lines ?? [];
 
         private readonly StringBuilder str = new();
 
@@ -18,10 +20,14 @@ namespace GorillaInfoWatch.Models
 
         }
 
-        public LineBuilder(string content) : this([.. content.Split(Environment.NewLine).Select(line => new ScreenLine(line))])
+        public LineBuilder(string content) : this([.. content.Split(Environment.NewLine).Select(line => new InfoLine(line))])
         {
 
         }
+
+        public override string GetTitleOfSection(int section) => string.Empty;
+
+        public override IEnumerable<InfoLine> GetLinesAtSection(int section) => Lines.Skip(section * Constants.SectionCapacity).Take(Constants.SectionCapacity);
 
         public LineBuilder Append(object value)
         {
@@ -81,7 +87,7 @@ namespace GorillaInfoWatch.Models
 
         public LineBuilder Repeat(int amount, string text, params List<Widget_Base> widgets)
         {
-            Lines.AddRange(Enumerable.Repeat<ScreenLine>(new(text, widgets), amount));
+            Lines.AddRange(Enumerable.Repeat<InfoLine>(new(text, widgets), amount));
             return this;
         }
 
@@ -91,12 +97,6 @@ namespace GorillaInfoWatch.Models
             return this;
         }
 
-        public override int GetSectionCount() => Mathf.CeilToInt(Lines.Count / (float)Constants.SectionCapacity);
-
-        public override IEnumerable<ScreenLine> GetLinesAtSection(int section) => Lines.Skip(section * Constants.SectionCapacity).Take(Constants.SectionCapacity);
-
-        public override string GetTitleOfSection(int section) => string.Empty;
-
-        public static implicit operator List<ScreenLine>(LineBuilder lines) => lines.Lines;
+        public static implicit operator List<InfoLine>(LineBuilder lines) => lines.Lines;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using GameObjectScheduling;
-using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaNetworking;
 using KID.Model;
@@ -13,11 +13,11 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class DetailsScreen : InfoWatchScreen
+    public class DetailsScreen : Models.Screen
     {
         public override string Title => "Details";
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             LineBuilder profileLines = new();
 

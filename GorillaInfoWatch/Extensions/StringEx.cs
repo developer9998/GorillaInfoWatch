@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Extensions
         // TODO: allow for rich presence tags
         public static string[] ToTextArray(this string text, string prepend = null)
         {
-            if (!Main.HasInstance || Main.Instance.menu_lines == null || Main.Instance.menu_lines[0] is not WatchLine line)
+            if (Main.Instance is null || Main.Instance.menuLines == null || Main.Instance.menuLines[0] is not WatchLine line)
                 return [string.IsNullOrEmpty(prepend) ? text : string.Concat(prepend, text)];
 
             string originalText = line.Text.text;

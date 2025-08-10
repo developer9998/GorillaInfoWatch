@@ -1,8 +1,9 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Attributes;
+using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
 using System;
@@ -12,7 +13,7 @@ using System.Linq;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ModListPage : InfoWatchScreen
+    public class ModListPage : Screen
     {
         public override string Title => "Mods";
 
@@ -32,7 +33,7 @@ namespace GorillaInfoWatch.Screens
             mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods).OrderBy(pluginInfo => pluginInfo.Metadata.Name).OrderByDescending(pluginInfo => pluginInfo.Instance.Config is ConfigFile config ? config.Count : -1)).Where(pluginInfo => pluginInfo.Metadata.GUID != Constants.GUID)];
         }
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             LineBuilder lines = new();
 
@@ -43,7 +44,7 @@ namespace GorillaInfoWatch.Screens
                 Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = InfoWatchSymbol.Info
+                    Symbol = Symbols.Info
                 };
 
                 if (stateSupportedMods.Contains(pluginInfo))

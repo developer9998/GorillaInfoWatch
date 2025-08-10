@@ -1,0 +1,56 @@
+namespace GorillaInfoWatch.Models.Enumerations
+{
+    // TODO: categorize symbols by people/figures and icons/cosmetics
+    public enum Symbols
+    {
+        // People
+        Dev,
+        Gizmo,
+        Cresmondo,
+        BloodJman,
+        H4RNS,
+        Astrid,
+        Deactivated,
+        Cyan,
+        Graze,
+        Chucken,
+        Socks,
+        Will,
+        Lapis,
+        Kronicahl,
+        // Icons
+        Verified,
+        Info,
+        Patreon,
+        KoFi,
+        OpenSpeaker,
+        MutedSpeaker,
+        ForceMuteSpeaker,
+        ModStick,
+        FingerPainter,
+        Illustrator,
+        ForestGuideStick,
+        InfoWatch,
+        AACreator,
+        TemplateHead,
+        TemplateFace,
+        Ignore,
+        Image,
+        Bell,
+        BellRing,
+        RedFlag,
+        GreenFlag,
+        Croptop,
+        Rainbow,
+        LightBulb,
+        Camera,
+        Vibration,
+        Gun,
+        Invisibility,
+        Particles,
+        Phone,
+        Play,
+        Stop,
+        ExternalLink
+    }
+}

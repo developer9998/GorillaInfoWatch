@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>preview</LangVersion>
 		<Configurations>Debug;Release;Editor</Configurations>
 	</PropertyGroup>
 
@@ -35,6 +35,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 	</ItemGroup>
+	
+	<!-- Modify parameters in Directory Builds.props rather than in here! -->
 
 	<ItemGroup>
 		<Reference Include="0Harmony">
@@ -50,10 +52,10 @@
 			<HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="GorillaFriends">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\BepInEx\plugins\GorillaFriends\GorillaFriends.dll</HintPath>
+		  <HintPath>$(PluginsPath)\GorillaFriends\GorillaFriends.dll</HintPath>
 		</Reference>
 		<Reference Include="KID">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\KID.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\KID.dll</HintPath>
 		</Reference>
 		<Reference Include="Newtonsoft.Json">
 			<HintPath>$(GameAssemblyPath)\Newtonsoft.Json.dll</HintPath>
@@ -77,13 +79,13 @@
 			<HintPath>$(GameAssemblyPath)\PhotonVoice.API.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonVoice.Fusion">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PhotonVoice.Fusion.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\PhotonVoice.Fusion.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonVoice.PUN">
 			<HintPath>$(GameAssemblyPath)\PhotonVoice.PUN.dll</HintPath>
 		</Reference>
 		<Reference Include="PlayFab">
-			<HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PlayFab.dll</HintPath>
+			<HintPath>$(GameAssemblyPath)\PlayFab.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.TextMeshPro">
 			<HintPath>$(GameAssemblyPath)\Unity.TextMeshPro.dll</HintPath>

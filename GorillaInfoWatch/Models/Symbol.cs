@@ -1,4 +1,5 @@
 using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Models.Enumerations;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -16,28 +17,18 @@ namespace GorillaInfoWatch.Models
             Sprite = sprite;
         }
 
-        public Symbol(InfoWatchSymbol symbol)
+        public Symbol(Symbols symbol)
         {
-            if (Main.Sprites.TryGetValue(symbol, out Sprite sprite))
+            if (Main.EnumToSprite.TryGetValue(symbol, out Sprite sprite))
             {
                 Sprite = sprite;
             }
         }
 
-        public static implicit operator Symbol(Sprite sprite)
-        {
-            return new Symbol(sprite);
-        }
+        public static implicit operator Symbol(Symbols enumeration) => new(enumeration);
 
-        public static implicit operator Symbol(InfoWatchSymbol enumSymbol)
-        {
-            return new Symbol(enumSymbol);
-        }
+        public static implicit operator Symbol(Sprite sprite) => new(sprite);
 
-        public static implicit operator Symbol(Texture2D texture)
-        {
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
-            return sprite;
-        }
+        public static implicit operator Symbol(Texture2D texture) => Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
     }
 }

@@ -7,11 +7,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\GorillaInfoWatch\Models\InfoWatchSymbol.cs">
-			<Link>InfoWatchSymbol.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Models\Enumerations\Symbols.cs">
+			<Link>Symbols.cs</Link>
 		</Compile>
-		<Compile Include="..\GorillaInfoWatch\Models\InfoWatchData.cs">
-			<Link>InfoWatchData.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Models\Assets.cs">
+			<Link>Assets.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Models\Significance\FigureSignificanceObject.cs">
 			<Link>FigureSignificanceObject.cs</Link>
@@ -62,7 +62,7 @@
 			<HintPath>$(GameAssemblyPath)\PhotonVoice.PUN.dll</HintPath>
 		</Reference>
 		<Reference Include="PlayFab">
-			<HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PlayFab.dll</HintPath>
+			<HintPath>$(GameAssemblyPath)\PlayFab.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.TextMeshPro">
 			<HintPath>$(GameAssemblyPath)\Unity.TextMeshPro.dll</HintPath>

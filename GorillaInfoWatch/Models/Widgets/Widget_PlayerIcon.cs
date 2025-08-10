@@ -1,5 +1,6 @@
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,17 +34,17 @@ namespace GorillaInfoWatch.Models.Widgets
                 rectTransform.sizeDelta = size; // speaker is default i think, 120x100
                 rectTransform.localPosition = rectTransform.localPosition.WithZ(-2);
 
-                CreateSubSymbol(ref monkeBase, InfoWatchSymbol.TemplateHead);
-                CreateSubSymbol(ref monkeFace, InfoWatchSymbol.TemplateFace);
+                CreateSubSymbol(ref monkeBase, Symbols.TemplateHead);
+                CreateSubSymbol(ref monkeFace, Symbols.TemplateFace);
 
-                OnSignificanceChanged(Player, Main.Significance.TryGetValue(Player, out PlayerSignificance significance) ? significance : null);
+                OnSignificanceChanged(Player, PlayerHandler.Significance.TryGetValue(Player, out PlayerSignificance significance) ? significance : null);
 
                 playerRig.Rig.OnColorChanged += OnColourChanged;
-                Events.OnSignificanceChanged += OnSignificanceChanged;
+                PlayerHandler.OnSignificanceChanged += OnSignificanceChanged;
             }
         }
 
-        private void CreateSubSymbol(ref Image image, InfoWatchSymbol watchSymbol)
+        private void CreateSubSymbol(ref Image image, Symbols watchSymbol)
         {
             string objectName = $"SubSymbol {watchSymbol}";
 
@@ -70,7 +71,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (playerRig)
             {
                 playerRig.Rig.OnColorChanged -= OnColourChanged;
-                Events.OnSignificanceChanged -= OnSignificanceChanged;
+                PlayerHandler.OnSignificanceChanged -= OnSignificanceChanged;
             }
         }
 

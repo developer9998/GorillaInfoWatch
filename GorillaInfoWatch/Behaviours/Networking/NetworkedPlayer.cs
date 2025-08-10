@@ -52,7 +52,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
         {
             if (playerInfoWatch is not null && playerInfoWatch) return;
 
-            GameObject gameObject = Instantiate(Main.Instance.WatchAsset);
+            GameObject gameObject = Instantiate(Main.Content.WatchPrefab);
             playerInfoWatch = gameObject.GetComponent<InfoWatch>();
             playerInfoWatch.Rig = Rig;
             gameObject.SetActive(true);

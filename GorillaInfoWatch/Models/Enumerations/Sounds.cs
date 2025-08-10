@@ -1,7 +1,8 @@
-﻿namespace GorillaInfoWatch.Models
+﻿namespace GorillaInfoWatch.Models.Enumerations
 {
-    public enum InfoWatchSound
+    public enum Sounds
     {
+        none,
         widgetButton,
         widgetSlider,
         widgetSwitch,

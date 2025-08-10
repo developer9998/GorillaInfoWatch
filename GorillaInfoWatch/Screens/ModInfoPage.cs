@@ -11,13 +11,13 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class ModInfoPage : InfoWatchScreen
+    public class ModInfoPage : Screen
     {
         public override string Title => "Mod Inspector";
 
         public static PluginInfo Mod;
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             if (Mod is null)
             {

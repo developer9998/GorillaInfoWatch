@@ -143,13 +143,14 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (Time.realtimeSinceStartup > PressTime && collider.TryGetComponent(out HandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand)
             {
-                PressTime = Time.realtimeSinceStartup + 0.25f;
-
                 if (Widget is not null && Widget.IsReadOnly)
                 {
-                    GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength, GorillaTagger.Instance.tapHapticDuration / 2f);
+                    PressTime = Time.realtimeSinceStartup + (GorillaTagger.Instance.tapHapticDuration / 2f);
+                    GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength * 2f, GorillaTagger.Instance.tapHapticDuration / 2f);
                     return;
                 }
+
+                PressTime = Time.realtimeSinceStartup + 0.25f;
 
                 bumped = true;
                 targetValue = 1f;

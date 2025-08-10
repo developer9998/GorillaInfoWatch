@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             Symbol.SetActive(false);
         }
 
-        public void Build(ScreenLine line, bool applyWidgets)
+        public void Build(InfoLine line, bool applyWidgets)
         {
             // Logging.Info($"Text: \"{line.Text}\"");
             // Logging.Info($"Apply Widgets: {applyWidgets}");

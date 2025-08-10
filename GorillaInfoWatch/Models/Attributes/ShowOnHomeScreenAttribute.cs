@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GorillaInfoWatch.Attributes
+namespace GorillaInfoWatch.Models.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public class ShowOnHomeScreenAttribute : Attribute

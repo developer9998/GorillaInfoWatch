@@ -1,18 +1,20 @@
 ﻿using GorillaInfoWatch.Tools;
-using GorillaLocomotion;
 using UnityEngine;
+using Player = GorillaLocomotion.GTPlayer;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
     public class Panel : MonoBehaviour
     {
+        public bool Active => gameObject.activeSelf;
+
         public Transform Origin, Head;
 
         public Vector3 OriginOffset;
 
         private bool startup = false;
 
-        private bool IsFacingUp => Vector3.Distance(GTPlayer.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
+        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
 
         public void OnEnable()
         {
@@ -25,15 +27,16 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Start()
         {
-            Head = GTPlayer.Instance.headCollider.transform;
+            Head = Player.Instance.headCollider.transform;
             startup = true;
 
             if (!ContextInfo.InVR)
             {
                 enabled = false;
-                gameObject.SetActive(true);
+                SetActive(true);
+
                 SetPosition();
-                transform.position += GTPlayer.Instance.headCollider.transform.forward * 0.35f + Vector3.up * (GTPlayer.Instance.headCollider.radius * 3f);
+                transform.position += Player.Instance.headCollider.transform.forward * 0.35f + Vector3.up * (Player.Instance.headCollider.radius * 3f);
                 transform.rotation = Quaternion.identity;
             }
         }
@@ -59,12 +62,18 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void SetRotation()
         {
-            Vector3 forward = transform.position - Head.position;
-            Vector3 euler_angles = Quaternion.LookRotation(forward, Vector3.up).eulerAngles;
+            Vector3 relativePosition = transform.position - Head.position;
+            Vector3 eulerAngles = Quaternion.LookRotation(relativePosition, Vector3.up).eulerAngles;
             // euler_angles.x = Math.Abs(euler_angles.x) > Constants.MenuTiltAngle ? Mathf.Lerp((Mathf.Abs(euler_angles.x) - Constants.MenuTiltAngle) * Constants.MenuTiltAmount * Mathf.Sign(euler_angles.x), euler_angles.x, (Mathf.Abs(euler_angles.x) - Constants.MenuTiltAngle) / Constants.MenuTiltMinimum) : 0f;
-            euler_angles.x = 0f;
-            euler_angles.z = 0f;
-            transform.rotation = Quaternion.Euler(euler_angles);
+            eulerAngles.x = 0f;
+            eulerAngles.z = 0f;
+            transform.rotation = Quaternion.Euler(eulerAngles);
+        }
+
+        public void SetActive(bool active)
+        {
+            if (Active == active) return;
+            gameObject.SetActive(active);
         }
 
 #if DEBUG

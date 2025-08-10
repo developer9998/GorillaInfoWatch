@@ -9,14 +9,14 @@ namespace GorillaInfoWatch.Extensions
     {
         private static MonoBehaviour MonoBehaviour => Main.Instance;
 
-        public static async Task YieldAsync(this YieldInstruction instruction)
+        public static async Task AsAwaitable(this YieldInstruction instruction)
         {
             var completionSource = new TaskCompletionSource<YieldInstruction>();
-            MonoBehaviour.StartCoroutine(YieldRoutine(instruction, completionSource));
+            MonoBehaviour.StartCoroutine(AwaitableRoutine(instruction, completionSource));
             await completionSource.Task;
         }
 
-        private static IEnumerator YieldRoutine(YieldInstruction instruction, TaskCompletionSource<YieldInstruction> completionSource)
+        private static IEnumerator AwaitableRoutine(YieldInstruction instruction, TaskCompletionSource<YieldInstruction> completionSource)
         {
             yield return instruction;
             completionSource.SetResult(instruction);

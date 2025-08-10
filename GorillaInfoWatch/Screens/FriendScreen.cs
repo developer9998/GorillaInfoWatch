@@ -1,6 +1,7 @@
-using GorillaInfoWatch.Attributes;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Attributes;
+using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
@@ -15,7 +16,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class FriendScreen : InfoWatchScreen
+    public class FriendScreen : Models.Screen
     {
         public override string Title => "Friends";
 
@@ -61,7 +62,7 @@ namespace GorillaInfoWatch.Screens
             SetContent();
         }
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             LineBuilder lines = new();
 
@@ -134,7 +135,7 @@ namespace GorillaInfoWatch.Screens
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                     {
                         Colour = ColourPalette.Yellow,
-                        Symbol = InfoWatchSymbol.LightBulb
+                        Symbol = Symbols.LightBulb
                     });
                     continue;
                 }
@@ -144,7 +145,7 @@ namespace GorillaInfoWatch.Screens
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton(JoinFriend, friend, inVirtualStump)
                     {
                         Colour = ColourPalette.Green,
-                        Symbol = InfoWatchSymbol.GreenFlag
+                        Symbol = Symbols.GreenFlag
                     });
                     continue;
                 }
@@ -152,7 +153,7 @@ namespace GorillaInfoWatch.Screens
                 lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                 {
                     Colour = ColourPalette.Red,
-                    Symbol = InfoWatchSymbol.RedFlag
+                    Symbol = Symbols.RedFlag
                 });
             }
 

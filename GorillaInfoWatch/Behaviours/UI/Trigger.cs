@@ -1,20 +1,20 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Tools;
-using GorillaLocomotion;
 using UnityEngine;
+using Player = GorillaLocomotion.GTPlayer;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours.UI
 {
-    public class WatchTrigger : MonoBehaviour
+    public class Trigger : MonoBehaviour
     {
-        public GameObject Menu;
+        public Panel Menu;
 
         public AudioSource AudioSource;
 
-        private bool IsFacingUp => Vector3.Distance(GTPlayer.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
-        private bool InView => Vector3.Dot(GTPlayer.Instance.headCollider.transform.forward, (transform.position - GTPlayer.Instance.headCollider.transform.position).normalized) > 0.64f;
+        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
+        private bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (transform.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
 
         private float touchTime;
 
@@ -37,14 +37,14 @@ namespace GorillaInfoWatch.Behaviours
 
                 if (InfoWatch.LocalWatch is InfoWatch watch && watch.stateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
                 {
-                    Events.OpenNotification(notification, true);
+                    Notifications.OpenNotification(notification, true);
                     watch.stateMachine.SwitchState(subState.previousState);
 
                     Menu.SetActive(true);
                     return;
                 }
 
-                Menu.SetActive(!Menu.activeSelf);
+                Menu.SetActive(!Menu.Active);
             }
         }
     }

@@ -3,11 +3,11 @@ using System;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class WarningScreen : InfoWatchScreen
+    public class WarningScreen : Screen
     {
         public override string Title => "Warning";
 
-        public override ScreenContent GetContent()
+        public override ScreenLines GetContent()
         {
             throw new NotImplementedException("Warning screen hasn't been implemented.. yet :3");
         }

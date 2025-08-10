@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Tools
             var bundleLoadRequest = AssetBundle.LoadFromStreamAsync(stream);
 
             // AssetBundleCreateRequest is a YieldInstruction !!
-            await bundleLoadRequest.YieldAsync();
+            await bundleLoadRequest.AsAwaitable();
 
             asset_bundle = bundleLoadRequest.assetBundle;
             is_bundle_loaded = true;
@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Tools
             var assetLoadRequest = asset_bundle.LoadAssetAsync<T>(name);
 
             // AssetBundleRequest is a YieldInstruction !!
-            await assetLoadRequest.YieldAsync();
+            await assetLoadRequest.AsAwaitable();
 
             var asset = assetLoadRequest.asset as T;
             loaded_assets.AddOrUpdate(name, asset);
@@ -62,7 +62,7 @@ namespace GorillaInfoWatch.Tools
             }
 
             var assetLoadRequest = asset_bundle.LoadAssetWithSubAssetsAsync<T>(name);
-            await assetLoadRequest.YieldAsync();
+            await assetLoadRequest.AsAwaitable();
 
             var assets = assetLoadRequest.allAssets.Cast<T>().ToArray();
             loaded_assets.AddOrUpdate(name, assets);

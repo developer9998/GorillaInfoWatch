@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public class ColourPalette
+    public static class ColourPalette
     {
         public static readonly Gradient Button = CreatePalette(new Color32(191, 188, 170, 255), new Color32(132, 131, 119, 255));
 

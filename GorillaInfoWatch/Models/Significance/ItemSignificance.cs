@@ -1,10 +1,16 @@
-﻿using GorillaNetworking;
+﻿using GorillaInfoWatch.Models.Enumerations;
+using GorillaNetworking;
 
 namespace GorillaInfoWatch.Models.Significance
 {
-    public class ItemSignificance(string title, InfoWatchSymbol symbol, string itemId) : PlayerSignificance(title, symbol)
+    public class ItemSignificance : PlayerSignificance
     {
-        public string ItemId { get; } = itemId;
+        public string ItemId { get; }
+
+        internal ItemSignificance(string title, Symbols symbol, string itemId): base(title, symbol)
+        {
+            ItemId = itemId;
+        }
 
         public override bool IsValid(NetPlayer player)
         {
