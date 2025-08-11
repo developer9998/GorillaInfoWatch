@@ -112,7 +112,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 List<Assembly> assemblies = [];
 
-                foreach (var pluginInfo in Chainloader.PluginInfos.Values)
+                foreach (PluginInfo pluginInfo in Chainloader.PluginInfos.Values)
                 {
                     try
                     {
@@ -333,8 +333,8 @@ namespace GorillaInfoWatch.Behaviours
 
             notifications.Add(notification);
 
-            if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audio))
-                localInfoWatch.audioDevice.PlayOneShot(audio);
+            if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip))
+                localInfoWatch.audioDevice.PlayOneShot(audioClip);
 
             GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, 0.04f, 0.2f);
 
