@@ -84,7 +84,7 @@
 		<Reference Include="PhotonVoice.PUN">
 			<HintPath>$(GameAssemblyPath)\PhotonVoice.PUN.dll</HintPath>
 		</Reference>
-		<Reference Include="PlayFab">
+		<Reference Include="PlayFab" Publicize="true">
 			<HintPath>$(GameAssemblyPath)\PlayFab.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.TextMeshPro">

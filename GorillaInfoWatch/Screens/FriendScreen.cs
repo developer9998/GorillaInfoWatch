@@ -135,7 +135,7 @@ namespace GorillaInfoWatch.Screens
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                     {
                         Colour = ColourPalette.Yellow,
-                        Symbol = Symbols.LightBulb
+                        Symbol = (Symbol)Symbols.LightBulb
                     });
                     continue;
                 }
@@ -145,7 +145,7 @@ namespace GorillaInfoWatch.Screens
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton(JoinFriend, friend, inVirtualStump)
                     {
                         Colour = ColourPalette.Green,
-                        Symbol = Symbols.GreenFlag
+                        Symbol = (Symbol)Symbols.GreenFlag
                     });
                     continue;
                 }
@@ -153,7 +153,7 @@ namespace GorillaInfoWatch.Screens
                 lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                 {
                     Colour = ColourPalette.Red,
-                    Symbol = Symbols.RedFlag
+                    Symbol = (Symbol)Symbols.RedFlag
                 });
             }
 

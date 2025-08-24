@@ -42,7 +42,7 @@ namespace GorillaInfoWatch.Patches
         [HarmonyPatch(nameof(VRRig.SetInvisibleToLocalPlayer)), HarmonyPostfix]
         public static void LocalInvisiblePatch(VRRig __instance, bool invisible)
         {
-            if (IsValid(__instance)) Events.OnRigSetLocallyInvisible?.SafeInvoke(__instance, invisible);
+            if (IsValid(__instance)) Events.OnRigSetInvisibleToLocal?.SafeInvoke(__instance, invisible);
         }
     }
 }

@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Screens
                 List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)), new Widget_PushButton(InspectPlayer, player)
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = Symbols.Info
+                    Symbol = (Symbol)Symbols.Info
                 }];
 
                 lines.AppendColour(player.GetNameRef().EnforceLength(12), ColorUtility.ToHtmlStringRGB(GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white));

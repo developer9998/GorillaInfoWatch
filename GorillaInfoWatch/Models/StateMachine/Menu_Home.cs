@@ -56,11 +56,11 @@ namespace GorillaInfoWatch.Models.StateMachine
             bellIcon = Watch.idleMenu.transform.Find("Bell").GetComponent<Image>();
             bellIcon.enabled = Watch.Rig.isOfflineVRRig;
 
-            micSpeakSymbol = Symbols.OpenSpeaker;
-            micMuteSymbol = Symbols.MutedSpeaker;
-            micTimeoutSymbol = Symbols.ForceMuteSpeaker;
-            bellIdleSymbol = Symbols.Bell;
-            bellRingSymbol = Symbols.BellRing;
+            micSpeakSymbol = (Symbol)Symbols.OpenSpeaker;
+            micMuteSymbol = (Symbol)Symbols.MutedSpeaker;
+            micTimeoutSymbol = (Symbol)Symbols.ForceMuteSpeaker;
+            bellIdleSymbol = (Symbol)Symbols.Bell;
+            bellRingSymbol = (Symbol)Symbols.BellRing;
         }
 
         public override void Resume()

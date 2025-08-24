@@ -1,11 +1,12 @@
-﻿using GorillaInfoWatch.Models.Enumerations;
+﻿using BepInEx;
+using GorillaInfoWatch.Models.Enumerations;
 using System;
 using System.Threading.Tasks;
 
 namespace GorillaInfoWatch.Models
 {
     [Serializable]
-    public class Notification(string content, float duration, Sounds sound, Notification.ExternalScreen screen = null)
+    public class Notification(string content, float duration, Sounds sound = Sounds.none, Notification.ExternalScreen screen = null)
     {
         public string Content { get; } = content;
         public float Duration { get; } = duration;
@@ -22,7 +23,7 @@ namespace GorillaInfoWatch.Models
 
         public bool SessionIsPrivate = NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate;
 
-        public Notification(string head, string body, float duration, Sounds sound, ExternalScreen screen = null) : this(string.Format("<size=6>{0}:</size><br><b>{1}</b>", head, body), duration, sound, screen)
+        public Notification(string head, string body, float duration, Sounds sound = Sounds.none, ExternalScreen screen = null) : this(string.Format("<size=6>{0}:</size><br><b>{1}</b>", head, body), duration, sound, screen)
         {
             DisplayText = $"{head.TrimEnd(':')}: {body}";
         }
@@ -33,7 +34,7 @@ namespace GorillaInfoWatch.Models
             public string DisplayText { get; } = displayText;
             public Task Task { get; } = task;
 
-            public ExternalScreen(Type screen, string displayText, Action action) : this(screen, displayText, Task.Run(action))
+            public ExternalScreen(Type screen, string displayText, Action action) : this(screen, displayText, Task.Run(() => ThreadingHelper.Instance.StartSyncInvoke(action)))
             {
                 // Must require a body
             }

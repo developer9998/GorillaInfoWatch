@@ -10,6 +10,9 @@ using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
+using GorillaNetworking;
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,7 +29,7 @@ using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class Main : MonoBehaviour
+    public class Main : MonoBehaviourPunCallbacks
     {
         public static Main Instance { get; private set; }
 
@@ -75,6 +78,8 @@ namespace GorillaInfoWatch.Behaviours
         // Display
         private TMP_Text menu_page_text;
         private PushButton button_prev_page, button_next_page, button_return_screen, button_reload_screen, buttonOpenInbox;
+
+        private bool wasRoomAllowed = true;
 
         public async void Awake()
         {
@@ -201,7 +206,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Figures, figure => (FigureSignificance)figure));
             Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
-            Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch);
+            Significance_Watch = new("InfoWatch User", Symbols.InfoWatch);
             Significance_Verified = new("Verified", Symbols.Verified);
 
             Dictionary<Sounds, AudioClip> audioClipDictionary = [];
@@ -239,10 +244,6 @@ namespace GorillaInfoWatch.Behaviours
             float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
             localInfoWatch.TimeOffset = timeOffset;
             NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
-
-            // The majority of the remaining code in this method was written at a point when my main computer broke down
-            // I wasn't able to work on C# as much as before, and most of my coding was done in Python in a robotics class in high school
-            // Hence the amount of underscores used every five lines, because that's how it was done in Python I suppose
 
             menu = Instantiate(Content.MenuPrefab);
             menu.name = "InfoMenu";
@@ -316,14 +317,28 @@ namespace GorillaInfoWatch.Behaviours
             Trigger watchTrigger = localWatchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<Trigger>();
             watchTrigger.Menu = localPanel;
 
-            Notifications.RequestSendNotification = HandleSentNotification;
-            Notifications.RequestOpenNotification = HandleOpenNotification;
-
             screenObject.SetActive(true);
             Home.SetEntries([.. registry.Values]);
             SwitchScreen(Home);
 
+            Notifications.RequestSendNotification = HandleSentNotification;
+            Notifications.RequestOpenNotification = HandleOpenNotification;
+
             enabled = true;
+        }
+
+        public void Update()
+        {
+            if (GorillaComputer.hasInstance)
+            {
+                GorillaComputer computer = GorillaComputer.instance;
+                bool roomNotAllowed = computer.roomNotAllowed;
+
+                if (wasRoomAllowed != roomNotAllowed) return;
+                wasRoomAllowed = !roomNotAllowed;
+
+                if (roomNotAllowed) Notifications.SendNotification(new("Room join failure", "Room inaccessible", 3, Sounds.notificationNegative));
+            }
         }
 
         public void HandleSentNotification(Notification notification)
@@ -336,7 +351,8 @@ namespace GorillaInfoWatch.Behaviours
             if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip))
                 localInfoWatch.audioDevice.PlayOneShot(audioClip);
 
-            GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, 0.04f, 0.2f);
+            bool isSilent = notification.Sound == Sounds.none;
+            GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, isSilent ? 0.06f : 0.04f, isSilent ? 0.1f : 0.2f);
 
             var stateMachine = localInfoWatch.stateMachine;
             Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;
@@ -350,6 +366,7 @@ namespace GorillaInfoWatch.Behaviours
             if (notification is null || notification.Opened || !notifications.Contains(notification) || notification.Processing)
             {
                 Logging.Warning($"OpenNotification \"{(notification is not null ? notification.DisplayText : "Null")}\"");
+                
                 if (notification is not null)
                 {
                     Logging.Warning($"Processing: {notification.Processing}");
@@ -361,6 +378,7 @@ namespace GorillaInfoWatch.Behaviours
                         RefreshInbox();
                     }
                 }
+
                 return;
             }
 
@@ -508,13 +526,12 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? ActiveScreen.Section.Wrap(0, sectionCount) : 0;
+                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.Section, 0, sectionCount) : 0; // ActiveScreen.Section.Wrap(0, sectionCount)
                 ActiveScreen.Section = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;
                 button_next_page.gameObject.SetActive(multiSection);
                 button_prev_page.gameObject.SetActive(multiSection);
-
                 menu_page_text.text = multiSection ? $"{currentSection + 1}/{sectionCount}" : string.Empty;
 
                 string sectionTitle = null;
@@ -530,7 +547,7 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                menuHeader.text = $"{ActiveScreen.Title}{(string.IsNullOrEmpty(sectionTitle) ? "" : $" - {sectionTitle}")}";
+                menuHeader.text = $"{ActiveScreen.Title}{((string.IsNullOrEmpty(sectionTitle) || string.IsNullOrWhiteSpace(sectionTitle)) ? "" : $": {sectionTitle}")}";
 
                 string description = null;
 
@@ -545,11 +562,13 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                if (string.IsNullOrEmpty(description) && menuDescription.gameObject.activeSelf)
+                bool hasDescription = !string.IsNullOrEmpty(description) && !string.IsNullOrWhiteSpace(description);
+
+                if (!hasDescription && menuDescription.gameObject.activeSelf)
                 {
                     menuDescription.gameObject.SetActive(false);
                 }
-                else if (!string.IsNullOrEmpty(description))
+                else if (hasDescription)
                 {
                     menuDescription.gameObject.SetActive(true);
                     menuDescription.text = ActiveScreen.Description;
@@ -646,6 +665,27 @@ namespace GorillaInfoWatch.Behaviours
             PlayErrorSound();
 
             return false;
+        }
+
+        public override void OnJoinRoomFailed(short returnCode, string message)
+        {
+            Logging.Error("OnJoinRoomFailed");
+            Logging.Message($"{returnCode}: {message}");
+
+            switch(returnCode)
+            {
+                case ErrorCode.GameFull:
+                    Notifications.SendNotification(new("Room join failure", "Room is full", 3, Sounds.notificationNegative));
+                    break;
+            }
+        }
+
+        public override void OnCustomAuthenticationFailed(string debugMessage)
+        {
+            Logging.Fatal("OnCustomAuthenticationFailed");
+            Logging.Message(debugMessage);
+
+            Notifications.SendNotification(new("Photon PUN failure", "Custom Authentication failed", 3, Sounds.notificationNegative));
         }
     }
 }

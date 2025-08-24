@@ -9,7 +9,7 @@ namespace GorillaInfoWatch
 
         internal static Action<VRRig> OnRigRecievedCosmetics;
 
-        internal static Action<VRRig, bool> OnRigSetLocallyInvisible;
+        internal static Action<VRRig, bool> OnRigSetInvisibleToLocal;
 
         internal static Action<RotatingQuest> OnQuestCompleted;
 

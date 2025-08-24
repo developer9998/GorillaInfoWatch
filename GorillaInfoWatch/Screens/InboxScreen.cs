@@ -57,11 +57,11 @@ namespace GorillaInfoWatch.Screens
                     lines.AddRange(array, new Widget_PushButton(OpenFunction, notification, true)
                     {
                         Colour = ColourPalette.Green,
-                        Symbol = Symbols.Verified
+                        Symbol = (Symbol)Symbols.Verified
                     }, new Widget_PushButton(OpenFunction, notification, false)
                     {
                         Colour = ColourPalette.Red,
-                        Symbol = Symbols.Ignore
+                        Symbol = (Symbol)Symbols.Ignore
                     });
                     continue;
                 }
@@ -69,7 +69,7 @@ namespace GorillaInfoWatch.Screens
                 lines.AddRange(array, new Widget_PushButton(OpenFunction, notification, true)
                 {
                     Colour = ColourPalette.Black,
-                    Symbol = Symbols.Invisibility
+                    Symbol = (Symbol)Symbols.Invisibility
                 });
             }
 

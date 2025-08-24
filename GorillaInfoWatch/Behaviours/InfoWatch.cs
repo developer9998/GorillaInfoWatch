@@ -103,7 +103,7 @@ namespace GorillaInfoWatch.Behaviours
             rimRenderer.material = screenRimMaterial;
 
             Rig.OnColorChanged += SetColour;
-            Events.OnRigSetLocallyInvisible += SetVisibilityCheck;
+            Events.OnRigSetInvisibleToLocal += SetVisibilityCheck;
 
             Configure();
             yield break;
@@ -123,7 +123,7 @@ namespace GorillaInfoWatch.Behaviours
         public void OnDestroy()
         {
             Rig.OnColorChanged -= SetColour;
-            Events.OnRigSetLocallyInvisible -= SetVisibilityCheck;
+            Events.OnRigSetInvisibleToLocal -= SetVisibilityCheck;
         }
 
         public void Update()

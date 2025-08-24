@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Screens
                 Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = Symbols.Info
+                    Symbol = (Symbol)Symbols.Info
                 };
 
                 if (stateSupportedMods.Contains(pluginInfo))
