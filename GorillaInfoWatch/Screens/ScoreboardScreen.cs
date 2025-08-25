@@ -77,7 +77,7 @@ namespace GorillaInfoWatch.Screens
                     Symbol = (Symbol)Symbols.Info
                 }];
 
-                lines.AppendColour(player.GetNameRef().EnforceLength(12), ColorUtility.ToHtmlStringRGB(GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white));
+                lines.AppendColour(player.GetName().EnforceLength(12), ColorUtility.ToHtmlStringRGB(GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white));
                 lines.Add(widgets);
             }
 

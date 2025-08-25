@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Extensions
 {
-    public static class PlayerEx
+    public static class PlayerExtensions
     {
         private static readonly Dictionary<string, (GetAccountInfoResult accountInfo, DateTime cacheTime)> accountInfoCache = [];
 
@@ -15,8 +15,11 @@ namespace GorillaInfoWatch.Extensions
 
         public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved)
         {
-            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < 5)
+            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < 3)
                 return accountInfoCache[userId].accountInfo;
+
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+                throw new InvalidOperationException("PlayFab Client must be logged in to post the account info request");
 
             PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
             {
@@ -35,12 +38,12 @@ namespace GorillaInfoWatch.Extensions
             return null;
         }
 
-        public static string GetNameRef(this NetPlayer player)
+        public static string GetName(this NetPlayer player, bool filterEmptyNames = true)
         {
             bool isNamePermissionEnabled = KIDManager.CheckFeatureSettingEnabled(EKIDFeatures.Custom_Nametags);
-            string playerName = player.NickName;
+            string nickName = player.NickName;
             string defaultName = player.DefaultName;
-            return isNamePermissionEnabled ? ((string.IsNullOrEmpty(playerName) || string.IsNullOrWhiteSpace(playerName)) ? defaultName : playerName) : defaultName;
+            return isNamePermissionEnabled ? ((filterEmptyNames && (string.IsNullOrEmpty(nickName) || string.IsNullOrWhiteSpace(nickName))) ? defaultName : nickName) : defaultName;
         }
     }
 }

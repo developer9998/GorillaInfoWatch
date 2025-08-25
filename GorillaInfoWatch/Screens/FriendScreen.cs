@@ -53,7 +53,7 @@ namespace GorillaInfoWatch.Screens
                 string userId = presence.FriendLinkId;
 
                 TaskCompletionSource<GetAccountInfoResult> completionSource = new();
-                GetAccountInfoResult currentAccountInfo = PlayerEx.GetAccountInfo(userId, completionSource.SetResult);
+                GetAccountInfoResult currentAccountInfo = PlayerExtensions.GetAccountInfo(userId, completionSource.SetResult);
                 currentAccountInfo ??= await completionSource.Task;
             }
 
@@ -106,7 +106,7 @@ namespace GorillaInfoWatch.Screens
 
                 string userId = presence.FriendLinkId;
 
-                GetAccountInfoResult accountInfo = PlayerEx.GetAccountInfo(userId, null);
+                GetAccountInfoResult accountInfo = PlayerExtensions.GetAccountInfo(userId, null);
 
                 if (accountInfo is null || accountInfo.AccountInfo is null || accountInfo.AccountInfo.TitleInfo is null)
                     continue;

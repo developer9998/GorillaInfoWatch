@@ -8,6 +8,7 @@ namespace GorillaInfoWatch.Models
     {
         public abstract string Title { get; }
         public virtual string Description { get; set; }
+        public virtual Type ReturnType { get; set; } = null;
 
         internal int Section;
         internal ScreenLines Lines;

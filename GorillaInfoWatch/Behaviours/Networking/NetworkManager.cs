@@ -86,7 +86,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
             {
                 if (!networkedPlayer.HasInfoWatch)
                 {
-                    Logging.Message($"{netPlayer.GetNameRef()} has GorillaInfoWatch");
+                    Logging.Message($"{netPlayer.GetName()} has GorillaInfoWatch");
                     networkedPlayer.HasInfoWatch = true;
                     PlayerHandler.Instance.EvaluatePlayer(netPlayer);
                 }

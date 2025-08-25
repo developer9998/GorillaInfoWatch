@@ -65,7 +65,7 @@ namespace GorillaInfoWatch.Screens
             LineBuilder lines = new();
 
             // name
-            string nameRef = player.GetNameRef();
+            string nameRef = player.GetName();
             string playerName = nameRef.EnforceLength(12);
             lines.AppendColour(playerName, rig.playerText1.color).Add(new Widget_PlayerSwatch(player, 520f, 90, 90), new Widget_PlayerSpeaker(player, 620f, 100, 100), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)));
             string sanitizedName = nameRef.SanitizeName();

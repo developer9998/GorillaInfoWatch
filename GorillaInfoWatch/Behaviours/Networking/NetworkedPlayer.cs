@@ -39,7 +39,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
         {
             if (player == Owner)
             {
-                Logging.Info($"{player.GetNameRef().SanitizeName()} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
+                Logging.Info($"{player.GetName().SanitizeName()} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
 
                 if (playerInfoWatch is null) CreateWatch();
 

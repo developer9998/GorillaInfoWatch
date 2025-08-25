@@ -8,7 +8,7 @@ using TMPro;
 
 namespace GorillaInfoWatch.Extensions
 {
-    public static class StringEx
+    public static class StringExtensions
     {
         private static TextInfo TextInfo => cultureInfo.TextInfo;
 
@@ -23,13 +23,13 @@ namespace GorillaInfoWatch.Extensions
             if (sanitizedNameCache.TryGetValue(name, out string sanitizedName))
                 return sanitizedName;
 
-            VRRig localRig = (VRRig.LocalRig ?? VRRigCache.Instance.localRig.Rig) ?? throw new InvalidOperationException("VRRig for local player is null");
+            VRRig localRig = (VRRig.LocalRig ?? GorillaTagger.Instance.offlineVRRig) ?? throw new InvalidOperationException("VRRig for local player is null");
             sanitizedName = localRig.NormalizeName(true, name);
             sanitizedNameCache.TryAdd(name, sanitizedName);
             return sanitizedName;
         }
 
-        public static string ToTitleCase(this string original) => TextInfo.ToTitleCase(original.ToLower());
+        public static string ToTitleCase(this string original, bool forceLower = true) => TextInfo.ToTitleCase(forceLower ? original.ToLower() : original);
 
         public static string EnforceLength(this string str, int maxLength) => str.Length > maxLength ? str[..maxLength] : str;
 

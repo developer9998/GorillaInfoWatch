@@ -11,6 +11,7 @@ using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
+using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -241,7 +242,7 @@ namespace GorillaInfoWatch.Behaviours
             localInfoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
             localWatchObject.SetActive(true);
 
-            float timeOffset = (float)TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes;
+            float timeOffset = Convert.ToSingle(TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes);
             localInfoWatch.TimeOffset = timeOffset;
             NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
 
@@ -290,7 +291,26 @@ namespace GorillaInfoWatch.Behaviours
             button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
             button_return_screen.OnButtonPressed = () =>
             {
-                SwitchScreen(history.Last());
+                Screen overrideScreen = null;
+
+                if (ActiveScreen is Screen screen)
+                {
+                    PropertyInfo returnTypeProperty = null;
+
+                    try
+                    {
+                        returnTypeProperty = AccessTools.Property(screen.GetType(), nameof(Screen.ReturnType));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Fatal("ReturnType property could not be accessed for return button process");
+                        Logging.Error(ex);
+                    }
+
+                    overrideScreen = (returnTypeProperty != null && returnTypeProperty.DeclaringType == screen.GetType()) ? (Screen)returnTypeProperty.GetValue(screen) : null;
+                }
+
+                SwitchScreen(overrideScreen ?? history.Last());
             };
 
             button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
@@ -361,7 +381,7 @@ namespace GorillaInfoWatch.Behaviours
             RefreshInbox();
         }
 
-        public void HandleOpenNotification(Notification notification, bool digest)
+        public void HandleOpenNotification(Notification notification, bool process)
         {
             if (notification is null || notification.Opened || !notifications.Contains(notification) || notification.Processing)
             {
@@ -384,7 +404,7 @@ namespace GorillaInfoWatch.Behaviours
 
             notification.Opened = true;
 
-            if (digest && notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is Screen screen)
+            if (process && notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is Screen screen)
             {
                 try
                 {
@@ -505,8 +525,22 @@ namespace GorillaInfoWatch.Behaviours
         {
             bool onHomeScreen = ActiveScreen == Home;
 
+            PropertyInfo returnTypeProperty = null;
+
+            try
+            {
+                returnTypeProperty = AccessTools.Property(ActiveScreen.GetType(), nameof(Screen.ReturnType));
+            }
+            catch (Exception ex)
+            {
+                Logging.Fatal("ReturnType property could not be accessed for screen process");
+                Logging.Error(ex);
+            }
+
+            bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(ActiveScreen) != null && returnTypeProperty.DeclaringType == ActiveScreen.GetType();
+
             buttonOpenInbox.gameObject.SetActive(onHomeScreen);
-            button_return_screen.gameObject.SetActive(!onHomeScreen);
+            button_return_screen.gameObject.SetActive(!onHomeScreen && (history.Count > 0 || considerReturnType));
 
             ActiveScreen.Lines ??= ActiveScreen.GetContent();
 
@@ -526,7 +560,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.Section, 0, sectionCount) : 0; // ActiveScreen.Section.Wrap(0, sectionCount)
+                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.Section, 0, sectionCount) : 0;
                 ActiveScreen.Section = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;

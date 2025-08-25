@@ -21,11 +21,11 @@ namespace GorillaInfoWatch
             RequestSendNotification?.SafeInvoke(notification);
         }
 
-        public static void OpenNotification(Notification notification, bool digest)
+        public static void OpenNotification(Notification notification, bool process)
         {
             if (notification is null) throw new ArgumentNullException(nameof(notification));
 
-            RequestOpenNotification?.SafeInvoke(notification, digest);
+            RequestOpenNotification?.SafeInvoke(notification, process);
         }
     }
 }

@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (GFriends.IsFriend(userId))
             {
-                Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetNameRef().EnforceLength(12)), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.GetNameRef().EnforceLength(12)}", delegate ()
+                Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforceLength(12)), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
                 {
                     player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
                     if (player != null && !player.IsNull)
@@ -88,7 +88,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (GFriends.IsVerified(userId))
             {
-                Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetNameRef().EnforceLength(12)), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.GetNameRef().EnforceLength(12)}", delegate ()
+                Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforceLength(12)), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
                 {
                     player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
                     if (player != null && !player.IsNull)
@@ -102,7 +102,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
             {
-                Notifications.SendNotification(new("A notable user has joined", player.GetNameRef().EnforceLength(12), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+                Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforceLength(12), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInfoPage), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
                     player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
                     if (player != null && !player.IsNull)
@@ -120,15 +120,15 @@ namespace GorillaInfoWatch.Behaviours
 
             if (GFriends.IsFriend(userId))
             {
-                Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetNameRef().EnforceLength(12)), 5, Sounds.notificationNegative));
+                Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforceLength(12)), 5, Sounds.notificationNegative));
             }
             else if (GFriends.IsVerified(userId))
             {
-                Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetNameRef().EnforceLength(12)), 5, Sounds.notificationNegative));
+                Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforceLength(12)), 5, Sounds.notificationNegative));
             }
             else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
             {
-                Notifications.SendNotification(new("A notable user has left", player.GetNameRef().EnforceLength(12), 5, Sounds.notificationNegative));
+                Notifications.SendNotification(new("A notable user has left", player.GetName().EnforceLength(12), 5, Sounds.notificationNegative));
             }
 
             EvaluatePlayer(player);

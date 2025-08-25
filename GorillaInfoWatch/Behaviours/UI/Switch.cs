@@ -106,7 +106,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 Main.Instance.PressSwitch(this, component.isLeftHand);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
-                if (currentWidget is not null) currentWidget.Value = bumped;
+                currentWidget?.Value = bumped;
                 OnSwitchFlipped?.Invoke();
             }
         }
