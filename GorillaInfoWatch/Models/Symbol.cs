@@ -25,7 +25,7 @@ namespace GorillaInfoWatch.Models
             }
         }
 
-        public static explicit operator Symbol(Symbols enumeration) => new(enumeration);
+        public static implicit operator Symbol(Symbols enumeration) => new(enumeration);
 
         public static implicit operator Symbol(Sprite sprite) => new(sprite);
 
