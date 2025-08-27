@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    [CreateAssetMenu(fileName = "Content", menuName = "Info Watch/Content", order = -1)]
-    public class Assets : ScriptableObject
+    [CreateAssetMenu(fileName = "Content", menuName = "Info Watch/ModContent", order = -1)]
+    public class ModContent : ScriptableObject
     {
         public GameObject WatchPrefab;
 

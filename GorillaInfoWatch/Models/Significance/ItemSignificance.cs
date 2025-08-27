@@ -7,7 +7,7 @@ namespace GorillaInfoWatch.Models.Significance
     {
         public string ItemId { get; }
 
-        internal ItemSignificance(string title, Symbols symbol, string itemId): base(title, symbol)
+        internal ItemSignificance(string title, Symbols symbol, string itemId) : base(title, symbol)
         {
             ItemId = itemId;
         }

@@ -8,7 +8,7 @@ namespace GorillaInfoWatch.Models.Significance
     {
         public string[] UserIDs { get; }
 
-        internal FigureSignificance(string title, Symbols symbol, string[] userIds): base(title, symbol)
+        internal FigureSignificance(string title, Symbols symbol, string[] userIds) : base(title, symbol)
         {
             UserIDs = Array.ConvertAll(userIds, userId => userId.Contains(" ") ? userId.Split(" ").First() : userId);
         }

@@ -2,8 +2,8 @@
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Tools;
 using UnityEngine;
-using Player = GorillaLocomotion.GTPlayer;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
+using Player = GorillaLocomotion.GTPlayer;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {

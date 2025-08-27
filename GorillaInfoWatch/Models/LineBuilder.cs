@@ -40,7 +40,7 @@ namespace GorillaInfoWatch.Models
 
         public LineBuilder AppendColour(object value, Color colour) => BeginColour(colour).Append(value).EndColour();
         public LineBuilder AppendColour(object value, string hex) => BeginColour(hex).Append(value).EndColour();
-        public LineBuilder BeginColour(Color colour) => BeginColour(ColorUtility.ToHtmlStringRGBA(colour));
+        public LineBuilder BeginColour(Color colour) => BeginColour(ColorUtility.ToHtmlStringRGB(colour));
         public LineBuilder BeginColour(string hex) => Append($"<color=#{hex.TrimStart('#')}>");
         public LineBuilder EndColour() => Append("</color>");
 

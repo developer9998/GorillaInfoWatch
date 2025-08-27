@@ -14,15 +14,13 @@ using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class PlayerInfoPage : Models.Screen
+    public class PlayerInspectorScreen : Models.Screen
     {
         public override string Title => "Player Inspector";
 
-        public static string RoomName;
+        public static string RoomName, UserId;
 
-        public static int ActorNumber;
-
-        private bool IsValid => RoomName is not null && ActorNumber != -1 && NetworkSystem.Instance.InRoom && NetworkSystem.Instance.RoomName == RoomName && NetworkSystem.Instance.GetPlayer(ActorNumber) != null;
+        private bool initialized;
 
         private Gradient muteColour, friendColour;
 
@@ -30,8 +28,12 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnShow();
 
-            muteColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), Color.red);
-            friendColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), GFriends.m_clrFriend);
+            if (!initialized)
+            {
+                initialized = true;
+                muteColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), Color.red);
+                friendColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), GFriends.m_clrFriend);
+            }
 
             RoomSystem.LeftRoomEvent += OnRoomLeft;
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
@@ -42,7 +44,7 @@ namespace GorillaInfoWatch.Screens
             base.OnClose();
 
             RoomName = null;
-            ActorNumber = -1;
+            UserId = null;
 
             RoomSystem.LeftRoomEvent -= OnRoomLeft;
             RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
@@ -50,15 +52,14 @@ namespace GorillaInfoWatch.Screens
 
         public override ScreenLines GetContent()
         {
-            if (!IsValid || !VRRigCache.Instance.TryGetVrrig(ActorNumber, out RigContainer rigContainer))
+            if (!NetworkSystem.Instance.InRoom || NetworkSystem.Instance.RoomName != RoomName || !GetPlayer(UserId, out NetPlayer player) || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
             {
                 SetScreen<ScoreboardScreen>();
                 return null;
             }
 
             // essential
-            NetPlayer player = rigContainer.Creator;
-            VRRig rig = rigContainer.Rig;
+            RigContainer rigContainer = rig.rigContainer ?? rig.GetComponent<RigContainer>();
             GetAccountInfoResult accountInfo = player.GetAccountInfo(result => SetContent());
 
             // setup
@@ -82,20 +83,17 @@ namespace GorillaInfoWatch.Screens
             if (GFriends.IsInFriendList(player.UserId)) significance.Add("Friend");
             if (PlayerHandler.Significance.TryGetValue(player, out PlayerSignificance plrSignificance)) significance.Add(plrSignificance.Symbol switch
             {
-                Symbols.Dev => "dev9998",
-                Symbols.Gizmo => "gizmogoat",
                 Symbols.ModStick => "Moderator",
                 Symbols.ForestGuideStick => "Forest Guide",
                 Symbols.FingerPainter => "Finger Painter",
-                Symbols.Illustrator => "Illustrator",
                 _ => plrSignificance.Title
             });
 
-            if (player.IsMasterClient) significance.Add("Master Client");
-            if (!NetworkSystem.Instance.GetPlayerTutorialCompletion(ActorNumber)) significance.Add("Noob");
+            if (player.IsMasterClient) significance.Add("Host");
+            if (!NetworkSystem.Instance.GetPlayerTutorialCompletion(player.ActorNumber)) significance.Add("Noob");
 
             lines.Skip().Append("Significance: ").AppendLine((significance is not null && significance.Count > 0) ? string.Join(", ", significance) : "None");
-            lines.Append("Creation Date: ").AppendLine((accountInfo != null && accountInfo.AccountInfo?.TitleInfo?.Created is DateTime utcTime && utcTime.ToLocalTime() is DateTime localTime) ? $"{localTime.ToShortDateString()} at {localTime.ToShortTimeString()}" : "Loading..");
+            lines.Append("Creation Date: ").AppendLine((accountInfo != null && accountInfo.AccountInfo?.TitleInfo?.Created is DateTime utcTime && utcTime.ToLocalTime() is DateTime localTime) ? $"{localTime.ToShortDateString()} at {localTime.ToShortTimeString()}" : ". . .");
 
             if (player.IsLocal) return lines;
 
@@ -129,28 +127,28 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is NetPlayer player && VRRigCache.Instance.TryGetVrrig(player, out RigContainer container))
             {
-                container.hasManualMute = true;
-                container.Muted = value;
-
-                GorillaScoreboardTotalUpdater.ReportMute(player, container.Muted ? 1 : 0);
-                Logging.Info($"Reported mute for {player.NickName}: {container.Muted}");
-
-                PlayerPrefs.SetInt(player.UserId, container.Muted ? 1 : 0);
-                PlayerPrefs.Save();
-
-                try
-                {
-                    GorillaScoreboardTotalUpdater.allScoreboards
+                GorillaPlayerScoreboardLine[] lines = [.. GorillaScoreboardTotalUpdater.allScoreboards
                     .Select(scoreboard => scoreboard.lines)
                     .SelectMany(lines => lines)
-                    .Where(line => line.linePlayer == player || line.rigContainer == container)
-                    .ForEach(line => line.InitializeLine());
-                }
-                catch (Exception ex)
+                    .Where(line => line.linePlayer == player || line.rigContainer == container)];
+
+                if (lines.Length > 0)
                 {
-                    Logging.Fatal($"Mute buttons could not be updated for {player.NickName}");
-                    Logging.Error(ex);
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        GorillaPlayerScoreboardLine line = lines[i];
+
+                        if (i == 0)
+                        {
+                            line.muteButton.isOn = value;
+                            line.PressButton(value, GorillaPlayerLineButton.ButtonType.Mute);
+                            continue;
+                        }
+
+                        line.InitializeLine();
+                    }
                 }
+                else Logging.Warning("No scoreboard lines detected");
 
                 SetText();
             }
@@ -158,19 +156,39 @@ namespace GorillaInfoWatch.Screens
 
         private void OnRoomLeft()
         {
-            ActorNumber = -1;
             RoomName = null;
+            UserId = null;
             SetContent();
         }
 
         private void OnPlayerLeft(NetPlayer player)
         {
-            if (ActorNumber != -1 && player.ActorNumber == ActorNumber)
+            if (!player.IsNull || player.UserId == UserId) OnRoomLeft();
+        }
+
+        public bool GetPlayer(string userId, out NetPlayer foundPlayer)
+        {
+            if (!string.IsNullOrEmpty(userId) && NetworkSystem.Instance != null && NetworkSystem.Instance.InRoom)
             {
-                ActorNumber = -1;
-                RoomName = null;
-                SetContent();
+                for (int i = 0; i < 2; i++)
+                {
+                    NetPlayer[] array = NetworkSystem.Instance.AllNetPlayers;
+
+                    foreach (NetPlayer player in array)
+                    {
+                        if (!player.IsNull && player.UserId == userId)
+                        {
+                            foundPlayer = player;
+                            return true;
+                        }
+                    }
+
+                    if (i == 0) NetworkSystem.Instance.UpdatePlayers();
+                }
             }
+
+            foundPlayer = null;
+            return false;
         }
     }
 }

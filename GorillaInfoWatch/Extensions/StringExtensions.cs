@@ -33,6 +33,8 @@ namespace GorillaInfoWatch.Extensions
 
         public static string EnforceLength(this string str, int maxLength) => str.Length > maxLength ? str[..maxLength] : str;
 
+        public static string EnforcePlayerNameLength(this string str) => str.EnforceLength(12);
+
         // TODO: allow for rich presence tags
         public static string[] ToTextArray(this string text, string prepend = null)
         {

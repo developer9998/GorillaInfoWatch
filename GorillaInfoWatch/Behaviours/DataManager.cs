@@ -47,7 +47,7 @@ namespace GorillaInfoWatch.Behaviours
 
             dataPerTypeDict = Enum.GetValues(typeof(DataLocation)).Cast<DataLocation>().ToDictionary(type => type, type => new Dictionary<string, object>());
 
-            dataLocation = Path.Combine(Application.persistentDataPath, $"InfoWatch.json");
+            dataLocation = Path.Combine(Application.persistentDataPath, "InfoWatch.json");
 
             ReadPersistentData();
         }
@@ -98,6 +98,18 @@ namespace GorillaInfoWatch.Behaviours
                             int int32 = Convert.ToInt32(deserializedLong);
                             dictionary[key] = int32;
                             return (T)(object)int32;
+                        case TypeCode.UInt16:
+                            ushort uint16 = Convert.ToUInt16(deserializedLong);
+                            dictionary[key] = uint16;
+                            return (T)(object)uint16;
+                        case TypeCode.UInt32:
+                            uint uint32 = Convert.ToUInt32(deserializedLong);
+                            dictionary[key] = uint32;
+                            return (T)(object)uint32;
+                        case TypeCode.UInt64:
+                            ulong uint64 = Convert.ToUInt64(deserializedLong);
+                            dictionary[key] = uint64;
+                            return (T)(object)uint64;
                     }
                 }
             }

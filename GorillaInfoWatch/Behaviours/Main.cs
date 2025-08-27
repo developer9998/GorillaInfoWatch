@@ -34,18 +34,18 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static Main Instance { get; private set; }
 
-        public static Assets Content { get; private set; }
+        public static ModContent Content { get; private set; }
 
         public static ReadOnlyDictionary<Sounds, AudioClip> EnumToAudio { get; private set; }
         public static ReadOnlyDictionary<Symbols, Sprite> EnumToSprite { get; private set; }
-
-        public static Screen ActiveScreen { get; private set; }
 
         public static ReadOnlyCollection<FigureSignificance> Significance_Figures { get; private set; }
         public static ReadOnlyCollection<ItemSignificance> Significance_Cosmetics { get; private set; }
 
         public static PlayerSignificance Significance_Watch { get; private set; }
         public static PlayerSignificance Significance_Verified { get; private set; }
+
+        public static Screen ActiveScreen { get; private set; }
 
         // Pages
 
@@ -102,7 +102,8 @@ namespace GorillaInfoWatch.Behaviours
             List<Type> builtinPages =
             [
                 typeof(ScoreboardScreen),
-                typeof(PlayerInfoPage),
+                typeof(PlayerInspectorScreen),
+                typeof(RoomInspectorPage),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
                 typeof(ModListPage),
@@ -112,7 +113,7 @@ namespace GorillaInfoWatch.Behaviours
 
             builtinPages.ForEach(page => RegisterScreen(page));
 
-            Type baseScreen = typeof(Screen);
+            Type screenType = typeof(Screen);
 
             try
             {
@@ -159,7 +160,7 @@ namespace GorillaInfoWatch.Behaviours
 
                             try
                             {
-                                if (type.IsSubclassOf(baseScreen) && baseScreen.IsAssignableFrom(type))
+                                if (type.IsSubclassOf(screenType) && screenType.IsAssignableFrom(type))
                                 {
                                     screenTypes.Add(type);
                                 }
@@ -203,7 +204,7 @@ namespace GorillaInfoWatch.Behaviours
 
             // Assets
 
-            Content = await AssetLoader.LoadAsset<Assets>("Data");
+            Content = await AssetLoader.LoadAsset<ModContent>("Data");
 
             Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Figures, figure => (FigureSignificance)figure));
             Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
@@ -307,7 +308,7 @@ namespace GorillaInfoWatch.Behaviours
                         Logging.Error(ex);
                     }
 
-                    overrideScreen = (returnTypeProperty != null && returnTypeProperty.DeclaringType == screen.GetType()) ? (Screen)returnTypeProperty.GetValue(screen) : null;
+                    overrideScreen = (returnTypeProperty != null && returnTypeProperty.DeclaringType == screen.GetType()) ? GetScreen((Type)returnTypeProperty.GetValue(screen)) : null;
                 }
 
                 SwitchScreen(overrideScreen ?? history.Last());
@@ -386,7 +387,7 @@ namespace GorillaInfoWatch.Behaviours
             if (notification is null || notification.Opened || !notifications.Contains(notification) || notification.Processing)
             {
                 Logging.Warning($"OpenNotification \"{(notification is not null ? notification.DisplayText : "Null")}\"");
-                
+
                 if (notification is not null)
                 {
                     Logging.Warning($"Processing: {notification.Processing}");
@@ -706,7 +707,7 @@ namespace GorillaInfoWatch.Behaviours
             Logging.Error("OnJoinRoomFailed");
             Logging.Message($"{returnCode}: {message}");
 
-            switch(returnCode)
+            switch (returnCode)
             {
                 case ErrorCode.GameFull:
                     Notifications.SendNotification(new("Room join failure", "Room is full", 3, Sounds.notificationNegative));
@@ -719,7 +720,7 @@ namespace GorillaInfoWatch.Behaviours
             Logging.Fatal("OnCustomAuthenticationFailed");
             Logging.Message(debugMessage);
 
-            Notifications.SendNotification(new("Photon PUN failure", "Custom Authentication failed", 3, Sounds.notificationNegative));
+            Notifications.SendNotification(new("Photon PUN failure", "Custom Auth failed", 3, Sounds.notificationNegative));
         }
     }
 }

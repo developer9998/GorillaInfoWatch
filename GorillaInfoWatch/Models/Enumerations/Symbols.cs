@@ -12,7 +12,6 @@ namespace GorillaInfoWatch.Models.Enumerations
         Astrid,
         Deactivated,
         Cyan,
-        Graze,
         Chucken,
         Socks,
         Will,

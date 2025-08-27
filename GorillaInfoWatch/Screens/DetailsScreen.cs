@@ -37,7 +37,7 @@ namespace GorillaInfoWatch.Screens
                 Mathf.RoundToInt(playerColour32.b)));
 
             var accountInfo = NetworkSystem.Instance.GetLocalPlayer().GetAccountInfo(result => SetContent());
-            profileLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? "Loading.." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
+            profileLines.Add($"Creation Date: {(accountInfo is null || accountInfo.AccountInfo?.TitleInfo?.Created is not DateTime created ? ". . ." : $"{created.ToShortDateString()} at {created.ToShortTimeString()}")}");
             profileLines.Skip();
 
             if (KIDManager.HasPermissionToUseFeature(EKIDFeatures.Voice_Chat))

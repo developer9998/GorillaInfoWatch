@@ -10,8 +10,8 @@
 		<Compile Include="..\GorillaInfoWatch\Models\Enumerations\Symbols.cs">
 			<Link>Symbols.cs</Link>
 		</Compile>
-		<Compile Include="..\GorillaInfoWatch\Models\Assets.cs">
-			<Link>Assets.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Models\ModContent.cs">
+			<Link>ModContent.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Models\Significance\FigureSignificanceObject.cs">
 			<Link>FigureSignificanceObject.cs</Link>

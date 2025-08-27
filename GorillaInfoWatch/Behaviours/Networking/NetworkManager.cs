@@ -22,7 +22,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
 
         public void Awake()
         {
-            if (Instance != null && (bool)Instance && Instance != this)
+            if (Instance != null && Instance != this)
             {
                 Destroy(this);
                 return;
