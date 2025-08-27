@@ -14,11 +14,11 @@ using System.Linq;
 using UnityEngine;
 using Utilla.Models;
 using Utilla.Utils;
-using Screen = GorillaInfoWatch.Models.Screen;
+using InfoScreen = GorillaInfoWatch.Models.InfoScreen;
 
 namespace GorillaInfoWatch.Screens
 {
-    internal class RoomInspectorPage : Screen, IInRoomCallbacks
+    internal class RoomInspectorPage : InfoScreen, IInRoomCallbacks
     {
         public override string Title => "Room Inspector";
         public override Type ReturnType => typeof(ScoreboardScreen);
@@ -27,9 +27,9 @@ namespace GorillaInfoWatch.Screens
 
         private float refreshTime;
 
-        public override void OnShow()
+        public override void OnScreenLoad()
         {
-            base.OnShow();
+            base.OnScreenLoad();
 
             refreshTime = RefreshRate;
 
@@ -38,20 +38,20 @@ namespace GorillaInfoWatch.Screens
             PhotonNetwork.AddCallbackTarget(this);
         }
 
-        public override void OnClose()
+        public override void OnScreenUnload()
         {
-            base.OnClose();
+            base.OnScreenUnload();
 
             RoomSystem.JoinedRoomEvent -= OnRoomJoined;
             RoomSystem.LeftRoomEvent -= OnRoomLeft;
             PhotonNetwork.RemoveCallbackTarget(this);
         }
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             if (!NetworkSystem.Instance.InRoom)
             {
-                SetScreen<ScoreboardScreen>();
+                LoadScreen<ScoreboardScreen>();
                 return null;
             }
 
@@ -62,7 +62,7 @@ namespace GorillaInfoWatch.Screens
             ConfigEntry<bool> privacyConfiguration = roomPrivacy ? Configuration.ShowPrivate : Configuration.ShowPublic;
 
             string roomName = privacyConfiguration.Value ? NetworkSystem.Instance.RoomName : $"-{privacyString.ToUpper()}-";
-            lines.Append("Room Name: ").Append(roomName).Add(new Widget_Switch(privacyConfiguration.Value, value =>
+            lines.Append("Room ID: ").Append(roomName).Add(new Widget_Switch(privacyConfiguration.Value, value =>
             {
                 privacyConfiguration.Value = value;
                 SetContent();
@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Screens
 
             int playerCount = NetworkSystem.Instance.RoomPlayerCount;
             int maxPlayers = RoomSystem.UseRoomSizeOverride ? RoomSystem.GetRoomSize(NetworkSystem.Instance.GameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
-            lines.Append("Capacity: ").BeginColour(playerCount == maxPlayers ? Color.green : Color.white).Append(playerCount).Append(" out of ").Append(maxPlayers).EndColour().AppendLine();
+            lines.Append("Capacity: ").BeginColour(playerCount == maxPlayers ? ColourPalette.Green.colorKeys[0].color : Color.white).Append(playerCount).Append(" out of ").Append(maxPlayers).EndColour().AppendLine();
 
             lines.Skip();
 
@@ -84,7 +84,7 @@ namespace GorillaInfoWatch.Screens
                 {
                     PlayerInspectorScreen.RoomName = NetworkSystem.Instance.RoomName;
                     PlayerInspectorScreen.UserId = host.UserId;
-                    SetScreen<PlayerInspectorScreen>();
+                    LoadScreen<PlayerInspectorScreen>();
                 })
                 {
                     Colour = ColourPalette.Blue,
@@ -144,14 +144,14 @@ namespace GorillaInfoWatch.Screens
             }
 
             int participantCount = NetworkSystem.Instance.AllNetPlayers.Where(player => player != null && !player.IsNull).Count(GameMode.CanParticipate);
-            lines.Append("Participating: ").BeginColour(participantCount == playerCount ? Color.green : Color.red).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
+            lines.Append("Participating: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.colorKeys[0].color : ColourPalette.Red.colorKeys[0].color).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
 
             return lines;
         }
 
         private void OnRoomJoined() => SetContent();
 
-        private void OnRoomLeft() => SetScreen<ScoreboardScreen>();
+        private void OnRoomLeft() => LoadScreen<ScoreboardScreen>();
 
         public void OnPlayerEnteredRoom(Player newPlayer) => SetContent();
 

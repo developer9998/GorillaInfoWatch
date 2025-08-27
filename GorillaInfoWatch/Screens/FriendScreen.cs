@@ -16,24 +16,24 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class FriendScreen : Models.Screen
+    public class FriendScreen : Models.InfoScreen
     {
         public override string Title => "Friends";
 
         public List<FriendBackendController.Friend> FriendsList;
 
-        public override void OnShow()
+        public override void OnScreenLoad()
         {
             FriendSystem.Instance.OnFriendListRefresh += OnGetFriendsReceived;
             RequestFriendsList();
         }
 
-        public override void OnClose()
+        public override void OnScreenUnload()
         {
             FriendSystem.Instance.OnFriendListRefresh -= OnGetFriendsReceived;
         }
 
-        public override void OnRefresh()
+        public override void OnScreenReload()
         {
             RequestFriendsList();
         }
@@ -62,7 +62,7 @@ namespace GorillaInfoWatch.Screens
             SetContent();
         }
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             LineBuilder lines = new();
 

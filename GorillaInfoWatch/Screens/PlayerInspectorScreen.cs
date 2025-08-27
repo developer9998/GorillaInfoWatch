@@ -14,7 +14,7 @@ using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class PlayerInspectorScreen : Models.Screen
+    public class PlayerInspectorScreen : Models.InfoScreen
     {
         public override string Title => "Player Inspector";
 
@@ -24,9 +24,9 @@ namespace GorillaInfoWatch.Screens
 
         private Gradient muteColour, friendColour;
 
-        public override void OnShow()
+        public override void OnScreenLoad()
         {
-            base.OnShow();
+            base.OnScreenLoad();
 
             if (!initialized)
             {
@@ -39,9 +39,9 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
         }
 
-        public override void OnClose()
+        public override void OnScreenUnload()
         {
-            base.OnClose();
+            base.OnScreenUnload();
 
             RoomName = null;
             UserId = null;
@@ -50,11 +50,11 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
         }
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             if (!NetworkSystem.Instance.InRoom || NetworkSystem.Instance.RoomName != RoomName || !GetPlayer(UserId, out NetPlayer player) || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
             {
-                SetScreen<ScoreboardScreen>();
+                LoadScreen<ScoreboardScreen>();
                 return null;
             }
 
@@ -67,7 +67,7 @@ namespace GorillaInfoWatch.Screens
 
             // name
             string nameRef = player.GetName();
-            string playerName = nameRef.EnforceLength(12);
+            string playerName = nameRef.EnforcePlayerNameLength();
             lines.AppendColour(playerName, rig.playerText1.color).Add(new Widget_PlayerSwatch(player, 520f, 90, 90), new Widget_PlayerSpeaker(player, 620f, 100, 100), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)));
             string sanitizedName = nameRef.SanitizeName();
             if (sanitizedName != null && sanitizedName.Length > 0 && playerName != sanitizedName) lines.Append("Display Name: ").AppendLine(sanitizedName);

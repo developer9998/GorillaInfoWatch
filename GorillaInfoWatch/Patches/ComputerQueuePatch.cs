@@ -18,7 +18,7 @@ namespace GorillaInfoWatch.Patches
 
             CodeInstruction[] codes = [.. instructions];
 
-            for(int i = 0; i < codes.Length; i++)
+            for (int i = 0; i < codes.Length; i++)
             {
                 if (codes[i].opcode == OpCodes.Ldstr && codes[i + 2].opcode == OpCodes.Call)
                 {

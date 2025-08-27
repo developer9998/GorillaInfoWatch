@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public class PageBuilder(params List<(string title, List<InfoLine>)> pages) : ScreenLines
+    public class PageBuilder(params List<(string title, List<InfoLine>)> pages) : InfoContent
     {
         public override int SectionCount => Pages.Sum(page => Mathf.CeilToInt(page.lines.Count / (float)Constants.SectionCapacity));
 

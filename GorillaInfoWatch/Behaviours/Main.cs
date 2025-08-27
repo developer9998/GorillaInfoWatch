@@ -23,9 +23,9 @@ using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using InfoScreen = GorillaInfoWatch.Models.InfoScreen;
 using PushButton = GorillaInfoWatch.Behaviours.UI.PushButton;
 using Random = UnityEngine.Random;
-using Screen = GorillaInfoWatch.Models.Screen;
 using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours
@@ -45,7 +45,7 @@ namespace GorillaInfoWatch.Behaviours
         public static PlayerSignificance Significance_Watch { get; private set; }
         public static PlayerSignificance Significance_Verified { get; private set; }
 
-        public static Screen ActiveScreen { get; private set; }
+        public static InfoScreen ActiveScreen { get; private set; }
 
         // Pages
 
@@ -57,9 +57,9 @@ namespace GorillaInfoWatch.Behaviours
 
         private GameObject screenObject;
 
-        private readonly Dictionary<Type, Screen> registry = [];
+        private readonly Dictionary<Type, InfoScreen> registry = [];
 
-        private readonly List<Screen> history = [];
+        private readonly List<InfoScreen> history = [];
 
         private readonly List<Notification> notifications = [];
 
@@ -102,8 +102,8 @@ namespace GorillaInfoWatch.Behaviours
             List<Type> builtinPages =
             [
                 typeof(ScoreboardScreen),
-                typeof(PlayerInspectorScreen),
                 typeof(RoomInspectorPage),
+                typeof(PlayerInspectorScreen),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
                 typeof(ModListPage),
@@ -113,7 +113,7 @@ namespace GorillaInfoWatch.Behaviours
 
             builtinPages.ForEach(page => RegisterScreen(page));
 
-            Type screenType = typeof(Screen);
+            Type screenType = typeof(InfoScreen);
 
             try
             {
@@ -278,29 +278,29 @@ namespace GorillaInfoWatch.Behaviours
             button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
             button_next_page.OnButtonPressed = () =>
             {
-                ActiveScreen.Section++;
-                RefreshScreen();
+                ActiveScreen.sectionNumber++;
+                ReloadScreen();
             };
 
             button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
             button_prev_page.OnButtonPressed = () =>
             {
-                ActiveScreen.Section--;
-                RefreshScreen();
+                ActiveScreen.sectionNumber--;
+                ReloadScreen();
             };
 
             button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
             button_return_screen.OnButtonPressed = () =>
             {
-                Screen overrideScreen = null;
+                InfoScreen overrideScreen = null;
 
-                if (ActiveScreen is Screen screen)
+                if (ActiveScreen is InfoScreen screen)
                 {
                     PropertyInfo returnTypeProperty = null;
 
                     try
                     {
-                        returnTypeProperty = AccessTools.Property(screen.GetType(), nameof(Screen.ReturnType));
+                        returnTypeProperty = AccessTools.Property(screen.GetType(), nameof(InfoScreen.ReturnType));
                     }
                     catch (Exception ex)
                     {
@@ -311,25 +311,25 @@ namespace GorillaInfoWatch.Behaviours
                     overrideScreen = (returnTypeProperty != null && returnTypeProperty.DeclaringType == screen.GetType()) ? GetScreen((Type)returnTypeProperty.GetValue(screen)) : null;
                 }
 
-                SwitchScreen(overrideScreen ?? history.Last());
+                LoadScreen(overrideScreen ?? history.Last());
             };
 
             button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
             button_reload_screen.OnButtonPressed = () =>
             {
-                if (ActiveScreen is Screen screen)
+                if (ActiveScreen is InfoScreen screen)
                 {
                     menuLines.ForEach(line => line.Build(new InfoLine("", []), true));
-                    screen.OnRefresh();
-                    screen.Lines = screen.GetContent();
-                    RefreshScreen();
+                    screen.OnScreenReload();
+                    screen.contents = screen.GetContent();
+                    ReloadScreen();
                 }
             };
 
             buttonOpenInbox ??= menu.transform.Find("Canvas/Button_Inbox").AddComponent<PushButton>();
             buttonOpenInbox.OnButtonPressed = delegate ()
             {
-                SwitchScreen(Inbox);
+                LoadScreen(Inbox);
             };
 
             localPanel = menu.AddComponent<Panel>();
@@ -340,7 +340,7 @@ namespace GorillaInfoWatch.Behaviours
 
             screenObject.SetActive(true);
             Home.SetEntries([.. registry.Values]);
-            SwitchScreen(Home);
+            LoadScreen(Home);
 
             Notifications.RequestSendNotification = HandleSentNotification;
             Notifications.RequestOpenNotification = HandleOpenNotification;
@@ -405,7 +405,7 @@ namespace GorillaInfoWatch.Behaviours
 
             notification.Opened = true;
 
-            if (process && notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is Screen screen)
+            if (process && notification.Screen is not null && GetScreen(notification.Screen.ScreenType) is InfoScreen screen)
             {
                 try
                 {
@@ -415,10 +415,10 @@ namespace GorillaInfoWatch.Behaviours
                         {
                             await task;
                             notification.Processing = false;
-                            SwitchScreen(screen);
+                            LoadScreen(screen);
                         });
                     }
-                    else SwitchScreen(screen);
+                    else LoadScreen(screen);
                 }
                 catch (Exception ex)
                 {
@@ -478,21 +478,21 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public T GetScreen<T>(bool registerFallback = true) where T : Screen => (T)GetScreen(typeof(T), registerFallback);
+        public T GetScreen<T>(bool registerFallback = true) where T : InfoScreen => (T)GetScreen(typeof(T), registerFallback);
 
-        public Screen GetScreen(Type type, bool registerFallback = true) => (registry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? registry[type] : null;
+        public InfoScreen GetScreen(Type type, bool registerFallback = true) => (registry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? registry[type] : null;
 
-        public void SwitchScreen(Screen newScreen)
+        public void LoadScreen(InfoScreen newScreen)
         {
-            if (ActiveScreen is Screen lastScreen)
+            if (ActiveScreen is InfoScreen lastScreen)
             {
-                ActiveScreen.ScreenSwitchEvent -= SwitchScreen;
-                ActiveScreen.UpdateScreenEvent -= RefreshScreen;
+                ActiveScreen.LoadScreenRequest -= LoadScreen;
+                ActiveScreen.UpdateScreenEvent -= ReloadScreen;
 
                 ActiveScreen.enabled = false;
-                ActiveScreen.Lines = null;
+                ActiveScreen.contents = null;
 
-                ActiveScreen.OnClose();
+                ActiveScreen.OnScreenUnload();
 
                 if (history.Count == 0 || history.Last() != newScreen) history.Add(ActiveScreen);
             }
@@ -502,27 +502,27 @@ namespace GorillaInfoWatch.Behaviours
             if (newScreen == Home) history.Clear();
             else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
-            newScreen.ScreenSwitchEvent += SwitchScreen;
+            newScreen.LoadScreenRequest += LoadScreen;
             newScreen.UpdateScreenEvent += delegate (bool includeWidgets)
             {
-                newScreen.Lines = newScreen.GetContent();
-                RefreshScreen(includeWidgets);
+                newScreen.contents = newScreen.GetContent();
+                ReloadScreen(includeWidgets);
             };
 
             newScreen.enabled = true;
-            newScreen.OnShow();
+            newScreen.OnScreenLoad();
 
-            newScreen.Lines = newScreen.GetContent();
-            RefreshScreen();
+            newScreen.contents = newScreen.GetContent();
+            ReloadScreen();
         }
 
-        public void SwitchScreen(Type type)
+        public void LoadScreen(Type type)
         {
-            if (type is null) SwitchScreen(Home);
-            else if (GetScreen(type, false) is Screen screen) SwitchScreen(screen);
+            if (type is null) LoadScreen(Home);
+            else if (GetScreen(type, false) is InfoScreen screen) LoadScreen(screen);
         }
 
-        public void RefreshScreen(bool includeWidgets = true)
+        public void ReloadScreen(bool includeWidgets = true)
         {
             bool onHomeScreen = ActiveScreen == Home;
 
@@ -530,7 +530,7 @@ namespace GorillaInfoWatch.Behaviours
 
             try
             {
-                returnTypeProperty = AccessTools.Property(ActiveScreen.GetType(), nameof(Screen.ReturnType));
+                returnTypeProperty = AccessTools.Property(ActiveScreen.GetType(), nameof(InfoScreen.ReturnType));
             }
             catch (Exception ex)
             {
@@ -543,7 +543,7 @@ namespace GorillaInfoWatch.Behaviours
             buttonOpenInbox.gameObject.SetActive(onHomeScreen);
             button_return_screen.gameObject.SetActive(!onHomeScreen && (history.Count > 0 || considerReturnType));
 
-            ActiveScreen.Lines ??= ActiveScreen.GetContent();
+            ActiveScreen.contents ??= ActiveScreen.GetContent();
 
             try
             {
@@ -551,7 +551,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 try
                 {
-                    sectionCount = ActiveScreen.Lines.SectionCount;
+                    sectionCount = ActiveScreen.contents.SectionCount;
                 }
                 catch (Exception ex)
                 {
@@ -561,8 +561,8 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.Section, 0, sectionCount) : 0;
-                ActiveScreen.Section = currentSection;
+                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.sectionNumber, 0, sectionCount) : 0;
+                ActiveScreen.sectionNumber = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;
                 button_next_page.gameObject.SetActive(multiSection);
@@ -573,7 +573,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 try
                 {
-                    sectionTitle = ActiveScreen.Lines.GetTitleOfSection(currentSection);
+                    sectionTitle = ActiveScreen.contents.GetTitleOfSection(currentSection);
                 }
                 catch (Exception ex)
                 {
@@ -613,7 +613,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 try
                 {
-                    lines = ActiveScreen.Lines.GetLinesAtSection(ActiveScreen.Section);
+                    lines = ActiveScreen.contents.GetLinesAtSection(ActiveScreen.sectionNumber);
                 }
                 catch (Exception ex)
                 {
@@ -659,7 +659,7 @@ namespace GorillaInfoWatch.Behaviours
                 return false;
             }
 
-            Type baseScreen = typeof(Screen);
+            Type baseScreen = typeof(InfoScreen);
 
             if (!type.IsSubclassOf(baseScreen))
             {
@@ -677,7 +677,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Component component = screenObject.AddComponent(type);
 
-            if (component is Screen screen)
+            if (component is InfoScreen screen)
             {
                 if (registry.ContainsValue(screen))
                 {

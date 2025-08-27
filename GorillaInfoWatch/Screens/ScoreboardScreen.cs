@@ -15,13 +15,13 @@ using Utilla.Utils;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ScoreboardScreen : Models.Screen
+    public class ScoreboardScreen : Models.InfoScreen
     {
         public override string Title => "Scoreboard";
 
-        public override void OnShow()
+        public override void OnScreenLoad()
         {
-            base.OnShow();
+            base.OnScreenLoad();
 
             Events.OnRigNameUpdate += OnRigNameUpdate;
 
@@ -31,9 +31,9 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.LeftRoomEvent += OnRoomLeft;
         }
 
-        public override void OnClose()
+        public override void OnScreenUnload()
         {
-            base.OnClose();
+            base.OnScreenUnload();
 
             Events.OnRigNameUpdate -= OnRigNameUpdate;
 
@@ -43,7 +43,7 @@ namespace GorillaInfoWatch.Screens
             RoomSystem.LeftRoomEvent -= OnRoomLeft;
         }
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             LineBuilder lines = new();
 
@@ -61,7 +61,7 @@ namespace GorillaInfoWatch.Screens
 
             string gameModeString = NetworkSystem.Instance.GameModeString;
             int maxPlayers = (RoomSystem.UseRoomSizeOverride || NetworkSystem.Instance is not NetworkSystemPUN) ? RoomSystem.GetRoomSize(gameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
-            lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => SetScreen<RoomInspectorPage>())
+            lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => LoadScreen<RoomInspectorPage>())
             {
                 Colour = ColourPalette.Blue,
                 Symbol = Symbols.Info
@@ -95,7 +95,7 @@ namespace GorillaInfoWatch.Screens
             {
                 PlayerInspectorScreen.RoomName = NetworkSystem.Instance.RoomName;
                 PlayerInspectorScreen.UserId = player.UserId;
-                SetScreen<PlayerInspectorScreen>();
+                LoadScreen<PlayerInspectorScreen>();
             }
         }
 

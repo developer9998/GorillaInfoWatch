@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public class LineBuilder(List<InfoLine> lines) : ScreenLines
+    public class LineBuilder(List<InfoLine> lines) : InfoContent
     {
         public override int SectionCount => Mathf.CeilToInt(Lines.Count / (float)Constants.SectionCapacity);
 

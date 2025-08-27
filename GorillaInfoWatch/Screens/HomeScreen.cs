@@ -7,15 +7,15 @@ using System.Reflection;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class HomeScreen : Screen
+    public class HomeScreen : InfoScreen
     {
         public override string Title => Constants.Name;
         public override string Description => "Created by dev9998 and gizmogoat";
 
-        private readonly Dictionary<string, Screen> entries = [];
+        private readonly Dictionary<string, InfoScreen> entries = [];
         private readonly LineBuilder lineBuilder = new();
 
-        public void SetEntries(List<Screen> screens)
+        public void SetEntries(List<InfoScreen> screens)
         {
             Assembly nativeAssembly = typeof(Plugin).Assembly;
 
@@ -33,13 +33,13 @@ namespace GorillaInfoWatch.Screens
             }
         }
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             lineBuilder.Clear();
 
             for (int i = 0; i < entries.Count; i++)
             {
-                (string title, Screen screen) = entries.ElementAt(i);
+                (string title, InfoScreen screen) = entries.ElementAt(i);
                 lineBuilder.Add(title, new Widget_PushButton(SelectScreen, screen));
             }
 
@@ -48,9 +48,9 @@ namespace GorillaInfoWatch.Screens
 
         public void SelectScreen(object[] args)
         {
-            if (args.ElementAtOrDefault(0) is Screen screen)
+            if (args.ElementAtOrDefault(0) is InfoScreen screen)
             {
-                SetScreen(screen.GetType());
+                LoadScreen(screen.GetType());
             }
         }
     }

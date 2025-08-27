@@ -13,11 +13,11 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class DetailsScreen : Models.Screen
+    public class DetailsScreen : Models.InfoScreen
     {
         public override string Title => "Details";
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             LineBuilder profileLines = new();
 

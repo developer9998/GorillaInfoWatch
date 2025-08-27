@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    internal class InboxScreen : Screen
+    internal class InboxScreen : InfoScreen
     {
         public override string Title => "Inbox";
 
@@ -19,7 +19,7 @@ namespace GorillaInfoWatch.Screens
 
         private readonly string formatOffline = "<line-height=45%><size=50%>{0}</size><br>", formatOnline = "<line-height=45%><size=50%>{0} in {1}</size><br>";
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             LineBuilder lines = new();
 

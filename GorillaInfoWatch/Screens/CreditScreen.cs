@@ -6,7 +6,7 @@ using GorillaInfoWatch.Models.Widgets;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class CreditScreen : Screen
+    public class CreditScreen : InfoScreen
     {
         public override string Title => "Credits";
         public override string Description => $"Credits for {Constants.Name} (as of v{Constants.Version})";
@@ -40,6 +40,6 @@ namespace GorillaInfoWatch.Screens
             pageBuilder.AddPage("Supporters", supporterCredits);
         }
 
-        public override ScreenLines GetContent() => pageBuilder;
+        public override InfoContent GetContent() => pageBuilder;
     }
 }

@@ -13,7 +13,7 @@ using System.Linq;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ModListPage : Screen
+    public class ModListPage : InfoScreen
     {
         public override string Title => "Mods";
 
@@ -33,7 +33,7 @@ namespace GorillaInfoWatch.Screens
             mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods).OrderBy(pluginInfo => pluginInfo.Metadata.Name).OrderByDescending(pluginInfo => pluginInfo.Instance.Config is ConfigFile config ? config.Count : -1)).Where(pluginInfo => pluginInfo.Metadata.GUID != Constants.GUID)];
         }
 
-        public override ScreenLines GetContent()
+        public override InfoContent GetContent()
         {
             LineBuilder lines = new();
 
@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Screens
             if (args.ElementAtOrDefault(0) is PluginInfo info)
             {
                 ModInfoPage.Mod = info;
-                SetScreen<ModInfoPage>();
+                LoadScreen<ModInfoPage>();
             }
         }
     }
