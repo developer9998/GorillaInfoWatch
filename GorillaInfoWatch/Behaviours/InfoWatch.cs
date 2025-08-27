@@ -48,9 +48,9 @@ namespace GorillaInfoWatch.Behaviours
         public StateMachine<Menu_StateBase> stateMachine;
         public Menu_Home home;
 
-        public IEnumerator Start()
+        public async void Start()
         {
-            if (Rig is null) yield return new WaitUntil(() => Rig is not null);
+            if (Rig is null) await new WaitUntil(() => Rig is not null).AsAwaitable();
 
             if (Rig.isOfflineVRRig || Rig.isLocal)
             {
@@ -58,7 +58,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     Logging.Warning("Duplicate local watch detected! Removing duplicate");
                     Destroy(this);
-                    yield break;
+                    return;
                 }
 
                 Logging.Message($"Local watch located: {transform.GetPath().TrimStart('/')}");
@@ -106,7 +106,6 @@ namespace GorillaInfoWatch.Behaviours
             Events.OnRigSetInvisibleToLocal += SetVisibilityCheck;
 
             Configure();
-            yield break;
         }
 
         public void Configure()
