@@ -561,7 +561,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.sectionNumber, 0, sectionCount) : 0;
+                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.sectionNumber, 0, sectionCount - 1) : 0;
                 ActiveScreen.sectionNumber = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;
