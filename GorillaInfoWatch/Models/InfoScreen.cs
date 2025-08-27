@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Models
         public virtual string Description { get; set; }
         public virtual Type ReturnType { get; set; } = null;
 
-        public event Action<bool> UpdateScreenEvent;
+        public event Action<bool> UpdateScreenRequest;
 
         public event Action<Type> LoadScreenRequest;
 
@@ -24,8 +24,8 @@ namespace GorillaInfoWatch.Models
 
         public abstract InfoContent GetContent();
 
-        public void SetText() => UpdateScreenEvent?.Invoke(false);
-        public void SetContent() => UpdateScreenEvent?.Invoke(true);
+        public void SetText() => UpdateScreenRequest?.Invoke(false);
+        public void SetContent() => UpdateScreenRequest?.Invoke(true);
 
         public virtual void OnScreenLoad()
         {

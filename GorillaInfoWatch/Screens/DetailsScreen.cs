@@ -91,7 +91,7 @@ namespace GorillaInfoWatch.Screens
             economyLines.Add($"Shiny Rocks: {CosmeticsController.instance.CurrencyBalance}");
 
             TimeSpan whenShinyRocks = TimeSpan.FromSeconds(CosmeticsController.instance.secondsUntilTomorrow);
-            economyLines.Add($"+ 100 Shiny Rocks in: {CountdownText.GetTimeDisplay(whenShinyRocks, "{0} {1}").ToLower()} ({(DateTime.Now + whenShinyRocks).ToShortTimeString()})");
+            economyLines.Add($"+ 100 Shiny Rocks in: {CountdownText.GetTimeDisplay(whenShinyRocks, "{0} {1}", int.MaxValue, "Now", string.Empty).ToLower()} ({(DateTime.Now + whenShinyRocks).ToShortTimeString()})");
 
             economyLines.Skip();
 

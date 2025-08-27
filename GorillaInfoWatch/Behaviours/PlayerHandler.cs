@@ -35,7 +35,6 @@ namespace GorillaInfoWatch.Behaviours
             RoomSystem.JoinedRoomEvent += OnJoinedRoom;
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
-
             Events.OnQuestCompleted += OnQuestCompleted;
             Events.OnRigRecievedCosmetics += OnGetUserCosmetics;
         }
@@ -59,7 +58,52 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public void OnJoinedRoom() => NetworkSystem.Instance.PlayerListOthers.ForEach(player => EvaluatePlayer(player));
+        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
+        {
+            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
+            Notifications.SendNotification(new("You completed a quest", quest.questName, 5, Sounds.notificationNeutral));
+        }
+
+        public async void OnJoinedRoom()
+        {
+            NetPlayer[] array = NetworkSystem.Instance.PlayerListOthers;
+            array.ForEach(player => EvaluatePlayer(player));
+
+            await new WaitForSeconds(0.5f).AsAwaitable();
+
+            List<Notification> list = [];
+
+            foreach(NetPlayer player in array)
+            {
+                if (player == null || player.IsNull) continue;
+
+                string userId = player.UserId;
+
+                if (GFriends.IsFriend(userId))
+                {
+                    list.Add(new("Your friend is here", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 1f));
+                    continue;
+                }
+
+                if (GFriends.IsVerified(userId))
+                {
+                    list.Add(new("A verified user is here", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 1f));
+                    continue;
+                }
+
+                if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+                {
+                    list.Add(new("A recognized user is here", player.GetName().EnforcePlayerNameLength(), 1f));
+                    continue;
+                }
+            }
+
+            foreach(Notification notification in list)
+            {
+                Notifications.SendNotification(notification);
+                await new WaitForSeconds(1f).AsAwaitable();
+            }
+        }
 
         public void OnPlayerJoined(NetPlayer player)
         {
@@ -130,12 +174,6 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             EvaluatePlayer(player);
-        }
-
-        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
-        {
-            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
-            Notifications.SendNotification(new("You completed a quest", quest.questName, 5, Sounds.notificationNeutral));
         }
 
         public void OnGetUserCosmetics(VRRig rig)

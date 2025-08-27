@@ -41,7 +41,6 @@ namespace GorillaInfoWatch.Behaviours
 
         public static ReadOnlyCollection<FigureSignificance> Significance_Figures { get; private set; }
         public static ReadOnlyCollection<ItemSignificance> Significance_Cosmetics { get; private set; }
-
         public static PlayerSignificance Significance_Watch { get; private set; }
         public static PlayerSignificance Significance_Verified { get; private set; }
 
@@ -308,7 +307,7 @@ namespace GorillaInfoWatch.Behaviours
                         Logging.Error(ex);
                     }
 
-                    overrideScreen = (returnTypeProperty != null && returnTypeProperty.DeclaringType == screen.GetType()) ? GetScreen((Type)returnTypeProperty.GetValue(screen)) : null;
+                    overrideScreen = (returnTypeProperty != null && returnTypeProperty.GetValue(screen) != null) ? GetScreen((Type)returnTypeProperty.GetValue(screen)) : null;
                 }
 
                 LoadScreen(overrideScreen ?? history.Last());
@@ -487,7 +486,7 @@ namespace GorillaInfoWatch.Behaviours
             if (ActiveScreen is InfoScreen lastScreen)
             {
                 ActiveScreen.LoadScreenRequest -= LoadScreen;
-                ActiveScreen.UpdateScreenEvent -= ReloadScreen;
+                ActiveScreen.UpdateScreenRequest -= ReloadScreen;
 
                 ActiveScreen.enabled = false;
                 ActiveScreen.contents = null;
@@ -503,7 +502,7 @@ namespace GorillaInfoWatch.Behaviours
             else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
 
             newScreen.LoadScreenRequest += LoadScreen;
-            newScreen.UpdateScreenEvent += delegate (bool includeWidgets)
+            newScreen.UpdateScreenRequest += delegate (bool includeWidgets)
             {
                 newScreen.contents = newScreen.GetContent();
                 ReloadScreen(includeWidgets);
@@ -538,7 +537,7 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Error(ex);
             }
 
-            bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(ActiveScreen) != null && returnTypeProperty.DeclaringType == ActiveScreen.GetType();
+            bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(ActiveScreen) != null;
 
             buttonOpenInbox.gameObject.SetActive(onHomeScreen);
             button_return_screen.gameObject.SetActive(!onHomeScreen && (history.Count > 0 || considerReturnType));
@@ -659,16 +658,16 @@ namespace GorillaInfoWatch.Behaviours
                 return false;
             }
 
-            Type baseScreen = typeof(InfoScreen);
+            Type screenType = typeof(InfoScreen);
 
-            if (!type.IsSubclassOf(baseScreen))
+            if (!type.IsSubclassOf(screenType))
             {
                 Logging.Warning("Type is not subclass of screen");
                 PlayErrorSound();
                 return false;
             }
 
-            if (!baseScreen.IsAssignableFrom(type))
+            if (!screenType.IsAssignableFrom(type))
             {
                 Logging.Warning("Type is not assignable from screen");
                 PlayErrorSound();
