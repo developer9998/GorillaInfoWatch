@@ -126,12 +126,14 @@ namespace GorillaInfoWatch.Screens
 
                 if (isOffline)
                 {
+                    // Only text is provided when the friend is offline, no symbols to infer or buttons to push here
                     lines.Append(playerName).Append(": ").Append(playerStatus).AppendLine();
                     continue;
                 }
 
                 if (roomId.Equals(NetworkSystem.Instance.RoomName))
                 {
+                    // Local Player is in the room with the friend
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                     {
                         Colour = ColourPalette.Yellow,
@@ -142,6 +144,7 @@ namespace GorillaInfoWatch.Screens
 
                 if ((!isRoomPublic || inZone) && !inVirtualStump)
                 {
+                    // Local Player is allowed to join the friend by using the push button
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton(JoinFriend, friend, inVirtualStump)
                     {
                         Colour = ColourPalette.Green,
@@ -150,6 +153,7 @@ namespace GorillaInfoWatch.Screens
                     continue;
                 }
 
+                // Local Player isn't allowed to join the friend and therefore no option is given
                 lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                 {
                     Colour = ColourPalette.Red,
@@ -166,6 +170,9 @@ namespace GorillaInfoWatch.Screens
             {
                 if (isVirtualStump && !GorillaComputer.instance.IsPlayerInVirtualStump())
                 {
+                    // The Virtual Stump connection is currently inaccessible, therefore the following code isn't used... for now 
+                    // Not only does the game disallow it with it's friend system, but I'm also not completely proud of this as well
+
                     try
                     {
                         GameObject treeRoom = ZoneManagement.instance.allObjects.First(gameObject => gameObject.name == "TreeRoom");
@@ -177,7 +184,7 @@ namespace GorillaInfoWatch.Screens
                     }
                     catch (Exception ex)
                     {
-                        Logging.Fatal("Teleporting player to virtual stump");
+                        Logging.Fatal("Failed to bring the local player to Virtual Stump when joining friend");
                         Logging.Error(ex);
                     }
 

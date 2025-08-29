@@ -15,5 +15,7 @@
         public const float MenuTiltAngle = 80; // calculated menu angle after this will start to visually tilt it
         public const float MenuTiltMinimum = 7.5f; // angle after previous
         public const float MenuTiltAmount = 0.95f; // angle factor after that
+
+        public const string SignificancePlayerNameTag = "[PlayerName]";
     }
 }

@@ -34,18 +34,23 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static Main Instance { get; private set; }
 
+        // Content
         public static ModContent Content { get; private set; }
 
+        // Enum/Unity Object dictionaries
         public static ReadOnlyDictionary<Sounds, AudioClip> EnumToAudio { get; private set; }
         public static ReadOnlyDictionary<Symbols, Sprite> EnumToSprite { get; private set; }
 
+        // Significance
         public static ReadOnlyCollection<FigureSignificance> Significance_Figures { get; private set; }
         public static ReadOnlyCollection<ItemSignificance> Significance_Cosmetics { get; private set; }
         public static PlayerSignificance Significance_Watch { get; private set; }
         public static PlayerSignificance Significance_Verified { get; private set; }
         public static PlayerSignificance Significance_Master { get; private set; }
         public static PlayerSignificance Significance_Friend { get; private set; }
+        public static PlayerSignificance Significance_RecentlyPlayed { get; private set; }
 
+        // Screens
         public static InfoScreen ActiveScreen { get; private set; }
 
         // Pages
@@ -59,8 +64,6 @@ namespace GorillaInfoWatch.Behaviours
         private GameObject screenObject;
 
         private readonly Dictionary<Type, InfoScreen> registry = [];
-
-        private readonly List<InfoScreen> history = [];
 
         private readonly List<Notification> notifications = [];
 
@@ -81,8 +84,10 @@ namespace GorillaInfoWatch.Behaviours
 
         // Display
 
-        private TMP_Text menu_page_text;
-        private PushButton button_prev_page, button_next_page, button_return_screen, button_reload_screen, buttonOpenInbox;
+        private TMP_Text menuPageText;
+        private PushButton menuPrevPageButton, menuNextPageButton, menuReturnButton, menuReloadButton, menuInboxButton;
+
+        // Runtime
 
         private bool wasRoomAllowed = true;
 
@@ -103,15 +108,17 @@ namespace GorillaInfoWatch.Behaviours
             screenObject.SetActive(false);
             screenObject.transform.SetParent(transform);
 
+            // This list should be expanded to encapsulate proper screens (in the form of their types)
+            // "Proper" screens refer to all but any hardcoded screens (including Home, Inbox, and Warning screens)
             List<Type> builtinPages =
             [
                 typeof(ScoreboardScreen),
-                typeof(RoomInspectorPage),
+                typeof(RoomInspectorScreen),
                 typeof(PlayerInspectorScreen),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
-                typeof(ModListPage),
-                typeof(ModInfoPage),
+                typeof(ModListScreen),
+                typeof(ModInspectorScreen),
                 typeof(CreditScreen)
             ];
 
@@ -202,20 +209,20 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Error(ex);
             }
 
-            Home = GetScreen<HomeScreen>();
-            Warning = GetScreen<WarningScreen>();
-            Inbox = GetScreen<InboxScreen>();
-
-            // Assets
+            // Hardcoded screens are retrieved here, ensure registerFallback parameter is turned set to True for each method
+            Home = GetScreen<HomeScreen>(true);
+            Warning = GetScreen<WarningScreen>(true);
+            Inbox = GetScreen<InboxScreen>(true);
 
             Content = await AssetLoader.LoadAsset<ModContent>("Data");
 
             Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Figures, figure => (FigureSignificance)figure));
             Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
-            Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, "[PlayerName] is a GorillaInfoWatch user");
-            Significance_Verified = new("Verified", Symbols.Verified, "[PlayerName] is a verified/trusted modder");
-            Significance_Master = new("Master Client", Symbols.None, "[PlayerName] is the current host of the room");
-            Significance_Friend = new("Friend", Symbols.None, "You have [PlayerName] added as a friend using the GorillaFriends mod");
+            Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, $"{Constants.SignificancePlayerNameTag} is a user of GorillaInfoWatch");
+            Significance_Verified = new("Verified", Symbols.Verified, $"{Constants.SignificancePlayerNameTag} is marked as verified by the GorillaFriends mod");
+            Significance_Master = new("Master Client", Symbols.None, $"{Constants.SignificancePlayerNameTag} is the master client responsible for hosting");
+            Significance_Friend = new("Friend", Symbols.None, $"You have {Constants.SignificancePlayerNameTag} added as a friend using the GorillaFriends mod");
+            Significance_RecentlyPlayed = new("Recently Played", Symbols.None, $"You have played with {Constants.SignificancePlayerNameTag} recently, according to the GorillaFriends mod");
 
             Dictionary<Sounds, AudioClip> audioClipDictionary = [];
 
@@ -279,49 +286,48 @@ namespace GorillaInfoWatch.Behaviours
 
             // Components
 
-            menu_page_text = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
+            menuPageText = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
 
-            button_next_page = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
-            button_next_page.OnButtonPressed = () =>
+            menuNextPageButton = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
+            menuNextPageButton.OnButtonPressed = () =>
             {
                 ActiveScreen.sectionNumber++;
                 UpdateScreen();
             };
 
-            button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
-            button_prev_page.OnButtonPressed = () =>
+            menuPrevPageButton = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
+            menuPrevPageButton.OnButtonPressed = () =>
             {
                 ActiveScreen.sectionNumber--;
                 UpdateScreen();
             };
 
-            button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
-            button_return_screen.OnButtonPressed = () =>
+            menuReturnButton = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
+            menuReturnButton.OnButtonPressed = () =>
             {
-                InfoScreen overrideScreen = null;
+                if (ActiveScreen is not InfoScreen screen) return;
 
-                if (ActiveScreen is InfoScreen screen)
+                Type overrideType = null;
+
+                PropertyInfo returnTypeProperty = null;
+
+                try
                 {
-                    PropertyInfo returnTypeProperty = null;
-
-                    try
-                    {
-                        returnTypeProperty = AccessTools.Property(screen.GetType(), nameof(InfoScreen.ReturnType));
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Fatal("ReturnType property could not be accessed for return button process");
-                        Logging.Error(ex);
-                    }
-
-                    overrideScreen = (returnTypeProperty != null && returnTypeProperty.GetValue(screen) != null) ? GetScreen((Type)returnTypeProperty.GetValue(screen)) : null;
+                    returnTypeProperty = AccessTools.Property(screen.GetType(), nameof(InfoScreen.ReturnType));
+                }
+                catch (Exception ex)
+                {
+                    Logging.Fatal("ReturnType property could not be accessed for return button process");
+                    Logging.Error(ex);
                 }
 
-                LoadScreen(overrideScreen ?? history.Last());
+                overrideType = (returnTypeProperty != null && returnTypeProperty.GetValue(screen) != null) ? (Type)returnTypeProperty.GetValue(screen) : null;
+
+                LoadScreen(overrideType ?? screen.CallerScreenType);
             };
 
-            button_reload_screen = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
-            button_reload_screen.OnButtonPressed = () =>
+            menuReloadButton = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
+            menuReloadButton.OnButtonPressed = () =>
             {
                 if (ActiveScreen is InfoScreen screen)
                 {
@@ -332,8 +338,8 @@ namespace GorillaInfoWatch.Behaviours
                 }
             };
 
-            buttonOpenInbox ??= menu.transform.Find("Canvas/Button_Inbox").AddComponent<PushButton>();
-            buttonOpenInbox.OnButtonPressed = delegate ()
+            menuInboxButton ??= menu.transform.Find("Canvas/Button_Inbox").AddComponent<PushButton>();
+            menuInboxButton.OnButtonPressed = delegate ()
             {
                 LoadScreen(Inbox);
             };
@@ -365,7 +371,7 @@ namespace GorillaInfoWatch.Behaviours
                 if (wasRoomAllowed != roomNotAllowed) return;
                 wasRoomAllowed = !roomNotAllowed;
 
-                if (roomNotAllowed) Notifications.SendNotification(new("Room join failure", "Room inaccessible", 3, Sounds.notificationNegative));
+                if (roomNotAllowed) Notifications.SendNotification(new("Room Join failure", "Room inaccessible", 3, Sounds.notificationNegative));
             }
         }
 
@@ -449,10 +455,8 @@ namespace GorillaInfoWatch.Behaviours
 
         public void PlayErrorSound()
         {
-            // Random.Range (inclusive, exclusive)
-            // meaning Random.Range(1, 7) can give you 1, 2, 3, 4, 5, and 6
-            if (Enum.TryParse(string.Concat("error", Random.Range(1, 7)), out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip))
-                localInfoWatch.audioDevice.PlayOneShot(audioClip);
+            string soundName = string.Concat("error", Random.Range(1, 7));
+            if (Enum.TryParse(soundName, out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip)) localInfoWatch.audioDevice.PlayOneShot(audioClip);
         }
 
         public void PressButton(PushButton button, bool isLeftHand)
@@ -491,6 +495,8 @@ namespace GorillaInfoWatch.Behaviours
 
         public void LoadScreen(InfoScreen newScreen)
         {
+            Type callerScreenType = Home.GetType();
+
             if (ActiveScreen is InfoScreen lastScreen)
             {
                 lastScreen.LoadScreenRequest -= LoadScreen;
@@ -500,17 +506,17 @@ namespace GorillaInfoWatch.Behaviours
 
                 lastScreen.OnScreenUnload();
 
-                if (history.Count == 0 || history.Last() != newScreen) history.Add(lastScreen);
-
                 PreserveScreenSectionAttribute preserveSection = lastScreen.GetType().GetCustomAttribute<PreserveScreenSectionAttribute>();
                 if (preserveSection == null) lastScreen.sectionNumber = 0;
                 if (preserveSection == null || preserveSection.ClearContent) lastScreen.contents = null;
+
+                if (newScreen == Home) callerScreenType = null;
+                else if (lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = newScreen.CallerScreenType;
             }
 
             ActiveScreen = newScreen;
 
-            if (newScreen == Home) history.Clear();
-            else if (history.Count > 0 && history.Last() == newScreen) history.RemoveAt(history.Count - 1);
+            newScreen.CallerScreenType = callerScreenType;
 
             newScreen.LoadScreenRequest += LoadScreen;
             newScreen.UpdateScreenRequest += delegate (bool includeWidgets)
@@ -546,12 +552,13 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Logging.Fatal("ReturnType property could not be accessed for screen process");
                 Logging.Error(ex);
+                PlayErrorSound();
             }
 
             bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(ActiveScreen) != null;
 
-            buttonOpenInbox.gameObject.SetActive(onHomeScreen);
-            button_return_screen.gameObject.SetActive(!onHomeScreen && (history.Count > 0 || considerReturnType));
+            menuInboxButton.gameObject.SetActive(onHomeScreen);
+            menuReturnButton.gameObject.SetActive(!onHomeScreen && (ActiveScreen.CallerScreenType != null || considerReturnType));
 
             ActiveScreen.contents ??= ActiveScreen.GetContent();
 
@@ -575,9 +582,9 @@ namespace GorillaInfoWatch.Behaviours
                 ActiveScreen.sectionNumber = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;
-                button_next_page.gameObject.SetActive(multiSection);
-                button_prev_page.gameObject.SetActive(multiSection);
-                menu_page_text.text = multiSection ? $"{currentSection + 1}/{sectionCount}" : string.Empty;
+                menuNextPageButton.gameObject.SetActive(multiSection);
+                menuPrevPageButton.gameObject.SetActive(multiSection);
+                menuPageText.text = multiSection ? $"{currentSection + 1}/{sectionCount}" : string.Empty;
 
                 string sectionTitle = null;
 
@@ -592,7 +599,7 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                menuHeader.text = $"{ActiveScreen.Title}{((string.IsNullOrEmpty(sectionTitle) || string.IsNullOrWhiteSpace(sectionTitle)) ? "" : $" : {sectionTitle}")}";
+                menuHeader.text = string.Concat(ActiveScreen.Title, (!string.IsNullOrEmpty(sectionTitle) && !string.IsNullOrWhiteSpace(sectionTitle)) ? $" : {sectionTitle}" : string.Empty);
 
                 string description = null;
 
@@ -722,7 +729,7 @@ namespace GorillaInfoWatch.Behaviours
             switch (returnCode)
             {
                 case ErrorCode.GameFull:
-                    Notifications.SendNotification(new("Room join failure", "Room is full", 3, Sounds.notificationNegative));
+                    Notifications.SendNotification(new("Room Join failure", "Room is full", 3, Sounds.notificationNegative));
                     break;
             }
         }
@@ -737,8 +744,8 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
         {
-            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
-            Notifications.SendNotification(new("You completed a quest", quest.questName, 5, Sounds.notificationNeutral));
+            Logging.Info($"Quest Completed: {quest.GetTextDescription()}");
+            Notifications.SendNotification(new("You completed a Quest", quest.questName, 5, Sounds.notificationNeutral));
         }
     }
 }

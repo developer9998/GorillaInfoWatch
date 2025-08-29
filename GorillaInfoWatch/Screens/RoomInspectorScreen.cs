@@ -18,7 +18,7 @@ using InfoScreen = GorillaInfoWatch.Models.InfoScreen;
 
 namespace GorillaInfoWatch.Screens
 {
-    internal class RoomInspectorPage : InfoScreen, IInRoomCallbacks
+    internal class RoomInspectorScreen : InfoScreen, IInRoomCallbacks
     {
         public override string Title => "Room Inspector";
         public override Type ReturnType => typeof(ScoreboardScreen);
@@ -70,7 +70,9 @@ namespace GorillaInfoWatch.Screens
 
             lines.Skip();
 
-            lines.Append("Privacy: ").AppendLine(!PhotonNetwork.CurrentRoom.IsOpen ? "Closed" : privacyString);
+            // From here on out, the method assumes PUN (Photon Unity Networking) is being used
+            // Honestly, I doubt a transition will be made any time soon with the volume of recent code that doesn't acknowledge Fusion
+            lines.Append("Privacy: ").AppendLine(PhotonNetwork.CurrentRoom.IsOpen ? privacyString : "Closed");
 
             int playerCount = NetworkSystem.Instance.RoomPlayerCount;
             int maxPlayers = RoomSystem.UseRoomSizeOverride ? RoomSystem.GetRoomSize(NetworkSystem.Instance.GameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
@@ -82,7 +84,6 @@ namespace GorillaInfoWatch.Screens
             {
                 lines.Append("Host: ").Append(host.GetName().EnforcePlayerNameLength()).Add(new Widget_PushButton(() =>
                 {
-                    PlayerInspectorScreen.RoomName = NetworkSystem.Instance.RoomName;
                     PlayerInspectorScreen.UserId = host.UserId;
                     LoadScreen<PlayerInspectorScreen>();
                 })
@@ -92,43 +93,31 @@ namespace GorillaInfoWatch.Screens
                 });
             }
 
-            int ping = -1;
-
-            try
-            {
-                ping = PhotonNetwork.GetPing();
-            }
-            catch (Exception ex)
-            {
-                Logging.Fatal("Ping (via PhotonNetwork.GetPing) could not be retrieved");
-                Logging.Error(ex);
-            }
-
+            int ping = PhotonNetwork.NetworkingClient?.LoadBalancingPeer?.RoundTripTime ?? -1;
             lines.Append("Ping: ").Append(ping != -1 ? ping : "N/A").AppendLine(" ms");
 
             // https://doc.photonengine.com/pun/current/connection-and-authentication/regions
-
-            string region = PhotonNetwork.CloudRegion.Replace("/*", "").ToLower();
+            string region = NetworkSystem.Instance.CurrentRegion.Replace("/*", "").ToLower();
             lines.Append("Region: ").AppendLine(region switch
             {
-                "us" => "United States (East)",
-                "usw" => "United States (West)",
-                "eu" => "Europe",
-                /*
-                "asia" => "Asia",
-                "au" => "Australia",
-                "cae" => "Canada",
-                "cn" => "China",
-                "hk" => "Hong Kong",
-                "in" => "India",
-                "jp" => "Japan",
-                "za" => "South Africa",
-                "sa" => "South America",
-                "kr" => "South Korea",
-                "tr" => "Turkey",
-                "uae" => "United Arab Emirates",
-                "ussc" => "United States (South Central)",
-                */
+                "us" => "United States (East)", // Washington DC
+                "usw" => "United States (West)", // San Jose
+                "eu" => "Europe", // Amsterdam
+
+                // Region codes below aren't used by Gorilla Tag as of commenting this
+                // Server locations were only ever expanded in May 2021 (including US West and Europe) and never again
+                "asia" => "Asia", // Singapore
+                "au" => "Australia", // Sydney
+                "cae" => "Canada", // Montreal
+                "hk" => "Hong Kong", // Hong Kong
+                "in" => "India", // Chennai
+                "jp" => "Japan", // Tokyo
+                "za" => "South Africa", // Johannesburg
+                "sa" => "South America", // Sao Paulo
+                "kr" => "South Korea", // Seoul
+                "tr" => "Turkey", // Istanbul
+                "uae" => "United Arab Emirates", // Dubai
+                "ussc" => "United States (South Central)", // Dallas
                 _ => region
             });
 
@@ -136,6 +125,8 @@ namespace GorillaInfoWatch.Screens
 
             lines.Append("Game Mode: ").AppendLine(GameModeUtils.CurrentGamemode is Gamemode gamemode ? gamemode.DisplayName : GorillaScoreBoard.error.ToTitleCase());
 
+            // "queueName" custom property is not set for ranked matches
+            // Perhaps properties could be implemented here when they're set, they include "mmrTier" (Low/Medium/High) and "platform" (Quest/PC)
             if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("queueName", out object queueObject) && queueObject is string queueName)
             {
                 bool isNativeQueue = ComputerQueuePatch.baseGameQueueNames.Contains(queueName);
@@ -144,7 +135,7 @@ namespace GorillaInfoWatch.Screens
             }
 
             int participantCount = NetworkSystem.Instance.AllNetPlayers.Where(player => player != null && !player.IsNull).Count(GameMode.CanParticipate);
-            lines.Append("Participating: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.colorKeys[0].color : ColourPalette.Red.colorKeys[0].color).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
+            lines.Append("Participation: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.colorKeys[0].color : ColourPalette.Red.colorKeys[0].color).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
 
             return lines;
         }

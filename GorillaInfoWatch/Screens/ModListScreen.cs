@@ -13,7 +13,7 @@ using System.Linq;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen, PreserveScreenSection]
-    internal class ModListPage : InfoScreen
+    internal class ModListScreen : InfoScreen
     {
         public override string Title => "Mods";
 
@@ -73,8 +73,8 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is PluginInfo info)
             {
-                ModInfoPage.Mod = info;
-                LoadScreen<ModInfoPage>();
+                ModInspectorScreen.Mod = info;
+                LoadScreen<ModInspectorScreen>();
             }
         }
     }

@@ -81,7 +81,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (Player != player)
                 return;
 
-            if (significance != null && Array.Find(significance, item => item != null) is PlayerSignificance item)
+            if (significance != null && Array.Find(significance, item => item != null) is PlayerSignificance item && item.Symbol > Symbols.None)
             {
                 useMonkeSymbol = false;
                 image.sprite = ((Symbol)item.Symbol).Sprite;

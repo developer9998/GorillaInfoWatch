@@ -14,6 +14,8 @@ namespace GorillaInfoWatch.Models
 
         public event Action<Type> LoadScreenRequest;
 
+        public Type CallerScreenType;
+
         internal int sectionNumber;
 
         internal InfoContent contents;

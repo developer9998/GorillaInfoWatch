@@ -12,7 +12,7 @@ namespace GorillaInfoWatch.Models.Significance
             get
             {
                 if (string.IsNullOrEmpty(itemDisplayName)) itemDisplayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(ItemId));
-                return $"[PlayerName] owns the {itemDisplayName} item";
+                return $"{Constants.SignificancePlayerNameTag} owns the \"{itemDisplayName}\" item";
             }
         }
 

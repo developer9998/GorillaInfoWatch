@@ -18,9 +18,9 @@ namespace GorillaInfoWatch.Screens
     internal class PlayerInspectorScreen : InfoScreen
     {
         public override string Title => "Player Inspector";
-        public override Type ReturnType => typeof(ScoreboardScreen);
+        public override Type ReturnType => null; // Returns to the previous screen (includes Scoreboard, Inbox, Room Inspector)
 
-        public static string RoomName, UserId;
+        public static string UserId;
 
         private bool initialized;
 
@@ -51,7 +51,6 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnScreenUnload();
 
-            RoomName = null;
             UserId = null;
 
             Events.OnRigNameUpdate -= OnRigNameUpdate;
@@ -61,7 +60,7 @@ namespace GorillaInfoWatch.Screens
 
         public override InfoContent GetContent()
         {
-            if (!NetworkSystem.Instance.InRoom || NetworkSystem.Instance.RoomName != RoomName || PlayerUtilities.GetPlayer(UserId) is not NetPlayer player || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
+            if (!NetworkSystem.Instance.InRoom || PlayerUtilities.GetPlayer(UserId) is not NetPlayer player || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
             {
                 LoadScreen<ScoreboardScreen>();
                 return null;
@@ -87,7 +86,11 @@ namespace GorillaInfoWatch.Screens
 
             lines.Append("Creation Date: ").AppendLine((accountInfo != null && accountInfo.AccountInfo?.TitleInfo?.Created is DateTime utcTime && utcTime.ToLocalTime() is DateTime localTime) ? $"{localTime.ToShortDateString()} at {localTime.ToShortTimeString()}" : ". . .");
 
-            if (!player.IsLocal)
+            bool isLocal = player.IsLocal;
+
+            bool isFriend = false;
+
+            if (!isLocal)
             {
                 lines.Skip();
 
@@ -96,7 +99,7 @@ namespace GorillaInfoWatch.Screens
                     Colour = muteColour
                 });
 
-                bool isFriend = GFriends.IsFriend(player.UserId);
+                isFriend = GFriends.IsFriend(UserId);
                 lines.Add(isFriend ? "Remove Friend" : "Add Friend", new Widget_Switch(isFriend, OnFriendButtonClick, player)
                 {
                     Colour = friendColour
@@ -109,14 +112,20 @@ namespace GorillaInfoWatch.Screens
 
             List<PlayerSignificance> list = [];
 
+            bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
+
             if (SignificanceManager.Instance.Significance.TryGetValue(player, out PlayerSignificance[] plrSignificance))
             {
                 plrSignificance = [.. plrSignificance];
-                if (GFriends.IsInFriendList(player.UserId)) plrSignificance[1] = Main.Significance_Friend;
+                if (isInFriendList) plrSignificance[1] = Main.Significance_Friend;
                 Array.ForEach(Array.FindAll(plrSignificance, item => item != null), list.Add);
             }
 
-            if (player.IsMasterClient) list.Add(Main.Significance_Master);
+            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) == GFriends.eRecentlyPlayed.Before)
+                list.Add(Main.Significance_RecentlyPlayed);
+
+            if (player.IsMasterClient)
+                list.Add(Main.Significance_Master);
 
             if (list.Count > 0)
             {
@@ -132,7 +141,7 @@ namespace GorillaInfoWatch.Screens
                     str.Append(i + 1).Append(". ");
 
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
-                    else str.Append(string.Format(describedFormat, significance.Title, significance.Description.Replace("[PlayerName]", normalizedName)));
+                    else str.Append(string.Format(describedFormat, significance.Title, significance.Description.Replace(Constants.SignificancePlayerNameTag, normalizedName)));
 
                     significanceLines.Add(str.ToString(), widgets: hasSymbol ? [new Widget_AnchoredSymbol(significance.Symbol)] : []);
                     str.Clear();
@@ -163,31 +172,6 @@ namespace GorillaInfoWatch.Screens
                     }
                     scoreboardLine.InitializeLine();
                 });
-
-                /*
-                GorillaPlayerScoreboardLine[] lines = [.. GorillaScoreboardTotalUpdater.allScoreboards
-                    .Select(scoreboard => scoreboard.lines)
-                    .SelectMany(lines => lines)
-                    .Where(line => line.linePlayer == player || line.rigContainer == container)];
-
-                if (lines.Length > 0)
-                {
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        GorillaPlayerScoreboardLine line = lines[i];
-
-                        if (i == 0)
-                        {
-                            line.muteButton.isOn = value;
-                            line.PressButton(value, GorillaPlayerLineButton.ButtonType.Mute);
-                            continue;
-                        }
-
-                        line.InitializeLine();
-                    }
-                }
-                else Logging.Warning("No scoreboard lines detected");
-                */
 
                 SetText();
             }
@@ -221,7 +205,6 @@ namespace GorillaInfoWatch.Screens
 
         private void OnRoomLeft()
         {
-            RoomName = null;
             UserId = null;
             SetContent();
         }

@@ -61,7 +61,7 @@ namespace GorillaInfoWatch.Screens
 
             string gameModeString = NetworkSystem.Instance.GameModeString;
             int maxPlayers = (RoomSystem.UseRoomSizeOverride || NetworkSystem.Instance is not NetworkSystemPUN) ? RoomSystem.GetRoomSize(gameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
-            lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => LoadScreen<RoomInspectorPage>())
+            lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => LoadScreen<RoomInspectorScreen>())
             {
                 Colour = ColourPalette.Blue,
                 Symbol = Symbols.Info
@@ -93,15 +93,19 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is NetPlayer player)
             {
-                PlayerInspectorScreen.RoomName = NetworkSystem.Instance.RoomName;
                 PlayerInspectorScreen.UserId = player.UserId;
                 LoadScreen<PlayerInspectorScreen>();
             }
         }
 
-        private void OnRigNameUpdate(VRRig targetRig)
+        private void OnRigNameUpdate(VRRig rig)
         {
-            if (targetRig.isLocal || targetRig.Creator is null || !targetRig.Creator.InRoom) return;
+            if (!rig.isLocal)
+            {
+                NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
+                if (player == null || player.IsNull || player.InRoom) return;
+            }
+
             SetContent();
         }
 
