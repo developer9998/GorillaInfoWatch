@@ -23,7 +23,7 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Room Inspector";
         public override Type ReturnType => typeof(ScoreboardScreen);
 
-        private const float RefreshRate = 2.5f;
+        private const float RefreshRate = 2f;
 
         private float refreshTime;
 

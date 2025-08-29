@@ -11,9 +11,10 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    public class ModInfoPage : InfoScreen
+    internal class ModInfoPage : InfoScreen
     {
         public override string Title => "Mod Inspector";
+        public override Type ReturnType => typeof(ModListPage);
 
         public static PluginInfo Mod;
 

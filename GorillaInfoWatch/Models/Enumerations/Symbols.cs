@@ -1,8 +1,9 @@
 namespace GorillaInfoWatch.Models.Enumerations
 {
-    // TODO: categorize symbols by people/figures and icons/cosmetics
-    public enum Symbols
+    public enum Symbols : byte
     {
+        None,
+
         // People
         Dev,
         Gizmo,
@@ -14,9 +15,10 @@ namespace GorillaInfoWatch.Models.Enumerations
         Cyan,
         Chucken,
         Socks,
-        Will,
+        Maple,
         Lapis,
         Kronicahl,
+
         // Icons
         Verified,
         Info,

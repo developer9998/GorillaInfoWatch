@@ -16,7 +16,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class FriendScreen : Models.InfoScreen
+    internal class FriendScreen : InfoScreen
     {
         public override string Title => "Friends";
 

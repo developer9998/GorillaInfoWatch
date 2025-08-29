@@ -2,6 +2,7 @@ using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,10 +38,10 @@ namespace GorillaInfoWatch.Models.Widgets
                 CreateSubSymbol(ref monkeBase, Symbols.TemplateHead);
                 CreateSubSymbol(ref monkeFace, Symbols.TemplateFace);
 
-                OnSignificanceChanged(Player, PlayerHandler.Significance.TryGetValue(Player, out PlayerSignificance significance) ? significance : null);
+                OnSignificanceChanged(Player, SignificanceManager.Instance.Significance.TryGetValue(Player, out PlayerSignificance[] significance) ? significance : null);
 
                 playerRig.Rig.OnColorChanged += OnColourChanged;
-                PlayerHandler.OnSignificanceChanged += OnSignificanceChanged;
+                SignificanceManager.Instance.OnSignificanceChanged += OnSignificanceChanged;
             }
         }
 
@@ -71,19 +72,20 @@ namespace GorillaInfoWatch.Models.Widgets
             if (playerRig)
             {
                 playerRig.Rig.OnColorChanged -= OnColourChanged;
-                PlayerHandler.OnSignificanceChanged -= OnSignificanceChanged;
+                SignificanceManager.Instance.OnSignificanceChanged -= OnSignificanceChanged;
             }
         }
 
-        public void OnSignificanceChanged(NetPlayer player, PlayerSignificance significance)
+        public void OnSignificanceChanged(NetPlayer player, PlayerSignificance[] significance)
         {
             if (Player != player)
                 return;
 
-            if (significance != null)
+            if (significance != null && Array.Find(significance, item => item != null) is PlayerSignificance item)
             {
                 useMonkeSymbol = false;
-                image.sprite = ((Symbol)significance.Symbol).Sprite;
+                image.sprite = ((Symbol)item.Symbol).Sprite;
+                image.enabled = image.sprite != null;
                 monkeBase.enabled = false;
                 monkeFace.enabled = false;
             }

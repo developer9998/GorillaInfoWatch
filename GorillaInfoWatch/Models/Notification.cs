@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace GorillaInfoWatch.Models
 {
     [Serializable]
-    public class Notification(string content, float duration, Sounds sound = Sounds.none, Notification.ExternalScreen screen = null)
+    public class Notification(string content, float duration, Sounds sound = Sounds.None, Notification.ExternalScreen screen = null)
     {
         public string Content { get; } = content;
         public float Duration { get; } = duration;
@@ -23,7 +23,7 @@ namespace GorillaInfoWatch.Models
 
         public bool SessionIsPrivate = NetworkSystem.Instance.InRoom && NetworkSystem.Instance.SessionIsPrivate;
 
-        public Notification(string head, string body, float duration, Sounds sound = Sounds.none, ExternalScreen screen = null) : this(string.Format("<size=6>{0}:</size><br><b>{1}</b>", head, body), duration, sound, screen)
+        public Notification(string head, string body, float duration, Sounds sound = Sounds.None, ExternalScreen screen = null) : this(string.Format("<size=6>{0}:</size><br><b>{1}</b>", head, body), duration, sound, screen)
         {
             DisplayText = $"{head.TrimEnd(':')}: {body}";
         }

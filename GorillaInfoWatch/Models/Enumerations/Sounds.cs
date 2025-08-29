@@ -2,7 +2,7 @@
 {
     public enum Sounds
     {
-        none,
+        None,
         widgetButton,
         widgetSlider,
         widgetSwitch,

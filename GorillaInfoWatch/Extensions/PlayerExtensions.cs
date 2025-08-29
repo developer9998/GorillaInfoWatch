@@ -15,7 +15,7 @@ namespace GorillaInfoWatch.Extensions
 
         public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved)
         {
-            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < 3)
+            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < 6)
                 return accountInfoCache[userId].accountInfo;
 
             if (!PlayFabClientAPI.IsClientLoggedIn())

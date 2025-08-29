@@ -15,7 +15,7 @@ using Utilla.Utils;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen]
-    public class ScoreboardScreen : Models.InfoScreen
+    internal class ScoreboardScreen : InfoScreen
     {
         public override string Title => "Scoreboard";
 

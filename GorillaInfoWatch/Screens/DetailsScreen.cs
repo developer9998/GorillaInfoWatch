@@ -12,8 +12,8 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
 {
-    [ShowOnHomeScreen]
-    public class DetailsScreen : Models.InfoScreen
+    [ShowOnHomeScreen, PreserveScreenSection(ClearContent = true)]
+    internal class DetailsScreen : InfoScreen
     {
         public override string Title => "Details";
 
@@ -96,11 +96,11 @@ namespace GorillaInfoWatch.Screens
             economyLines.Skip();
 
             var currentWornSet = CosmeticsController.instance.currentWornSet;
+
             for (int i = 0; i < currentWornSet.items.Length; i++)
             {
                 var item = currentWornSet.items[i];
-                if (item.isNullItem)
-                    continue;
+                if (item.isNullItem) continue;
 
                 string displayName = CosmeticsController.instance.GetItemDisplayName(item);
                 CosmeticsController.CosmeticSlots slot = (CosmeticsController.CosmeticSlots)i;

@@ -1,5 +1,6 @@
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models.Enumerations;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -12,6 +13,8 @@ namespace GorillaInfoWatch.Models
 
         public Material Material;
 
+        private static readonly Dictionary<Symbols, Symbol> SymbolFromEnum = [];
+
         public Symbol(Sprite sprite)
         {
             Sprite = sprite;
@@ -19,13 +22,12 @@ namespace GorillaInfoWatch.Models
 
         public Symbol(Symbols symbol)
         {
-            if (Main.EnumToSprite.TryGetValue(symbol, out Sprite sprite))
-            {
-                Sprite = sprite;
-            }
+            if (Main.EnumToSprite.TryGetValue(symbol, out Sprite sprite)) Sprite = sprite;
+
+            if (!SymbolFromEnum.ContainsKey(symbol)) SymbolFromEnum.Add(symbol, this);
         }
 
-        public static implicit operator Symbol(Symbols enumeration) => new(enumeration);
+        public static implicit operator Symbol(Symbols enumeration) => SymbolFromEnum.TryGetValue(enumeration, out Symbol symbol) ? symbol : new(enumeration);
 
         public static implicit operator Symbol(Sprite sprite) => new(sprite);
 

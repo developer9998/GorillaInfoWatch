@@ -9,9 +9,7 @@ namespace GorillaInfoWatch.Patches
     {
         public static void Prefix(RotatingQuest __instance)
         {
-            if (__instance.isQuestComplete)
-                return;
-
+            if (__instance.isQuestComplete) return;
             Events.OnQuestCompleted?.SafeInvoke(__instance);
         }
     }

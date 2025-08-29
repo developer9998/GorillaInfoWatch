@@ -12,8 +12,8 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    [ShowOnHomeScreen]
-    public class ModListPage : InfoScreen
+    [ShowOnHomeScreen, PreserveScreenSection]
+    internal class ModListPage : InfoScreen
     {
         public override string Title => "Mods";
 

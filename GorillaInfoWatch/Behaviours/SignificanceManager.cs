@@ -1,10 +1,10 @@
-﻿using GorillaInfoWatch.Behaviours.Networking;
-using GorillaInfoWatch.Extensions;
+﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using System;
 using System.Collections.Generic;
@@ -14,13 +14,13 @@ using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    public class PlayerHandler : MonoBehaviour
+    public class SignificanceManager : MonoBehaviour
     {
-        public static event Action<NetPlayer, PlayerSignificance> OnSignificanceChanged;
+        public static SignificanceManager Instance { get; private set; }
 
-        public static PlayerHandler Instance;
+        public event Action<NetPlayer, PlayerSignificance[]> OnSignificanceChanged;
 
-        public static Dictionary<NetPlayer, PlayerSignificance> Significance = [];
+        public readonly Dictionary<NetPlayer, PlayerSignificance[]> Significance = [];
 
         public void Awake()
         {
@@ -35,8 +35,8 @@ namespace GorillaInfoWatch.Behaviours
             RoomSystem.JoinedRoomEvent += OnJoinedRoom;
             NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
             NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
-            Events.OnQuestCompleted += OnQuestCompleted;
             Events.OnRigRecievedCosmetics += OnGetUserCosmetics;
+            CosmeticsV2Spawner_Dirty.OnPostInstantiateAllPrefabs2 += () => CheckPlayer(NetworkSystem.Instance.GetLocalPlayer(), SignificanceCheckScope.Item);
         }
 
         public async void Start()
@@ -54,26 +54,20 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Message("Local Player authenticated");
 
                 netSys.UpdatePlayers();
-                EvaluatePlayer(netSys.GetLocalPlayer());
+                CheckPlayer(netSys.GetLocalPlayer(), SignificanceCheckScope.LocalPlayer);
             }
-        }
-
-        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
-        {
-            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
-            Notifications.SendNotification(new("You completed a quest", quest.questName, 5, Sounds.notificationNeutral));
         }
 
         public async void OnJoinedRoom()
         {
-            NetPlayer[] array = NetworkSystem.Instance.PlayerListOthers;
-            array.ForEach(player => EvaluatePlayer(player));
+            NetPlayer[] playersInRoom = NetworkSystem.Instance.PlayerListOthers;
+            playersInRoom.ForEach(player => CheckPlayer(player, SignificanceCheckScope.PlayerJoined));
 
             await new WaitForSeconds(0.5f).AsAwaitable();
 
             List<Notification> list = [];
 
-            foreach(NetPlayer player in array)
+            foreach (NetPlayer player in playersInRoom)
             {
                 if (player == null || player.IsNull) continue;
 
@@ -91,14 +85,14 @@ namespace GorillaInfoWatch.Behaviours
                     continue;
                 }
 
-                if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+                if (Significance.TryGetValue(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance))
                 {
                     list.Add(new("A recognized user is here", player.GetName().EnforcePlayerNameLength(), 1f));
                     continue;
                 }
             }
 
-            foreach(Notification notification in list)
+            foreach (Notification notification in list)
             {
                 Notifications.SendNotification(notification);
                 await new WaitForSeconds(1f).AsAwaitable();
@@ -107,7 +101,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnPlayerJoined(NetPlayer player)
         {
-            EvaluatePlayer(player);
+            CheckPlayer(player, SignificanceCheckScope.PlayerJoined);
 
             if (player.IsLocal) // called for the local player when marked "InGame" / connected to a room
                 return;
@@ -142,7 +136,7 @@ namespace GorillaInfoWatch.Behaviours
                 return;
             }
 
-            if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+            if (Significance.TryGetValue(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance))
             {
                 Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforcePlayerNameLength(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
@@ -168,20 +162,20 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
             }
-            else if (Significance.TryGetValue(player, out PlayerSignificance significance) && significance is FigureSignificance)
+            else if (Significance.TryGetValue(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance))
             {
                 Notifications.SendNotification(new("A notable user has left", player.GetName().EnforcePlayerNameLength(), 5, Sounds.notificationNegative));
             }
 
-            EvaluatePlayer(player);
+            CheckPlayer(player, SignificanceCheckScope.PlayerLeft);
         }
 
         public void OnGetUserCosmetics(VRRig rig)
         {
-            if (rig.Creator is not NetPlayer player || player.IsNull || player.IsLocal)
-                return;
+            NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
+            if (player == null || player.IsNull || player.IsLocal || rig.isOfflineVRRig || rig.isLocal) return;
 
-            if (EvaluatePlayer(player) && Significance.TryGetValue(player, out var significance) && significance is ItemSignificance item)
+            if (CheckPlayer(player, SignificanceCheckScope.Item) && Significance.TryGetValue(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
             {
                 string userId = player.UserId;
                 string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
@@ -197,48 +191,58 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public bool EvaluatePlayer(NetPlayer player)
+        public bool CheckPlayer(NetPlayer player, SignificanceCheckScope check)
         {
-            if (player is null || player.IsNull)
-                return false;
+            if (player is null) throw new ArgumentNullException(nameof(player));
 
-            PlayerSignificance predicate = null;
+            if (player.IsNull) throw new ArgumentException("NetPlayer is classified as null (NetPlayer.IsNull)", nameof(player));
 
-            if (player.IsLocal || player.InRoom)
+            PlayerSignificance[] array = Significance.ContainsKey(player) ? [.. Significance[player]] : [.. Enumerable.Repeat<PlayerSignificance>(null, 5)];
+
+            if (check.HasFlag(SignificanceCheckScope.RemovalCandidate) && Significance.ContainsKey(player) && !player.IsLocal && (!NetworkSystem.Instance.InRoom || !player.InRoom))
             {
-                if (Main.Instance is not null && Array.Find(Main.Significance_Figures.ToArray(), figure => figure.IsValid(player)) is FigureSignificance figure)
-                    predicate = figure;
-                else if (player.IsLocal || VRRigCache.rigsInUse.TryGetValue(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component) && component.HasInfoWatch)
-                    predicate = Main.Significance_Watch;
-                else if (Main.Instance is not null && Array.Find(Main.Significance_Cosmetics.ToArray(), cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic)
-                    predicate = cosmetic;
-                else if (GFriends.IsVerified(player.UserId))
-                    predicate = Main.Significance_Verified;
-            }
-
-            if (predicate != null)
-            {
-                if (!Significance.ContainsKey(player))
-                {
-                    Logging.Info($"Added significant player {player.NickName}: {predicate.Symbol}");
-                    Significance.Add(player, predicate);
-                    OnSignificanceChanged?.SafeInvoke(player, predicate);
-                    return true;
-                }
-
-                if (Significance[player] != predicate)
-                {
-                    Logging.Info($"Changed significant player {player.NickName}: from {Significance[player].Symbol} to {predicate.Symbol}");
-                    Significance[player] = predicate;
-                    OnSignificanceChanged?.SafeInvoke(player, predicate);
-                    return true;
-                }
-            }
-            else if (Significance.ContainsKey(player))
-            {
-                Logging.Info($"Removed significant player {player.NickName}");
+                Logging.Info($"Removed significant player {player.GetName()}");
                 Significance.Remove(player);
                 OnSignificanceChanged?.SafeInvoke(player, null);
+                return false;
+            }
+
+            if (check.HasFlag(SignificanceCheckScope.Figure) && Array.Find(Main.Significance_Figures.ToArray(), figure => figure.IsValid(player)) is FigureSignificance figure)
+            {
+                array[0] = figure;
+            }
+
+            if (check.HasFlag(SignificanceCheckScope.Item) && Array.Find(Main.Significance_Cosmetics.ToArray(), cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic)
+            {
+                array[2] = cosmetic;
+            }
+
+            if (check.HasFlag(SignificanceCheckScope.InfoWatch) && !array.Contains(Main.Significance_Watch) && PlayerUtilities.HasInfoWatch(player))
+            {
+                array[3] = Main.Significance_Watch;
+            }
+
+            if (check.HasFlag(SignificanceCheckScope.Verified) && GFriends.IsVerified(player.UserId))
+            {
+                array[4] = Main.Significance_Verified;
+            }
+
+            if (!Significance.ContainsKey(player))
+            {
+                Logging.Message($"Added significant player {player.GetName()}");
+                Logging.Info(string.Join(", ", array.Where(item => item != null).Select(item => item.Title)));
+                Significance.Add(player, array);
+                OnSignificanceChanged?.SafeInvoke(player, array);
+                return true;
+            }
+
+            if (!Significance[player].SequenceEqual(array))
+            {
+                Logging.Message($"Changed significant player {player.GetName()}");
+                Logging.Info(string.Join(", ", array.Where(item => item != null).Select(item => item.Title)));
+                Significance[player] = array;
+                OnSignificanceChanged?.SafeInvoke(player, array);
+                return true;
             }
 
             return false;

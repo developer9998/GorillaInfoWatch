@@ -8,7 +8,6 @@ using GorillaExtensions;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.StateMachine;
-using System.Collections;
 #endif
 
 namespace GorillaInfoWatch.Behaviours

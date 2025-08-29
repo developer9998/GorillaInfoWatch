@@ -8,7 +8,7 @@ namespace GorillaInfoWatch.Models
     {
         public abstract string Title { get; }
         public virtual string Description { get; set; }
-        public virtual Type ReturnType { get; set; } = null;
+        public virtual Type ReturnType { get; set; } = typeof(HomeScreen);
 
         public event Action<bool> UpdateScreenRequest;
 

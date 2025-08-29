@@ -43,6 +43,8 @@ namespace GorillaInfoWatch.Behaviours
         public static ReadOnlyCollection<ItemSignificance> Significance_Cosmetics { get; private set; }
         public static PlayerSignificance Significance_Watch { get; private set; }
         public static PlayerSignificance Significance_Verified { get; private set; }
+        public static PlayerSignificance Significance_Master { get; private set; }
+        public static PlayerSignificance Significance_Friend { get; private set; }
 
         public static InfoScreen ActiveScreen { get; private set; }
 
@@ -63,12 +65,14 @@ namespace GorillaInfoWatch.Behaviours
         private readonly List<Notification> notifications = [];
 
         // Assets
+
         private GameObject localWatchObject, menu;
 
         private InfoWatch localInfoWatch;
         private Panel localPanel;
 
         // Menu
+
         private Image menuBackground;
         private TMP_Text menuHeader;
         private TMP_Text menuDescription;
@@ -76,6 +80,7 @@ namespace GorillaInfoWatch.Behaviours
         internal List<WatchLine> menuLines;
 
         // Display
+
         private TMP_Text menu_page_text;
         private PushButton button_prev_page, button_next_page, button_return_screen, button_reload_screen, buttonOpenInbox;
 
@@ -207,14 +212,16 @@ namespace GorillaInfoWatch.Behaviours
 
             Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Figures, figure => (FigureSignificance)figure));
             Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
-            Significance_Watch = new("InfoWatch User", Symbols.InfoWatch);
-            Significance_Verified = new("Verified", Symbols.Verified);
+            Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, "[PlayerName] is a GorillaInfoWatch user");
+            Significance_Verified = new("Verified", Symbols.Verified, "[PlayerName] is a verified/trusted modder");
+            Significance_Master = new("Master Client", Symbols.None, "[PlayerName] is the current host of the room");
+            Significance_Friend = new("Friend", Symbols.None, "You have [PlayerName] added as a friend using the GorillaFriends mod");
 
             Dictionary<Sounds, AudioClip> audioClipDictionary = [];
 
             foreach (Sounds enumeration in Enum.GetValues(typeof(Sounds)).Cast<Sounds>())
             {
-                if (enumeration == Sounds.none) continue;
+                if (enumeration == Sounds.None) continue;
 
                 AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(enumeration.GetName());
 
@@ -278,14 +285,14 @@ namespace GorillaInfoWatch.Behaviours
             button_next_page.OnButtonPressed = () =>
             {
                 ActiveScreen.sectionNumber++;
-                ReloadScreen();
+                UpdateScreen();
             };
 
             button_prev_page = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
             button_prev_page.OnButtonPressed = () =>
             {
                 ActiveScreen.sectionNumber--;
-                ReloadScreen();
+                UpdateScreen();
             };
 
             button_return_screen = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
@@ -321,7 +328,7 @@ namespace GorillaInfoWatch.Behaviours
                     menuLines.ForEach(line => line.Build(new InfoLine("", []), true));
                     screen.OnScreenReload();
                     screen.contents = screen.GetContent();
-                    ReloadScreen();
+                    UpdateScreen();
                 }
             };
 
@@ -343,6 +350,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Notifications.RequestSendNotification = HandleSentNotification;
             Notifications.RequestOpenNotification = HandleOpenNotification;
+            Events.OnQuestCompleted += OnQuestCompleted;
 
             enabled = true;
         }
@@ -371,8 +379,8 @@ namespace GorillaInfoWatch.Behaviours
             if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip))
                 localInfoWatch.audioDevice.PlayOneShot(audioClip);
 
-            bool isSilent = notification.Sound == Sounds.none;
-            GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, isSilent ? 0.06f : 0.04f, isSilent ? 0.1f : 0.2f);
+            bool isSilent = notification.Sound == Sounds.None;
+            GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, isSilent ? 0.2f : 0.04f, isSilent ? 0.1f : 0.2f);
 
             var stateMachine = localInfoWatch.stateMachine;
             Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;
@@ -485,15 +493,18 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (ActiveScreen is InfoScreen lastScreen)
             {
-                ActiveScreen.LoadScreenRequest -= LoadScreen;
-                ActiveScreen.UpdateScreenRequest -= ReloadScreen;
+                lastScreen.LoadScreenRequest -= LoadScreen;
+                lastScreen.UpdateScreenRequest -= UpdateScreen;
 
-                ActiveScreen.enabled = false;
-                ActiveScreen.contents = null;
+                lastScreen.enabled = false;
 
-                ActiveScreen.OnScreenUnload();
+                lastScreen.OnScreenUnload();
 
-                if (history.Count == 0 || history.Last() != newScreen) history.Add(ActiveScreen);
+                if (history.Count == 0 || history.Last() != newScreen) history.Add(lastScreen);
+
+                PreserveScreenSectionAttribute preserveSection = lastScreen.GetType().GetCustomAttribute<PreserveScreenSectionAttribute>();
+                if (preserveSection == null) lastScreen.sectionNumber = 0;
+                if (preserveSection == null || preserveSection.ClearContent) lastScreen.contents = null;
             }
 
             ActiveScreen = newScreen;
@@ -505,14 +516,14 @@ namespace GorillaInfoWatch.Behaviours
             newScreen.UpdateScreenRequest += delegate (bool includeWidgets)
             {
                 newScreen.contents = newScreen.GetContent();
-                ReloadScreen(includeWidgets);
+                UpdateScreen(includeWidgets);
             };
 
             newScreen.enabled = true;
             newScreen.OnScreenLoad();
 
             newScreen.contents = newScreen.GetContent();
-            ReloadScreen();
+            UpdateScreen();
         }
 
         public void LoadScreen(Type type)
@@ -521,7 +532,7 @@ namespace GorillaInfoWatch.Behaviours
             else if (GetScreen(type, false) is InfoScreen screen) LoadScreen(screen);
         }
 
-        public void ReloadScreen(bool includeWidgets = true)
+        public void UpdateScreen(bool includeWidgets = true)
         {
             bool onHomeScreen = ActiveScreen == Home;
 
@@ -581,7 +592,7 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                menuHeader.text = $"{ActiveScreen.Title}{((string.IsNullOrEmpty(sectionTitle) || string.IsNullOrWhiteSpace(sectionTitle)) ? "" : $": {sectionTitle}")}";
+                menuHeader.text = $"{ActiveScreen.Title}{((string.IsNullOrEmpty(sectionTitle) || string.IsNullOrWhiteSpace(sectionTitle)) ? "" : $" : {sectionTitle}")}";
 
                 string description = null;
 
@@ -650,6 +661,8 @@ namespace GorillaInfoWatch.Behaviours
 
         public bool RegisterScreen(Type type)
         {
+            if (type == null) return false;
+
             Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
 
             if (registry.ContainsKey(type))
@@ -720,6 +733,12 @@ namespace GorillaInfoWatch.Behaviours
             Logging.Message(debugMessage);
 
             Notifications.SendNotification(new("Photon PUN failure", "Custom Auth failed", 3, Sounds.notificationNegative));
+        }
+
+        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
+        {
+            Logging.Info($"Quest completed: {quest.GetTextDescription()}");
+            Notifications.SendNotification(new("You completed a quest", quest.questName, 5, Sounds.notificationNeutral));
         }
     }
 }

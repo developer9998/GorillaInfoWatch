@@ -10,12 +10,12 @@ namespace GorillaInfoWatch.Screens
     public class HomeScreen : InfoScreen
     {
         public override string Title => Constants.Name;
-        public override string Description => "Created by dev9998 and gizmogoat";
+        public override string Description => "Created by Dev [dev9998] and Gizmo [gizmogoat]";
 
-        private readonly Dictionary<string, InfoScreen> entries = [];
-        private readonly LineBuilder lineBuilder = new();
+        internal readonly Dictionary<string, InfoScreen> entries = [];
+        internal readonly LineBuilder lineBuilder = new();
 
-        public void SetEntries(List<InfoScreen> screens)
+        internal void SetEntries(List<InfoScreen> screens)
         {
             Assembly nativeAssembly = typeof(Plugin).Assembly;
 
@@ -46,7 +46,7 @@ namespace GorillaInfoWatch.Screens
             return lineBuilder;
         }
 
-        public void SelectScreen(object[] args)
+        internal void SelectScreen(object[] args)
         {
             if (args.ElementAtOrDefault(0) is InfoScreen screen)
             {

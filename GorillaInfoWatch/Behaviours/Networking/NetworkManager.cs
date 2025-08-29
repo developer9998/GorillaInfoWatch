@@ -1,5 +1,6 @@
 using ExitGames.Client.Photon;
 using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
 using Photon.Pun;
 using Photon.Realtime;
@@ -88,7 +89,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
                 {
                     Logging.Message($"{netPlayer.GetName()} has GorillaInfoWatch");
                     networkedPlayer.HasInfoWatch = true;
-                    PlayerHandler.Instance.EvaluatePlayer(netPlayer);
+                    SignificanceManager.Instance.CheckPlayer(netPlayer, SignificanceCheckScope.InfoWatch);
                 }
 
                 Logging.Message($"Recieved properties from {netPlayer.NickName}");

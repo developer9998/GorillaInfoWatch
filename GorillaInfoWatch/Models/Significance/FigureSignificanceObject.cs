@@ -8,11 +8,13 @@ namespace GorillaInfoWatch.Models.Significance
     {
         public Symbols Symbol;
 
+        public string Description;
+
         public string[] UserIds;
 
 #if PLUGIN
         public static explicit operator FigureSignificance(FigureSignificanceObject scriptableObject)
-            => new(scriptableObject.name, scriptableObject.Symbol, scriptableObject.UserIds);
+            => new(scriptableObject.name, scriptableObject.Symbol, scriptableObject.Description, scriptableObject.UserIds);
 #endif
     }
 }
