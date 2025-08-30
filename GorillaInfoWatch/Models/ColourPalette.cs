@@ -53,9 +53,13 @@ namespace GorillaInfoWatch.Models
         public static Color GetColour(this Gradient gradient, int index)
         {
             if (gradient == null) throw new ArgumentNullException(nameof(gradient));
-            if (gradient.colorKeys == null) throw new ArgumentException("gradient parameter has null colour keys", nameof(gradient));
+            if (gradient.colorKeys == null) throw new ArgumentException("Gradient has missing colour keys", nameof(gradient));
             if (index < 0 || index >= gradient.colorKeys.Length) throw new ArgumentOutOfRangeException(nameof(index));
             return gradient.colorKeys[index].color;
         }
+
+        public static Color GetInitialColour(this Gradient gradient) => gradient.GetColour(0);
+
+        public static Color GetPressedColour(this Gradient gradient) => gradient.GetColour(gradient.colorKeys.Length - 1);
     }
 }

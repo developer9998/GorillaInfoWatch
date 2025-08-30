@@ -22,10 +22,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="Content\GorillaInfoMediaManager.exe" />
 		<None Remove="Content\watchbundle" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="Content\GorillaInfoMediaManager.exe" />
 		<EmbeddedResource Include="Content\watchbundle" />
 	</ItemGroup>
 

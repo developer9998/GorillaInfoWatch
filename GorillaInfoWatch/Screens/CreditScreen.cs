@@ -21,6 +21,8 @@ namespace GorillaInfoWatch.Screens
             {
                 pageBuilder = new();
 
+                // TODO: load credit data from player significance
+
                 LineBuilder baseCredits = new();
 
                 baseCredits.Add(string.Format(creditFormat, "Dev", "dev9998", "Creator and Developer"), new Widget_AnchoredSymbol(new(Symbols.Dev)));

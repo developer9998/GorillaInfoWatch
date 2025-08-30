@@ -44,19 +44,19 @@ namespace GorillaInfoWatch.Extensions
             string originalText = line.Text.text;
 
             line.Text.text = text;
-            line.Text.ForceMeshUpdate(true);
+            line.Text.ForceMeshUpdate(true, true);
 
             TMP_TextInfo textInfo = line.Text.textInfo;
 
             string[] lines = new string[textInfo.lineCount];
+
+            StringBuilder str = new();
 
             for (int i = 0; i < textInfo.lineCount; i++)
             {
                 TMP_LineInfo lineInfo = textInfo.lineInfo[i];
                 int startCharIndex = lineInfo.firstCharacterIndex;
                 int endCharIndex = startCharIndex + lineInfo.characterCount;
-
-                StringBuilder str = new();
 
                 for (int charIndex = startCharIndex; charIndex < endCharIndex; charIndex++)
                 {
@@ -65,10 +65,11 @@ namespace GorillaInfoWatch.Extensions
                 }
 
                 lines[i] = i != 0 || string.IsNullOrEmpty(prepend) ? str.ToString() : string.Concat(prepend, str.ToString());
+                str.Clear();
             }
 
             line.Text.text = originalText;
-            line.Text.ForceMeshUpdate(true);
+            line.Text.ForceMeshUpdate(true, true);
 
             return lines;
         }

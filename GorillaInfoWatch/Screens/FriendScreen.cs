@@ -77,7 +77,7 @@ namespace GorillaInfoWatch.Screens
                 SetContent();
             })
             {
-                Colour = ColourPalette.CreatePalette(ColourPalette.Green.Evaluate(0), ColourPalette.Red.Evaluate(0))
+                Colour = ColourPalette.CreatePalette(ColourPalette.Green.GetInitialColour(), ColourPalette.Red.GetInitialColour())
             });
             lines.Skip();
 
@@ -116,13 +116,15 @@ namespace GorillaInfoWatch.Screens
                 bool? isPublic = presence.IsPublic;
                 string zoneName = presence.Zone;
 
-                string playerName = ((string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].EnforceLength(12) : userName;
+                string playerName = ((string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].EnforcePlayerNameLength() : userName;
 
                 bool isRoomPublic = isPublic.GetValueOrDefault(false);
                 bool isOffline = string.IsNullOrEmpty(roomId) || roomId.Length == 0;
                 bool inVirtualStump = !isOffline && (roomId.StartsWith(GorillaComputer.instance.VStumpRoomPrepend) || (zoneName != null && zoneName.ToLower().Contains(GTZone.customMaps.GetName().ToLower())));
                 bool inZone = !string.IsNullOrEmpty(zoneName) && ZoneManagement.instance.activeZones.Exists(zone => zoneName.ToLower().Contains(zone.GetName().ToLower()));
-                string playerStatus = isOffline ? "Offline" : (inVirtualStump ? $"{roomId} in Virtual Stump" : ((isRoomPublic && presence.Zone != null) ? $"{roomId} in {presence.Zone.ToUpper()}" : roomId));
+                bool privacyConfiguration = (isRoomPublic ? Configuration.ShowPublic : Configuration.ShowPrivate).Value;
+                string visibleRoomId = privacyConfiguration ? roomId : $"-{(isRoomPublic ? "PUBLIC" : "PRIVATE")}-";
+                string playerStatus = isOffline ? "Offline" : (inVirtualStump ? $"{roomId} in Virtual Stump" : ((isRoomPublic && presence.Zone != null) ? $"{visibleRoomId} in {presence.Zone.ToUpper()}" : visibleRoomId));
 
                 if (isOffline)
                 {
@@ -133,7 +135,7 @@ namespace GorillaInfoWatch.Screens
 
                 if (roomId.Equals(NetworkSystem.Instance.RoomName))
                 {
-                    // Local Player is in the room with the friend
+                    // Local Player is in the room with the friend, no functionality is neccesary here
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                     {
                         Colour = ColourPalette.Yellow,
@@ -153,7 +155,7 @@ namespace GorillaInfoWatch.Screens
                     continue;
                 }
 
-                // Local Player isn't allowed to join the friend and therefore no option is given
+                // Local Player isn't allowed to join the friend and therefore no functionality is given
                 lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                 {
                     Colour = ColourPalette.Red,

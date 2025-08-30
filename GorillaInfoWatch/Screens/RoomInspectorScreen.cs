@@ -76,7 +76,7 @@ namespace GorillaInfoWatch.Screens
 
             int playerCount = NetworkSystem.Instance.RoomPlayerCount;
             int maxPlayers = RoomSystem.UseRoomSizeOverride ? RoomSystem.GetRoomSize(NetworkSystem.Instance.GameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
-            lines.Append("Capacity: ").BeginColour(playerCount == maxPlayers ? ColourPalette.Green.colorKeys[0].color : Color.white).Append(playerCount).Append(" out of ").Append(maxPlayers).EndColour().AppendLine();
+            lines.Append("Capacity: ").BeginColour(playerCount == maxPlayers ? ColourPalette.Green.GetInitialColour() : Color.white).Append(playerCount).Append(" out of ").Append(maxPlayers).EndColour().AppendLine();
 
             lines.Skip();
 
@@ -135,7 +135,7 @@ namespace GorillaInfoWatch.Screens
             }
 
             int participantCount = NetworkSystem.Instance.AllNetPlayers.Where(player => player != null && !player.IsNull).Count(GameMode.CanParticipate);
-            lines.Append("Participation: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.colorKeys[0].color : ColourPalette.Red.colorKeys[0].color).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
+            lines.Append("Participation: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.GetInitialColour() : ColourPalette.Red.GetInitialColour()).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
 
             return lines;
         }

@@ -176,14 +176,14 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public bool CheckPlayer(NetPlayer player, SignificanceCheckScope check)
+        public bool CheckPlayer(NetPlayer player, SignificanceCheckScope checkScope)
         {
             if (player is null) throw new ArgumentNullException(nameof(player));
             if (player.IsNull) throw new ArgumentException("NetPlayer is classified as null (NetPlayer.IsNull)", nameof(player));
 
             PlayerSignificance[] array = Significance.ContainsKey(player) ? [.. Significance[player]] : [.. Enumerable.Repeat<PlayerSignificance>(null, 5)];
 
-            if (check.HasFlag(SignificanceCheckScope.RemovalCandidate) && Significance.ContainsKey(player) && !player.IsLocal && (!NetworkSystem.Instance.InRoom || !player.InRoom))
+            if (checkScope.HasFlag(SignificanceCheckScope.RemovalCandidate) && Significance.ContainsKey(player) && !player.IsLocal && (!NetworkSystem.Instance.InRoom || !player.InRoom))
             {
                 Logging.Info($"Removed significant player {player.GetName()}");
                 Significance.Remove(player);
@@ -191,7 +191,7 @@ namespace GorillaInfoWatch.Behaviours
                 return false;
             }
 
-            if (check.HasFlag(SignificanceCheckScope.Figure))
+            if (checkScope.HasFlag(SignificanceCheckScope.Figure))
             {
                 array[0] = (Array.Find(Main.Significance_Figures.ToArray(), figure => figure.IsValid(player)) is FigureSignificance figure) ? figure : null;
             }
@@ -199,17 +199,17 @@ namespace GorillaInfoWatch.Behaviours
             // Position 1 (array[1]) in array is used in PlayerInspectorScreen which may occupy the friend significance object in that particular circumstance
             // The array in that code however is duplicated from the array we work on in this code
 
-            if (check.HasFlag(SignificanceCheckScope.Item))
+            if (checkScope.HasFlag(SignificanceCheckScope.Item))
             {
                 array[2] = (Array.Find(Main.Significance_Cosmetics.ToArray(), cosmetic => cosmetic.IsValid(player)) is ItemSignificance cosmetic) ? cosmetic : null;
             }
 
-            if (check.HasFlag(SignificanceCheckScope.InfoWatch) && !array.Contains(Main.Significance_Watch) && PlayerUtilities.HasInfoWatch(player))
+            if (checkScope.HasFlag(SignificanceCheckScope.InfoWatch) && !array.Contains(Main.Significance_Watch) && PlayerUtilities.HasInfoWatch(player))
             {
                 array[3] = Main.Significance_Watch;
             }
 
-            if (check.HasFlag(SignificanceCheckScope.Verified))
+            if (checkScope.HasFlag(SignificanceCheckScope.Verified))
             {
                 array[4] = GFriends.IsVerified(player.UserId) ? Main.Significance_Verified : null;
             }
