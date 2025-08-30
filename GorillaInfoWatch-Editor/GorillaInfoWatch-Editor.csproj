@@ -70,6 +70,9 @@
 		<Reference Include="UnityEngine">
 			<HintPath>$(GameAssemblyPath)\UnityEngine.dll</HintPath>
 		</Reference>
+		<Reference Include="UnityEngine.AnimationModule">
+		  <HintPath>$(GameAssemblyPath)\UnityEngine.AnimationModule.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine.AssetBundleModule">
 			<HintPath>$(GameAssemblyPath)\UnityEngine.AssetBundleModule.dll</HintPath>
 		</Reference>

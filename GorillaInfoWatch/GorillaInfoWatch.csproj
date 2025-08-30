@@ -22,12 +22,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="Content\GorillaInfoMediaManager.exe" />
+		<None Remove="Content\Sample.CMD.exe" />
 		<None Remove="Content\watchbundle" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Content\GorillaInfoMediaManager.exe" />
+		<EmbeddedResource Include="Content\Sample.CMD.exe" />
 		<EmbeddedResource Include="Content\watchbundle" />
 	</ItemGroup>
 
@@ -95,6 +95,9 @@
 		<Reference Include="UnityEngine">
 			<HintPath>$(GameAssemblyPath)\UnityEngine.dll</HintPath>
 		</Reference>
+		<Reference Include="UnityEngine.AnimationModule">
+		  <HintPath>$(GameAssemblyPath)\UnityEngine.AnimationModule.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine.AssetBundleModule">
 			<HintPath>$(GameAssemblyPath)\UnityEngine.AssetBundleModule.dll</HintPath>
 		</Reference>
@@ -103,6 +106,9 @@
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
 			<HintPath>$(GameAssemblyPath)\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ImageConversionModule">
+		  <HintPath>$(GameAssemblyPath)\UnityEngine.ImageConversionModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.PhysicsModule">
 			<HintPath>$(GameAssemblyPath)\UnityEngine.PhysicsModule.dll</HintPath>

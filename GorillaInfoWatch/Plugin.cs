@@ -22,7 +22,7 @@ namespace GorillaInfoWatch
 
             nativeAssembly = typeof(Plugin).Assembly;
             Harmony.CreateAndPatchAll(nativeAssembly, Constants.GUID);
-            GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(SignificanceManager), typeof(Main), typeof(NetworkManager), typeof(DataManager)));
+            GorillaTagger.OnPlayerSpawned(() => new GameObject(Constants.Name, typeof(SignificanceManager), typeof(MediaManager), typeof(Main), typeof(NetworkManager), typeof(DataManager)));
         }
     }
 }

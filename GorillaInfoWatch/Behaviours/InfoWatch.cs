@@ -1,6 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 #if PLUGIN
 using System.Linq;
@@ -19,15 +20,40 @@ namespace GorillaInfoWatch.Behaviours
         public Transform watchHeadTransform, watchCanvasTransform;
         public GameObject watchStrap;
 
-        public GameObject idleMenu, messageMenu, redirectIcon;
+        public AudioSource audioDevice;
+
+        public MeshRenderer screenRenderer, rimRenderer;
+
+        [Header("Menu Interface")]
+
+        public Animator menuAnimator;
+
+        public AnimationClip standardClip, mediaPlayerClip;
+
+        [FormerlySerializedAs("idleMenu")]
+        public GameObject homeMenu;
+
+        public GameObject messageMenu;
+
+        public GameObject redirectIcon;
 
         public TMP_Text timeText, messageText, redirectText;
 
         public Slider messageSlider;
 
-        public AudioSource audioDevice;
+        [Header("Home : Media Player")]
 
-        public MeshRenderer screenRenderer, rimRenderer;
+        public TMP_Text trackTitle;
+
+        public TMP_Text trackAuthor;
+
+        public TMP_Text trackElapsed;
+
+        public TMP_Text trackRemaining;
+
+        public RawImage trackThumbnail;
+
+        public Slider trackProgression;
 
 #if PLUGIN
 
@@ -79,7 +105,7 @@ namespace GorillaInfoWatch.Behaviours
             //redirectIcon = messageMenu.transform.Find("RedirectIcon").gameObject;
             //redirectText = messageMenu.transform.Find("RedirectText").GetComponent<TMP_Text>();
 
-            idleMenu.SetActive(false);
+            homeMenu.SetActive(false);
             messageMenu.SetActive(false);
 
             stateMachine = new();

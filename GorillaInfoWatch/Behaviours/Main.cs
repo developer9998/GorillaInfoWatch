@@ -34,6 +34,8 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static Main Instance { get; private set; }
 
+        public static event Action OnInitialized;
+
         // Content
         public static ModContent Content { get; private set; }
 
@@ -220,7 +222,7 @@ namespace GorillaInfoWatch.Behaviours
             Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
             Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, $"{Constants.SignificancePlayerNameTag} is a user of GorillaInfoWatch");
             Significance_Verified = new("Verified", Symbols.Verified, $"{Constants.SignificancePlayerNameTag} is marked as verified by the GorillaFriends mod");
-            Significance_Master = new("Master Client", Symbols.None, $"{Constants.SignificancePlayerNameTag} is the master client responsible for hosting");
+            Significance_Master = new("Master Client", Symbols.None, $"{Constants.SignificancePlayerNameTag} is the master client of the room, responsible for hosting the game mode manager");
             Significance_Friend = new("Friend", Symbols.None, $"You have {Constants.SignificancePlayerNameTag} added as a friend using the GorillaFriends mod");
             Significance_RecentlyPlayed = new("Recently Played", Symbols.None, $"You have played with {Constants.SignificancePlayerNameTag} recently, according to the GorillaFriends mod");
 
@@ -359,6 +361,8 @@ namespace GorillaInfoWatch.Behaviours
             Events.OnQuestCompleted += OnQuestCompleted;
 
             enabled = true;
+
+            OnInitialized?.Invoke();
         }
 
         public void Update()
@@ -450,7 +454,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (ActiveScreen == Inbox) Inbox.SetContent();
 
-            localInfoWatch.home?.RefreshBell(Inbox.Contents.Count);
+            localInfoWatch.home?.UpdateBell(Inbox.Contents.Count);
         }
 
         public void PlayErrorSound()

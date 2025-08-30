@@ -1,7 +1,6 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Tools;
-using Photon.Pun;
 using Photon.Voice.PUN;
 using Photon.Voice.Unity;
 using System;
@@ -28,32 +27,33 @@ namespace GorillaInfoWatch.Models.StateMachine
         private bool isLocalWatch;
         private RigContainer targetRig;
 
+        private string animationName;
+
         public override void Enter()
         {
             base.Enter();
 
-            Watch.idleMenu.SetActive(true);
+            Watch.homeMenu.SetActive(true);
 
-            if (Watch.Rig.isOfflineVRRig)
+            if (isLocalWatch)
             {
-                NetworkSystem.Instance.OnMultiplayerStarted += RefreshMic;
-                NetworkSystem.Instance.OnReturnedToSinglePlayer += RefreshMic;
+                NetworkSystem.Instance.OnMultiplayerStarted += UpdateSpeaker;
+                NetworkSystem.Instance.OnReturnedToSinglePlayer += UpdateSpeaker;
             }
 
-            isLocalWatch = InfoWatch.LocalWatch == Watch;
-            targetRig = isLocalWatch ? VRRigCache.Instance.localRig : (Watch.Rig.rigContainer ?? Watch.Rig.GetComponent<RigContainer>());
+            Watch.menuAnimator.Play(animationName);
         }
 
         public override void Initialize()
         {
             base.Initialize();
 
-            fpsObject = Watch.idleMenu.transform.Find("FPS").gameObject;
+            fpsObject = Watch.homeMenu.transform.Find("FPS").gameObject;
             fpsText = fpsObject.transform.GetChild(0).GetComponent<TMP_Text>();
             fpsObject.SetActive(true);
 
-            micIcon = Watch.idleMenu.transform.Find("Speaker").GetComponent<Image>();
-            bellIcon = Watch.idleMenu.transform.Find("Bell").GetComponent<Image>();
+            micIcon = Watch.homeMenu.transform.Find("IconParent/Speaker").GetComponent<Image>();
+            bellIcon = Watch.homeMenu.transform.Find("IconParent/Bell").GetComponent<Image>();
             bellIcon.enabled = Watch.Rig.isOfflineVRRig;
 
             micSpeakSymbol = (Symbol)Symbols.OpenSpeaker;
@@ -61,6 +61,11 @@ namespace GorillaInfoWatch.Models.StateMachine
             micTimeoutSymbol = (Symbol)Symbols.ForceMuteSpeaker;
             bellIdleSymbol = (Symbol)Symbols.Bell;
             bellRingSymbol = (Symbol)Symbols.BellRing;
+
+            isLocalWatch = InfoWatch.LocalWatch == Watch;
+            targetRig = isLocalWatch ? VRRigCache.Instance.localRig : (Watch.Rig.rigContainer ?? Watch.Rig.GetComponent<RigContainer>());
+
+            animationName = Watch.standardClip.name;
         }
 
         public override void Resume()
@@ -70,19 +75,19 @@ namespace GorillaInfoWatch.Models.StateMachine
             frameCount = 0;
             timeCount = 0;
 
-            RefreshMic();
+            UpdateSpeaker();
         }
 
         public override void Exit()
         {
             base.Exit();
 
-            Watch.idleMenu.SetActive(false);
+            Watch.homeMenu.SetActive(false);
 
-            if (Watch.Rig.isLocal)
+            if (isLocalWatch)
             {
-                NetworkSystem.Instance.OnMultiplayerStarted -= RefreshMic;
-                NetworkSystem.Instance.OnReturnedToSinglePlayer -= RefreshMic;
+                NetworkSystem.Instance.OnMultiplayerStarted -= UpdateSpeaker;
+                NetworkSystem.Instance.OnReturnedToSinglePlayer -= UpdateSpeaker;
             }
         }
 
@@ -90,7 +95,7 @@ namespace GorillaInfoWatch.Models.StateMachine
         {
             base.Update();
 
-            if (timeCount < 0.5f)
+            if (timeCount < 1f)
             {
                 timeCount += Time.unscaledDeltaTime;
                 frameCount++;
@@ -133,7 +138,7 @@ namespace GorillaInfoWatch.Models.StateMachine
                         return;
                     }
 
-                    bool isSpeaking = isLocalWatch ? (recorder.IsCurrentlyTransmitting) : (targetRig.Voice is PhotonVoiceView voice && voice.IsSpeaking);
+                    bool isSpeaking = isLocalWatch ? recorder.IsCurrentlyTransmitting : (targetRig.Voice is PhotonVoiceView voice && voice && voice.IsSpeaking);
                     float value = isSpeaking ? 1f : 0.5f;
 
                     if (micIcon.sprite != micSpeakSymbol.Sprite) micIcon.sprite = micSpeakSymbol.Sprite;
@@ -164,7 +169,7 @@ namespace GorillaInfoWatch.Models.StateMachine
             fpsText.text = (isLocalWatch ? Mathf.FloorToInt(frameCount / timeCount) : Watch.Rig.fps).ToString();
         }
 
-        public void RefreshBell(int notificationCount)
+        public void UpdateBell(int notificationCount)
         {
             bool hasUnread = notificationCount > 0;
             float floatingPoint = hasUnread ? 1f : 0.2f;
@@ -173,9 +178,18 @@ namespace GorillaInfoWatch.Models.StateMachine
             bellIcon.color = new Color(1f, 1f, 1f, floatingPoint);
         }
 
-        public void RefreshMic()
+        public void UpdateSpeaker()
         {
-            if (micIcon) micIcon.enabled = PhotonNetwork.InRoom;
+            if (micIcon) micIcon.enabled = NetworkSystem.Instance.InRoom;
+        }
+
+        public void SetAnimation(AnimationClip animationClip)
+        {
+            if (animationName != animationClip.name)
+            {
+                animationName = animationClip.name;
+                Watch.menuAnimator.Play(animationName);
+            }
         }
     }
 }
