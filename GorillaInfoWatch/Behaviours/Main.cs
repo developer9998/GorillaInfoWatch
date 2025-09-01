@@ -319,7 +319,7 @@ namespace GorillaInfoWatch.Behaviours
                     {
                         property = returnTypeProperty.GetValue(activeScreen);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         property = null;
                         Logging.Error(ex);
