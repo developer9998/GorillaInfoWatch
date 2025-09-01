@@ -13,11 +13,12 @@ namespace GorillaInfoWatch.Screens
         public override string Description => "Created by Dev [dev9998] and Gizmo [gizmogoat]";
 
         internal readonly Dictionary<string, InfoScreen> entries = [];
+
         internal readonly LineBuilder lineBuilder = new();
 
         internal void SetEntries(List<InfoScreen> screens)
         {
-            Assembly nativeAssembly = typeof(Plugin).Assembly;
+            Assembly nativeAssembly = Assembly.GetExecutingAssembly();
 
             var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly);
             var orderedScreens = nativeScreens.Concat(screens.Except(nativeScreens)).ToList();

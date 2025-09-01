@@ -22,9 +22,7 @@ namespace GorillaInfoWatch.Behaviours
         public string FocussedSession { get; private set; } = null;
 
         public bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
-        public string ExecutablePath => Path.Combine(Application.persistentDataPath, "Sample_CMD.exe");
-
-        public readonly string ResourcePath = "GorillaInfoWatch.Content.Sample.CMD.exe";
+        public string ExecutablePath => Path.Combine(Application.persistentDataPath, "GorillaInfoMediaProcess.exe");
 
         public ProcessStartInfo consoleStartInfo;
 
@@ -49,31 +47,32 @@ namespace GorillaInfoWatch.Behaviours
 
             Application.wantsToQuit += () =>
             {
-                void KillProcess()
+                if (consoleProcess != null && !consoleProcess.HasExited)
                 {
-                    if (consoleProcess != null)
+                    try
                     {
-                        Logging.Message("Killing media process");
-                        ThreadingHelper.Instance.StartAsyncInvoke(() =>
+                        consoleProcess.StandardInput.WriteLine("quit");
+                        consoleProcess.StandardInput.Flush();
+
+                        if (!consoleProcess.WaitForExit(2000))
                         {
                             consoleProcess.Kill();
-                            if (!consoleProcess.HasExited) consoleProcess.WaitForExit();
-                            return () =>
-                            {
-                                Logging.Message("Disposing media process");
-                                consoleProcess.Dispose();
-                                consoleProcess = null;
-                                Application.Quit();
-                            };
-                        });
+                            consoleProcess.WaitForExit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Fatal("Could not kill consoleProcess");
+                        Logging.Error(ex);
+                    }
+                    finally
+                    {
+                        consoleProcess.Dispose();
+                        consoleProcess = null;
                     }
                 }
 
-                if (ThreadingHelper.Instance.InvokeRequired) 
-                    ThreadingHelper.Instance.StartSyncInvoke(KillProcess);
-                else KillProcess();
-
-                return consoleProcess == null || consoleProcess.HasExited;
+                return true;
             };
         }
 

@@ -14,6 +14,7 @@ namespace GorillaInfoWatch.Screens
     internal class InboxScreen : InfoScreen
     {
         public override string Title => "Inbox";
+        public override Type ReturnType => typeof(HomeScreen);
 
         public List<Notification> Contents = [];
 

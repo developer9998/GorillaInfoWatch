@@ -307,25 +307,32 @@ namespace GorillaInfoWatch.Behaviours
             menuReturnButton = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
             menuReturnButton.OnButtonPressed = () =>
             {
-                if (ActiveScreen is not InfoScreen screen) return;
+                if (ActiveScreen is not InfoScreen activeScreen) return;
 
-                Type overrideType = null;
+                PropertyInfo returnTypeProperty = AccessTools.Property(activeScreen.GetType(), nameof(InfoScreen.ReturnType));
 
-                PropertyInfo returnTypeProperty = null;
-
-                try
+                if (returnTypeProperty != null)
                 {
-                    returnTypeProperty = AccessTools.Property(screen.GetType(), nameof(InfoScreen.ReturnType));
-                }
-                catch (Exception ex)
-                {
-                    Logging.Fatal("ReturnType property could not be accessed for return button process");
-                    Logging.Error(ex);
+                    object property = null;
+
+                    try
+                    {
+                        property = returnTypeProperty.GetValue(activeScreen);
+                    }
+                    catch(Exception ex)
+                    {
+                        property = null;
+                        Logging.Error(ex);
+                    }
+
+                    if (property != null && property is Type type && GetScreen(type, false) is InfoScreen screen)
+                    {
+                        LoadScreen(screen);
+                        return;
+                    }
                 }
 
-                overrideType = (returnTypeProperty != null && returnTypeProperty.GetValue(screen) != null) ? (Type)returnTypeProperty.GetValue(screen) : null;
-
-                LoadScreen(overrideType ?? screen.CallerScreenType);
+                LoadScreen(activeScreen.CallerScreenType);
             };
 
             menuReloadButton = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
@@ -499,7 +506,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void LoadScreen(InfoScreen newScreen)
         {
-            Type callerScreenType = Home.GetType();
+            Type callerScreenType = null;
 
             if (ActiveScreen is InfoScreen lastScreen)
             {
@@ -514,8 +521,8 @@ namespace GorillaInfoWatch.Behaviours
                 if (preserveSection == null) lastScreen.sectionNumber = 0;
                 if (preserveSection == null || preserveSection.ClearContent) lastScreen.contents = null;
 
-                if (newScreen == Home) callerScreenType = null;
-                else if (lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = newScreen.CallerScreenType;
+                if (newScreen != Home && lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = lastScreen.CallerScreenType;
+                else if (newScreen != Home) callerScreenType = lastScreen.GetType();
             }
 
             ActiveScreen = newScreen;

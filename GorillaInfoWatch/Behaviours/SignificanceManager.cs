@@ -113,7 +113,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
                 {
-                    player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
+                    player = PlayerUtilities.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
                 return;
@@ -123,7 +123,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
                 {
-                    player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
+                    player = PlayerUtilities.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
                 return;
@@ -133,7 +133,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforcePlayerNameLength(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
-                    player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
+                    player = PlayerUtilities.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
             }
@@ -170,7 +170,7 @@ namespace GorillaInfoWatch.Behaviours
                 string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
                 Notifications.SendNotification(new($"A notable cosmetic was detected", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
                 {
-                    player = Array.Find(NetworkSystem.Instance.PlayerListOthers, player => player.UserId == userId);
+                    player = PlayerUtilities.GetPlayer(userId);
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
             }

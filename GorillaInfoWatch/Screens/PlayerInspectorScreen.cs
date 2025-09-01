@@ -18,7 +18,6 @@ namespace GorillaInfoWatch.Screens
     internal class PlayerInspectorScreen : InfoScreen
     {
         public override string Title => "Player Inspector";
-        public override Type ReturnType => null; // Returns to the previous screen (includes Scoreboard, Inbox, Room Inspector)
 
         public static string UserId;
 
