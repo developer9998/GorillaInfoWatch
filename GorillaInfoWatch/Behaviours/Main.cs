@@ -521,7 +521,7 @@ namespace GorillaInfoWatch.Behaviours
                 if (preserveSection == null) lastScreen.sectionNumber = 0;
                 if (preserveSection == null || preserveSection.ClearContent) lastScreen.contents = null;
 
-                if (newScreen != Home && lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = lastScreen.CallerScreenType;
+                if (newScreen != Home && lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = newScreen.CallerScreenType;
                 else if (newScreen != Home) callerScreenType = lastScreen.GetType();
             }
 
