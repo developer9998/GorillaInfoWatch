@@ -27,8 +27,6 @@ namespace GorillaInfoWatch.Models.StateMachine
         private bool isLocalWatch;
         private RigContainer targetRig;
 
-        private string animationName;
-
         public override void Enter()
         {
             base.Enter();
@@ -40,8 +38,6 @@ namespace GorillaInfoWatch.Models.StateMachine
                 NetworkSystem.Instance.OnMultiplayerStarted += UpdateSpeaker;
                 NetworkSystem.Instance.OnReturnedToSinglePlayer += UpdateSpeaker;
             }
-
-            Watch.menuAnimator.Play(animationName);
         }
 
         public override void Initialize()
@@ -64,8 +60,6 @@ namespace GorillaInfoWatch.Models.StateMachine
 
             isLocalWatch = InfoWatch.LocalWatch == Watch;
             targetRig = isLocalWatch ? VRRigCache.Instance.localRig : (Watch.Rig.rigContainer ?? Watch.Rig.GetComponent<RigContainer>());
-
-            animationName = Watch.standardClip.name;
         }
 
         public override void Resume()
@@ -95,7 +89,7 @@ namespace GorillaInfoWatch.Models.StateMachine
         {
             base.Update();
 
-            if (timeCount < 1f)
+            if (timeCount < 0.5f)
             {
                 timeCount += Time.unscaledDeltaTime;
                 frameCount++;
@@ -181,15 +175,6 @@ namespace GorillaInfoWatch.Models.StateMachine
         public void UpdateSpeaker()
         {
             if (micIcon) micIcon.enabled = NetworkSystem.Instance.InRoom;
-        }
-
-        public void SetAnimation(AnimationClip animationClip)
-        {
-            if (animationName != animationClip.name)
-            {
-                animationName = animationClip.name;
-                Watch.menuAnimator.Play(animationName);
-            }
         }
     }
 }

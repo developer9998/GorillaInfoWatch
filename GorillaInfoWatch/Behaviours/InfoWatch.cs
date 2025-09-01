@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.Serialization;
 
 #if PLUGIN
+using System;
 using System.Linq;
 using GorillaExtensions;
 using GorillaInfoWatch.Tools;
@@ -28,7 +29,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public Animator menuAnimator;
 
-        public AnimationClip standardClip, mediaPlayerClip;
+        public string standardTrigger, mediaTrigger;
 
         [FormerlySerializedAs("idleMenu")]
         public GameObject homeMenu;
@@ -70,8 +71,10 @@ namespace GorillaInfoWatch.Behaviours
         public float? TimeOffset;
 
         // Handling
-        public StateMachine<Menu_StateBase> stateMachine;
-        public Menu_Home home;
+        public StateMachine<Menu_StateBase> MenuStateMachine;
+        public Menu_Home HomeState;
+
+        private bool mediaTriggerState = false;
 
         public async void Start()
         {
@@ -87,7 +90,12 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 Logging.Message($"Local watch located: {transform.GetPath().TrimStart('/')}");
+
                 LocalWatch = this;
+
+                MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
+                MediaManager.Instance.OnMediaChanged += OnMediaChanged;
+                MediaManager.Instance.OnTimelineChanged += OnTimelineChanged;
             }
 
             watchHeadTransform.localEulerAngles = watchHeadTransform.localEulerAngles.WithZ(-91.251f);
@@ -108,9 +116,9 @@ namespace GorillaInfoWatch.Behaviours
             homeMenu.SetActive(false);
             messageMenu.SetActive(false);
 
-            stateMachine = new();
-            home = new(this);
-            stateMachine.SwitchState(home);
+            MenuStateMachine = new();
+            HomeState = new(this);
+            MenuStateMachine.SwitchState(HomeState);
 
             MeshRenderer[] rendererArray = transform.GetComponentsInChildren<MeshRenderer>(true);
             foreach (MeshRenderer meshRenderer in rendererArray)
@@ -130,10 +138,10 @@ namespace GorillaInfoWatch.Behaviours
             Rig.OnColorChanged += SetColour;
             Events.OnRigSetInvisibleToLocal += SetVisibilityCheck;
 
-            Configure();
+            ConfigureWatch();
         }
 
-        public void Configure()
+        public void ConfigureWatch()
         {
             transform.SetParent(InLeftHand ? Rig.leftHandTransform.parent : Rig.rightHandTransform.parent, false);
             transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
@@ -152,8 +160,10 @@ namespace GorillaInfoWatch.Behaviours
 
         public void Update()
         {
-            stateMachine?.Update();
+            MenuStateMachine?.Update();
         }
+
+        #region Appearance
 
         public void SetVisibilityCheck(VRRig rig, bool invisible)
         {
@@ -174,6 +184,56 @@ namespace GorillaInfoWatch.Behaviours
             Color screenColour = Color.HSVToRGB(H, S, V);
             screenMaterial.color = screenColour;
         }
+
+        #endregion
+
+        #region Media Player
+
+        public void OnSessionFocussed(MediaManager.Session focussedSession)
+        {
+            if (focussedSession != null)
+            {
+                OnMediaChanged(focussedSession);
+                OnTimelineChanged(focussedSession);
+                return;
+            }
+
+            if (mediaTriggerState)
+            {
+                mediaTriggerState = false;
+                menuAnimator.SetTrigger(standardTrigger);
+            }
+        }
+
+        public void OnMediaChanged(MediaManager.Session session)
+        {
+            if (MediaManager.Instance.FocussedSession == session.Id)
+            {
+                trackTitle.text = session.Title;
+                trackAuthor.text = session.Artist;
+                trackThumbnail.texture = session.Thumbnail;
+
+                bool hasMedia = session.Title != null && session.Title.Length > 0;
+                if (hasMedia != mediaTriggerState)
+                {
+                    mediaTriggerState = hasMedia;
+                    string trigger = hasMedia ? mediaTrigger : standardTrigger;
+                    menuAnimator.SetTrigger(trigger);
+                }
+            }
+        }
+
+        public void OnTimelineChanged(MediaManager.Session session)
+        {
+            if (MediaManager.Instance.FocussedSession == session.Id)
+            {
+                trackElapsed.text = TimeSpan.FromSeconds(session.Position).ToString(@"mm\:ss");
+                trackRemaining.text = string.Concat("-", TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
+                trackProgression.value = (float)session.Position / (float)session.EndTime;
+            }
+        }
+
+        #endregion
 
 #endif
     }

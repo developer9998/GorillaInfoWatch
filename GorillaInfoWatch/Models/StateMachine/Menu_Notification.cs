@@ -33,7 +33,7 @@ namespace GorillaInfoWatch.Models.StateMachine
         {
             base.Resume();
 
-            Watch.stateMachine.SwitchState(previousState);
+            Watch.MenuStateMachine.SwitchState(previousState);
         }
 
         public override void Exit()
@@ -55,7 +55,7 @@ namespace GorillaInfoWatch.Models.StateMachine
             if (elapsed >= notification.Duration)
             {
                 ended = true;
-                Watch.stateMachine.SwitchState(previousState);
+                Watch.MenuStateMachine.SwitchState(previousState);
                 return;
             }
 

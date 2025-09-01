@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Tools;
 using Newtonsoft.Json.Linq;
@@ -17,20 +18,19 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static MediaManager Instance { get; private set; }
 
-        public static Dictionary<string, Session> Sessions { get; private set; } = [];
+        public Dictionary<string, Session> Sessions { get; private set; } = [];
+        public string FocussedSession { get; private set; } = null;
 
-        public static string FocussedSession { get; private set; } = null;
+        public bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
+        public string ExecutablePath => Path.Combine(Application.persistentDataPath, "Sample_CMD.exe");
 
-        public static bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
-        public static string ExecutablePath => Path.Combine(Application.persistentDataPath, "Sample_CMD.exe");
-
-        public const string ResourcePath = "GorillaInfoWatch.Content.Sample.CMD.exe";
+        public readonly string ResourcePath = "GorillaInfoWatch.Content.Sample.CMD.exe";
 
         public ProcessStartInfo consoleStartInfo;
 
         public Process consoleProcess;
 
-        private bool isProcessKilled;
+        public event Action<Session> OnSessionFocussed, OnPlaybackStateChanged, OnMediaChanged, OnTimelineChanged;
 
         private readonly Dictionary<string, Texture2D> thumbnailCache = [];
 
@@ -46,14 +46,40 @@ namespace GorillaInfoWatch.Behaviours
             Instance = this;
 
             Main.OnInitialized += HandleModInitialized;
-            Application.quitting += HandleApplicationQuitting;
-            Application.wantsToQuit += HandleApplicationQuitAttempt;
+
+            Application.wantsToQuit += () =>
+            {
+                void KillProcess()
+                {
+                    if (consoleProcess != null)
+                    {
+                        Logging.Message("Killing media process");
+                        ThreadingHelper.Instance.StartAsyncInvoke(() =>
+                        {
+                            consoleProcess.Kill();
+                            if (!consoleProcess.HasExited) consoleProcess.WaitForExit();
+                            return () =>
+                            {
+                                Logging.Message("Disposing media process");
+                                consoleProcess.Dispose();
+                                consoleProcess = null;
+                                Application.Quit();
+                            };
+                        });
+                    }
+                }
+
+                if (ThreadingHelper.Instance.InvokeRequired) 
+                    ThreadingHelper.Instance.StartSyncInvoke(KillProcess);
+                else KillProcess();
+
+                return consoleProcess == null || consoleProcess.HasExited;
+            };
         }
 
-        private void HandleModInitialized()
+        private async void HandleModInitialized()
         {
-            // TODO: Fix CreateExecutable method leading to error
-            // As of now, CreateExecutable results in the executable being inaccessible (UnauthorizedAccessException) 
+            await CreateExecutable();
 
             consoleStartInfo = new ProcessStartInfo
             {
@@ -65,7 +91,8 @@ namespace GorillaInfoWatch.Behaviours
 
             consoleProcess = new()
             {
-                StartInfo = consoleStartInfo
+                StartInfo = consoleStartInfo,
+                EnableRaisingEvents = true
             };
 
             consoleProcess.OutputDataReceived += (sender, args) =>
@@ -81,114 +108,149 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnDataReceived(string data)
         {
-            // This method is not ran on the Unity thread, please do so when performing any Unity methods via ThreadingHelper
+            Logging.Info(data);
 
             JObject obj = JObject.Parse(data);
 
-            string eventName = (string)obj.Property("EventName", StringComparison.Ordinal)?.Value ?? null;
-            string sessionId = (string)obj.Property("SessionId", StringComparison.Ordinal)?.Value ?? null;
+            string eventName = (string)obj.Property("EventName")?.Value ?? null;
+            string sessionId = (string)obj.Property("SessionId")?.Value ?? null;
 
-            Session session;
-
-            if (!string.IsNullOrEmpty(eventName))
+            ThreadingHelper.Instance.StartSyncInvoke(async () =>
             {
-                Logging.Message(eventName);
+                Session session;
 
-                switch (eventName)
+                if (!string.IsNullOrEmpty(eventName))
                 {
-                    case "AddSession":
-                        if (string.IsNullOrEmpty(sessionId)) return;
+                    switch (eventName)
+                    {
+                        case "AddSession":
+                            if (string.IsNullOrEmpty(sessionId)) return;
 
-                        if (!Sessions.ContainsKey(sessionId)) Sessions.Add(sessionId, new Session()
-                        {
-                            Id = sessionId
-                        });
+                            if (!Sessions.ContainsKey(sessionId))
+                            {
+                                session = new Session()
+                                {
+                                    Id = sessionId
+                                };
+                                Sessions.Add(sessionId, session);
 
-                        break;
-                    case "RemoveSession":
-                        if (string.IsNullOrEmpty(sessionId)) return;
+                                Logging.Message($"Added Session: \"{sessionId}\"");
 
-                        if (Sessions.ContainsKey(sessionId)) Sessions.Remove(sessionId);
+                                if (string.IsNullOrEmpty(FocussedSession))
+                                {
+                                    FocussedSession = sessionId;
+                                    OnSessionFocussed?.SafeInvoke(session);
+                                }
+                            }
+                            break;
 
-                        break;
-                    case "SessionFocusChanged":
-                        FocussedSession = sessionId;
-                        break;
-                    case "PlaybackStateChanged":
-                        if (Sessions.TryGetValue(sessionId, out session))
-                        {
+                        case "RemoveSession":
+                            if (string.IsNullOrEmpty(sessionId)) return;
+
+                            if (Sessions.ContainsKey(sessionId))
+                            {
+                                Sessions.Remove(sessionId);
+
+                                Logging.Message($"Removed Session: \"{sessionId}\"");
+
+                                if (Sessions.Count == 0 && FocussedSession != null)
+                                {
+                                    FocussedSession = null;
+                                    OnSessionFocussed?.SafeInvoke(null);
+                                }
+                            }
+                            break;
+
+                        case "SessionFocusChanged":
+                            FocussedSession = sessionId;
+                            if (sessionId != null) await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+
+                            Logging.Message($"Session Focus Changed: \"{sessionId}\"");
+
+                            OnSessionFocussed?.SafeInvoke((!string.IsNullOrEmpty(sessionId) && Sessions.TryGetValue(sessionId, out session)) ? session : null);
+                            break;
+
+                        case "PlaybackStateChanged":
+                            if (sessionId == null) return;
+
+                            if (!Sessions.TryGetValue(sessionId, out session))
+                            {
+                                await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                                session = Sessions[sessionId];
+                            }
+
                             session.PlaybackStatus = (string)obj["PlaybackStatus"];
-                        }
-                        break;
-                    case "MediaPropertyChanged":
-                        if (Sessions.TryGetValue(sessionId, out session))
-                        {
+
+                            OnPlaybackStateChanged?.SafeInvoke(session);
+                            break;
+
+                        case "MediaPropertyChanged":
+                            if (sessionId == null) return;
+
+                            if (!Sessions.TryGetValue(sessionId, out session))
+                            {
+                                await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                                session = Sessions[sessionId];
+                            }
+
                             session.Title = (string)obj["Title"];
                             session.Artist = (string)obj["Artist"];
 
                             string base64String = (string)obj["Thumbnail"];
 
-                            ThreadingHelper.Instance.StartSyncInvoke(() =>
+                            Texture2D texture = null;
+
+                            if (!string.IsNullOrEmpty(base64String) && !thumbnailCache.TryGetValue(base64String, out texture))
                             {
-                                Texture2D texture = null;
-
-                                if (!string.IsNullOrEmpty(base64String))
+                                texture = new Texture2D(2, 2)
                                 {
-                                    if (!thumbnailCache.TryGetValue(base64String, out texture))
-                                    {
-                                        texture = new Texture2D(2, 2)
-                                        {
-                                            filterMode = FilterMode.Point,
-                                            wrapMode = TextureWrapMode.Clamp
-                                        };
-                                        texture.LoadImage(Convert.FromBase64String(base64String));
-                                    }
-                                }
+                                    filterMode = FilterMode.Point,
+                                    wrapMode = TextureWrapMode.Clamp
+                                };
+                                texture.LoadImage(Convert.FromBase64String(base64String));
+                                thumbnailCache.Add(base64String, texture);
+                            }
 
-                                session.Thumbnail = texture;
-                            });
-                        }
-                        break;
-                    case "TimelinePropertyChanged":
-                        if (Sessions.TryGetValue(sessionId, out session))
-                        {
+                            session.Thumbnail = texture;
+
+                            OnMediaChanged?.SafeInvoke(session);
+                            break;
+
+                        case "TimelinePropertyChanged":
+                            if (sessionId == null) return;
+
+                            if (!Sessions.TryGetValue(sessionId, out session))
+                            {
+                                await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                                session = Sessions[sessionId];
+                            }
+
                             session.Position = (double)obj["Position"];
                             session.StartTime = (double)obj["StartTime"];
                             session.EndTime = (double)obj["EndTime"];
-                        }
-                        break;
-                }
-            }
-        }
 
-        public void HandleApplicationQuitting()
-        {
-            if (!isProcessKilled)
-            {
-                if (consoleProcess != null)
-                {
-                    consoleProcess.Kill();
-                    consoleProcess.WaitForExit();
-                    consoleProcess.Dispose();
-                    consoleProcess = null;
+                            OnTimelineChanged?.SafeInvoke(session);
+                            break;
+                    }
                 }
-                isProcessKilled = true;
-                Application.Quit();
-            }
+            });
         }
-
-        public bool HandleApplicationQuitAttempt() => isProcessKilled;
 
         public async Task CreateExecutable()
         {
-            if (File.Exists(ExecutablePath)) File.Delete(ExecutablePath);
+            if (!File.Exists(ExecutablePath))
+            {
+                File.Delete(ExecutablePath);
 
-            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourcePath);
-            using FileStream fileStream = new(ExecutablePath, FileMode.Create, FileAccess.Write);
-            using MemoryStream memoryStream = new();
+                using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourcePath);
+                using FileStream fileStream = new(ExecutablePath, FileMode.Create, FileAccess.Write);
+                using MemoryStream memoryStream = new();
 
-            await stream.CopyToAsync(memoryStream);
-            await fileStream.WriteAsync(memoryStream.ToArray());
+                await stream.CopyToAsync(memoryStream);
+                await fileStream.WriteAsync(memoryStream.ToArray());
+            }
+
+            await Task.Delay(5000);
         }
 
         public void PushKey(MediaKeyCode keyCode)

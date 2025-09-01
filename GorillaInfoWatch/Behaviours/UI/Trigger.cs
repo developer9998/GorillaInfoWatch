@@ -35,10 +35,10 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                 AudioSource.PlayOneShot(AudioSource.clip, 0.4f);
 
-                if (InfoWatch.LocalWatch is InfoWatch watch && watch.stateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
+                if (InfoWatch.LocalWatch is InfoWatch watch && watch.MenuStateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
                 {
                     Notifications.OpenNotification(notification, true);
-                    watch.stateMachine.SwitchState(subState.previousState);
+                    watch.MenuStateMachine.SwitchState(subState.previousState);
 
                     Menu.SetActive(true);
                     return;

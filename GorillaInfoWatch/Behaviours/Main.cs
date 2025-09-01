@@ -392,7 +392,7 @@ namespace GorillaInfoWatch.Behaviours
             bool isSilent = notification.Sound == Sounds.None;
             GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, isSilent ? 0.2f : 0.04f, isSilent ? 0.1f : 0.2f);
 
-            var stateMachine = localInfoWatch.stateMachine;
+            var stateMachine = localInfoWatch.MenuStateMachine;
             Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;
             stateMachine.SwitchState(new Menu_Notification(localInfoWatch, currentState, notification));
 
@@ -454,7 +454,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (ActiveScreen == Inbox) Inbox.SetContent();
 
-            localInfoWatch.home?.UpdateBell(Inbox.Contents.Count);
+            localInfoWatch.HomeState?.UpdateBell(Inbox.Contents.Count);
         }
 
         public void PlayErrorSound()
