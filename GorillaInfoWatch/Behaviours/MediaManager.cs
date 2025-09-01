@@ -22,7 +22,9 @@ namespace GorillaInfoWatch.Behaviours
         public string FocussedSession { get; private set; } = null;
 
         public bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
-        public string ExecutablePath => Path.Combine(Application.persistentDataPath, "GorillaInfoMediaProcess.exe");
+        public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
+
+        public readonly string ExecutableURL = @"https://github.com/developer9998/WindowsMediaController/raw/main/GorillaInfoMediaProcess.exe";
 
         public ProcessStartInfo consoleStartInfo;
 
@@ -78,7 +80,7 @@ namespace GorillaInfoWatch.Behaviours
 
         private async void HandleModInitialized()
         {
-            await CreateExecutable();
+            // await CreateExecutable();
 
             consoleStartInfo = new ProcessStartInfo
             {
