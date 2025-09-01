@@ -7,10 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Behaviours
         public bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
         public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
 
-        public readonly string ExecutableURL = @"https://github.com/developer9998/WindowsMediaController/raw/main/GorillaInfoMediaProcess.exe";
+        public readonly string ExecutableURL = @"https://github.com/developer9998/WindowsMediaController/raw/master/GorillaInfoMediaProcess.exe";
 
         public ProcessStartInfo consoleStartInfo;
 
@@ -80,7 +80,14 @@ namespace GorillaInfoWatch.Behaviours
 
         private async void HandleModInitialized()
         {
-            // await CreateExecutable();
+            await CreateExecutable();
+
+            if (!File.Exists(ExecutablePath))
+            {
+                Logging.Warning("Executable does not exist");
+                Logging.Info(ExecutablePath);
+                return;
+            }
 
             consoleStartInfo = new ProcessStartInfo
             {
@@ -241,14 +248,15 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (!File.Exists(ExecutablePath))
             {
-                File.Delete(ExecutablePath);
+                using UnityWebRequest request = UnityWebRequest.Get(ExecutablePath);
 
-                using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourcePath);
-                using FileStream fileStream = new(ExecutablePath, FileMode.Create, FileAccess.Write);
-                using MemoryStream memoryStream = new();
+                UnityWebRequestAsyncOperation asyncOperation = request.SendWebRequest();
+                await asyncOperation;
 
-                await stream.CopyToAsync(memoryStream);
-                await fileStream.WriteAsync(memoryStream.ToArray());
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    await File.WriteAllTextAsync(ExecutablePath, request.downloadHandler.text);
+                }
             }
 
             await Task.Delay(5000);
