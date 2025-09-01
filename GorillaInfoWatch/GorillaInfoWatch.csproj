@@ -22,12 +22,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="Content\Sample.CMD.exe" />
 		<None Remove="Content\watchbundle" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Content\Sample.CMD.exe" />
 		<EmbeddedResource Include="Content\watchbundle" />
 	</ItemGroup>
 

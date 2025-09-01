@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -23,8 +24,6 @@ namespace GorillaInfoWatch.Behaviours
 
         public bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
         public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
-
-        public readonly string ExecutableURL = @"https://github.com/developer9998/WindowsMediaController/raw/master/GorillaInfoMediaProcess.exe";
 
         public ProcessStartInfo consoleStartInfo;
 
@@ -49,31 +48,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Application.wantsToQuit += () =>
             {
-                if (consoleProcess != null && !consoleProcess.HasExited)
-                {
-                    try
-                    {
-                        consoleProcess.StandardInput.WriteLine("quit");
-                        consoleProcess.StandardInput.Flush();
-
-                        if (!consoleProcess.WaitForExit(2000))
-                        {
-                            consoleProcess.Kill();
-                            consoleProcess.WaitForExit();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Fatal("Could not kill consoleProcess");
-                        Logging.Error(ex);
-                    }
-                    finally
-                    {
-                        consoleProcess.Dispose();
-                        consoleProcess = null;
-                    }
-                }
-
+                QuitExecutable();
                 return true;
             };
         }
@@ -92,6 +67,7 @@ namespace GorillaInfoWatch.Behaviours
             consoleStartInfo = new ProcessStartInfo
             {
                 FileName = ExecutablePath,
+                RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -246,20 +222,47 @@ namespace GorillaInfoWatch.Behaviours
 
         public async Task CreateExecutable()
         {
-            if (!File.Exists(ExecutablePath))
+            string directoryName = Path.GetDirectoryName(ExecutablePath);
+
+            if (!Directory.Exists(directoryName) || !File.Exists(ExecutablePath))
             {
-                using UnityWebRequest request = UnityWebRequest.Get(ExecutablePath);
+                using HttpClient client = new();
+                using Stream stream = await client.GetStreamAsync("https://github.com/developer9998/WindowsMediaController/releases/download/1.0.0/GorillaInfoMediaProcess.exe");
 
-                UnityWebRequestAsyncOperation asyncOperation = request.SendWebRequest();
-                await asyncOperation;
-
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    await File.WriteAllTextAsync(ExecutablePath, request.downloadHandler.text);
-                }
+                if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
+                using FileStream fileStream = new(ExecutablePath, FileMode.OpenOrCreate);
+                await stream.CopyToAsync(fileStream);
             }
 
             await Task.Delay(5000);
+        }
+
+        public void QuitExecutable()
+        {
+            if (consoleProcess != null && !consoleProcess.HasExited)
+            {
+                try
+                {
+                    consoleProcess.StandardInput.WriteLine("quit");
+                    consoleProcess.StandardInput.Flush();
+
+                    if (!consoleProcess.WaitForExit(2000))
+                    {
+                        consoleProcess.Kill();
+                        consoleProcess.WaitForExit();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Fatal("Could not kill consoleProcess");
+                    Logging.Error(ex);
+                }
+                finally
+                {
+                    consoleProcess.Dispose();
+                    consoleProcess = null;
+                }
+            }
         }
 
         public void PushKey(MediaKeyCode keyCode)
