@@ -10,18 +10,19 @@ namespace GorillaInfoWatch.Behaviours.Networking
     [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
     public class NetworkedPlayer : MonoBehaviour
     {
-        public bool HasInfoWatch;
+        public InfoWatch NetworkedInfoWatch { get; private set; }
+
+        public bool HasInfoWatch { get; set; }
 
         public VRRig Rig;
-        public NetPlayer Owner;
 
-        private InfoWatch playerInfoWatch;
+        public NetPlayer Player;
 
         public void Start()
         {
             NetworkManager.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
 
-            if (!HasInfoWatch && Owner is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef)
+            if (!HasInfoWatch && Player is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef)
                 NetworkManager.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
         }
 
@@ -29,33 +30,30 @@ namespace GorillaInfoWatch.Behaviours.Networking
         {
             NetworkManager.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
 
-            if (!HasInfoWatch) return;
-            HasInfoWatch = false;
-
-            if (playerInfoWatch is not null && playerInfoWatch) Destroy(playerInfoWatch.gameObject);
+            if (HasInfoWatch)
+            {
+                HasInfoWatch = false;
+                if (NetworkedInfoWatch) Destroy(NetworkedInfoWatch.gameObject);
+            }
         }
 
         public void OnPlayerPropertyChanged(NetPlayer player, Dictionary<string, object> properties)
         {
-            if (player == Owner)
+            if (player == Player)
             {
                 Logging.Info($"{player.GetName().SanitizeName()} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
 
-                if (playerInfoWatch is null) CreateWatch();
+                if (NetworkedInfoWatch == null || !NetworkedInfoWatch)
+                {
+                    GameObject prefab = Instantiate(Main.Content.WatchPrefab);
+                    NetworkedInfoWatch = prefab.GetComponent<InfoWatch>();
+                    NetworkedInfoWatch.Rig = Rig;
+                    prefab.SetActive(true);
+                }
 
                 if (properties.TryGetValue("TimeOffset", out object timeOffsetObj) && timeOffsetObj is float timeObject)
-                    playerInfoWatch.TimeOffset = timeObject;
+                    NetworkedInfoWatch.TimeOffset = timeObject;
             }
-        }
-
-        public void CreateWatch()
-        {
-            if (playerInfoWatch is not null && playerInfoWatch) return;
-
-            GameObject gameObject = Instantiate(Main.Content.WatchPrefab);
-            playerInfoWatch = gameObject.GetComponent<InfoWatch>();
-            playerInfoWatch.Rig = Rig;
-            gameObject.SetActive(true);
         }
     }
 }

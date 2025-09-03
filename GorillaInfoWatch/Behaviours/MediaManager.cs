@@ -22,7 +22,6 @@ namespace GorillaInfoWatch.Behaviours
         public Dictionary<string, Session> Sessions { get; private set; } = [];
         public string FocussedSession { get; private set; } = null;
 
-        public bool IsCompatible => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
         public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
 
         public ProcessStartInfo consoleStartInfo;
@@ -35,9 +34,17 @@ namespace GorillaInfoWatch.Behaviours
 
         public void Awake()
         {
-            if (!IsCompatible || (Instance != null && Instance != this))
+            bool hasCompatibility = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
+
+            if (!hasCompatibility)
             {
-                Logging.Info($"MediaManager.IsCompatible : {IsCompatible}");
+                Logging.Warning("MediaManager is incompatible (not on Windows operating system)");
+                Destroy(this);
+                return;
+            }
+
+            if (Instance != null && Instance != this)
+            {
                 Destroy(this);
                 return;
             }
@@ -45,12 +52,7 @@ namespace GorillaInfoWatch.Behaviours
             Instance = this;
 
             Main.OnInitialized += HandleModInitialized;
-
-            Application.wantsToQuit += () =>
-            {
-                QuitExecutable();
-                return true;
-            };
+            Application.wantsToQuit += HandleGameQuit;
         }
 
         private async void HandleModInitialized()
@@ -88,6 +90,12 @@ namespace GorillaInfoWatch.Behaviours
             consoleProcess.Start();
 
             consoleProcess.BeginOutputReadLine();
+        }
+
+        public bool HandleGameQuit()
+        {
+            QuitExecutable();
+            return true;
         }
 
         public void OnDataReceived(string data)

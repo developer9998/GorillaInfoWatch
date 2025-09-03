@@ -78,40 +78,27 @@ namespace GorillaInfoWatch.Behaviours
 
         public async void Start()
         {
-            if (Rig is null) await new WaitUntil(() => Rig is not null).AsAwaitable();
+            if (Rig is null) await new WaitWhile(() => Rig == null).AsAwaitable();
 
-            if (Rig.isOfflineVRRig || Rig.isLocal)
+            if (Rig.isOfflineVRRig)
             {
                 if (LocalWatch is not null && LocalWatch != this)
                 {
-                    Logging.Warning("Duplicate local watch detected! Removing duplicate");
+                    Logging.Warning("Duplicate local watch detected to remove");
                     Destroy(this);
                     return;
                 }
 
-                Logging.Message($"Local watch located: {transform.GetPath().TrimStart('/')}");
+                Logging.Message("Local Watch");
+                Logging.Info(transform.GetPath().TrimStart('/'));
 
                 LocalWatch = this;
-
                 MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
                 MediaManager.Instance.OnMediaChanged += OnMediaChanged;
                 MediaManager.Instance.OnTimelineChanged += OnTimelineChanged;
             }
 
             watchHeadTransform.localEulerAngles = watchHeadTransform.localEulerAngles.WithZ(-91.251f);
-
-            //idleMenu = head.Find("Watch GUI/IdleMenu").gameObject;
-
-            //timeText = idleMenu.transform.Find("TimeDate").GetComponent<TMP_Text>();
-            // fpsText = idleMenu.transform.Find("FPS").GetComponent<TMP_Text>();
-
-            //messageMenu = head.Find("Watch GUI/MessageMenu").gameObject;
-
-            //messageText = messageMenu.transform.Find("Message").GetComponent<TMP_Text>();
-            //messageSlider = messageMenu.transform.Find("Slider").GetComponent<Slider>();
-
-            //redirectIcon = messageMenu.transform.Find("RedirectIcon").gameObject;
-            //redirectText = messageMenu.transform.Find("RedirectText").GetComponent<TMP_Text>();
 
             homeMenu.SetActive(false);
             messageMenu.SetActive(false);
@@ -229,7 +216,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 trackElapsed.text = TimeSpan.FromSeconds(session.Position).ToString(@"mm\:ss");
                 trackRemaining.text = string.Concat("-", TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
-                trackProgression.value = (float)session.Position / (float)session.EndTime;
+                trackProgression.value = (session.EndTime > 0) ? Mathf.Lerp(trackProgression.minValue, trackProgression.maxValue, Convert.ToSingle(Math.Round(session.Position / session.EndTime, 3))) : trackProgression.minValue;
             }
         }
 

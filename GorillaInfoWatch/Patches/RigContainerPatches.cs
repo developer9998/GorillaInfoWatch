@@ -15,7 +15,7 @@ namespace GorillaInfoWatch.Patches
 
             NetworkedPlayer networkComponent = __instance.gameObject.AddComponent<NetworkedPlayer>();
             networkComponent.Rig = __instance.Rig;
-            networkComponent.Owner = value;
+            networkComponent.Player = value;
         }
 
         [HarmonyPatch(nameof(RigContainer.OnDisable))]
