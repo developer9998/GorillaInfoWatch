@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
 
 namespace GorillaInfoWatch.Tools
 {
@@ -12,8 +11,8 @@ namespace GorillaInfoWatch.Tools
             {
                 if (!inVr.HasValue)
                 {
-                    List<XRDisplaySubsystem> xrDisplaySubsystems = [];
-                    SubsystemManager.GetInstances(xrDisplaySubsystems);
+                    List<ISubsystem> xrDisplaySubsystems = [];
+                    SubsystemManager.GetSubsystems(xrDisplaySubsystems);
                     inVr = xrDisplaySubsystems.Count != 0;
                 }
 
