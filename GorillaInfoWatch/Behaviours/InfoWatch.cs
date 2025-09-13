@@ -10,6 +10,7 @@ using GorillaExtensions;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.StateMachine;
+using GorillaInfoWatch.Behaviours.Networking;
 #endif
 
 namespace GorillaInfoWatch.Behaviours
@@ -57,6 +58,8 @@ namespace GorillaInfoWatch.Behaviours
         public Slider trackProgression;
 
 #if PLUGIN
+
+        public bool IsLocalWatch => this == LocalWatch;
 
         // Assets (cont.)
         private Material screenMaterial, screenRimMaterial;
@@ -178,6 +181,8 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnSessionFocussed(MediaManager.Session focussedSession)
         {
+            if (!IsLocalWatch) return;
+
             if (focussedSession != null)
             {
                 OnMediaChanged(focussedSession);
@@ -194,30 +199,41 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnMediaChanged(MediaManager.Session session)
         {
-            if (MediaManager.Instance.FocussedSession == session.Id)
-            {
-                trackTitle.text = session.Title;
-                trackAuthor.text = session.Artist;
-                trackThumbnail.texture = session.Thumbnail;
+            if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
 
-                bool hasMedia = session.Title != null && session.Title.Length > 0;
-                if (hasMedia != mediaTriggerState)
-                {
-                    mediaTriggerState = hasMedia;
-                    string trigger = hasMedia ? mediaTrigger : standardTrigger;
-                    menuAnimator.SetTrigger(trigger);
-                }
+            trackTitle.text = session.Title;
+            trackAuthor.text = session.Artist;
+            trackThumbnail.texture = session.Thumbnail;
+
+            bool hasMedia = session.Title != null && session.Title.Length > 0;
+            if (hasMedia != mediaTriggerState)
+            {
+                mediaTriggerState = hasMedia;
+                string trigger = hasMedia ? mediaTrigger : standardTrigger;
+                menuAnimator.SetTrigger(trigger);
+            }
+
+            if (mediaTriggerState)
+            {
+                NetworkManager.Instance.SetProperty("TrkTit", session.Title);
+                NetworkManager.Instance.SetProperty("TrkArt", session.Artist);
+                NetworkManager.Instance.SetProperty("TrkLen", session.EndTime);
+            }
+            else
+            {
+                NetworkManager.Instance.RemoveProperty("TrkTit");
+                NetworkManager.Instance.RemoveProperty("TrkArt");
+                NetworkManager.Instance.RemoveProperty("TrkLen");
             }
         }
 
         public void OnTimelineChanged(MediaManager.Session session)
         {
-            if (MediaManager.Instance.FocussedSession == session.Id)
-            {
-                trackElapsed.text = TimeSpan.FromSeconds(session.Position).ToString(@"mm\:ss");
-                trackRemaining.text = string.Concat("-", TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
-                trackProgression.value = (session.EndTime > 0) ? Mathf.Lerp(trackProgression.minValue, trackProgression.maxValue, Convert.ToSingle(Math.Round(session.Position / session.EndTime, 3))) : trackProgression.minValue;
-            }
+            if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
+
+            trackElapsed.text = TimeSpan.FromSeconds(session.Position).ToString(@"mm\:ss");
+            trackRemaining.text = string.Concat("-", TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
+            trackProgression.value = (session.EndTime > 0) ? Mathf.Lerp(trackProgression.minValue, trackProgression.maxValue, Convert.ToSingle(Math.Round(session.Position / session.EndTime, 3))) : trackProgression.minValue;
         }
 
         #endregion

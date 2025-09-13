@@ -11,7 +11,6 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace GorillaInfoWatch.Behaviours
 {
@@ -100,7 +99,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnDataReceived(string data)
         {
-            Logging.Info(data);
+            // Logging.Info(data);
 
             JObject obj = JObject.Parse(data);
 
@@ -254,7 +253,7 @@ namespace GorillaInfoWatch.Behaviours
                     consoleProcess.StandardInput.WriteLine("quit");
                     consoleProcess.StandardInput.Flush();
 
-                    if (!consoleProcess.WaitForExit(2000))
+                    if (!consoleProcess.WaitForExit(2500))
                     {
                         consoleProcess.Kill();
                         consoleProcess.WaitForExit();

@@ -366,6 +366,7 @@ namespace GorillaInfoWatch.Behaviours
             Notifications.RequestSendNotification = HandleSentNotification;
             Notifications.RequestOpenNotification = HandleOpenNotification;
             Events.OnQuestCompleted += OnQuestCompleted;
+            MothershipClientApiUnity.OnMessageNotificationSocket += OnMothershipMessageRecieved;
 
             enabled = true;
 
@@ -734,7 +735,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
-            Logging.Error("OnJoinRoomFailed");
+            Logging.Fatal("OnJoinRoomFailed");
             Logging.Message($"{returnCode}: {message}");
 
             switch (returnCode)
@@ -756,7 +757,26 @@ namespace GorillaInfoWatch.Behaviours
         public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
         {
             Logging.Info($"Quest Completed: {quest.GetTextDescription()}");
+
             Notifications.SendNotification(new("You completed a Quest", quest.questName, 5, Sounds.notificationNeutral));
+        }
+
+        public void OnMothershipMessageRecieved(NotificationsMessageResponse notification, IntPtr _)
+        {
+            string title = notification.Title;
+
+            Logging.Message(title);
+            Logging.Info(notification.Body);
+
+            switch(title)
+            {
+                case "Warning":
+                    break;
+                case "Mute":
+                    break;
+                case "Unmute":
+                    break;
+            }
         }
     }
 }

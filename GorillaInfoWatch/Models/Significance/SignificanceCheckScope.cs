@@ -12,7 +12,6 @@ namespace GorillaInfoWatch.Models.Significance
         Verified = 1 << 3,
         InfoWatch = 1 << 4,
         RemovalCandidate = 1 << 5,
-
         PlayerJoined = Figure | Friend | Verified,
         PlayerLeft = RemovalCandidate,
         LocalPlayer = Figure | Item | Verified | InfoWatch

@@ -18,8 +18,10 @@ namespace GorillaInfoWatch.Behaviours.Networking
         public Action<NetPlayer, Dictionary<string, object>> OnPlayerPropertyChanged;
 
         private readonly Dictionary<string, object> properties = [];
-        private bool set_properties = false;
-        private float properties_timer;
+
+        private bool setProperties = false;
+
+        private float propertyTimer;
 
         public void Awake()
         {
@@ -49,11 +51,11 @@ namespace GorillaInfoWatch.Behaviours.Networking
             enabled = false;
         }
 
-        public void Update()
+        public void LateUpdate()
         {
-            properties_timer -= Time.deltaTime;
+            propertyTimer -= Time.deltaTime;
 
-            if (set_properties && properties.Count > 0 && properties_timer <= 0)
+            if (setProperties && properties.Count > 0 && propertyTimer <= 0)
             {
                 PhotonNetwork.LocalPlayer.SetCustomProperties(new()
                 {
@@ -63,24 +65,39 @@ namespace GorillaInfoWatch.Behaviours.Networking
                     }
                 });
 
-                set_properties = false;
-                properties_timer = Constants.NetworkRaiseInterval;
+                setProperties = false;
+                propertyTimer = Constants.NetworkRaiseInterval;
             }
         }
 
         public void SetProperty(string key, object value)
         {
-            if (properties.ContainsKey(key)) properties[key] = value;
-            else properties.Add(key, value);
-            set_properties = true;
+            if (properties.ContainsKey(key))
+            {
+                bool isEquivalent = value.Equals(properties[key]);
+                properties[key] = value;
+                setProperties = isEquivalent || setProperties;
+                return;
+            }
+
+            properties.Add(key, value);
+            setProperties = true;
         }
 
+        public void RemoveProperty(string key)
+        {
+            if (properties.ContainsKey(key))
+            {
+                properties.Remove(key);
+                setProperties = true;
+            }
+        }
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
         {
             NetPlayer netPlayer = NetworkSystem.Instance.GetPlayer(targetPlayer.ActorNumber);
 
-            if (netPlayer.IsLocal || !VRRigCache.Instance.TryGetVrrig(netPlayer, out RigContainer playerRig) || !playerRig.TryGetComponent(out NetworkedPlayer networkedPlayer))
+            if (netPlayer.IsLocal || !VRRigCache.rigsInUse.TryGetValue(netPlayer, out RigContainer playerRig) || !playerRig.TryGetComponent(out NetworkedPlayer networkedPlayer))
                 return;
 
             if (changedProps.TryGetValue(Constants.NetworkPropertyKey, out object propertiesObject) && propertiesObject is Dictionary<string, object> properties)
