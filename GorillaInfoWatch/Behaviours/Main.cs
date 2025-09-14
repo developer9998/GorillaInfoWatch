@@ -17,6 +17,7 @@ using Photon.Realtime;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -761,20 +762,42 @@ namespace GorillaInfoWatch.Behaviours
             Notifications.SendNotification(new("You completed a Quest", quest.questName, 5, Sounds.notificationNeutral));
         }
 
-        public void OnMothershipMessageRecieved(NotificationsMessageResponse notification, IntPtr _)
+        public void OnMothershipMessageRecieved(NotificationsMessageResponse notification, nint _)
         {
             string title = notification.Title;
+            string body = notification.Body;
+            Logging.Message($"\"{title}\": \"{body}\"");
 
-            Logging.Message(title);
-            Logging.Info(notification.Body);
+            string[] array;
 
-            switch(title)
+            switch (title)
             {
                 case "Warning":
+                    array = body.Split('|');
+                    if (array.Length != 2) break;
+
+                    string warnCategory = array[0];
+                    string[] warnReasons = array[1].Split(',');
+                    if (warnReasons.Length == 0) break;
+
+                    string warnReasonString = string.Join(", ", warnReasons.Select(reason => reason.ToTitleCase().Replace('_', ' ')));
+                    Notifications.SendNotification(new($"{warnCategory.ToTitleCase()} warning received", warnReasonString, 3f + (warnReasons.Length * 0.333333f), Sounds.notificationNegative));
+
                     break;
                 case "Mute":
-                    break;
-                case "Unmute":
+                    array = body.Split('|');
+                    if (array.Length != 3 || !array[0].Equals("voice", StringComparison.OrdinalIgnoreCase)) break;
+
+                    if (array[2].Length > 0 && int.TryParse(array[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int muteDuration))
+                    {
+                        TimeSpan timeSpan = TimeSpan.FromSeconds(muteDuration);
+                        Notifications.SendNotification(new("Voice mute sanction", $"{(timeSpan.TotalHours >= 1f ? $"{timeSpan.TotalHours} hour" : $"{timeSpan.TotalMinutes} minute")} mute", 5, Sounds.notificationNegative));
+                    }
+                    else
+                    {
+                        Notifications.SendNotification(new("Voice mute sanction", "Indefinite mute", 5, Sounds.notificationNegative));
+                    }
+
                     break;
             }
         }

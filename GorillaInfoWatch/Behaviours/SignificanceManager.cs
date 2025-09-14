@@ -59,45 +59,10 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public async void OnJoinedRoom()
+        public void OnJoinedRoom()
         {
             NetPlayer[] playersInRoom = NetworkSystem.Instance.PlayerListOthers;
             playersInRoom.ForEach(player => CheckPlayer(player, SignificanceCheckScope.PlayerJoined));
-
-            await new WaitForSeconds(0.5f).AsAwaitable();
-
-            List<Notification> list = [];
-
-            foreach (NetPlayer player in playersInRoom)
-            {
-                if (player == null || player.IsNull) continue;
-
-                string userId = player.UserId;
-
-                if (GFriends.IsFriend(userId))
-                {
-                    list.Add(new("Your friend is here", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 1f));
-                    continue;
-                }
-
-                if (GFriends.IsVerified(userId))
-                {
-                    list.Add(new("A verified user is here", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 1f));
-                    continue;
-                }
-
-                if (Significance.TryGetValue(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance))
-                {
-                    list.Add(new("A recognized user is here", player.GetName().EnforcePlayerNameLength(), 1f));
-                    continue;
-                }
-            }
-
-            foreach (Notification notification in list)
-            {
-                Notifications.SendNotification(notification);
-                await new WaitForSeconds(1f).AsAwaitable();
-            }
         }
 
         public void OnPlayerJoined(NetPlayer player)
