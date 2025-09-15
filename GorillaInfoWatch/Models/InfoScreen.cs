@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Screens;
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models
@@ -20,9 +19,9 @@ namespace GorillaInfoWatch.Models
 
         internal InfoContent contents;
 
-        public void ReturnToHomePage() => LoadScreen<HomeScreen>();
         public void LoadScreen<T>() where T : InfoScreen => LoadScreen(typeof(T));
         public void LoadScreen(Type type) => LoadScreenRequest?.Invoke(type);
+        public void ReturnScreen() => LoadScreenRequest?.Invoke(null);
 
         public abstract InfoContent GetContent();
 

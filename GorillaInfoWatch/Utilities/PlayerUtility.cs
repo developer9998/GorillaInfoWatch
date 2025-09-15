@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Utilities
 {
-    public static class PlayerUtilities
+    public static class PlayerUtility
     {
         public static NetPlayer GetPlayer(string userId) => GetPlayer(player => player.UserId == userId);
 
@@ -16,6 +16,8 @@ namespace GorillaInfoWatch.Utilities
 
             if (NetworkSystem.Instance is NetworkSystem netSys && netSys.InRoom)
             {
+                bool hasUpdatedPlayers = false;
+
                 for (int i = 0; i < 2; i++)
                 {
                     NetPlayer[] array = netSys.AllNetPlayers;
@@ -27,7 +29,11 @@ namespace GorillaInfoWatch.Utilities
                         if (predicate(player)) return player;
                     }
 
-                    if (i == 0) netSys.UpdatePlayers();
+                    if (!hasUpdatedPlayers)
+                    {
+                        hasUpdatedPlayers = true;
+                        netSys.UpdatePlayers();
+                    }
                 }
             }
 

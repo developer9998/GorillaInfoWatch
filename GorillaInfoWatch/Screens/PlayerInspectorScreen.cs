@@ -59,9 +59,9 @@ namespace GorillaInfoWatch.Screens
 
         public override InfoContent GetContent()
         {
-            if (!NetworkSystem.Instance.InRoom || PlayerUtilities.GetPlayer(UserId) is not NetPlayer player || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
+            if (!NetworkSystem.Instance.InRoom || PlayerUtility.GetPlayer(UserId) is not NetPlayer player || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
             {
-                LoadScreen<ScoreboardScreen>();
+                ReturnScreen();
                 return null;
             }
 
@@ -161,9 +161,9 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is NetPlayer player)
             {
-                PlayerUtilities.RunScoreboardLineAction(player, (scoreboardLine, isPreferredLine) =>
+                PlayerUtility.RunScoreboardLineAction(player, (scoreboardLine, isPrimaryLine) =>
                 {
-                    if (isPreferredLine)
+                    if (isPrimaryLine)
                     {
                         scoreboardLine.muteButton.isOn = value;
                         scoreboardLine.PressButton(value, GorillaPlayerLineButton.ButtonType.Mute);

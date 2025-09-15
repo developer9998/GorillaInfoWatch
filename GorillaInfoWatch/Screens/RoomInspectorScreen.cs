@@ -51,7 +51,7 @@ namespace GorillaInfoWatch.Screens
         {
             if (!NetworkSystem.Instance.InRoom)
             {
-                LoadScreen<ScoreboardScreen>();
+                ReturnScreen();
                 return null;
             }
 

@@ -547,7 +547,11 @@ namespace GorillaInfoWatch.Behaviours
 
         public void LoadScreen(Type type)
         {
-            if (type is null) LoadScreen(Home);
+            if (type is null)
+            {
+                if (ActiveScreen != Home) menuReturnButton?.OnButtonPressed?.Invoke();
+                return;
+            }
             else if (GetScreen(type, false) is InfoScreen screen) LoadScreen(screen);
         }
 
@@ -784,6 +788,7 @@ namespace GorillaInfoWatch.Behaviours
                     Notifications.SendNotification(new($"{warnCategory.ToTitleCase()} warning received", warnReasonString, 3f + (warnReasons.Length * 0.333333f), Sounds.notificationNegative));
 
                     break;
+
                 case "Mute":
                     array = body.Split('|');
                     if (array.Length != 3 || !array[0].Equals("voice", StringComparison.OrdinalIgnoreCase)) break;

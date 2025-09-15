@@ -215,15 +215,15 @@ namespace GorillaInfoWatch.Behaviours
 
             if (mediaTriggerState)
             {
-                NetworkManager.Instance.SetProperty("TrkTit", session.Title);
-                NetworkManager.Instance.SetProperty("TrkArt", session.Artist);
-                NetworkManager.Instance.SetProperty("TrkLen", session.EndTime);
+                NetworkManager.Instance.SetProperty("Title", session.Title);
+                NetworkManager.Instance.SetProperty("Artist", session.Artist);
+                NetworkManager.Instance.SetProperty("Length", session.EndTime);
             }
             else
             {
-                NetworkManager.Instance.RemoveProperty("TrkTit");
-                NetworkManager.Instance.RemoveProperty("TrkArt");
-                NetworkManager.Instance.RemoveProperty("TrkLen");
+                NetworkManager.Instance.RemoveProperty("Title");
+                NetworkManager.Instance.RemoveProperty("Artist");
+                NetworkManager.Instance.RemoveProperty("Length");
             }
         }
 
