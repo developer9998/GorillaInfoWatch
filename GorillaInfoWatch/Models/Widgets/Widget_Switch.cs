@@ -6,13 +6,14 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public sealed class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
     {
+        public override float Width => 25.5f;
         public bool IsReadOnly => Command == null || Command.Target == null;
 
         public bool Value = value;
         public readonly Action<bool, object[]> Command = action;
         public readonly object[] Parameters = parameters ?? [];
 
-        public Gradient Colour = ColourPalette.CreatePalette(ColourPalette.Red.Evaluate(0), ColourPalette.Green.Evaluate(0));
+        public Gradient Colour = ColourPalette.CreatePalette(ColourPalette.Red.GetInitialColour(), ColourPalette.Green.GetInitialColour());
 
         public Widget_Switch(bool value) : this(value, (Action<bool, object[]>)null, null)
         {
@@ -31,17 +32,17 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(WatchLine menuLine)
         {
-            if (gameObject == null || !gameObject)
+            if (Object == null || !Object)
             {
-                gameObject = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
-                gameObject.name = "Switch";
-                gameObject.SetActive(true);
+                Object = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
+                Object.name = "Switch";
+                Object.SetActive(true);
             }
         }
 
         public override void Object_Modify()
         {
-            if (gameObject && gameObject.TryGetComponent(out Switch component))
+            if (Object && Object.TryGetComponent(out Switch component))
                 component.AssignWidget(this);
         }
 

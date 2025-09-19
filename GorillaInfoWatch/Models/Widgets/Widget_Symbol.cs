@@ -1,35 +1,47 @@
 using GorillaInfoWatch.Behaviours.UI;
-using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_Symbol(Symbol symbol) : Widget_Base
+    public class Widget_Symbol : Widget_Base
     {
-        public Symbol Value = symbol;
+        public override bool Modify => Settings != null;
+        public override float Depth => 3f;
+
+        public readonly Symbol Settings;
 
         internal Image image;
 
+        internal Widget_Symbol()
+        {
+
+        }
+
+        public Widget_Symbol(Symbol settings)
+        {
+            Settings = settings;
+        }
+
         public override void Object_Construct(WatchLine menuLine)
         {
-            if (gameObject == null || !gameObject)
+            if (Object == null || !Object)
             {
-                gameObject = Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
-                gameObject.name = "Symbol";
-                gameObject.SetActive(true);
+                Object = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
+                Object.name = "Symbol";
+                Object.SetActive(true);
             }
 
-            if (gameObject.TryGetComponent(out image))
+            if (Object.TryGetComponent(out image))
                 image.enabled = true;
         }
 
         public override void Object_Modify()
         {
-            if (image || (gameObject && gameObject.TryGetComponent(out image)))
+            if (image || (Object && Object.TryGetComponent(out image)))
             {
-                image.sprite = Value.Sprite;
-                image.material = Value.Material;
-                image.color = Value.Colour;
+                image.sprite = Settings.Sprite;
+                image.material = Settings.Material;
+                image.color = Settings.Colour;
             }
         }
 
@@ -41,7 +53,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (widget is not Widget_Symbol widgetSymbol)
                 return false;
 
-            return Value.Sprite == widgetSymbol.Value.Sprite && Value.Material == widgetSymbol.Value.Material && Value.Colour == widgetSymbol.Value.Colour;
+            return Settings.Equals(widgetSymbol.Settings) && ControllerType == widgetSymbol.ControllerType;
         }
     }
 }

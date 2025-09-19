@@ -76,7 +76,28 @@ namespace GorillaInfoWatch.Screens
             {
                 if (player == null || player.IsNull || (!player.IsLocal && !player.InRoom)) continue;
 
-                List<Widget_Base> widgets = [new Widget_PlayerSwatch(player), new Widget_PlayerSpeaker(player), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)), new Widget_PushButton(InspectPlayer, player)
+                List<Widget_Base> widgets = [new Widget_Symbol()
+                {
+                    Alignment = new(47.5f),
+                    ControllerType = typeof(WidgetController_PlayerSwatch),
+                    ControllerParameters = [player]
+                }, new Widget_Symbol()
+                {
+                    Alignment = new(47.5f)
+                    {
+                        DepthOffset = -2
+                    },
+                    ControllerType = typeof(WidgetController_PlayerIcon),
+                    ControllerParameters = [player]
+                }, new Widget_Symbol()
+                {
+                    Alignment = new(47.5f)
+                    {
+                        HorizontalOffset = 100
+                    },
+                    ControllerType = typeof(WidgetController_PlayerSpeaker),
+                    ControllerParameters = [player]
+                }, new Widget_PushButton(InspectPlayer, player)
                 {
                     Colour = ColourPalette.Blue,
                     Symbol = (Symbol)Symbols.Info

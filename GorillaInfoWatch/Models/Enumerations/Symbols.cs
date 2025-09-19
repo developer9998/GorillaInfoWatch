@@ -52,6 +52,8 @@ namespace GorillaInfoWatch.Models.Enumerations
         Phone,
         Play,
         Stop,
-        ExternalLink
+        ExternalLink,
+        Minus,
+        Plus
     }
 }

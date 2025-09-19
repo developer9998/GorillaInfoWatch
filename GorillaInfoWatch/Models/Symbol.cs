@@ -27,6 +27,11 @@ namespace GorillaInfoWatch.Models
             if (!SymbolFromEnum.ContainsKey(symbol)) SymbolFromEnum.Add(symbol, this);
         }
 
+        public bool Equals(Symbol symbol)
+        {
+            return symbol.Sprite == Sprite && symbol.Colour == Colour && symbol.Material == Material;
+        }
+
         public static implicit operator Symbol(Symbols enumeration) => SymbolFromEnum.TryGetValue(enumeration, out Symbol symbol) ? symbol : new(enumeration);
 
         public static implicit operator Symbol(Sprite sprite) => new(sprite);

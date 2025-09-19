@@ -1,18 +1,21 @@
-using GorillaExtensions;
-using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using Photon.Voice.Unity;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_PlayerSpeaker(NetPlayer player, float offset = 620, int scaleX = 100, int scaleY = 100) : Widget_Symbol(new Symbol(null))
+    // anchor of 47.5
+    // offset of 100
+    public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
     {
-        public override bool AllowModification => false;
-        public override bool UseBehaviour => true;
+        public override Type[] AllowedTypes => [typeof(Widget_Symbol)];
+        public override bool? AllowModification => false;
+        public override bool? UseBehaviour => true;
 
         public NetPlayer Player = player;
 
@@ -22,7 +25,9 @@ namespace GorillaInfoWatch.Models.Widgets
         private Sprite open_speaker, muted_speaker, force_mute_speaker;
         private bool is_mute_manual;
 
-        public override void Behaviour_Enable()
+        private Image Image => (Widget as Widget_Symbol).image;
+
+        public override void OnEnable()
         {
             Main.EnumToSprite.TryGetValue(Symbols.OpenSpeaker, out open_speaker);
             Main.EnumToSprite.TryGetValue(Symbols.MutedSpeaker, out muted_speaker);
@@ -31,53 +36,42 @@ namespace GorillaInfoWatch.Models.Widgets
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
                 is_mute_manual = PlayerPrefs.HasKey(Player.UserId);
-
-                image.enabled = true;
-
-                LayoutElement layoutElement = image.gameObject.GetOrAddComponent<LayoutElement>();
-                layoutElement.ignoreLayout = true;
-
-                RectTransform rectTransform = image.GetComponent<RectTransform>();
-                rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
-                rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
-
-                image.enabled = false;
+                Image.enabled = false;
 
                 SetSpeakerState();
             }
         }
 
-        public override void Behaviour_Update()
+        public override void Update()
         {
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
                 Logging.Info($"PlayerSpeaker for {Player.NickName} will be shut off");
-                Enabled = false;
+                Widget.Enabled = false;
                 playerRig = null;
                 return;
             }
 
             if (playerRig is not null) SetSpeakerState();
         }
-
         public void SetSpeakerState()
         {
             if (!is_mute_manual && playerRig.GetIsPlayerAutoMuted())
             {
-                if (!image.enabled || image.sprite != force_mute_speaker)
+                if (!Image.enabled || Image.sprite != force_mute_speaker)
                 {
-                    image.sprite = force_mute_speaker;
-                    image.enabled = true;
+                    Image.sprite = force_mute_speaker;
+                    Image.enabled = true;
                 }
                 return;
             }
 
             if (playerRig.Muted)
             {
-                if (!image.enabled || image.sprite != muted_speaker)
+                if (!Image.enabled || Image.sprite != muted_speaker)
                 {
-                    image.sprite = muted_speaker;
-                    image.enabled = true;
+                    Image.sprite = muted_speaker;
+                    Image.enabled = true;
                 }
                 return;
             }
@@ -86,10 +80,10 @@ namespace GorillaInfoWatch.Models.Widgets
             {
                 if (playerRig.Rig.SpeakingLoudness > playerRig.Rig.replacementVoiceLoudnessThreshold && !playerRig.ForceMute && !playerRig.Muted)
                 {
-                    if (!image.enabled || image.sprite != open_speaker)
+                    if (!Image.enabled || Image.sprite != open_speaker)
                     {
-                        image.sprite = open_speaker;
-                        image.enabled = true;
+                        Image.sprite = open_speaker;
+                        Image.enabled = true;
                     }
                     return;
                 }
@@ -101,16 +95,16 @@ namespace GorillaInfoWatch.Models.Widgets
 
             if ((playerRig.Voice != null && playerRig.Voice.IsSpeaking) || (playerRig.Rig.isLocal && recorder.IsCurrentlyTransmitting))
             {
-                if (!image.enabled || image.sprite != open_speaker)
+                if (!Image.enabled || Image.sprite != open_speaker)
                 {
-                    image.sprite = open_speaker;
-                    image.enabled = true;
+                    Image.sprite = open_speaker;
+                    Image.enabled = true;
                 }
                 return;
             }
 
         HideSpeaker:
-            if (image.enabled) image.enabled = false;
+            if (Image.enabled) Image.enabled = false;
         }
     }
 }

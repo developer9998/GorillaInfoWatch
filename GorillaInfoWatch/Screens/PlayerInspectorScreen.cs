@@ -25,8 +25,6 @@ namespace GorillaInfoWatch.Screens
 
         private Gradient muteColour, friendColour;
 
-        private readonly string symbolPrepend = "<line-indent=4em>";
-
         private readonly string describedFormat = "<line-height=45%>{0}<br><size=60%>{1}";
 
         public override void OnScreenLoad()
@@ -74,7 +72,28 @@ namespace GorillaInfoWatch.Screens
 
             string playerName = player.GetName();
             string normalizedName = playerName.EnforcePlayerNameLength();
-            lines.AppendColour(normalizedName, rig.playerText1.color).Add(new Widget_PlayerSwatch(player, 520f, 90, 90), new Widget_PlayerSpeaker(player, 620f, 100, 100), new Widget_PlayerIcon(player, 520, new Vector2(70, 80)));
+            lines.AppendColour(normalizedName, rig.playerText1.color).Add(new Widget_Symbol()
+            {
+                Alignment = new(47.5f),
+                ControllerType = typeof(WidgetController_PlayerSwatch),
+                ControllerParameters = [player]
+            }, new Widget_Symbol()
+            {
+                Alignment = new(47.5f)
+                {
+                    DepthOffset = -2
+                },
+                ControllerType = typeof(WidgetController_PlayerIcon),
+                ControllerParameters = [player]
+            }, new Widget_Symbol()
+            {
+                Alignment = new(47.5f)
+                {
+                    HorizontalOffset = 100
+                },
+                ControllerType = typeof(WidgetController_PlayerSpeaker),
+                ControllerParameters = [player]
+            });
 
             string displayName = playerName.SanitizeName();
             if (displayName != null && displayName.Length > 0 && normalizedName != displayName) lines.Append("Display Name: ").AppendLine(displayName);
@@ -134,15 +153,15 @@ namespace GorillaInfoWatch.Screens
                 {
                     PlayerSignificance significance = list[i];
 
-                    bool hasSymbol = significance.Symbol != Symbols.None;
-                    if (hasSymbol) str.Append(symbolPrepend);
-
                     str.Append(i + 1).Append(". ");
 
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
                     else str.Append(string.Format(describedFormat, significance.Title, significance.Description.Replace(Constants.SignificancePlayerNameTag, normalizedName)));
 
-                    significanceLines.Add(str.ToString(), widgets: hasSymbol ? [new Widget_AnchoredSymbol(significance.Symbol)] : []);
+                    significanceLines.Add(str.ToString(), widgets: significance.Symbol != Symbols.None ? [new Widget_Symbol(significance.Symbol)
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }] : []);
                     str.Clear();
 
                     significanceLines.Skip();

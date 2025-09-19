@@ -6,6 +6,7 @@ namespace GorillaInfoWatch.Models.Widgets
 {
     public sealed class Widget_SnapSlider(int value, int start, int end, Action<int, object[]> action, params object[] parameters) : Widget_Base
     {
+        public override float Width => 60f;
         public int Value = value;
         public Action<int, object[]> Command = action;
         public readonly object[] Parameters = parameters ?? [];
@@ -22,17 +23,17 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Object_Construct(WatchLine menuLine)
         {
-            if (gameObject == null || !gameObject)
+            if (Object == null || !Object)
             {
-                gameObject = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
-                gameObject.name = "SnapSlider";
-                gameObject.SetActive(true);
+                Object = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
+                Object.name = "SnapSlider";
+                Object.SetActive(true);
             }
         }
 
         public override void Object_Modify()
         {
-            if (gameObject && gameObject.TryGetComponent(out SnapSlider component))
+            if (Object && Object.TryGetComponent(out SnapSlider component))
                 component.ApplySlider(this);
         }
 

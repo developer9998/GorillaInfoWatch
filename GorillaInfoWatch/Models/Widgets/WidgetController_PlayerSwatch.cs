@@ -1,14 +1,16 @@
-using GorillaExtensions;
-using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Tools;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
-    public class Widget_PlayerSwatch(NetPlayer player, float offset = 520, int scaleX = 90, int scaleY = 90) : Widget_Symbol(new Models.Symbol(null))
+    // anchor of 47.5
+    public class WidgetController_PlayerSwatch(NetPlayer player) : WidgetController
     {
-        public override bool AllowModification => false;
-        public override bool UseBehaviour => true;
+        public override Type[] AllowedTypes => [typeof(Widget_Symbol)];
+        public override bool? AllowModification => false;
+        public override bool? UseBehaviour => true;
 
         public NetPlayer Player = player;
 
@@ -17,24 +19,22 @@ namespace GorillaInfoWatch.Models.Widgets
         private Material material;
         private Color colour;
 
-        public override void Behaviour_Enable()
+        private Image Image => (Widget as Widget_Symbol).image;
+
+        public override void OnEnable()
         {
             if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
             {
-                image.enabled = true;
+                Image.enabled = true;
 
-                LayoutElement layoutElement = image.gameObject.GetOrAddComponent<LayoutElement>();
-                layoutElement.ignoreLayout = true;
-
-                RectTransform rectTransform = image.GetComponent<RectTransform>();
-                rectTransform.anchoredPosition3D = rectTransform.anchoredPosition3D.WithX(offset).WithY(31.25f);
-                rectTransform.sizeDelta = new Vector2(scaleX, scaleY);
+                RectTransform rectTransform = Image.GetComponent<RectTransform>();
+                rectTransform.sizeDelta = Vector2.one * 90f;
 
                 SetSwatchColour();
             }
         }
 
-        public override void Behaviour_Update()
+        public override void Update()
         {
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
@@ -43,8 +43,7 @@ namespace GorillaInfoWatch.Models.Widgets
                 return;
             }
 
-            if (playerRig is not null)
-                SetSwatchColour();
+            if (playerRig is not null) SetSwatchColour();
         }
 
         public void SetSwatchColour()
@@ -64,8 +63,8 @@ namespace GorillaInfoWatch.Models.Widgets
                 colour = designatedMaterial.color;
             }
 
-            if (image.material != material) image.material = material;
-            if (image.color != colour) image.color = colour;
+            if (Image.material != material) Image.material = material;
+            if (Image.color != colour) Image.color = colour;
         }
     }
 }

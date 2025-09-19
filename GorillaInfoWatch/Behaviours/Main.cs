@@ -667,7 +667,17 @@ namespace GorillaInfoWatch.Behaviours
                     {
                         bool wasLineActive = menuLine.gameObject.activeSelf;
                         menuLine.gameObject.SetActive(true);
-                        menuLine.Build(screenLine, !wasLineActive || includeWidgets);
+
+                        try
+                        {
+                            menuLine.Build(screenLine, !wasLineActive || includeWidgets);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error(ex);
+                            PlayErrorSound();
+                        }
+
                         continue;
                     }
 
@@ -678,7 +688,6 @@ namespace GorillaInfoWatch.Behaviours
             {
                 Logging.Fatal($"Displaying screen contents of {ActiveScreen.GetType().Name} threw exception");
                 Logging.Error(ex);
-
                 PlayErrorSound();
             }
         }
