@@ -45,8 +45,6 @@ namespace GorillaInfoWatch.Models.Widgets
         {
             base.Update();
 
-            Logging.Message("Speaker");
-
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
                 Logging.Info($"PlayerSpeaker for {Player.NickName} will be shut off");
