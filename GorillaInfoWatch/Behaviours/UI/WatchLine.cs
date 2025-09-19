@@ -106,7 +106,13 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                             if (regularWidgets.Contains(currentWidget))
                             {
-                                currentWidget.Behaviour_Disable();
+                                if (currentWidget.Controller != null)
+                                {
+                                    currentWidget.Controller.OnDisable();
+                                    // GC.SuppressFinalize(currentWidget.Controller);
+                                    currentWidget.Controller = null;
+                                }
+
                                 regularWidgets.Remove(currentWidget);
                             }
 
@@ -139,7 +145,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                         if (regularWidgets.Contains(currentWidget))
                         {
-                            currentWidget.Behaviour_Disable();
+                            currentWidget.Controller?.OnDisable();
                             regularWidgets.Remove(currentWidget);
                         }
 
@@ -161,14 +167,15 @@ namespace GorillaInfoWatch.Behaviours.UI
                             if (newWidget.Object.transform is RectTransform rectTransform)
                             {
                                 float offset = rectTransform.sizeDelta.x * rectTransform.localScale.x * 0.5f;
-                                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f));
+                                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f) + newWidget.Alignment.HorizontalOffset);
+                                rectTransform.localPosition = rectTransform.localPosition.WithZ(newWidget.Controller != null ? newWidget.Controller.Depth.GetValueOrDefault(newWidget.Depth) : newWidget.Depth);
                             }
                         }
 
-                        if (currentWidget.Controller != null ? currentWidget.Controller.UseBehaviour.GetValueOrDefault(currentWidget.UseBehaviour) : currentWidget.UseBehaviour)
+                        if (currentWidget.Controller != null)
                         {
-                            newWidget.Behaviour_Enable();
-                            regularWidgets.Add(currentWidget);
+                            newWidget.Controller?.OnEnable();
+                            regularWidgets.Add(newWidget);
                         }
                     }
                     else
@@ -181,7 +188,11 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                             if (regularWidgets.Contains(currentWidget))
                             {
-                                currentWidget.Behaviour_Disable();
+                                if (currentWidget.Controller != null)
+                                {
+                                    currentWidget.Controller.OnDisable();
+                                    currentWidget.Controller = null;
+                                }
                                 regularWidgets.Remove(currentWidget);
                             }
 
@@ -193,6 +204,12 @@ namespace GorillaInfoWatch.Behaviours.UI
                         }
 
                         newWidget.Object_Construct(this);
+
+                        if (newWidget.ControllerType is Type controllerType && controllerType.IsSubclassOf(typeof(WidgetController)))
+                        {
+                            newWidget.Controller = newWidget.ControllerParameters is object[] parameters ? (WidgetController)Activator.CreateInstance(controllerType, args: parameters) : (WidgetController)Activator.CreateInstance(controllerType);
+                            newWidget.Controller.Widget = newWidget;
+                        }
 
                         newWidget.Object.transform.SetParent(newWidget.Alignment.Classification switch
                         {
@@ -207,14 +224,9 @@ namespace GorillaInfoWatch.Behaviours.UI
                             if (newWidget.Object.transform is RectTransform rectTransform)
                             {
                                 float offset = rectTransform.sizeDelta.x * rectTransform.localScale.x * 0.5f;
-                                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f));
+                                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f) + newWidget.Alignment.HorizontalOffset);
+                                rectTransform.localPosition = rectTransform.localPosition.WithZ(newWidget.Controller != null ? newWidget.Controller.Depth.GetValueOrDefault(newWidget.Depth) : newWidget.Depth);
                             }
-                        }
-
-                        if (newWidget.ControllerType is Type controllerType && controllerType.IsSubclassOf(typeof(WidgetController)))
-                        {
-                            newWidget.Controller = newWidget.ControllerParameters is object[] parameters ? (WidgetController)Activator.CreateInstance(controllerType, args: parameters) : (WidgetController)Activator.CreateInstance(controllerType);
-                            newWidget.Controller.Widget = newWidget;
                         }
 
                         //Logging.Info(newWidget.gameObject.name);
@@ -222,9 +234,9 @@ namespace GorillaInfoWatch.Behaviours.UI
                         currentWidget = newWidget;
                         //Logging.Info("Updated current widget");
 
-                        if (currentWidget.Controller != null ? currentWidget.Controller.UseBehaviour.GetValueOrDefault(currentWidget.UseBehaviour) : currentWidget.UseBehaviour)
+                        if (currentWidget.Controller != null)
                         {
-                            newWidget.Behaviour_Enable();
+                            newWidget.Controller.OnEnable();
                             regularWidgets.Add(currentWidget);
                         }
 
@@ -238,7 +250,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                     currentWidget.Object.SetActive(true);
 
-                    if (currentWidget.Controller != null ? currentWidget.Controller.AllowModification.GetValueOrDefault(currentWidget.Modify) : currentWidget.Modify)
+                    if (currentWidget.Controller != null ? currentWidget.Controller.Modify.GetValueOrDefault(currentWidget.Modify) : currentWidget.Modify)
                     {
                         try
                         {
@@ -270,13 +282,19 @@ namespace GorillaInfoWatch.Behaviours.UI
             {
                 try
                 {
-                    if (regularWidgets.ElementAtOrDefault(i) is Widget_Base widget && widget.Enabled) widget.Behaviour_Update();
+                    Widget_Base widget = regularWidgets.ElementAtOrDefault(widgetIndex);
+                    WidgetController controller = widget.Controller;
+                    if (controller != null && controller.Enabled)
+                    {
+                        // Logging.Info($"#{widgetIndex}: {controller.GetType().Name}");
+                        controller.Update();
+                    }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    // Logging.Fatal("Exception due to widget update");
-                    Logging.Error(ex);
+
                 }
+
                 widgetIndex = (widgetIndex + 1) % regularWidgets.Count;
             }
         }

@@ -83,10 +83,7 @@ namespace GorillaInfoWatch.Screens
                     ControllerParameters = [player]
                 }, new Widget_Symbol()
                 {
-                    Alignment = new(47.5f)
-                    {
-                        DepthOffset = -2
-                    },
+                    Alignment = new(47.5f),
                     ControllerType = typeof(WidgetController_PlayerIcon),
                     ControllerParameters = [player]
                 }, new Widget_Symbol()

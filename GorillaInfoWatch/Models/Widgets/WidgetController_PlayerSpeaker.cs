@@ -14,8 +14,7 @@ namespace GorillaInfoWatch.Models.Widgets
     public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
     {
         public override Type[] AllowedTypes => [typeof(Widget_Symbol)];
-        public override bool? AllowModification => false;
-        public override bool? UseBehaviour => true;
+        public override bool? Modify => false;
 
         public NetPlayer Player = player;
 
@@ -44,11 +43,16 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override void Update()
         {
+            base.Update();
+
+            Logging.Message("Speaker");
+
             if (Player is not null && playerRig is not null && playerRig.Creator != Player)
             {
                 Logging.Info($"PlayerSpeaker for {Player.NickName} will be shut off");
-                Widget.Enabled = false;
+                Enabled = false;
                 playerRig = null;
+
                 return;
             }
 

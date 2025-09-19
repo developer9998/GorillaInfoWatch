@@ -12,9 +12,8 @@ namespace GorillaInfoWatch.Models.Widgets
     public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : WidgetController
     {
         public override Type[] AllowedTypes => [typeof(Widget_Symbol)];
-        public override bool? AllowModification => false;
-        public override bool? UseBehaviour => true;
-        public override float? Transform_ZPosition => 1f;
+        public override bool? Modify => false;
+        public override float? Depth => 1f;
 
         public readonly NetPlayer Player = player;
 

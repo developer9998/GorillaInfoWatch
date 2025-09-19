@@ -8,11 +8,7 @@ namespace GorillaInfoWatch.Models.Widgets
     {
         public virtual float Width { get; } = 20.5f;
         public virtual float Depth { get; } = 0f;
-
         public virtual bool Modify { get; } = true;
-        public virtual bool UseBehaviour { get; } = false;
-
-        public bool Enabled = true;
 
         public GameObject Object;
 
@@ -32,21 +28,6 @@ namespace GorillaInfoWatch.Models.Widgets
         public virtual void Object_Modify()
         {
 
-        }
-
-        public virtual void Behaviour_Enable()
-        {
-            Controller?.OnEnable();
-        }
-
-        public virtual void Behaviour_Disable()
-        {
-            Controller?.OnDisable();
-        }
-
-        public virtual void Behaviour_Update()
-        {
-            Controller?.Update();
         }
 
         public virtual bool Equals(Widget_Base widget) => false;

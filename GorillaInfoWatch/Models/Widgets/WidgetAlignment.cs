@@ -13,7 +13,7 @@ namespace GorillaInfoWatch.Models.Widgets
         [Range(0, 100)]
         public float HorizontalAnchor;
 
-        public float HorizontalOffset, DepthOffset;
+        public float HorizontalOffset;
 
         public WidgetAlignment(bool alignToRight)
         {

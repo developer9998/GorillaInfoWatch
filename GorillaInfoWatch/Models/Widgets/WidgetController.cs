@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GorillaInfoWatch.Tools;
+using System;
 
 namespace GorillaInfoWatch.Models.Widgets
 {
@@ -6,10 +7,10 @@ namespace GorillaInfoWatch.Models.Widgets
     {
         public abstract Type[] AllowedTypes { get; }
         public Widget_Base Widget { get; set; }
+        public virtual bool? Modify { get; }
+        public virtual float? Depth { get; }
 
-        public virtual bool? AllowModification { get; }
-        public virtual bool? UseBehaviour { get; }
-        public virtual float? Transform_ZPosition { get; }
+        public bool Enabled = true;
 
         public virtual void OnEnable()
         {
@@ -25,5 +26,7 @@ namespace GorillaInfoWatch.Models.Widgets
         {
 
         }
+
+        ~WidgetController() => Logging.Message($"Finalizing controller: {GetType().Name}");
     }
 }
