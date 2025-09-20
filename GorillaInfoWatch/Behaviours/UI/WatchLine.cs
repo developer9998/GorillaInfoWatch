@@ -55,216 +55,220 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Build(InfoLine line, bool applyWidgets)
         {
-            // Logging.Info($"Text: \"{line.Text}\"");
-            // Logging.Info($"Apply Widgets: {applyWidgets}");
+            // Logging.Message(line.Text);
+
+            //Logging.Info($"Text: \"{line.Text}\"");
+            //Logging.Info($"Apply Widgets: {applyWidgets}");
 
             Text.text = line.Text;
 
-            if (applyWidgets)
+            if (!applyWidgets) return;
+
+            List<Widget_Base> newWidgets = line.Widgets;
+
+            if (newWidgets is null)
             {
-                List<Widget_Base> newWidgets = line.Widgets;
+                //Logging.Fatal("newWidgets is null!!! It should at least be an empty collection");
+                return;
+            }
 
-                if (newWidgets is null)
+            // Logging.Info($"Widgets: {string.Join(", ", newWidgets.Select(widget => widget.GetType().Name))}");
+
+            int intake = newWidgets.Count - currentWidgets.Count;
+            if (intake > 0)
+            {
+                //Logging.Info($"Extending widget list +{intake}");
+                currentWidgets.AddRange(Enumerable.Repeat<Widget_Base>(null, intake));
+                //Logging.Info($"Total count of {currentWidgets.Count}");
+            }
+
+            IEnumerable<Widget_Base> widgetsLeftAlign = newWidgets.Where(widget => widget.Alignment.Classification == "left");
+            float marginLeft = widgetsLeftAlign.Sum(widget => widget.Width);
+            marginLeft += widgetsLeftAlign.Any() ? 10 : 0;
+
+            IEnumerable<Widget_Base> widgetsRightAlign = newWidgets.Where(widget => widget.Alignment.Classification == "right");
+            float marginRight = widgetsRightAlign.Sum(widget => widget.Width);
+            marginRight += widgetsRightAlign.Any() ? 10 : 0;
+
+            Text.margin = new Vector4(marginLeft, 0f, marginRight, 0f);
+
+            for (int i = 0; i < currentWidgets.Count; i++)
+            {
+                Widget_Base currentWidget = currentWidgets.ElementAtOrDefault(i);
+
+                Widget_Base newWidget = newWidgets.ElementAtOrDefault(i);
+
+                if (newWidget is null)
                 {
-                    //Logging.Fatal("newWidgets is null!!! It should at least be an empty collection");
-                    return;
-                }
+                    //Logging.Info($"{i} : null widget");
 
-                // Logging.Info($"Widgets: {string.Join(", ", newWidgets.Select(widget => widget.GetType().Name))}");
-
-                int intake = newWidgets.Count - currentWidgets.Count;
-                if (intake > 0)
-                {
-                    //Logging.Info($"Extending widget list +{intake}");
-                    currentWidgets.AddRange(Enumerable.Repeat<Widget_Base>(null, intake));
-                    //Logging.Info($"Total count of {currentWidgets.Count}");
-                }
-
-                IEnumerable<Widget_Base> widgetsLeftAlign = newWidgets.Where(widget => widget.Alignment.Classification == "left");
-                float marginLeft = widgetsLeftAlign.Sum(widget => widget.Width);
-                marginLeft += widgetsLeftAlign.Any() ? 10 : 0;
-
-                IEnumerable<Widget_Base> widgetsRightAlign = newWidgets.Where(widget => widget.Alignment.Classification == "right");
-                float marginRight = widgetsRightAlign.Sum(widget => widget.Width);
-                marginRight += widgetsRightAlign.Any() ? 10 : 0;
-
-                Text.margin = new Vector4(marginLeft, 0f, marginRight, 0f);
-
-                for (int i = 0; i < currentWidgets.Count; i++)
-                {
-                    Widget_Base currentWidget = currentWidgets.ElementAtOrDefault(i);
-
-                    Widget_Base newWidget = newWidgets.ElementAtOrDefault(i);
-
-                    if (newWidget is null)
+                    if (currentWidget is not null)
                     {
-                        //Logging.Info($"{i} : null widget");
-
-                        if (currentWidget is not null)
-                        {
-                            // Logging.Info("Clearing existing widget");
-
-                            if (regularWidgets.Contains(currentWidget))
-                            {
-                                if (currentWidget.Controller != null)
-                                {
-                                    currentWidget.Controller.OnDisable();
-                                    // GC.SuppressFinalize(currentWidget.Controller);
-                                    currentWidget.Controller = null;
-                                }
-
-                                regularWidgets.Remove(currentWidget);
-                            }
-
-                            if (currentWidget.Object is not null && currentWidget.Object)
-                            {
-                                Destroy(currentWidget.Object);
-                                currentWidget.Object = null;
-                            }
-
-                            currentWidgets[i] = null;
-                        }
-
-                        continue;
-                    }
-
-                    bool equivalent = currentWidget != null && currentWidget.Object != null && currentWidget.Object && newWidget.GetType() == currentWidget.GetType();// && newWidget.Equals(currentWidget);
-
-                    //Logging.Info($"add {i} : {newWidget.GetType().Name}");
-                    //Logging.Info($"pos {i} : {(currentWidget != null && currentWidget.gameObject is not null && currentWidget.gameObject ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
-
-                    if (equivalent)
-                    {
-                        //Destroy(newWidget.gameObject);
-                        newWidget.Object = currentWidget.Object;
-                        newWidget.Controller = currentWidget.Controller;
-                        newWidget.Controller?.Widget = newWidget;
-
-                        //Logging.Info(newWidget.gameObject.name);
-                        newWidget.Object.SetActive(true);
+                        // Logging.Info("Clearing existing widget");
 
                         if (regularWidgets.Contains(currentWidget))
                         {
-                            currentWidget.Controller?.OnDisable();
+                            if (currentWidget.Controller != null)
+                            {
+                                currentWidget.Controller.OnDisable();
+                                // GC.SuppressFinalize(currentWidget.Controller);
+                                currentWidget.Controller = null;
+                            }
+
                             regularWidgets.Remove(currentWidget);
                         }
 
-                        currentWidgets[i] = newWidget;
-                        currentWidget = newWidget;
-
-                        newWidget.Object_Construct(this);
-
-                        newWidget.Object.transform.SetParent(newWidget.Alignment.Classification switch
+                        if (currentWidget.Object is not null && currentWidget.Object)
                         {
-                            "left" => containerLeftAlign,
-                            "right" => containerRightAlign,
-                            _ => container
-                        });
-
-                        if (newWidget.Alignment.Classification == "custom")
-                        {
-                            float width = container.sizeDelta.x;
-                            if (newWidget.Object.transform is RectTransform rectTransform)
-                            {
-                                float offset = rectTransform.sizeDelta.x * rectTransform.localScale.x * 0.5f;
-                                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f) + newWidget.Alignment.HorizontalOffset);
-                                rectTransform.localPosition = rectTransform.localPosition.WithZ(newWidget.Controller != null ? newWidget.Controller.Depth.GetValueOrDefault(newWidget.Depth) : newWidget.Depth);
-                            }
+                            Destroy(currentWidget.Object);
+                            currentWidget.Object = null;
                         }
 
-                        if (currentWidget.Controller != null)
-                        {
-                            newWidget.Controller?.OnEnable();
-                            regularWidgets.Add(newWidget);
-                        }
-                    }
-                    else
-                    {
-                        //Logging.Info("Not equivalent");
-
-                        if (currentWidget is not null && currentWidget.Object is not null)
-                        {
-                            //Logging.Info("Clearing existing widget");
-
-                            if (regularWidgets.Contains(currentWidget))
-                            {
-                                if (currentWidget.Controller != null)
-                                {
-                                    currentWidget.Controller.OnDisable();
-                                    currentWidget.Controller = null;
-                                }
-                                regularWidgets.Remove(currentWidget);
-                            }
-
-                            if (currentWidget.Object is not null && currentWidget.Object)
-                            {
-                                Destroy(currentWidget.Object);
-                                currentWidget.Object = null;
-                            }
-                        }
-
-                        newWidget.Object_Construct(this);
-
-                        if (newWidget.ControllerType is Type controllerType && controllerType.IsSubclassOf(typeof(WidgetController)))
-                        {
-                            newWidget.Controller = newWidget.ControllerParameters is object[] parameters ? (WidgetController)Activator.CreateInstance(controllerType, args: parameters) : (WidgetController)Activator.CreateInstance(controllerType);
-                            newWidget.Controller.Widget = newWidget;
-                        }
-
-                        newWidget.Object.transform.SetParent(newWidget.Alignment.Classification switch
-                        {
-                            "left" => containerLeftAlign,
-                            "right" => containerRightAlign,
-                            _ => container
-                        });
-
-                        if (newWidget.Alignment.Classification == "custom")
-                        {
-                            float width = container.sizeDelta.x;
-                            if (newWidget.Object.transform is RectTransform rectTransform)
-                            {
-                                float offset = rectTransform.sizeDelta.x * rectTransform.localScale.x * 0.5f;
-                                rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f) + newWidget.Alignment.HorizontalOffset);
-                                rectTransform.localPosition = rectTransform.localPosition.WithZ(newWidget.Controller != null ? newWidget.Controller.Depth.GetValueOrDefault(newWidget.Depth) : newWidget.Depth);
-                            }
-                        }
-
-                        //Logging.Info(newWidget.gameObject.name);
-                        currentWidgets[i] = newWidget;
-                        currentWidget = newWidget;
-                        //Logging.Info("Updated current widget");
-
-                        if (currentWidget.Controller != null)
-                        {
-                            newWidget.Controller.OnEnable();
-                            regularWidgets.Add(currentWidget);
-                        }
-
-                        //Logging.Info("Initialized new widget");
+                        currentWidgets[i] = null;
                     }
 
-                    if (currentWidget.Object is null || !currentWidget.Object)
+                    continue;
+                }
+
+                bool equivalent = currentWidget != null && currentWidget.Object != null && currentWidget.Object && newWidget.GetType() == currentWidget.GetType() && newWidget.Equals(currentWidget);
+
+                // Logging.Info($"{i} : {newWidget.GetType().Name}");
+
+                //Logging.Info($"pos {i} : {(currentWidget != null && currentWidget.gameObject is not null && currentWidget.gameObject ? currentWidget.gameObject.name : "null widget/object")}: {equivalent}");
+
+                if (equivalent)
+                {
+                    //Logging.Info("Equivalent");
+
+                    //Destroy(newWidget.gameObject);
+                    newWidget.Object = currentWidget.Object;
+                    newWidget.Controller = currentWidget.Controller;
+                    newWidget.Controller?.Widget = newWidget;
+
+                    //Logging.Info(newWidget.gameObject.name);
+                    newWidget.Object.SetActive(true);
+
+                    if (regularWidgets.Contains(currentWidget))
                     {
-                        currentWidget.Object_Construct(this);
+                        currentWidget.Controller?.OnDisable();
+                        regularWidgets.Remove(currentWidget);
                     }
 
-                    currentWidget.Object.SetActive(true);
+                    currentWidgets[i] = newWidget;
+                    currentWidget = newWidget;
 
-                    if (currentWidget.Controller != null ? currentWidget.Controller.Modify.GetValueOrDefault(currentWidget.Modify) : currentWidget.Modify)
+                    newWidget.Initialize(this);
+
+                    newWidget.Object.transform.SetParent(newWidget.Alignment.Classification switch
                     {
-                        try
+                        "left" => containerLeftAlign,
+                        "right" => containerRightAlign,
+                        _ => container
+                    });
+
+                    if (newWidget.Alignment.Classification == "custom")
+                    {
+                        float width = container.sizeDelta.x;
+                        if (newWidget.Object.transform is RectTransform rectTransform)
                         {
-                            currentWidget.Object_Modify();
+                            float offset = rectTransform.sizeDelta.x * rectTransform.localScale.x * 0.5f;
+                            rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f) + newWidget.Alignment.HorizontalOffset);
+                            rectTransform.localPosition = rectTransform.localPosition.WithZ(newWidget.Controller != null ? newWidget.Controller.Depth.GetValueOrDefault(newWidget.Depth) : newWidget.Depth);
                         }
-                        catch (Exception ex)
+                    }
+
+                    if (currentWidget.Controller != null)
+                    {
+                        newWidget.Controller?.OnEnable();
+                        regularWidgets.Add(newWidget);
+                    }
+                }
+                else
+                {
+                    //Logging.Info("Not equivalent");
+
+                    if (currentWidget is not null && currentWidget.Object is not null)
+                    {
+                        //Logging.Info("Clearing existing widget");
+
+                        if (regularWidgets.Contains(currentWidget))
                         {
-                            // Logging.Fatal($"Widget could not modify");
-                            Logging.Error(ex);
+                            if (currentWidget.Controller != null)
+                            {
+                                currentWidget.Controller.OnDisable();
+                                currentWidget.Controller = null;
+                            }
+                            regularWidgets.Remove(currentWidget);
                         }
-                        finally
+
+                        if (currentWidget.Object is not null && currentWidget.Object)
                         {
-                            //Logging.Info("Modified widget");
+                            Destroy(currentWidget.Object);
+                            currentWidget.Object = null;
                         }
+                    }
+
+                    newWidget.Initialize(this);
+
+                    if (newWidget.ControllerType is Type controllerType && controllerType.IsSubclassOf(typeof(WidgetController)))
+                    {
+                        newWidget.Controller = newWidget.ControllerParameters is object[] parameters ? (WidgetController)Activator.CreateInstance(controllerType, args: parameters) : (WidgetController)Activator.CreateInstance(controllerType);
+                        newWidget.Controller.Widget = newWidget;
+                    }
+
+                    newWidget.Object.transform.SetParent(newWidget.Alignment.Classification switch
+                    {
+                        "left" => containerLeftAlign,
+                        "right" => containerRightAlign,
+                        _ => container
+                    });
+
+                    if (newWidget.Alignment.Classification == "custom")
+                    {
+                        float width = container.sizeDelta.x;
+                        if (newWidget.Object.transform is RectTransform rectTransform)
+                        {
+                            float offset = rectTransform.sizeDelta.x * rectTransform.localScale.x * 0.5f;
+                            rectTransform.anchoredPosition = rectTransform.anchoredPosition.WithX(Mathf.Lerp(offset, width - offset, newWidget.Alignment.HorizontalAnchor / 100f) + newWidget.Alignment.HorizontalOffset);
+                            rectTransform.localPosition = rectTransform.localPosition.WithZ(newWidget.Controller != null ? newWidget.Controller.Depth.GetValueOrDefault(newWidget.Depth) : newWidget.Depth);
+                        }
+                    }
+
+                    //Logging.Info(newWidget.Object.name);
+                    currentWidgets[i] = newWidget;
+                    currentWidget = newWidget;
+                    //Logging.Info("Updated current widget");
+
+                    if (currentWidget.Controller != null)
+                    {
+                        newWidget.Controller.OnEnable();
+                        regularWidgets.Add(currentWidget);
+                    }
+
+                    //Logging.Info("Initialized new widget");
+                }
+
+                if (currentWidget.Object is null || !currentWidget.Object)
+                {
+                    currentWidget.Initialize(this);
+                }
+
+                currentWidget.Object.SetActive(true);
+
+                if (currentWidget.Controller != null ? currentWidget.Controller.Modification.GetValueOrDefault(currentWidget.Modification) : currentWidget.Modification)
+                {
+                    try
+                    {
+                        currentWidget.Modify();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Logging.Fatal($"Widget could not modify");
+                        Logging.Error(ex);
+                    }
+                    finally
+                    {
+                        Logging.Info("Modified widget");
                     }
                 }
             }

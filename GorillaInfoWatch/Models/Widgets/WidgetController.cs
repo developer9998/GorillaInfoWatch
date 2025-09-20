@@ -6,9 +6,10 @@ namespace GorillaInfoWatch.Models.Widgets
     public abstract class WidgetController
     {
         public abstract Type[] AllowedTypes { get; }
+
         public Widget_Base Widget { get; set; }
-        public virtual bool? Modify { get; }
         public virtual float? Depth { get; }
+        public virtual bool? Modification { get; }
 
         public bool Enabled = true;
 
@@ -27,6 +28,6 @@ namespace GorillaInfoWatch.Models.Widgets
 
         }
 
-        ~WidgetController() => Logging.Message($"Finalizing controller: {GetType().Name}");
+        ~WidgetController() => Logging.Message($"Finalizing WidgetController: {GetType().Name}");
     }
 }

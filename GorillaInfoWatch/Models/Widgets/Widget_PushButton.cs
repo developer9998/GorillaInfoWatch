@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void Object_Construct(WatchLine menuLine)
+        public override void Initialize(WatchLine menuLine)
         {
             if (Object == null || !Object)
             {
@@ -34,7 +34,7 @@ namespace GorillaInfoWatch.Models.Widgets
             }
         }
 
-        public override void Object_Modify()
+        public override void Modify()
         {
             if (Object && Object.TryGetComponent(out PushButton component))
                 component.AssignWidget(this);
@@ -42,6 +42,9 @@ namespace GorillaInfoWatch.Models.Widgets
 
         public override bool Equals(Widget_Base widget)
         {
+            return true;
+
+            /*
             if (widget is null)
                 return false;
 
@@ -49,6 +52,7 @@ namespace GorillaInfoWatch.Models.Widgets
                 return false;
 
             return Command.Target == widgetButton.Command.Target && Command.Method.Equals(widgetButton.Command.Method);
+            */
         }
     }
 }

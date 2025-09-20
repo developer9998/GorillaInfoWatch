@@ -310,6 +310,12 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (ActiveScreen is not InfoScreen activeScreen) return;
 
+                if (activeScreen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute && attribute != null)
+                {
+                    LoadScreen(Home);
+                    return;
+                }
+
                 PropertyInfo returnTypeProperty = AccessTools.Property(activeScreen.GetType(), nameof(InfoScreen.ReturnType));
 
                 if (returnTypeProperty != null)

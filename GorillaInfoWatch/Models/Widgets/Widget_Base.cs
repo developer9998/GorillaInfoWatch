@@ -1,4 +1,5 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Tools;
 using System;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace GorillaInfoWatch.Models.Widgets
     {
         public virtual float Width { get; } = 20.5f;
         public virtual float Depth { get; } = 0f;
-        public virtual bool Modify { get; } = true;
+        public virtual bool Modification { get; } = true;
 
         public GameObject Object;
 
@@ -20,16 +21,18 @@ namespace GorillaInfoWatch.Models.Widgets
 
         internal WidgetController Controller = null;
 
-        public virtual void Object_Construct(WatchLine menuLine)
+        public virtual void Initialize(WatchLine menuLine)
         {
 
         }
 
-        public virtual void Object_Modify()
+        public virtual void Modify()
         {
 
         }
 
         public virtual bool Equals(Widget_Base widget) => false;
+
+        ~Widget_Base() => Logging.Message($"Finalizing Widget: {GetType().Name}");
     }
 }

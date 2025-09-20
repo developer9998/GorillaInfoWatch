@@ -5,7 +5,7 @@ using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
-using GorillaTagScripts.ModIO;
+using GorillaTagScripts.VirtualStumpCustomMaps;
 using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
@@ -179,10 +179,10 @@ namespace GorillaInfoWatch.Screens
                     {
                         GameObject treeRoom = ZoneManagement.instance.allObjects.First(gameObject => gameObject.name == "TreeRoom");
                         VirtualStumpTeleporter teleporter = treeRoom.GetComponentInChildren<VirtualStumpTeleporter>(true);
-                        StartCoroutine(CustomMapManager.TeleportToVirtualStump(teleporter.teleporterIndex, success =>
+                        StartCoroutine(CustomMapManager.TeleportToVirtualStump(teleporter, success =>
                         {
                             if (success) JoinFriend(args);
-                        }, teleporter.entrancePoint, teleporter.mySerializer));
+                        }));
                     }
                     catch (Exception ex)
                     {

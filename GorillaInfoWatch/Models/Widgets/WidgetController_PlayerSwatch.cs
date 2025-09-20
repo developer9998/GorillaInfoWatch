@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Models.Widgets
     public class WidgetController_PlayerSwatch(NetPlayer player) : WidgetController
     {
         public override Type[] AllowedTypes => [typeof(Widget_Symbol)];
-        public override bool? Modify => false;
+        public override bool? Modification => false;
 
         public NetPlayer Player = player;
 
