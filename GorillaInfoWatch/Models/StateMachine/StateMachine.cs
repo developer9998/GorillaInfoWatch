@@ -1,28 +1,26 @@
-﻿namespace GorillaInfoWatch.Models.StateMachine
+﻿namespace GorillaInfoWatch.Models.StateMachine;
+
+public class StateMachine<T> where T : State
 {
-    public class StateMachine<T> where T : State
+    protected T    currentState;
+    public    T    CurrentState => currentState;
+    public    bool HasState     => currentState is not null;
+
+    public void SwitchState(T newState)
     {
-        public T CurrentState => currentState;
-        public bool HasState => currentState is not null;
+        if (newState is null)
+            return;
 
-        protected T currentState;
+        if (HasState)
+            currentState.Exit();
 
-        public void SwitchState(T newState)
-        {
-            if (newState is null)
-                return;
+        currentState = newState;
+        currentState.Enter();
+    }
 
-            if (HasState)
-                currentState.Exit();
-
-            currentState = newState;
-            currentState.Enter();
-        }
-
-        public void Update()
-        {
-            if (HasState)
-                currentState.Update();
-        }
+    public void Update()
+    {
+        if (HasState)
+            currentState.Update();
     }
 }

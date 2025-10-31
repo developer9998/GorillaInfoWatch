@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace GorillaInfoWatch.Models.Attributes
+namespace GorillaInfoWatch.Models.Attributes;
+
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public class ShowOnHomeScreenAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class ShowOnHomeScreenAttribute : Attribute
-    {
-        public string DisplayTitle;
-    }
+    public string DisplayTitle;
 }

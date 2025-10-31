@@ -14,7 +14,8 @@ namespace GorillaInfoWatch.Models.Significance
 
 #if PLUGIN
         public static explicit operator FigureSignificance(FigureSignificanceObject scriptableObject)
-            => new(scriptableObject.name, scriptableObject.Symbol, scriptableObject.Description, scriptableObject.UserIds);
+            => new(scriptableObject.name, scriptableObject.Symbol, scriptableObject.Description,
+                    scriptableObject.UserIds);
 #endif
     }
 }

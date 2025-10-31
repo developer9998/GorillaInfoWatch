@@ -1,33 +1,28 @@
-﻿using GorillaNetworking;
-using HarmonyLib;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection.Emit;
+using GorillaNetworking;
+using HarmonyLib;
 
-namespace GorillaInfoWatch.Patches
+namespace GorillaInfoWatch.Patches;
+
+[HarmonyPatch(typeof(GorillaComputer), nameof(GorillaComputer.ProcessQueueState))]
+internal class ComputerQueuePatch
 {
-    [HarmonyPatch(typeof(GorillaComputer), nameof(GorillaComputer.ProcessQueueState))]
-    internal class ComputerQueuePatch
+    public static List<string> baseGameQueueNames = [];
+
+    [HarmonyPriority(Priority.Low)]
+    [HarmonyWrapSafe]
+    private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
     {
-        public static List<string> baseGameQueueNames = [];
+        if (baseGameQueueNames.Count > 0) return instructions;
 
-        [HarmonyPriority(Priority.Low)]
-        [HarmonyWrapSafe]
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            if (baseGameQueueNames.Count > 0) return instructions;
+        CodeInstruction[] codes = [.. instructions,];
 
-            CodeInstruction[] codes = [.. instructions];
-
-            for (int i = 0; i < codes.Length; i++)
-            {
-                if (codes[i].opcode == OpCodes.Ldstr && codes[i + 2].opcode == OpCodes.Call)
-                {
+        for (int i = 0; i < codes.Length; i++)
+            if (codes[i].opcode == OpCodes.Ldstr && codes[i + 2].opcode == OpCodes.Call)
                     // Too lazy to check for specifics surrounding what is being called haha
-                    baseGameQueueNames.Add(codes[i].operand.ToString());
-                }
-            }
+                baseGameQueueNames.Add(codes[i].operand.ToString());
 
-            return codes;
-        }
+        return codes;
     }
 }

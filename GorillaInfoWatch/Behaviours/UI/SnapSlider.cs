@@ -1,121 +1,120 @@
-﻿using GorillaInfoWatch.Models;
+﻿using System;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
-using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours.UI
+namespace GorillaInfoWatch.Behaviours.UI;
+
+public class SnapSlider : MonoBehaviour
 {
-    public class SnapSlider : MonoBehaviour
+    public static SnapSlider currentSnapSlider;
+
+    [SerializeField] [HideInInspector] private BoxCollider collider;
+
+    [SerializeField] [HideInInspector] private MeshRenderer renderer;
+
+    [SerializeField] [HideInInspector] private Transform needle, min, max;
+
+    [SerializeField] [HideInInspector] private Gradient colour = ColourPalette.Button;
+
+    private GorillaTriggerColliderHandIndicator currentHandIndicator;
+    public  Action                              OnSliderAdjusted;
+
+    public Widget_SnapSlider Widget;
+
+    public void Awake()
     {
-        public Action OnSliderAdjusted;
+        collider           = GetComponent<BoxCollider>();
+        collider.isTrigger = true;
+        gameObject.SetLayer(UnityLayer.GorillaInteractable);
 
-        public Widget_SnapSlider Widget;
+        needle = transform.Find("Button");
 
-        [SerializeField, HideInInspector]
-        private BoxCollider collider;
+        renderer              = needle.GetComponent<MeshRenderer>();
+        renderer.materials[1] = new Material(renderer.materials[1]);
+        // TODO: use material property block
 
-        [SerializeField, HideInInspector]
-        private MeshRenderer renderer;
+        min = transform.Find("Min");
+        max = transform.Find("Max");
+    }
 
-        [SerializeField, HideInInspector]
-        private Transform needle, min, max;
-
-        private GorillaTriggerColliderHandIndicator currentHandIndicator;
-
-        public static SnapSlider currentSnapSlider;
-
-        [SerializeField, HideInInspector]
-        private Gradient colour = ColourPalette.Button;
-
-        public void Awake()
+    public void OnTriggerExit(Collider other)
+    {
+        if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) &&
+            currentHandIndicator == component)
         {
-            collider = GetComponent<BoxCollider>();
-            collider.isTrigger = true;
-            gameObject.SetLayer(UnityLayer.GorillaInteractable);
-
-            needle = transform.Find("Button");
-
-            renderer = needle.GetComponent<MeshRenderer>();
-            renderer.materials[1] = new(renderer.materials[1]);
-            // TODO: use material property block
-
-            min = transform.Find("Min");
-            max = transform.Find("Max");
+            currentHandIndicator = null;
+            currentSnapSlider    = null;
+            PushButton.PressTime = Time.realtimeSinceStartup + 0.5f;
         }
+    }
 
-        public void ApplySlider(Widget_SnapSlider widget)
-        {
-            if (widget is not null)
-            {
-                Widget = widget;
-
-                gameObject.SetActive(true);
-                OnSliderAdjusted = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
-                colour = Widget.Colour ?? ColourPalette.Button;
-                SetNeedlePosition();
-                return;
-            }
-
-            Widget = null;
-            gameObject.SetActive(false);
-            OnSliderAdjusted = null;
-        }
-
-        public void OnTriggerStay(Collider other)
-        {
-            if
-            (
+    public void OnTriggerStay(Collider other)
+    {
+        if
+        (
                 Time.realtimeSinceStartup > PushButton.PressTime
-                && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand
-                && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this)
-            )
+             && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) &&
+                component.isLeftHand != InfoWatch.LocalWatch.InLeftHand
+             && (currentHandIndicator == null || currentHandIndicator == component) &&
+                (currentSnapSlider    == null || currentSnapSlider    == this)
+        )
+        {
+            Vector3 local = transform.InverseTransformPoint(component.transform.position);
+            float   clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
+            int     split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
+            float   oneDivSplit = 1f / split;
+            int     targetValue = (int)(Mathf.RoundToInt(clampedPreciseValue / oneDivSplit) * oneDivSplit * split);
+
+            if (Widget.Value != targetValue)
             {
-                Vector3 local = transform.InverseTransformPoint(component.transform.position);
-                float clampedPreciseValue = Mathf.Clamp01((local.z - min.localPosition.z) / (max.localPosition.z * 2f));
-                int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
-                float oneDivSplit = 1f / split;
-                int targetValue = (int)(Mathf.RoundToInt(clampedPreciseValue / oneDivSplit) * oneDivSplit * split);
+                Widget.Value = targetValue;
 
-                if (Widget.Value != targetValue)
+                OnSliderAdjusted?.Invoke();
+
+                SetNeedlePosition();
+
+                if (currentHandIndicator is not null)
                 {
-                    Widget.Value = targetValue;
-
-                    OnSliderAdjusted?.Invoke();
-
-                    SetNeedlePosition();
-
-                    if (currentHandIndicator is not null)
-                    {
-                        GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.2f, 0.02f);
-                        Main.Instance.PressSlider(this, component.isLeftHand);
-                    }
-                }
-
-                if (currentHandIndicator is null)
-                {
-                    currentHandIndicator = component;
-                    currentSnapSlider = this;
-                    GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
+                    GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.2f, 0.02f);
+                    Main.Instance.PressSlider(this, component.isLeftHand);
                 }
             }
-        }
 
-        public void OnTriggerExit(Collider other)
-        {
-            if (other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && currentHandIndicator == component)
+            if (currentHandIndicator is null)
             {
-                currentHandIndicator = null;
-                currentSnapSlider = null;
-                PushButton.PressTime = Time.realtimeSinceStartup + 0.5f;
+                currentHandIndicator = component;
+                currentSnapSlider    = this;
+                GorillaTagger.Instance.StartVibration(component.isLeftHand,
+                        GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
             }
         }
+    }
 
-        private void SetNeedlePosition()
+    public void ApplySlider(Widget_SnapSlider widget)
+    {
+        if (widget is not null)
         {
-            int split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
-            float value = Widget.Value / (float)split;
-            needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, value);
-            renderer.materials[1].color = colour.Evaluate(value);
+            Widget = widget;
+
+            gameObject.SetActive(true);
+            OnSliderAdjusted = () => Widget.Command?.Invoke(Widget.Value, Widget.Parameters ?? []);
+            colour           = Widget.Colour ?? ColourPalette.Button;
+            SetNeedlePosition();
+
+            return;
         }
+
+        Widget = null;
+        gameObject.SetActive(false);
+        OnSliderAdjusted = null;
+    }
+
+    private void SetNeedlePosition()
+    {
+        int   split = Mathf.Abs(Widget.StartValue - Widget.EndValue);
+        float value = Widget.Value / (float)split;
+        needle.transform.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, value);
+        renderer.materials[1].color    = colour.Evaluate(value);
     }
 }

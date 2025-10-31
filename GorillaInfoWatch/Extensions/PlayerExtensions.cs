@@ -1,49 +1,57 @@
-﻿using GorillaInfoWatch.Tools;
+﻿using System;
+using System.Collections.Generic;
+using GorillaInfoWatch.Tools;
 using PlayFab;
 using PlayFab.ClientModels;
-using System;
-using System.Collections.Generic;
 
-namespace GorillaInfoWatch.Extensions
+namespace GorillaInfoWatch.Extensions;
+
+public static class PlayerExtensions
 {
-    public static class PlayerExtensions
+    private static readonly Dictionary<string, (GetAccountInfoResult accountInfo, DateTime cacheTime)>
+            accountInfoCache = [];
+
+    public static GetAccountInfoResult GetAccountInfo(this NetPlayer               netPlayer,
+                                                      Action<GetAccountInfoResult> onAccountInfoRecieved)
+        => GetAccountInfo(netPlayer.UserId, onAccountInfoRecieved);
+
+    public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved)
     {
-        private static readonly Dictionary<string, (GetAccountInfoResult accountInfo, DateTime cacheTime)> accountInfoCache = [];
+        if (accountInfoCache.ContainsKey(userId) &&
+            (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < 6)
+            return accountInfoCache[userId].accountInfo;
 
-        public static GetAccountInfoResult GetAccountInfo(this NetPlayer netPlayer, Action<GetAccountInfoResult> onAccountInfoRecieved)
-            => GetAccountInfo(netPlayer.UserId, onAccountInfoRecieved);
+        if (!PlayFabClientAPI.IsClientLoggedIn())
+            throw new InvalidOperationException("PlayFab Client must be logged in to post the account info request");
 
-        public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved)
+        PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
         {
-            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < 6)
-                return accountInfoCache[userId].accountInfo;
+                PlayFabId = userId,
+        }, accountInfo =>
+           {
+               if (accountInfoCache.ContainsKey(userId)) accountInfoCache[userId] = (accountInfo, DateTime.Now);
+               else accountInfoCache.Add(userId, (accountInfo, DateTime.Now));
 
-            if (!PlayFabClientAPI.IsClientLoggedIn())
-                throw new InvalidOperationException("PlayFab Client must be logged in to post the account info request");
+               onAccountInfoRecieved?.Invoke(accountInfo);
+           }, error =>
+              {
+                  Logging.Fatal($"PlayFabClientAPI.GetAccountInfo for {userId}");
+                  Logging.Error(error.GenerateErrorReport());
+              });
 
-            PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
-            {
-                PlayFabId = userId
-            }, accountInfo =>
-            {
-                if (accountInfoCache.ContainsKey(userId)) accountInfoCache[userId] = (accountInfo, DateTime.Now);
-                else accountInfoCache.Add(userId, (accountInfo, DateTime.Now));
-                onAccountInfoRecieved?.Invoke(accountInfo);
-            }, error =>
-            {
-                Logging.Fatal($"PlayFabClientAPI.GetAccountInfo for {userId}");
-                Logging.Error(error.GenerateErrorReport());
-            });
+        return null;
+    }
 
-            return null;
-        }
+    public static string GetName(this NetPlayer player, bool filterEmptyNames = true)
+    {
+        bool   isNamePermissionEnabled = KIDManager.CheckFeatureSettingEnabled(EKIDFeatures.Custom_Nametags);
+        string nickName                = player.NickName;
+        string defaultName             = player.DefaultName;
 
-        public static string GetName(this NetPlayer player, bool filterEmptyNames = true)
-        {
-            bool isNamePermissionEnabled = KIDManager.CheckFeatureSettingEnabled(EKIDFeatures.Custom_Nametags);
-            string nickName = player.NickName;
-            string defaultName = player.DefaultName;
-            return isNamePermissionEnabled ? ((filterEmptyNames && (string.IsNullOrEmpty(nickName) || string.IsNullOrWhiteSpace(nickName))) ? defaultName : nickName) : defaultName;
-        }
+        return isNamePermissionEnabled
+                       ? filterEmptyNames && (string.IsNullOrEmpty(nickName) || string.IsNullOrWhiteSpace(nickName))
+                                 ? defaultName
+                                 : nickName
+                       : defaultName;
     }
 }

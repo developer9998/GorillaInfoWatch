@@ -54,6 +54,6 @@ namespace GorillaInfoWatch.Models.Enumerations
         Stop,
         ExternalLink,
         Minus,
-        Plus
+        Plus,
     }
 }

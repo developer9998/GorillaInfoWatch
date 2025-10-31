@@ -1,8 +1,7 @@
-﻿namespace GorillaInfoWatch.Models.Enumerations
+﻿namespace GorillaInfoWatch.Models.Enumerations;
+
+public enum DataLocation
 {
-    public enum DataLocation
-    {
-        Persistent, // Located in InfoWatch.json at Application.persistentDataPath
-        Session
-    }
+    Persistent, // Located in InfoWatch.json at Application.persistentDataPath
+    Session,
 }

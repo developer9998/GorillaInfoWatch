@@ -1,15 +1,12 @@
-﻿using GorillaInfoWatch.Models;
-using System;
+﻿using System;
+using GorillaInfoWatch.Models;
 
-namespace GorillaInfoWatch.Screens
+namespace GorillaInfoWatch.Screens;
+
+internal class WarningScreen : InfoScreen
 {
-    internal class WarningScreen : InfoScreen
-    {
-        public override string Title => "Warning";
+    public override string Title => "Warning";
 
-        public override InfoContent GetContent()
-        {
+    public override InfoContent GetContent() =>
             throw new NotImplementedException("Warning screen hasn't been implemented.. yet :3");
-        }
-    }
 }

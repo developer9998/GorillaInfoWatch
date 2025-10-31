@@ -1,25 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Tools
+namespace GorillaInfoWatch.Tools;
+
+public static class ContextInfo
 {
-    public static class ContextInfo
+    private static bool? inVr;
+
+    public static bool InVR
     {
-        public static bool InVR
+        get
         {
-            get
+            if (!inVr.HasValue)
             {
-                if (!inVr.HasValue)
-                {
-                    List<ISubsystem> xrDisplaySubsystems = [];
-                    SubsystemManager.GetSubsystems(xrDisplaySubsystems);
-                    inVr = xrDisplaySubsystems.Count != 0;
-                }
-
-                return inVr.Value;
+                List<ISubsystem> xrDisplaySubsystems = [];
+                SubsystemManager.GetSubsystems(xrDisplaySubsystems);
+                inVr = xrDisplaySubsystems.Count != 0;
             }
-        }
 
-        private static bool? inVr = null;
+            return inVr.Value;
+        }
     }
 }

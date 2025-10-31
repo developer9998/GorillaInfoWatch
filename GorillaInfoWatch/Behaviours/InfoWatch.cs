@@ -1,8 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Serialization;
-
+using UnityEngine.UI;
 #if PLUGIN
 using System;
 using System.Linq;
@@ -19,21 +18,18 @@ namespace GorillaInfoWatch.Behaviours
     public class InfoWatch : MonoBehaviour
     {
         // Assets
-        public Transform watchHeadTransform, watchCanvasTransform;
+        public Transform  watchHeadTransform, watchCanvasTransform;
         public GameObject watchStrap;
 
         public AudioSource audioDevice;
 
         public MeshRenderer screenRenderer, rimRenderer;
 
-        [Header("Menu Interface")]
-
-        public Animator menuAnimator;
+        [Header("Menu Interface")] public Animator menuAnimator;
 
         public string standardTrigger, mediaTrigger;
 
-        [FormerlySerializedAs("idleMenu")]
-        public GameObject homeMenu;
+        [FormerlySerializedAs("idleMenu")] public GameObject homeMenu;
 
         public GameObject messageMenu;
 
@@ -43,9 +39,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public Slider messageSlider;
 
-        [Header("Home : Media Player")]
-
-        public TMP_Text trackTitle;
+        [Header("Home : Media Player")] public TMP_Text trackTitle;
 
         public TMP_Text trackAuthor;
 
@@ -58,7 +52,6 @@ namespace GorillaInfoWatch.Behaviours
         public Slider trackProgression;
 
 #if PLUGIN
-
         public bool IsLocalWatch => this == LocalWatch;
 
         // Assets (cont.)
@@ -66,18 +59,18 @@ namespace GorillaInfoWatch.Behaviours
 
         // Ownership
         public static InfoWatch LocalWatch;
-        public VRRig Rig;
+        public        VRRig     Rig;
 
         // Data
-        public bool InLeftHand = true;
-        public bool HideWatch = false;
+        public bool   InLeftHand = true;
+        public bool   HideWatch;
         public float? TimeOffset;
 
         // Handling
         public StateMachine<Menu_StateBase> MenuStateMachine;
-        public Menu_Home HomeState;
+        public Menu_Home                    HomeState;
 
-        private bool mediaTriggerState = false;
+        private bool mediaTriggerState;
 
         public async void Start()
         {
@@ -89,6 +82,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     Logging.Warning("Duplicate local watch detected to remove");
                     Destroy(this);
+
                     return;
                 }
 
@@ -106,14 +100,16 @@ namespace GorillaInfoWatch.Behaviours
             homeMenu.SetActive(false);
             messageMenu.SetActive(false);
 
-            MenuStateMachine = new();
-            HomeState = new(this);
+            MenuStateMachine = new StateMachine<Menu_StateBase>();
+            HomeState = new Menu_Home(this);
             MenuStateMachine.SwitchState(HomeState);
 
             MeshRenderer[] rendererArray = transform.GetComponentsInChildren<MeshRenderer>(true);
             foreach (MeshRenderer meshRenderer in rendererArray)
             {
-                Material[] uberMaterials = [.. meshRenderer.materials.Select(material => material.CreateUberShaderVariant())];
+                Material[] uberMaterials =
+                        [.. meshRenderer.materials.Select(material => material.CreateUberShaderVariant()),];
+
                 meshRenderer.materials = uberMaterials;
             }
 
@@ -153,7 +149,7 @@ namespace GorillaInfoWatch.Behaviours
             MenuStateMachine?.Update();
         }
 
-        #region Appearance
+#region Appearance
 
         public void SetVisibilityCheck(VRRig rig, bool invisible)
         {
@@ -169,15 +165,15 @@ namespace GorillaInfoWatch.Behaviours
         public void SetColour(Color playerColour)
         {
             screenRimMaterial.color = playerColour;
-            Color.RGBToHSV(playerColour, out float H, out float S, out _);
+            Color.RGBToHSV(playerColour, out float H, out float S, out float _);
             float V = 0.13f * Mathf.Clamp((S + 1) * 0.9f, 1, float.MaxValue);
             Color screenColour = Color.HSVToRGB(H, S, V);
             screenMaterial.color = screenColour;
         }
 
-        #endregion
+#endregion
 
-        #region Media Player
+#region Media Player
 
         public void OnSessionFocussed(MediaManager.Session focussedSession)
         {
@@ -187,6 +183,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 OnMediaChanged(focussedSession);
                 OnTimelineChanged(focussedSession);
+
                 return;
             }
 
@@ -215,7 +212,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (mediaTriggerState)
             {
-                NetworkManager.Instance.SetProperty("Title", session.Title);
+                NetworkManager.Instance.SetProperty("Title",  session.Title);
                 NetworkManager.Instance.SetProperty("Artist", session.Artist);
                 NetworkManager.Instance.SetProperty("Length", session.EndTime);
             }
@@ -232,11 +229,17 @@ namespace GorillaInfoWatch.Behaviours
             if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
 
             trackElapsed.text = TimeSpan.FromSeconds(session.Position).ToString(@"mm\:ss");
-            trackRemaining.text = string.Concat("-", TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
-            trackProgression.value = (session.EndTime > 0) ? Mathf.Lerp(trackProgression.minValue, trackProgression.maxValue, Convert.ToSingle(Math.Round(session.Position / session.EndTime, 3))) : trackProgression.minValue;
+            trackRemaining.text = string.Concat("-",
+                    TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
+
+            trackProgression.value = session.EndTime > 0
+                                             ? Mathf.Lerp(trackProgression.minValue, trackProgression.maxValue,
+                                                     Convert.ToSingle(Math.Round(session.Position / session.EndTime,
+                                                             3)))
+                                             : trackProgression.minValue;
         }
 
-        #endregion
+#endregion
 
 #endif
     }

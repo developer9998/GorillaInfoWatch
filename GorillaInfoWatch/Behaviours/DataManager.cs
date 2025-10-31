@@ -1,148 +1,162 @@
-﻿using BepInEx;
-using GorillaInfoWatch.Models.Enumerations;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BepInEx;
+using GorillaInfoWatch.Models.Enumerations;
+using Newtonsoft.Json;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours;
+
+public class DataManager : MonoBehaviour
 {
-    public class DataManager : MonoBehaviour
+    private static string dataLocation;
+
+    private static Dictionary<DataLocation, Dictionary<string, object>> dataPerTypeDict;
+
+    private       JsonSerializerSettings serializeSettings, deserializeSettings;
+    public static DataManager            Instance { get; private set; }
+
+    public void Awake()
     {
-        public static DataManager Instance { get; private set; }
-
-        private static string dataLocation;
-
-        private static Dictionary<DataLocation, Dictionary<string, object>> dataPerTypeDict;
-
-        private JsonSerializerSettings serializeSettings, deserializeSettings;
-
-        public void Awake()
+        if (Instance != null && Instance != this)
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(this);
-                return;
-            }
+            Destroy(this);
 
-            Instance = this;
-
-            var converter = new Vector3Converter();
-
-            serializeSettings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All,
-                CheckAdditionalContent = true,
-                Formatting = Formatting.Indented
-            };
-            serializeSettings.Converters.Add(converter);
-
-            deserializeSettings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All
-            };
-            deserializeSettings.Converters.Add(converter);
-
-            dataPerTypeDict = Enum.GetValues(typeof(DataLocation)).Cast<DataLocation>().ToDictionary(type => type, type => new Dictionary<string, object>());
-
-            dataLocation = Path.Combine(Application.persistentDataPath, "InfoWatch.json");
-
-            ReadPersistentData();
+            return;
         }
 
-        public void SetItem(string key, object value, DataLocation dataType = DataLocation.Persistent)
+        Instance = this;
+
+        Vector3Converter converter = new();
+
+        serializeSettings = new JsonSerializerSettings
         {
-            EnsureDataCollection(dataType);
-            Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
+                TypeNameHandling       = TypeNameHandling.All,
+                CheckAdditionalContent = true,
+                Formatting             = Formatting.Indented,
+        };
 
-            if (dictionary.ContainsKey(key)) dictionary[key] = value;
-            else dictionary.Add(key, value);
+        serializeSettings.Converters.Add(converter);
 
+        deserializeSettings = new JsonSerializerSettings
+        {
+                TypeNameHandling = TypeNameHandling.All,
+        };
+
+        deserializeSettings.Converters.Add(converter);
+
+        dataPerTypeDict = Enum.GetValues(typeof(DataLocation)).Cast<DataLocation>()
+                              .ToDictionary(type => type, type => new Dictionary<string, object>());
+
+        dataLocation = Path.Combine(Application.persistentDataPath, "InfoWatch.json");
+
+        ReadPersistentData();
+    }
+
+    public void SetItem(string key, object value, DataLocation dataType = DataLocation.Persistent)
+    {
+        EnsureDataCollection(dataType);
+        Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
+
+        if (dictionary.ContainsKey(key)) dictionary[key] = value;
+        else dictionary.Add(key, value);
+
+        if (dataType == DataLocation.Persistent) WritePersistentData();
+    }
+
+    public void RemoveItem(string key, DataLocation dataType = DataLocation.Persistent)
+    {
+        EnsureDataCollection(dataType);
+        Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
+
+        if (dictionary.ContainsKey(key))
+        {
+            dictionary.Remove(key);
             if (dataType == DataLocation.Persistent) WritePersistentData();
         }
+    }
 
-        public void RemoveItem(string key, DataLocation dataType = DataLocation.Persistent)
+    public T GetItem<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default,
+                        bool   setDefaultValue = true)
+    {
+        EnsureDataCollection(dataType);
+        Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
+
+        if (dictionary.TryGetValue(key, out object value))
         {
-            EnsureDataCollection(dataType);
-            Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
+            if (value is T item) return item;
 
-            if (dictionary.ContainsKey(key))
-            {
-                dictionary.Remove(key);
-                if (dataType == DataLocation.Persistent) WritePersistentData();
-            }
-        }
+            TypeCode typeCode = Type.GetTypeCode(typeof(T));
 
-        public T GetItem<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default, bool setDefaultValue = true)
-        {
-            EnsureDataCollection(dataType);
-            Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
-
-            if (dictionary.TryGetValue(key, out object value))
-            {
-                if (value is T item) return item;
-
-                TypeCode typeCode = Type.GetTypeCode(typeof(T));
-
-                if (typeCode != TypeCode.Int64 && value is long deserializedLong)
+            if (typeCode != TypeCode.Int64 && value is long deserializedLong)
+                switch (typeCode)
                 {
-                    switch (typeCode)
-                    {
-                        case TypeCode.Int16:
-                            short int16 = Convert.ToInt16(deserializedLong);
-                            dictionary[key] = int16;
-                            return (T)(object)int16;
-                        case TypeCode.Int32:
-                            int int32 = Convert.ToInt32(deserializedLong);
-                            dictionary[key] = int32;
-                            return (T)(object)int32;
-                        case TypeCode.UInt16:
-                            ushort uint16 = Convert.ToUInt16(deserializedLong);
-                            dictionary[key] = uint16;
-                            return (T)(object)uint16;
-                        case TypeCode.UInt32:
-                            uint uint32 = Convert.ToUInt32(deserializedLong);
-                            dictionary[key] = uint32;
-                            return (T)(object)uint32;
-                        case TypeCode.UInt64:
-                            ulong uint64 = Convert.ToUInt64(deserializedLong);
-                            dictionary[key] = uint64;
-                            return (T)(object)uint64;
-                    }
+                    case TypeCode.Int16:
+                        short int16 = Convert.ToInt16(deserializedLong);
+                        dictionary[key] = int16;
+
+                        return (T)(object)int16;
+
+                    case TypeCode.Int32:
+                        int int32 = Convert.ToInt32(deserializedLong);
+                        dictionary[key] = int32;
+
+                        return (T)(object)int32;
+
+                    case TypeCode.UInt16:
+                        ushort uint16 = Convert.ToUInt16(deserializedLong);
+                        dictionary[key] = uint16;
+
+                        return (T)(object)uint16;
+
+                    case TypeCode.UInt32:
+                        uint uint32 = Convert.ToUInt32(deserializedLong);
+                        dictionary[key] = uint32;
+
+                        return (T)(object)uint32;
+
+                    case TypeCode.UInt64:
+                        ulong uint64 = Convert.ToUInt64(deserializedLong);
+                        dictionary[key] = uint64;
+
+                        return (T)(object)uint64;
                 }
-            }
-
-            if (setDefaultValue) SetItem(key, defaultValue);
-            return defaultValue;
         }
 
-        public void ReadPersistentData()
-        {
-            EnsureDataCollection(DataLocation.Persistent);
+        if (setDefaultValue) SetItem(key, defaultValue);
 
-            if (File.Exists(dataLocation)) dataPerTypeDict[DataLocation.Persistent] = JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(dataLocation));
-            else WritePersistentData();
-        }
+        return defaultValue;
+    }
 
-        public void WritePersistentData()
-        {
-            EnsureDataCollection(DataLocation.Persistent);
+    public void ReadPersistentData()
+    {
+        EnsureDataCollection(DataLocation.Persistent);
 
-            string serialized = JsonConvert.SerializeObject(dataPerTypeDict[DataLocation.Persistent], serializeSettings);
+        if (File.Exists(dataLocation))
+            dataPerTypeDict[DataLocation.Persistent] =
+                    JsonConvert.DeserializeObject<Dictionary<string, object>>(File.ReadAllText(dataLocation));
+        else WritePersistentData();
+    }
 
-            ThreadingHelper.Instance.StartAsyncInvoke(() =>
-            {
-                File.WriteAllText(dataLocation, serialized);
-                return null;
-            });
-        }
+    public void WritePersistentData()
+    {
+        EnsureDataCollection(DataLocation.Persistent);
 
-        public void EnsureDataCollection(DataLocation dataType)
-        {
-            if (dataPerTypeDict.ContainsKey(dataType)) return;
-            dataPerTypeDict.Add(dataType, []);
-        }
+        string serialized = JsonConvert.SerializeObject(dataPerTypeDict[DataLocation.Persistent], serializeSettings);
+
+        ThreadingHelper.Instance.StartAsyncInvoke(() =>
+                                                  {
+                                                      File.WriteAllText(dataLocation, serialized);
+
+                                                      return null;
+                                                  });
+    }
+
+    public void EnsureDataCollection(DataLocation dataType)
+    {
+        if (dataPerTypeDict.ContainsKey(dataType)) return;
+        dataPerTypeDict.Add(dataType, []);
     }
 }

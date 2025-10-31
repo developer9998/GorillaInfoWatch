@@ -1,38 +1,29 @@
-﻿namespace GorillaInfoWatch.Models.StateMachine
+﻿namespace GorillaInfoWatch.Models.StateMachine;
+
+public class State
 {
-    public class State
+    protected bool initialized;
+
+    public virtual void Enter()
     {
-        protected bool initialized;
-
-        public virtual void Enter()
+        if (!initialized)
         {
-            if (!initialized)
-            {
-                Initialize();
-                return;
-            }
+            Initialize();
 
-            Resume();
+            return;
         }
 
-        public virtual void Initialize()
-        {
-            initialized = true;
-        }
-
-        public virtual void Resume()
-        {
-
-        }
-
-        public virtual void Exit()
-        {
-
-        }
-
-        public virtual void Update()
-        {
-
-        }
+        Resume();
     }
+
+    public virtual void Initialize()
+    {
+        initialized = true;
+    }
+
+    public virtual void Resume() { }
+
+    public virtual void Exit() { }
+
+    public virtual void Update() { }
 }
