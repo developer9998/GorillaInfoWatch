@@ -35,7 +35,7 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static Main Instance { get; private set; }
 
-        public static event Action OnInitialized;
+        public static event Action OnModInitialized;
 
         // Content
         public static ModContent Content { get; private set; }
@@ -153,12 +153,21 @@ namespace GorillaInfoWatch.Behaviours
 
                 foreach (Assembly assembly in assemblies.Distinct())
                 {
-                    string assemblyName = assembly.GetName().Name;
-                    Logging.Info(assemblyName);
+                    string assemblyName;
 
-                    if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() == null)
+                    try
                     {
-                        //Logging.Warning("Assembly missing InfoWatchCompatibleAttribute, which is probably okay, not every mod has to be compatible!");
+                        assemblyName = assembly.GetName().Name;
+                        Logging.Info(assemblyName);
+
+                        if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() == null)
+                        {
+                            //Logging.Warning("Assembly missing InfoWatchCompatibleAttribute, which is probably okay, not every mod has to be compatible!");
+                            continue;
+                        }
+                    }
+                    catch
+                    {
                         continue;
                     }
 
@@ -310,7 +319,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (ActiveScreen is not InfoScreen activeScreen) return;
 
-                if (activeScreen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute && attribute != null)
+                if (activeScreen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute)
                 {
                     LoadScreen(Home);
                     return;
@@ -377,7 +386,7 @@ namespace GorillaInfoWatch.Behaviours
 
             enabled = true;
 
-            OnInitialized?.Invoke();
+            OnModInitialized?.Invoke();
         }
 
         public void Update()

@@ -50,7 +50,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Instance = this;
 
-            Main.OnInitialized += HandleModInitialized;
+            Main.OnModInitialized += HandleModInitialized;
             Application.wantsToQuit += HandleGameQuit;
         }
 

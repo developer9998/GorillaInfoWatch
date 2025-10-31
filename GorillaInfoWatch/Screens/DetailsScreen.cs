@@ -151,6 +151,7 @@ namespace GorillaInfoWatch.Screens
             progressionLines.Add($"Total Points: {ProgressionController.TotalPoints}");
             progressionLines.Add($"Unclaimed Points: {ProgressionController._gInstance.unclaimedPoints}");
 
+            /*
             if (localRig.TryGetComponent(out GRPlayer grPlayer))
             {
                 progressionLines.Skip();
@@ -161,6 +162,7 @@ namespace GorillaInfoWatch.Screens
                 progressionLines.Add($"Earned: {grProgression.points} out of {nextTier} / {Mathf.FloorToInt((float)grProgression.points / nextTier * 100f)}%");
                 progressionLines.Add($"Promotion: {(grProgression.points - nextTier) >= 0}");
             }
+            */
 
             /*
             StringBuilder str = new();

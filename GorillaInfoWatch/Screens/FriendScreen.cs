@@ -179,10 +179,10 @@ namespace GorillaInfoWatch.Screens
                     {
                         GameObject treeRoom = ZoneManagement.instance.allObjects.First(gameObject => gameObject.name == "TreeRoom");
                         VirtualStumpTeleporter teleporter = treeRoom.GetComponentInChildren<VirtualStumpTeleporter>(true);
-                        StartCoroutine(CustomMapManager.TeleportToVirtualStump(teleporter, success =>
+                        CustomMapManager.TeleportToVirtualStump(teleporter, success =>
                         {
                             if (success) JoinFriend(args);
-                        }));
+                        });
                     }
                     catch (Exception ex)
                     {
