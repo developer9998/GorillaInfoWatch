@@ -40,7 +40,7 @@ namespace GorillaInfoWatch.Screens
             foreach (Notification notification in Contents)
             {
                 TimeSpan timeSpan = DateTime.Now - notification.Created;
-                string timeDisplay = CountdownText.GetTimeDisplay(timeSpan, "{0} {1} ago", int.MaxValue, "Now", string.Empty).ToLower();
+                string timeDisplay = CountdownText.GetTimeDisplay(timeSpan, "{0} {1} ago", int.MaxValue, "Now", string.Empty).msg.ToLower();
 
                 string prepend = string.Format(formatOffline, timeDisplay);
 

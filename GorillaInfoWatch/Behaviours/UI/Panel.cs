@@ -14,7 +14,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private bool startup = false;
 
-        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.75f;
+        private bool IsFacingUp => Vector3.Distance(Player.Instance.LeftHand.controllerTransform.right, Vector3.up) > 1.75f;
 
         public void OnEnable()
         {

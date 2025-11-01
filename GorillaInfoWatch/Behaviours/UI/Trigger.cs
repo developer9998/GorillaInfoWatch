@@ -13,7 +13,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public AudioSource AudioSource;
 
-        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftControllerTransform.right, Vector3.up) > 1.82f;
+        private bool IsFacingUp => Vector3.Distance(Player.Instance.leftHand.controllerTransform.right, Vector3.up) > 1.82f;
         private bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (transform.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
 
         private float touchTime;

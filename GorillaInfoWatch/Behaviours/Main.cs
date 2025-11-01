@@ -783,7 +783,7 @@ namespace GorillaInfoWatch.Behaviours
             Notifications.SendNotification(new("Photon PUN failure", "Custom Auth failed", 3, Sounds.notificationNegative));
         }
 
-        public void OnQuestCompleted(RotatingQuestsManager.RotatingQuest quest)
+        public void OnQuestCompleted(RotatingQuest quest)
         {
             Logging.Info($"Quest Completed: {quest.GetTextDescription()}");
 
