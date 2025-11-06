@@ -22,6 +22,9 @@
 		<Compile Include="..\GorillaInfoWatch\Behaviours\InfoWatch.cs">
 			<Link>Important\InfoWatch.cs</Link>
 		</Compile>
+		<Compile Include="..\GorillaInfoWatch\Behaviours\UI\ShortcutButton.cs">
+			<Link>Behaviours\UI\ShortcutButton.cs</Link>
+		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>

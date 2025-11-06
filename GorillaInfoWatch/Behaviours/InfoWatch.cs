@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
+using GorillaInfoWatch.Behaviours.UI;
+
 
 #if PLUGIN
 using System;
@@ -43,7 +45,9 @@ namespace GorillaInfoWatch.Behaviours
 
         public Slider messageSlider;
 
-        [Header("Home : Media Player")]
+        public ShortcutButton shortcutButton;
+
+        [Header("Media Controller")]
 
         public TMP_Text trackTitle;
 
@@ -89,6 +93,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     Logging.Warning("Duplicate local watch detected to remove");
                     Destroy(this);
+
                     return;
                 }
 
@@ -96,9 +101,14 @@ namespace GorillaInfoWatch.Behaviours
                 Logging.Info(transform.GetPath().TrimStart('/'));
 
                 LocalWatch = this;
+
                 MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
                 MediaManager.Instance.OnMediaChanged += OnMediaChanged;
                 MediaManager.Instance.OnTimelineChanged += OnTimelineChanged;
+            }
+            else
+            {
+                shortcutButton.SetActive(false);
             }
 
             watchHeadTransform.localEulerAngles = watchHeadTransform.localEulerAngles.WithZ(-91.251f);

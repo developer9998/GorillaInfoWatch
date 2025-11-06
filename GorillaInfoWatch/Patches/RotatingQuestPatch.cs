@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Extensions;
 using HarmonyLib;
-using static RotatingQuestsManager;
 
 namespace GorillaInfoWatch.Patches
 {

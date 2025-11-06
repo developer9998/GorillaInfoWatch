@@ -3,6 +3,7 @@ using BepInEx.Bootstrap;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Functions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Enumerations;
@@ -35,7 +36,7 @@ namespace GorillaInfoWatch.Behaviours
     {
         public static Main Instance { get; private set; }
 
-        public static event Action OnModInitialized;
+        public static event Action Initialized;
 
         // Content
         public static ModContent Content { get; private set; }
@@ -56,7 +57,7 @@ namespace GorillaInfoWatch.Behaviours
         // Screens
         public static InfoScreen ActiveScreen { get; private set; }
 
-        // Pages
+        // Screens
 
         private HomeScreen Home;
 
@@ -66,9 +67,13 @@ namespace GorillaInfoWatch.Behaviours
 
         private GameObject screenObject;
 
-        private readonly Dictionary<Type, InfoScreen> registry = [];
+        private readonly Dictionary<Type, InfoScreen> screenCache = [];
 
         private readonly List<Notification> notifications = [];
+
+        // Functions
+
+
 
         // Assets
 
@@ -113,21 +118,31 @@ namespace GorillaInfoWatch.Behaviours
 
             // This list should be expanded to encapsulate proper screens (in the form of their types)
             // "Proper" screens refer to all but any hardcoded screens (including Home, Inbox, and Warning screens)
-            List<Type> builtinPages =
+            List<Type> includedScreenTypes =
             [
                 typeof(ScoreboardScreen),
                 typeof(RoomInspectorScreen),
                 typeof(PlayerInspectorScreen),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
+                typeof(ShortcutListScreen),
                 typeof(ModListScreen),
                 typeof(ModInspectorScreen),
                 typeof(CreditScreen)
             ];
 
-            builtinPages.ForEach(page => RegisterScreen(page));
+            includedScreenTypes.ForEach(page => RegisterScreen(page));
+
+            List<Type> includedShortcutsTypes =
+            [
+                typeof(ShortcutRegistrar_Rooms)
+            ];
+
+            includedShortcutsTypes.ForEach(funcReg => RegisterShortcuts(funcReg));
 
             Type screenType = typeof(InfoScreen);
+
+            Type shortcutRegType = typeof(ShortcutRegistrar);
 
             try
             {
@@ -171,7 +186,7 @@ namespace GorillaInfoWatch.Behaviours
                         continue;
                     }
 
-                    List<Type> screenTypes = [];
+                    List<Type> screenTypes = [], shortcutRegTypes = [];
 
                     try
                     {
@@ -181,18 +196,8 @@ namespace GorillaInfoWatch.Behaviours
                         {
                             if (type is null) continue;
 
-                            try
-                            {
-                                if (type.IsSubclassOf(screenType) && screenType.IsAssignableFrom(type))
-                                {
-                                    screenTypes.Add(type);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Logging.Fatal($"Type {type.Name} could not be filtered");
-                                Logging.Error(ex);
-                            }
+                            if (type.IsSubclassOf(screenType) && screenType.IsAssignableFrom(type)) screenTypes.Add(type);
+                            else if (type.IsSubclassOf(shortcutRegType) && shortcutRegType.IsAssignableFrom(type)) shortcutRegTypes.Add(type);
                         }
                     }
                     catch (Exception ex)
@@ -202,17 +207,8 @@ namespace GorillaInfoWatch.Behaviours
                         continue;
                     }
 
-                    if (screenTypes.Count == 0)
-                    {
-                        Logging.Warning("Assembly contains no types valid for registration");
-                        continue;
-                    }
-
-                    foreach (Type type in screenTypes)
-                    {
-                        if (RegisterScreen(type)) continue;
-                        Logging.Warning($"Type {type.Name} could not be registered as a screen");
-                    }
+                    screenTypes.ForEach(type => RegisterScreen(type));
+                    shortcutRegTypes.ForEach(type => RegisterShortcuts(type));
                 }
             }
             catch (Exception ex)
@@ -222,9 +218,11 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             // Hardcoded screens are retrieved here, ensure registerFallback parameter is turned set to True for each method
-            Home = GetScreen<HomeScreen>(true);
-            Warning = GetScreen<WarningScreen>(true);
-            Inbox = GetScreen<InboxScreen>(true);
+            Home = GetScreen<HomeScreen>();
+            Warning = GetScreen<WarningScreen>();
+            Inbox = GetScreen<InboxScreen>();
+
+            GetScreen<ShortcutListScreen>().SetEntries(ShortcutRegistrar.Shortcuts);
 
             Content = await AssetLoader.LoadAsset<ModContent>("Data");
 
@@ -376,7 +374,7 @@ namespace GorillaInfoWatch.Behaviours
             watchTrigger.Menu = localPanel;
 
             screenObject.SetActive(true);
-            Home.SetEntries([.. registry.Values]);
+            Home.SetEntries([.. screenCache.Values]);
             LoadScreen(Home);
 
             Notifications.RequestSendNotification = HandleSentNotification;
@@ -386,7 +384,7 @@ namespace GorillaInfoWatch.Behaviours
 
             enabled = true;
 
-            OnModInitialized?.Invoke();
+            Initialized?.Invoke();
         }
 
         public void Update()
@@ -519,7 +517,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public T GetScreen<T>(bool registerFallback = true) where T : InfoScreen => (T)GetScreen(typeof(T), registerFallback);
 
-        public InfoScreen GetScreen(Type type, bool registerFallback = true) => (registry.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? registry[type] : null;
+        public InfoScreen GetScreen(Type type, bool registerFallback = true) => (screenCache.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? screenCache[type] : null;
 
         public void LoadScreen(InfoScreen newScreen)
         {
@@ -713,7 +711,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
 
-            if (registry.ContainsKey(type))
+            if (screenCache.ContainsKey(type))
             {
                 Logging.Warning("Registry contains key");
                 return false;
@@ -739,7 +737,7 @@ namespace GorillaInfoWatch.Behaviours
 
             if (component is InfoScreen screen)
             {
-                if (registry.ContainsValue(screen))
+                if (screenCache.ContainsValue(screen))
                 {
                     Logging.Warning("Registry contains value (component of type)");
                     Destroy(component);
@@ -748,7 +746,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 screen.enabled = false;
 
-                registry[type] = screen;
+                screenCache[type] = screen;
 
                 Logging.Info("Register success");
                 return true;
@@ -760,6 +758,42 @@ namespace GorillaInfoWatch.Behaviours
             PlayErrorSound();
 
             return false;
+        }
+
+        public bool RegisterShortcuts(Type type)
+        {
+            if (type == null) return false;
+
+            Logging.Message($"RegisterFunctionRegistrar: {type.FullName}");
+
+            Type registrarType = typeof(ShortcutRegistrar);
+
+            if (!type.IsSubclassOf(registrarType))
+            {
+                PlayErrorSound();
+                return false;
+            }
+
+            if (!registrarType.IsAssignableFrom(type))
+            {
+                PlayErrorSound();
+                return false;
+            }
+
+            try
+            {
+                ShortcutRegistrar registrar = (ShortcutRegistrar)Activator.CreateInstance(type);
+                Logging.Message("CreateInstance success");
+            }
+            catch (Exception ex)
+            {
+                Logging.Fatal("CreateInstance exception");
+                Logging.Error(ex);
+
+                return false;
+            }
+
+            return true;
         }
 
         public override void OnJoinRoomFailed(short returnCode, string message)

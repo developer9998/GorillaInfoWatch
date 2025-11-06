@@ -47,12 +47,12 @@ namespace GorillaInfoWatch.Behaviours
 
             dataPerTypeDict = Enum.GetValues(typeof(DataLocation)).Cast<DataLocation>().ToDictionary(type => type, type => new Dictionary<string, object>());
 
-            dataLocation = Path.Combine(Application.persistentDataPath, "InfoWatch.json");
+            dataLocation = Path.Combine(Application.persistentDataPath, $"{Constants.Name}.json");
 
             ReadPersistentData();
         }
 
-        public void SetItem(string key, object value, DataLocation dataType = DataLocation.Persistent)
+        public void SetEntry(string key, object value, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -63,7 +63,7 @@ namespace GorillaInfoWatch.Behaviours
             if (dataType == DataLocation.Persistent) WritePersistentData();
         }
 
-        public void RemoveItem(string key, DataLocation dataType = DataLocation.Persistent)
+        public void RemoveEntry(string key, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -75,7 +75,14 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public T GetItem<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default, bool setDefaultValue = true)
+        public bool HasEntry(string key, DataLocation dataType = DataLocation.Persistent)
+        {
+            EnsureDataCollection(dataType);
+            Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
+            return dictionary.ContainsKey(key);
+        }
+
+        public T GetEntry<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default, bool setDefaultValue = true)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -114,7 +121,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
             }
 
-            if (setDefaultValue) SetItem(key, defaultValue);
+            if (setDefaultValue) SetEntry(key, defaultValue);
             return defaultValue;
         }
 
