@@ -1,6 +1,5 @@
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
-using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Widgets;
 
 namespace GorillaInfoWatch.Screens

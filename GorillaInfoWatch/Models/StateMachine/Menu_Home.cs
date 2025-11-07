@@ -1,5 +1,4 @@
 ﻿using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Tools;
 using Photon.Voice.PUN;
 using Photon.Voice.Unity;

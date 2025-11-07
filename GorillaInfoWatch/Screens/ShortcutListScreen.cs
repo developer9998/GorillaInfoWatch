@@ -32,7 +32,8 @@ namespace GorillaInfoWatch.Screens
 
             foreach (Shortcut shortcut in _entries)
             {
-                lines.Add(shortcut.Name, new Widget_PushButton(() =>
+                string shortcutText = string.Format("<line-height=45%>{0}<br><size=60%>{1}", shortcut.Name, shortcut.Description);
+                lines.Add(shortcut.Name, new Widget_Switch(ShortcutManager.Instance.Shortcut == shortcut, (bool value) =>
                 {
                     ShortcutManager.Instance.SetOrRemoveShortcut(shortcut);
                     SetContent();

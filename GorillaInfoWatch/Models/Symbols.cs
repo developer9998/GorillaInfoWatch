@@ -1,4 +1,4 @@
-namespace GorillaInfoWatch.Models.Enumerations
+namespace GorillaInfoWatch.Models
 {
     public enum Symbols : byte
     {
@@ -41,7 +41,6 @@ namespace GorillaInfoWatch.Models.Enumerations
         BellRing,
         RedFlag,
         GreenFlag,
-        Croptop,
         Rainbow,
         LightBulb,
         Camera,

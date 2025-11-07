@@ -1,6 +1,5 @@
 ﻿using GorillaExtensions;
 using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using System;
 using UnityEngine;

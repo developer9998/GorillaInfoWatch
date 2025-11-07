@@ -1,4 +1,4 @@
-﻿namespace GorillaInfoWatch.Models.Enumerations
+﻿namespace GorillaInfoWatch.Models
 {
     public enum DataLocation
     {

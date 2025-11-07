@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Instance = this;
 
-            Main.Initialized += Initialize;
+            Events.OnModInitialized += Initialize;
         }
 
         public void Initialize()
@@ -34,7 +34,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 foreach (Shortcut shortcut in ShortcutRegistrar.Shortcuts)
                 {
-                    if (shortcut.FunctionId == value)
+                    if (shortcut.GetShortcutId() == value)
                     {
                         lastShortcut = shortcut;
                         break;
@@ -61,13 +61,13 @@ namespace GorillaInfoWatch.Behaviours
 
         private void SaveShortcut(Shortcut shortcut)
         {
-            if (shortcut != null) DataManager.Instance.SetEntry(_shortcutIdEntry, shortcut.FunctionId);
+            if (shortcut != null) DataManager.Instance.SetEntry(_shortcutIdEntry, shortcut.GetShortcutId());
             else DataManager.Instance.RemoveEntry(_shortcutIdEntry);
         }
 
         public void ExcecuteShortcut(Shortcut shortcut)
         {
-            shortcut.Method?.Invoke(!shortcut.IsToggleFunction || shortcut.StateGetter.Invoke());
+            shortcut.Method?.Invoke(!shortcut.HasState || shortcut.GetState());
         }
     }
 }

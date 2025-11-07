@@ -1,4 +1,4 @@
-﻿namespace GorillaInfoWatch.Models.Enumerations
+﻿namespace GorillaInfoWatch.Models
 {
     public enum Sounds
     {
@@ -14,6 +14,9 @@
         error3,
         error4,
         error5,
-        error6
+        error6,
+        activationMain,
+        activationGeneric,
+        deactivation
     }
 }

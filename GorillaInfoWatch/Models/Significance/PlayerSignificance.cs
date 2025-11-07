@@ -1,6 +1,4 @@
-﻿using GorillaInfoWatch.Models.Enumerations;
-
-namespace GorillaInfoWatch.Models.Significance
+﻿namespace GorillaInfoWatch.Models.Significance
 {
     public class PlayerSignificance
     {

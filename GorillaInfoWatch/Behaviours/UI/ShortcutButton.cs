@@ -4,7 +4,6 @@ using UnityEngine;
 #if PLUGIN
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models.Enumerations;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 #endif
 
@@ -25,20 +24,42 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private Shortcut _shortcut;
 
-        private float _lastTime;
+        private Material _material;
+
+        private Gradient _buttonColour;
 
         private HandIndicator _touching;
 
         private float _timer;
 
+        private bool _activated;
+
+        private float _activationTime;
+
+        private readonly float _holdDuration = 0.25f;
+
+        private readonly float _activationInterval = 1f;
+
+        public void Start()
+        {
+            Material[] materials = buttonRenderer.materials;
+            _material = materials[materialIndex] = new Material(materials[materialIndex]);
+            buttonRenderer.materials = materials;
+
+            enabled = _shortcut != null;
+        }
+
         public void OnTriggerEnter(Collider other)
         {
-            if (_lastTime > (Time.realtimeSinceStartup - 1f) || _touching != null) return;
+            if (_activated || _touching != null) return;
 
             if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != InfoWatch.LocalWatch.InLeftHand)
             {
                 _touching = handIndicator;
                 _timer = 0f;
+
+                AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
+                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.activationGeneric], 0.2f);
             }
         }
 
@@ -52,24 +73,44 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Update()
         {
+            float time;
+
+            if (_activated && _activationTime > (Time.realtimeSinceStartup - _activationInterval))
+            {
+                time = Mathf.Clamp01(_activationTime - (Time.realtimeSinceStartup - _activationInterval));
+                _material.color = _buttonColour.Evaluate(time);
+            }
+            else if (_activated)
+            {
+                _activated = false;
+                _material.color = _buttonColour.Evaluate(0);
+            }
+
             if (_touching == null) return;
 
             _timer += Time.unscaledDeltaTime;
 
-            GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticDuration, Time.unscaledDeltaTime);
+            GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 5f, Time.unscaledDeltaTime);
 
-            if (_timer < 0.25f) return;
+            time = Mathf.Clamp01(_timer / _holdDuration);
+            _material.color = _buttonColour.Evaluate(time);
 
-            _lastTime = Time.realtimeSinceStartup;
+            if (time < 1f) return;
+
+            _activationTime = Time.realtimeSinceStartup;
 
             try
             {
+                _activated = true;
+
                 GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
                 AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
-                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.widgetButton], 0.2f);
+                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.deactivation], 0.2f);
 
                 ShortcutManager.Instance.ExcecuteShortcut(_shortcut);
+
+                if (_shortcut.HasState) _buttonColour = _shortcut.GetState() ? ColourPalette.Green : ColourPalette.Red;
             }
             catch
             {
@@ -82,16 +123,15 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void SetShortcut(Shortcut shortcut)
         {
-            SetActive(shortcut != null);
-
-            if (shortcut == null)
-            {
-                _shortcut = null;
-                return;
-            }
-
             _shortcut = shortcut;
-            buttonText.text = shortcut.Name;
+
+            enabled = _shortcut != null;
+            SetActive(_shortcut != null);
+
+            if (_shortcut == null) return;
+
+            buttonText.text = _shortcut.Name;
+            _buttonColour = _shortcut.HasState ? (_shortcut.GetState() ? ColourPalette.Green : ColourPalette.Red) : ColourPalette.Button;
         }
 
         public void SetActive(bool active)

@@ -1,5 +1,5 @@
 ﻿using BepInEx;
-using GorillaInfoWatch.Models.Enumerations;
+using GorillaInfoWatch.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

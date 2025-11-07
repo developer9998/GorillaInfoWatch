@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Models.Enumerations;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Significance
 {

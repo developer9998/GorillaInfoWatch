@@ -3,13 +3,12 @@ using BepInEx.Bootstrap;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Functions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
-using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
+using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using HarmonyLib;
@@ -35,8 +34,6 @@ namespace GorillaInfoWatch.Behaviours
     public class Main : MonoBehaviourPunCallbacks
     {
         public static Main Instance { get; private set; }
-
-        public static event Action Initialized;
 
         // Content
         public static ModContent Content { get; private set; }
@@ -76,6 +73,8 @@ namespace GorillaInfoWatch.Behaviours
 
 
         // Assets
+
+        private AssetLoader _assetLoader;
 
         private GameObject localWatchObject, menu;
 
@@ -125,8 +124,8 @@ namespace GorillaInfoWatch.Behaviours
                 typeof(PlayerInspectorScreen),
                 typeof(DetailsScreen),
                 typeof(FriendScreen),
-                typeof(ShortcutListScreen),
                 typeof(ModListScreen),
+                typeof(ShortcutListScreen),
                 typeof(ModInspectorScreen),
                 typeof(CreditScreen)
             ];
@@ -224,7 +223,9 @@ namespace GorillaInfoWatch.Behaviours
 
             GetScreen<ShortcutListScreen>().SetEntries(ShortcutRegistrar.Shortcuts);
 
-            Content = await AssetLoader.LoadAsset<ModContent>("Data");
+            _assetLoader = new AssetLoader("GorillaInfoWatch.Content.watchbundle");
+
+            Content = await _assetLoader.LoadAsset<ModContent>("Data");
 
             Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Figures, figure => (FigureSignificance)figure));
             Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
@@ -240,7 +241,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (enumeration == Sounds.None) continue;
 
-                AudioClip clip = await AssetLoader.LoadAsset<AudioClip>(enumeration.GetName());
+                AudioClip clip = await _assetLoader.LoadAsset<AudioClip>(enumeration.GetName());
 
                 if (clip is not null)
                 {
@@ -253,7 +254,7 @@ namespace GorillaInfoWatch.Behaviours
 
             EnumToAudio = new ReadOnlyDictionary<Sounds, AudioClip>(audioClipDictionary);
 
-            Sprite[] spriteCollection = await AssetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
+            Sprite[] spriteCollection = await _assetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
             EnumToSprite = new ReadOnlyDictionary<Symbols, Sprite>(Array.FindAll(spriteCollection, sprite => Enum.IsDefined(typeof(Symbols), sprite.name)).ToDictionary(sprite => (Symbols)Enum.Parse(typeof(Symbols), sprite.name), sprite => sprite));
 
             // Objects
@@ -377,14 +378,15 @@ namespace GorillaInfoWatch.Behaviours
             Home.SetEntries([.. screenCache.Values]);
             LoadScreen(Home);
 
-            Notifications.RequestSendNotification = HandleSentNotification;
-            Notifications.RequestOpenNotification = HandleOpenNotification;
             Events.OnQuestCompleted += OnQuestCompleted;
+            Notifications.SendRequest += HandleSentNotification;
+            Notifications.OpenRequest += HandleOpenNotification;
+
             MothershipClientApiUnity.OnMessageNotificationSocket += OnMothershipMessageRecieved;
 
             enabled = true;
 
-            Initialized?.Invoke();
+            Events.OnModInitialized?.Invoke();
         }
 
         public void Update()

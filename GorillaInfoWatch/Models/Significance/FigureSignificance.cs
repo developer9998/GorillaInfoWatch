@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Models.Enumerations;
-using System;
+﻿using System;
 using System.Linq;
 
 namespace GorillaInfoWatch.Models.Significance

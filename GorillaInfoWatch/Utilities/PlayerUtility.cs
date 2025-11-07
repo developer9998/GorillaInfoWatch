@@ -3,6 +3,7 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
 using System;
 using System.Linq;
+using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Utilities
 {
@@ -72,6 +73,28 @@ namespace GorillaInfoWatch.Utilities
             }
 
             Logging.Warning($"No scoreboard lines detected for player {player.GetName().EnforcePlayerNameLength()} (what the fuck map are you in??)");
+        }
+
+        public static void MutePlayer(NetPlayer player, bool value)
+        {
+            RunScoreboardLineAction(player, (scoreboardLine, isPrimaryLine) =>
+            {
+                if (isPrimaryLine)
+                {
+                    scoreboardLine.muteButton.isOn = value;
+                    scoreboardLine.PressButton(value, GorillaPlayerLineButton.ButtonType.Mute);
+                    return;
+                }
+                scoreboardLine.InitializeLine();
+            });
+        }
+
+        public static void FriendPlayer(NetPlayer player, bool value)
+        {
+            bool isFriend = GFriends.IsFriend(player.UserId);
+
+            if (!value && isFriend) GFriends.RemoveFriend(player.UserId);
+            else if (value && !isFriend) GFriends.AddFriend(player.UserId);
         }
     }
 }

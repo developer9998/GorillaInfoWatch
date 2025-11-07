@@ -4,6 +4,8 @@ namespace GorillaInfoWatch
 {
     public class Events
     {
+        internal static Action OnModInitialized;
+
         internal static Action<VRRig> OnRigNameUpdate;
 
         internal static Action<VRRig> OnRigRecievedCosmetics;

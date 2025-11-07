@@ -9,15 +9,13 @@ namespace GorillaInfoWatch.Models
 
         public readonly string Description;
 
-        public readonly bool IsToggleFunction;
+        public readonly bool HasState;
 
         internal readonly Func<bool> StateGetter;
 
         internal readonly Action<bool> Method;
 
         internal Assembly CallingAssembly;
-
-        internal string FunctionId => $"{CallingAssembly.GetName().Name}_{Name}";
 
         internal Shortcut(Assembly source, string name, string description, Action method)
         {
@@ -35,9 +33,43 @@ namespace GorillaInfoWatch.Models
             Name = name;
             Description = description;
 
-            IsToggleFunction = true;
+            HasState = true;
             StateGetter = stateGetter;
             Method = method;
+        }
+
+        internal string GetShortcutId()
+        {
+            if (CallingAssembly == null) return Name;
+
+            try
+            {
+                AssemblyName assemblyName = CallingAssembly.GetName();
+                return $"{assemblyName.Name}_{Name}";
+            }
+            catch (Exception)
+            {
+
+            }
+
+            return Name;
+        }
+
+        internal bool GetState()
+        {
+            if (!HasState || StateGetter == null) return false;
+
+            try
+            {
+                bool state = StateGetter.Invoke();
+                return state;
+            }
+            catch (Exception)
+            {
+
+            }
+
+            return false;
         }
     }
 }

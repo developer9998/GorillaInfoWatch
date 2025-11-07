@@ -1,7 +1,6 @@
 using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Utilities;
@@ -177,16 +176,7 @@ namespace GorillaInfoWatch.Screens
         {
             if (args.ElementAtOrDefault(0) is NetPlayer player)
             {
-                PlayerUtility.RunScoreboardLineAction(player, (scoreboardLine, isPrimaryLine) =>
-                {
-                    if (isPrimaryLine)
-                    {
-                        scoreboardLine.muteButton.isOn = value;
-                        scoreboardLine.PressButton(value, GorillaPlayerLineButton.ButtonType.Mute);
-                        return;
-                    }
-                    scoreboardLine.InitializeLine();
-                });
+                PlayerUtility.MutePlayer(player, value);
 
                 SetText();
             }
@@ -194,12 +184,9 @@ namespace GorillaInfoWatch.Screens
 
         private void OnFriendButtonClick(bool value, object[] args)
         {
-            if (args.ElementAtOrDefault(0) is NetPlayer netPlayer)
+            if (args.ElementAtOrDefault(0) is NetPlayer player)
             {
-                bool isFriend = GFriends.IsFriend(netPlayer.UserId);
-
-                if (!value && isFriend) GFriends.RemoveFriend(netPlayer.UserId);
-                else if (value && !isFriend) GFriends.AddFriend(netPlayer.UserId);
+                PlayerUtility.FriendPlayer(player, value);
 
                 SetContent();
             }

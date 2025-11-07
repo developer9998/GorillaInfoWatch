@@ -1,5 +1,4 @@
 using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Models.Enumerations;
 using System.Collections.Generic;
 using UnityEngine;
 

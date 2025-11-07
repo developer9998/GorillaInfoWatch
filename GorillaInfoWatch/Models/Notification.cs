@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using GorillaInfoWatch.Models.Enumerations;
 using System;
 using System.Threading.Tasks;
 

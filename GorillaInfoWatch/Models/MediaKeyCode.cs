@@ -1,4 +1,4 @@
-﻿namespace GorillaInfoWatch.Models.Enumerations
+﻿namespace GorillaInfoWatch.Models
 {
     // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     public enum MediaKeyCode : uint

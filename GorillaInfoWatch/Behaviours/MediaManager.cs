@@ -1,6 +1,6 @@
 ﻿using BepInEx;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models.Enumerations;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
 using Newtonsoft.Json.Linq;
 using System;
@@ -19,6 +19,7 @@ namespace GorillaInfoWatch.Behaviours
         public static MediaManager Instance { get; private set; }
 
         public Dictionary<string, Session> Sessions { get; private set; } = [];
+
         public string FocussedSession { get; private set; } = null;
 
         public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
@@ -50,7 +51,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Instance = this;
 
-            Main.Initialized += HandleModInitialized;
+            Events.OnModInitialized += HandleModInitialized;
             Application.wantsToQuit += HandleGameQuit;
         }
 

@@ -9,9 +9,9 @@ namespace GorillaInfoWatch
 {
     public static class Notifications
     {
-        internal static Action<Notification> RequestSendNotification;
+        internal static event Action<Notification> SendRequest;
 
-        internal static Action<Notification, bool> RequestOpenNotification;
+        internal static event Action<Notification, bool> OpenRequest;
 
         public static void SendNotification(Notification notification)
         {
@@ -27,14 +27,14 @@ namespace GorillaInfoWatch
 
             Logging.Message($"Notification sending from {assembly.GetName().Name}:\n{notification.DisplayText}");
 
-            RequestSendNotification?.SafeInvoke(notification);
+            SendRequest?.SafeInvoke(notification);
         }
 
         public static void OpenNotification(Notification notification, bool process)
         {
             if (notification is null) throw new ArgumentNullException(nameof(notification));
 
-            RequestOpenNotification?.SafeInvoke(notification, process);
+            OpenRequest?.SafeInvoke(notification, process);
         }
     }
 }

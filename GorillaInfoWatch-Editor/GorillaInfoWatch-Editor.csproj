@@ -7,20 +7,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\GorillaInfoWatch\Models\Enumerations\Symbols.cs">
-			<Link>Symbols.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Models\Symbols.cs">
+			<Link>Models\Symbols.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Models\ModContent.cs">
-			<Link>ModContent.cs</Link>
+			<Link>Models\ModContent.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Models\Significance\FigureSignificanceObject.cs">
-			<Link>FigureSignificanceObject.cs</Link>
+			<Link>Models\Significance\FigureSignificanceObject.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Models\Significance\ItemSignificanceObject.cs">
-			<Link>ItemSignificanceObject.cs</Link>
+			<Link>Models\Significance\ItemSignificanceObject.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Behaviours\InfoWatch.cs">
-			<Link>Important\InfoWatch.cs</Link>
+			<Link>Behaviours\InfoWatch.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Behaviours\UI\ShortcutButton.cs">
 			<Link>Behaviours\UI\ShortcutButton.cs</Link>

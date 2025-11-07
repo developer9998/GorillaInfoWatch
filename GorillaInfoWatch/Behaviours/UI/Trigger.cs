@@ -1,6 +1,6 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
-using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
 using UnityEngine;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 using Player = GorillaLocomotion.GTPlayer;
@@ -22,7 +22,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             AudioSource = GetComponent<AudioSource>();
 
-            Menu.SetActive(!ContextInfo.InVR);
+            Menu.SetActive(!XRUtility.IsXRSubsystemActive);
         }
 
         public void OnTriggerEnter(Collider other)

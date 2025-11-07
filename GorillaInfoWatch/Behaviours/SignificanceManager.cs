@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Models.Enumerations;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
