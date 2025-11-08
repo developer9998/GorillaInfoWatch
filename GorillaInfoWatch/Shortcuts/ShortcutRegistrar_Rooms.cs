@@ -5,7 +5,6 @@ using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
 using GorillaLocomotion;
 using GorillaNetworking;
-using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Collections.Generic;
@@ -132,7 +131,7 @@ namespace GorillaInfoWatch.Shortcuts
                 float nearestDistance = -1;
                 int nearestIndex = 0;
 
-                for(int i = 0; i < rigsInUse.Count; i++)
+                for (int i = 0; i < rigsInUse.Count; i++)
                 {
                     float distance = (position - rigsInUse[i].Rig.syncPos).sqrMagnitude;
                     if (nearestDistance == -1 || nearestDistance > distance)

@@ -1,6 +1,5 @@
 ﻿using BepInEx.Configuration;
 using GameObjectScheduling;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;

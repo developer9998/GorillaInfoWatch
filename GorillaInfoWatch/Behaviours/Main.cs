@@ -12,7 +12,6 @@ using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using HarmonyLib;
-using Newtonsoft.Json.Linq;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
