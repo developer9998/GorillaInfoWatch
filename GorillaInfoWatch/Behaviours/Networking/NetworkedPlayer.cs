@@ -10,8 +10,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
     [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
     public class NetworkedPlayer : MonoBehaviour
     {
-        public Watch NetworkedInfoWatch { get; private set; }
-
+        public Watch Watch { get; private set; }
         public bool HasInfoWatch { get; set; }
 
         public VRRig Rig;
@@ -22,8 +21,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
         {
             NetworkManager.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
 
-            if (!HasInfoWatch && Player is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef)
-                NetworkManager.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
+            if (!HasInfoWatch && Player is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef) NetworkManager.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
         }
 
         public void OnDestroy()
@@ -33,7 +31,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
             if (HasInfoWatch)
             {
                 HasInfoWatch = false;
-                if (NetworkedInfoWatch) Destroy(NetworkedInfoWatch.gameObject);
+                if (Watch) Destroy(Watch.gameObject);
             }
         }
 
@@ -43,16 +41,16 @@ namespace GorillaInfoWatch.Behaviours.Networking
             {
                 Logging.Info($"{player.GetName().SanitizeName()} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
 
-                if (NetworkedInfoWatch == null || !NetworkedInfoWatch)
+                if (Watch == null || !Watch)
                 {
                     GameObject prefab = Instantiate(Main.Content.WatchPrefab);
-                    NetworkedInfoWatch = prefab.GetComponent<Watch>();
-                    NetworkedInfoWatch.Rig = Rig;
+                    Watch = prefab.GetComponent<Watch>();
+                    Watch.Rig = Rig;
                     prefab.SetActive(true);
                 }
 
                 if (properties.TryGetValue("TimeOffset", out object timeOffsetObj) && timeOffsetObj is float timeObject)
-                    NetworkedInfoWatch.TimeOffset = timeObject;
+                    Watch.TimeOffset = timeObject;
             }
         }
     }

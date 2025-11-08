@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Screens
 
             PageBuilder pages = new();
 
-            pages.AddPage(Mod.Metadata.Name, lines);
+            pages.Add(Mod.Metadata.Name, lines);
 
             var entries = Mod.Instance.Config.Keys.Select(key => Mod.Instance.Config[key]);
 
@@ -84,7 +84,7 @@ namespace GorillaInfoWatch.Screens
 
                 lines.Add($"Value: {configEntry.GetSerializedValue()}", widgets);
 
-                pages.AddPage(configEntry.Definition.Section, lines);
+                pages.Add(configEntry.Definition.Section, lines);
             }
 
             return pages;

@@ -166,8 +166,8 @@ namespace GorillaInfoWatch.Screens
 
             #endregion
 
-            inspectorPage.AddPage(lines);
-            if (significanceLines.Lines.Count > 0) inspectorPage.AddPage("Significance", significanceLines);
+            inspectorPage.Add(lines);
+            if (significanceLines.Lines.Count > 0) inspectorPage.Add("Significance", significanceLines);
 
             return inspectorPage;
         }

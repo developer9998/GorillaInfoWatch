@@ -8,17 +8,24 @@ namespace GorillaInfoWatch.Models
 {
     public abstract class ShortcutRegistrar
     {
-        public static ReadOnlyCollection<Shortcut> Shortcuts => _shortcuts.AsReadOnly();
-
         public abstract string Title { get; }
 
-        private static readonly List<Shortcut> _shortcuts = [];
+        public ReadOnlyCollection<Shortcut> Shortcuts => _shortcuts.AsReadOnly();
 
-        public void RegisterShortcut(string name, string description, Action method)
+        public static ReadOnlyCollection<Shortcut> AllShortcuts => _allShortcuts.AsReadOnly();
+
+        private readonly List<Shortcut> _shortcuts = [];
+
+        private static readonly List<Shortcut> _allShortcuts = [];
+
+        public void RegisterShortcut(string name, string description, Action method) => RegisterShortcut(name, description, ShortcutRestrictions.None, method);
+
+        public void RegisterShortcut(string name, string description, ShortcutRestrictions restrictions, Action method)
         {
             Assembly source = Assembly.GetCallingAssembly();
-            Shortcut function = new(source, name, description, method);
-            _shortcuts.Add(function);
+            Shortcut shortcut = new(source, name, description, restrictions, method);
+            _shortcuts.Add(shortcut);
+            _allShortcuts.Add(shortcut);
         }
 
         internal void Notify(Notification notification) => Notifications.SendNotification(notification);

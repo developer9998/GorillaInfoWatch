@@ -242,7 +242,7 @@ namespace GorillaInfoWatch.Screens
             LineBuilder platform = str;
             */
 
-            return new PageBuilder(("Profile", profileLines), ("Economy", economyLines), ("Safety", safetyLines), ("Progression", progressionLines));
+            return new PageBuilder(("Profile", "", profileLines), ("Economy", "", economyLines), ("Safety", "", safetyLines), ("Progression", "", progressionLines));
         }
     }
 }

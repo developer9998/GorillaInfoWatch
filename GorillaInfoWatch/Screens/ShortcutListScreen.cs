@@ -12,35 +12,47 @@ namespace GorillaInfoWatch.Screens
     internal class ShortcutListScreen : InfoScreen
     {
         public override string Title => "Shortcuts";
-
         public override string Description => "Choose a bind for the shortcut button and inspect shortcuts";
 
-        internal List<Shortcut> _entries;
+        internal List<ShortcutRegistrar> _entries;
 
-
-        internal void SetEntries(IList<Shortcut> list)
+        internal void SetEntries(IList<ShortcutRegistrar> list)
         {
             Assembly nativeAssembly = Assembly.GetExecutingAssembly();
 
-            IEnumerable<Shortcut> nativeScreens = list.Where(screen => screen.GetType().Assembly == nativeAssembly);
+            IEnumerable<ShortcutRegistrar> nativeScreens = list.Where(screen => screen.GetType().Assembly == nativeAssembly);
             _entries = [.. nativeScreens, .. list.Except(nativeScreens)];
         }
 
         public override InfoContent GetContent()
         {
-            LineBuilder lines = new();
+            PageBuilder pages = new();
 
-            foreach (Shortcut shortcut in _entries)
+            foreach (ShortcutRegistrar registrar in _entries)
             {
-                string shortcutText = string.Format("<line-height=45%>{0}<br><size=60%>{1}", shortcut.Name, shortcut.Description);
-                lines.Add(shortcutText, new Widget_Switch(ShortcutHandler.Instance.Shortcut == shortcut, (bool value) =>
+                LineBuilder lines = new();
+
+                foreach (Shortcut shortcut in registrar.Shortcuts)
                 {
-                    ShortcutHandler.Instance.SetOrRemoveShortcut(shortcut);
-                    SetContent();
-                }));
+                    string shortcutText = string.Format("<line-height=45%>{0}<br><size=60%>{1}", shortcut.Name, shortcut.Description);
+                    lines.Add(shortcutText, new Widget_PushButton(() =>
+                    {
+                        ShortcutHandler.Instance.ExcecuteShortcut(shortcut);
+                    })
+                    {
+                        Colour = ColourPalette.Green,
+                        Symbol = Symbol.GetSharedSymbol(Symbols.Play)
+                    }, new Widget_Switch(ShortcutHandler.Instance.Shortcut == shortcut, (bool value) =>
+                    {
+                        ShortcutHandler.Instance.SetOrRemoveShortcut(shortcut);
+                        SetContent();
+                    }));
+                }
+
+                pages.Add(lines, registrar.Title);
             }
 
-            return lines;
+            return pages;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
+using GorillaExtensions;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
@@ -56,48 +57,48 @@ namespace GorillaInfoWatch.Behaviours
 
         // Screens
 
-        private HomeScreen Home;
+        private HomeScreen _homeScreen;
 
-        private WarningScreen Warning;
+        private WarningScreen _warnScreen;
 
-        private InboxScreen Inbox;
+        private InboxScreen _inboxScreen;
 
-        private GameObject screenObject;
+        private GameObject _screenRoot;
 
-        private readonly Dictionary<Type, InfoScreen> screenCache = [];
+        private readonly Dictionary<Type, InfoScreen> _screens = [];
 
-        private readonly List<Notification> notifications = [];
+        private readonly List<Notification> _notifications = [];
 
-        // Functions
+        // Shortcuts
 
-
+        private readonly Dictionary<Type, ShortcutRegistrar> _shortcutRegistars = [];
 
         // Assets
 
         private AssetLoader _assetLoader;
 
-        private GameObject localWatchObject, menu;
+        private GameObject _watchObject, _panelObject;
 
-        private Watch localInfoWatch;
-        private Panel localPanel;
+        private Watch _infoWatch;
+        private Panel _panel;
 
-        // Menu
+        // Panel
 
-        private Image menuBackground;
-        private TMP_Text menuHeader;
-        private TMP_Text menuDescription;
-        private Transform menuLinesOrigin;
+        private Image _panelBackground;
+        private TMP_Text _panelTitle;
+        private TMP_Text _panelDescription;
+        private Transform _panelLinesRoot;
         private List<PanelLine> _panelLines;
         private TMP_Text _sampleLineText;
 
         // Display
 
-        private TMP_Text menuPageText;
-        private PushButton menuPrevPageButton, menuNextPageButton, menuReturnButton, menuReloadButton, menuInboxButton;
+        private TMP_Text _panelPageText;
+        private PushButton _panelPrevPageButton, _panelNextPageButton, _panelReturnButton, _panelReloadButton, _panelInboxButton;
 
         // Runtime
 
-        private bool wasRoomAllowed = true;
+        private bool _wasRoomAllowed = true;
 
         public async void Awake()
         {
@@ -112,9 +113,9 @@ namespace GorillaInfoWatch.Behaviours
 
             // Screens
 
-            screenObject = new GameObject("ScreenContainer");
-            screenObject.SetActive(false);
-            screenObject.transform.SetParent(transform);
+            _screenRoot = new GameObject("Screen Root");
+            _screenRoot.SetActive(false);
+            _screenRoot.transform.SetParent(transform);
 
             // This list should be expanded to encapsulate proper screens (in the form of their types)
             // "Proper" screens refer to all but any hardcoded screens (including Home, Inbox, and Warning screens)
@@ -218,11 +219,9 @@ namespace GorillaInfoWatch.Behaviours
             }
 
             // Hardcoded screens are retrieved here, ensure registerFallback parameter is turned set to True for each method
-            Home = GetScreen<HomeScreen>();
-            Warning = GetScreen<WarningScreen>();
-            Inbox = GetScreen<InboxScreen>();
-
-            GetScreen<ShortcutListScreen>().SetEntries(ShortcutRegistrar.Shortcuts);
+            _homeScreen = GetScreen<HomeScreen>();
+            _warnScreen = GetScreen<WarningScreen>();
+            _inboxScreen = GetScreen<InboxScreen>();
 
             _assetLoader = new AssetLoader("GorillaInfoWatch.Content.watchbundle");
 
@@ -261,29 +260,29 @@ namespace GorillaInfoWatch.Behaviours
             // Objects
 
             Content.WatchPrefab.SetActive(false);
-            localWatchObject = Instantiate(Content.WatchPrefab);
-            localWatchObject.name = "InfoWatch";
+            _watchObject = Instantiate(Content.WatchPrefab);
+            _watchObject.name = "InfoWatch";
 
-            localInfoWatch = localWatchObject.GetComponent<Watch>();
-            localInfoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
-            localWatchObject.SetActive(true);
+            _infoWatch = _watchObject.GetComponent<Watch>();
+            _infoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
+            _watchObject.SetActive(true);
 
             float timeOffset = Convert.ToSingle(TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes);
-            localInfoWatch.TimeOffset = timeOffset;
+            _infoWatch.TimeOffset = timeOffset;
             NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
 
-            menu = Instantiate(Content.MenuPrefab);
-            menu.name = "InfoMenu";
-            menu.transform.SetParent(transform);
-            menu.gameObject.SetActive(true);
+            _panelObject = Instantiate(Content.MenuPrefab);
+            _panelObject.name = "InfoMenu";
+            _panelObject.transform.SetParent(transform);
+            _panelObject.gameObject.SetActive(true);
 
-            menuBackground = menu.transform.Find("Canvas/Background").GetComponent<Image>();
-            menuHeader = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
-            menuDescription = menu.transform.Find("Canvas/Header/Description").GetComponent<TMP_Text>();
-            menuLinesOrigin = menu.transform.Find("Canvas/Lines");
+            _panelBackground = _panelObject.transform.Find("Canvas/Background").GetComponent<Image>();
+            _panelTitle = _panelObject.transform.Find("Canvas/Header/TextContainer/Title").GetComponent<TMP_Text>();
+            _panelDescription = _panelObject.transform.Find("Canvas/Header/TextContainer/Description").GetComponent<TMP_Text>();
+            _panelLinesRoot = _panelObject.transform.Find("Canvas/Lines");
             _panelLines = new(Constants.SectionCapacity);
 
-            foreach (Transform transform in menuLinesOrigin)
+            foreach (Transform transform in _panelLinesRoot)
             {
                 transform.gameObject.SetActive(true);
 
@@ -308,30 +307,30 @@ namespace GorillaInfoWatch.Behaviours
 
             // Components
 
-            menuPageText = menu.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
+            _panelPageText = _panelObject.transform.Find("Canvas/Page Text").GetComponent<TMP_Text>();
 
-            menuNextPageButton = menu.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
-            menuNextPageButton.OnButtonPressed = () =>
+            _panelNextPageButton = _panelObject.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
+            _panelNextPageButton.OnButtonPressed = () =>
             {
-                ActiveScreen.sectionNumber++;
+                ActiveScreen.SectionNumber++;
                 UpdateScreen();
             };
 
-            menuPrevPageButton = menu.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
-            menuPrevPageButton.OnButtonPressed = () =>
+            _panelPrevPageButton = _panelObject.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
+            _panelPrevPageButton.OnButtonPressed = () =>
             {
-                ActiveScreen.sectionNumber--;
+                ActiveScreen.SectionNumber--;
                 UpdateScreen();
             };
 
-            menuReturnButton = menu.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
-            menuReturnButton.OnButtonPressed = () =>
+            _panelReturnButton = _panelObject.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
+            _panelReturnButton.OnButtonPressed = () =>
             {
                 if (ActiveScreen is not InfoScreen activeScreen) return;
 
                 if (activeScreen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute)
                 {
-                    LoadScreen(Home);
+                    LoadScreen(_homeScreen);
                     return;
                 }
 
@@ -361,33 +360,37 @@ namespace GorillaInfoWatch.Behaviours
                 LoadScreen(activeScreen.CallerScreenType);
             };
 
-            menuReloadButton = menu.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
-            menuReloadButton.OnButtonPressed = () =>
+            _panelReloadButton = _panelObject.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
+            _panelReloadButton.OnButtonPressed = () =>
             {
                 if (ActiveScreen is InfoScreen screen)
                 {
-                    _panelLines.ForEach(line => line.Build(new InfoLine("", []), true));
+                    _panelLines.ForEach(line => line.Build(new InfoLine("Placeholder", []), true));
                     screen.OnScreenReload();
-                    screen.contents = screen.GetContent();
+                    screen.Content = screen.GetContent();
                     UpdateScreen();
                 }
             };
 
-            menuInboxButton ??= menu.transform.Find("Canvas/Button_Inbox").AddComponent<PushButton>();
-            menuInboxButton.OnButtonPressed = delegate ()
+            _panelInboxButton ??= _panelObject.transform.Find("Canvas/Button_Inbox").AddComponent<PushButton>();
+            _panelInboxButton.OnButtonPressed = delegate ()
             {
-                LoadScreen(Inbox);
+                LoadScreen(_inboxScreen);
             };
 
-            localPanel = menu.AddComponent<Panel>();
-            localPanel.Origin = localWatchObject.transform.Find("Point");
+            _panel = _panelObject.AddComponent<Panel>();
+            _panel.Origin = _watchObject.transform.Find("Point");
 
-            Trigger watchTrigger = localWatchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<Trigger>();
-            watchTrigger.Menu = localPanel;
+            Trigger watchTrigger = _watchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<Trigger>();
+            watchTrigger.Menu = _panel;
 
-            screenObject.SetActive(true);
-            Home.SetEntries([.. screenCache.Values]);
-            LoadScreen(Home);
+            _screenRoot.SetActive(true);
+
+            GetScreen<ShortcutListScreen>().SetEntries([.. _shortcutRegistars.Values]);
+
+            _homeScreen.SetEntries([.. _screens.Values]);
+            LoadScreen(_homeScreen);
+
             RefreshInbox();
 
             Events.OnQuestCompleted += OnQuestCompleted;
@@ -408,8 +411,8 @@ namespace GorillaInfoWatch.Behaviours
                 GorillaComputer computer = GorillaComputer.instance;
                 bool roomNotAllowed = computer.roomNotAllowed;
 
-                if (wasRoomAllowed != roomNotAllowed) return;
-                wasRoomAllowed = !roomNotAllowed;
+                if (_wasRoomAllowed != roomNotAllowed) return;
+                _wasRoomAllowed = !roomNotAllowed;
 
                 if (roomNotAllowed) Notifications.SendNotification(new("Room Join failure", "Room inaccessible", 3, Sounds.notificationNegative));
             }
@@ -417,27 +420,27 @@ namespace GorillaInfoWatch.Behaviours
 
         public void HandleSentNotification(Notification notification)
         {
-            if (notification is null || notification.Opened || notifications.Contains(notification))
+            if (notification is null || notification.Opened || _notifications.Contains(notification))
                 return;
 
-            notifications.Add(notification);
+            _notifications.Add(notification);
 
             if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip))
-                localInfoWatch.audioDevice.PlayOneShot(audioClip);
+                _infoWatch.audioDevice.PlayOneShot(audioClip);
 
             bool isSilent = notification.Sound == Sounds.None;
-            GorillaTagger.Instance.StartVibration(localInfoWatch.InLeftHand, isSilent ? 0.2f : 0.04f, isSilent ? 0.1f : 0.2f);
+            GorillaTagger.Instance.StartVibration(_infoWatch.InLeftHand, isSilent ? 0.2f : 0.04f, isSilent ? 0.1f : 0.2f);
 
-            var stateMachine = localInfoWatch.MenuStateMachine;
+            var stateMachine = _infoWatch.MenuStateMachine;
             Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;
-            stateMachine.SwitchState(new Menu_Notification(localInfoWatch, currentState, notification));
+            stateMachine.SwitchState(new Menu_Notification(_infoWatch, currentState, notification));
 
             RefreshInbox();
         }
 
         public void HandleOpenNotification(Notification notification, bool process)
         {
-            if (notification is null || notification.Opened || !notifications.Contains(notification) || notification.Processing)
+            if (notification is null || notification.Opened || !_notifications.Contains(notification) || notification.Processing)
             {
                 Logging.Warning($"OpenNotification \"{(notification is not null ? notification.DisplayText : "Null")}\"");
 
@@ -445,8 +448,8 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     Logging.Warning($"Processing: {notification.Processing}");
                     Logging.Warning($"Opened: {notification.Opened}");
-                    Logging.Warning($"Known: {notifications.Contains(notification)}");
-                    if (Inbox.Contents.Contains(notification))
+                    Logging.Warning($"Known: {_notifications.Contains(notification)}");
+                    if (_inboxScreen.Contents.Contains(notification))
                     {
                         Logging.Info("Exists in inbox, correcting error");
                         RefreshInbox();
@@ -486,17 +489,17 @@ namespace GorillaInfoWatch.Behaviours
 
         public void RefreshInbox()
         {
-            Inbox.Contents = [.. notifications.Where(notif => !notif.Opened).OrderByDescending(notif => notif.Created)];
+            _inboxScreen.Contents = [.. _notifications.Where(notif => !notif.Opened).OrderByDescending(notif => notif.Created)];
 
-            if (ActiveScreen == Inbox) Inbox.SetContent();
+            if (ActiveScreen == _inboxScreen) _inboxScreen.SetContent();
 
-            localInfoWatch.HomeState?.UpdateBell(Inbox.Contents.Count);
+            _infoWatch.HomeState?.UpdateBell(_inboxScreen.Contents.Count);
         }
 
         public void PlayErrorSound()
         {
             string soundName = string.Concat("error", Random.Range(1, 7));
-            if (Enum.TryParse(soundName, out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip)) localInfoWatch.audioDevice.PlayOneShot(audioClip);
+            if (Enum.TryParse(soundName, out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip)) _infoWatch.audioDevice.PlayOneShot(audioClip);
         }
 
         public void PressButton(PushButton button, bool isLeftHand)
@@ -531,7 +534,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public T GetScreen<T>(bool registerFallback = true) where T : InfoScreen => (T)GetScreen(typeof(T), registerFallback);
 
-        public InfoScreen GetScreen(Type type, bool registerFallback = true) => (screenCache.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? screenCache[type] : null;
+        public InfoScreen GetScreen(Type type, bool registerFallback = true) => (_screens.ContainsKey(type) || (registerFallback && RegisterScreen(type))) ? _screens[type] : null;
 
         public void LoadScreen(InfoScreen newScreen)
         {
@@ -547,11 +550,11 @@ namespace GorillaInfoWatch.Behaviours
                 lastScreen.OnScreenUnload();
 
                 PreserveScreenSectionAttribute preserveSection = lastScreen.GetType().GetCustomAttribute<PreserveScreenSectionAttribute>();
-                if (preserveSection == null) lastScreen.sectionNumber = 0;
-                if (preserveSection == null || preserveSection.ClearContent) lastScreen.contents = null;
+                if (preserveSection == null) lastScreen.SectionNumber = 0;
+                if (preserveSection == null || preserveSection.ClearContent) lastScreen.Content = null;
 
-                if (newScreen != Home && lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = newScreen.CallerScreenType;
-                else if (newScreen != Home) callerScreenType = lastScreen.GetType();
+                if (newScreen != _homeScreen && lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = newScreen.CallerScreenType;
+                else if (newScreen != _homeScreen) callerScreenType = lastScreen.GetType();
             }
 
             ActiveScreen = newScreen;
@@ -561,14 +564,14 @@ namespace GorillaInfoWatch.Behaviours
             newScreen.LoadScreenRequest += LoadScreen;
             newScreen.UpdateScreenRequest += delegate (bool includeWidgets)
             {
-                newScreen.contents = newScreen.GetContent();
+                newScreen.Content = newScreen.GetContent();
                 UpdateScreen(includeWidgets);
             };
 
             newScreen.enabled = true;
             newScreen.OnScreenLoad();
 
-            newScreen.contents = newScreen.GetContent();
+            newScreen.Content = newScreen.GetContent();
             UpdateScreen();
         }
 
@@ -576,7 +579,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             if (type is null)
             {
-                if (ActiveScreen != Home) menuReturnButton?.OnButtonPressed?.Invoke();
+                if (ActiveScreen != _homeScreen) _panelReturnButton?.OnButtonPressed?.Invoke();
                 return;
             }
             else if (GetScreen(type, false) is InfoScreen screen) LoadScreen(screen);
@@ -584,7 +587,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void UpdateScreen(bool includeWidgets = true)
         {
-            bool onHomeScreen = ActiveScreen == Home;
+            bool onHomeScreen = ActiveScreen == _homeScreen;
 
             PropertyInfo returnTypeProperty = null;
 
@@ -601,10 +604,10 @@ namespace GorillaInfoWatch.Behaviours
 
             bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(ActiveScreen) != null;
 
-            menuInboxButton.gameObject.SetActive(onHomeScreen);
-            menuReturnButton.gameObject.SetActive(!onHomeScreen && (ActiveScreen.CallerScreenType != null || considerReturnType));
+            _panelInboxButton.gameObject.SetActive(onHomeScreen);
+            _panelReturnButton.gameObject.SetActive(!onHomeScreen && (ActiveScreen.CallerScreenType != null || considerReturnType));
 
-            ActiveScreen.contents ??= ActiveScreen.GetContent();
+            ActiveScreen.Content ??= ActiveScreen.GetContent();
 
             try
             {
@@ -612,7 +615,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 try
                 {
-                    sectionCount = ActiveScreen.contents.SectionCount;
+                    sectionCount = ActiveScreen.Content.SectionCount;
                 }
                 catch (Exception ex)
                 {
@@ -622,19 +625,19 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? MathExtensions.Wrap(ActiveScreen.sectionNumber, 0, sectionCount) : 0;
-                ActiveScreen.sectionNumber = currentSection;
+                int currentSection = hasSection ? MathExtensions.Wrap(ActiveScreen.SectionNumber, 0, sectionCount) : 0;
+                ActiveScreen.SectionNumber = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;
-                menuNextPageButton.gameObject.SetActive(multiSection);
-                menuPrevPageButton.gameObject.SetActive(multiSection);
-                menuPageText.text = multiSection ? $"{currentSection + 1}/{sectionCount}" : string.Empty;
+                _panelNextPageButton.gameObject.SetActive(multiSection);
+                _panelPrevPageButton.gameObject.SetActive(multiSection);
+                _panelPageText.text = multiSection ? $"{currentSection + 1}/{sectionCount}" : string.Empty;
 
                 string sectionTitle = null;
 
                 try
                 {
-                    sectionTitle = ActiveScreen.contents.GetTitleOfSection(currentSection);
+                    sectionTitle = ActiveScreen.Content.GetTitleOfSection(currentSection);
                 }
                 catch (Exception ex)
                 {
@@ -643,7 +646,7 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                menuHeader.text = string.Concat(ActiveScreen.Title, (!string.IsNullOrEmpty(sectionTitle) && !string.IsNullOrWhiteSpace(sectionTitle)) ? $" : {sectionTitle}" : string.Empty);
+                _panelTitle.text = string.Concat(ActiveScreen.Title, (!string.IsNullOrEmpty(sectionTitle) && !string.IsNullOrWhiteSpace(sectionTitle)) ? $" <color=#808080>></color> {sectionTitle}" : string.Empty);
 
                 string description = null;
 
@@ -658,23 +661,40 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                bool hasDescription = !string.IsNullOrEmpty(description) && !string.IsNullOrWhiteSpace(description);
+                string overrideDescription = null;
 
-                if (!hasDescription && menuDescription.gameObject.activeSelf)
+                try
                 {
-                    menuDescription.gameObject.SetActive(false);
+                    overrideDescription = ActiveScreen.Content.GetDescriptionOfSection(ActiveScreen.SectionNumber);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Fatal("Screen section description method threw exception");
+                    Logging.Error(ex);
+                    PlayErrorSound();
+                }
+
+                if (string.IsNullOrEmpty(description) && overrideDescription != null && overrideDescription.Length > 0) description = overrideDescription;
+
+                bool hasDescription = description != null && description.Length > 0;
+
+                if (!hasDescription && _panelDescription.gameObject.activeSelf)
+                {
+                    _panelDescription.gameObject.SetActive(false);
+                    _panelTitle.GetComponent<RectTransform>().sizeDelta = _panelTitle.GetComponent<RectTransform>().sizeDelta.WithY(12);
                 }
                 else if (hasDescription)
                 {
-                    menuDescription.gameObject.SetActive(true);
-                    menuDescription.text = ActiveScreen.Description;
+                    _panelDescription.gameObject.SetActive(true);
+                    _panelDescription.text = description;
+                    _panelTitle.GetComponent<RectTransform>().sizeDelta = _panelTitle.GetComponent<RectTransform>().sizeDelta.WithY(8);
                 }
 
                 List<InfoLine> lines = [];
 
                 try
                 {
-                    lines = [.. ActiveScreen.contents.GetLinesAtSection(ActiveScreen.sectionNumber)];
+                    lines = [.. ActiveScreen.Content.GetLinesAtSection(ActiveScreen.SectionNumber)];
                 }
                 catch (Exception ex)
                 {
@@ -744,7 +764,7 @@ namespace GorillaInfoWatch.Behaviours
 
             Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
 
-            if (screenCache.ContainsKey(type))
+            if (_screens.ContainsKey(type))
             {
                 Logging.Warning("Registry contains key");
                 return false;
@@ -766,11 +786,11 @@ namespace GorillaInfoWatch.Behaviours
                 return false;
             }
 
-            Component component = screenObject.AddComponent(type);
+            Component component = _screenRoot.AddComponent(type);
 
             if (component is InfoScreen screen)
             {
-                if (screenCache.ContainsValue(screen))
+                if (_screens.ContainsValue(screen))
                 {
                     Logging.Warning("Registry contains value (component of type)");
                     Destroy(component);
@@ -779,7 +799,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 screen.enabled = false;
 
-                screenCache[type] = screen;
+                _screens[type] = screen;
 
                 Logging.Info("Register success");
                 return true;
@@ -799,6 +819,12 @@ namespace GorillaInfoWatch.Behaviours
 
             Logging.Message($"RegisterFunctionRegistrar: {type.FullName}");
 
+            if (_shortcutRegistars.ContainsKey(type))
+            {
+                Logging.Warning("Registry contains key");
+                return false;
+            }
+
             Type registrarType = typeof(ShortcutRegistrar);
 
             if (!type.IsSubclassOf(registrarType))
@@ -817,6 +843,8 @@ namespace GorillaInfoWatch.Behaviours
             {
                 ShortcutRegistrar registrar = (ShortcutRegistrar)Activator.CreateInstance(type);
                 Logging.Message("CreateInstance success");
+
+                _shortcutRegistars.TryAdd(type, registrar);
             }
             catch (Exception ex)
             {

@@ -67,7 +67,7 @@ namespace GorillaInfoWatch.Screens
                 {
                     Alignment = WidgetAlignment.Left
                 });
-                pageBuilder.AddPage(baseCredits);
+                pageBuilder.Add(baseCredits);
 
                 LineBuilder supporterCredits = new();
                 supporterCredits.Add(string.Format(creditFormat, "CBigback", "cbigbomb", "Supporter since March 9, 2025"), new Widget_Symbol(new(Symbols.Patreon))
@@ -86,7 +86,7 @@ namespace GorillaInfoWatch.Screens
                 {
                     Alignment = WidgetAlignment.Left
                 });
-                pageBuilder.AddPage("Supporters", supporterCredits);
+                pageBuilder.Add("Supporters", supporterCredits);
             }
         }
 

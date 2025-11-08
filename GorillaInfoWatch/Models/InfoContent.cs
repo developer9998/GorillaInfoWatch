@@ -6,6 +6,7 @@ namespace GorillaInfoWatch.Models
     {
         public abstract int SectionCount { get; }
         public abstract string GetTitleOfSection(int section);
+        public virtual string GetDescriptionOfSection(int section) => "";
         public abstract IEnumerable<InfoLine> GetLinesAtSection(int section);
     }
 }

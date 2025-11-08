@@ -32,7 +32,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 string value = DataManager.Instance.GetEntry<string>(_shortcutIdEntry);
 
-                foreach (Shortcut shortcut in ShortcutRegistrar.Shortcuts)
+                foreach (Shortcut shortcut in ShortcutRegistrar.AllShortcuts)
                 {
                     if (shortcut.GetShortcutId() == value)
                     {

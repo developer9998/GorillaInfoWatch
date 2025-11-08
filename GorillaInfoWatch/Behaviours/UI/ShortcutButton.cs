@@ -69,6 +69,8 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             _touching = null;
             _timer = 0f;
+
+            _material.color = _buttonColour.Evaluate(0);
         }
 
         public void Update()

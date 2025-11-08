@@ -3,7 +3,6 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
-using GorillaLocomotion;
 using GorillaNetworking;
 using Photon.Realtime;
 using System;
@@ -49,7 +48,7 @@ namespace GorillaInfoWatch.Shortcuts
                 {
                     if (joinTrigger == null) continue;
 
-                    if (activeZones.Contains(joinTrigger.zone) && (GorillaComputer.instance.friendJoinCollider == null || GorillaComputer.instance.friendJoinCollider.myAllowedMapsToJoin.Contains(networkZone) || (NetworkSystem.Instance.InRoom && !NetworkSystem.Instance.SessionIsPrivate && GorillaComputer.instance.GetJoinTriggerFromFullGameModeString(NetworkSystem.Instance.GameModeString) is GorillaNetworkJoinTrigger triggerFromMode && triggerFromMode.myCollider.myAllowedMapsToJoin.Contains(networkZone))))
+                    if (activeZones.Contains(joinTrigger.zone) && (!NetworkSystem.Instance.InRoom || GorillaComputer.instance.friendJoinCollider == null || GorillaComputer.instance.friendJoinCollider.myAllowedMapsToJoin.Contains(networkZone) || (!NetworkSystem.Instance.SessionIsPrivate && GorillaComputer.instance.GetJoinTriggerFromFullGameModeString(NetworkSystem.Instance.GameModeString) is GorillaNetworkJoinTrigger triggerFromMode && triggerFromMode.myCollider.myAllowedMapsToJoin.Contains(networkZone))))
                     {
                         triggers.Add(joinTrigger);
                         Logging.Info($"+ {joinTrigger.zone} ({string.Join(", ", joinTrigger.myCollider?.myAllowedMapsToJoin)})");
@@ -77,13 +76,13 @@ namespace GorillaInfoWatch.Shortcuts
                 selectedTrigger.OnBoxTriggered();
             });
 
-            RegisterShortcut("Leave", "Leave the room you are currently in", () =>
+            RegisterShortcut("Leave", "Leave the room you are currently in", ShortcutRestrictions.Multiplayer, () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
                 NetworkSystem.Instance.ReturnToSinglePlayer();
             });
 
-            RegisterShortcut("Rejoin", "Leaves then joins your current room", async () =>
+            RegisterShortcut("Rejoin", "Leaves then joins your current room", ShortcutRestrictions.Multiplayer, async () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
 
@@ -95,7 +94,7 @@ namespace GorillaInfoWatch.Shortcuts
                 await PhotonNetworkController.Instance.AttemptToJoinSpecificRoomAsync(roomName, JoinType.Solo, null);
             });
 
-            RegisterShortcut("Copy Room", "Copies the name of your current room to the clipboard", () =>
+            RegisterShortcut("Copy Room", "Copies the name of your current room to the clipboard", ShortcutRestrictions.Multiplayer, () =>
             {
                 if (NetworkSystem.Instance.InRoom)
                 {
@@ -105,7 +104,7 @@ namespace GorillaInfoWatch.Shortcuts
                 }
             });
 
-            RegisterShortcut("Identify Master", "Identifies the master client of your current room", () =>
+            RegisterShortcut("Identify Master", "Identifies the master client of your current room", ShortcutRestrictions.Multiplayer, () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
 
@@ -119,6 +118,7 @@ namespace GorillaInfoWatch.Shortcuts
                 }));
             });
 
+            /*
             RegisterShortcut("Mute Player", "Changes the mute state applied to the nearest player", () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
@@ -144,6 +144,7 @@ namespace GorillaInfoWatch.Shortcuts
                 RigContainer nearest = rigsInUse[nearestIndex];
                 PlayerUtility.MutePlayer(nearest.Creator, !nearest.Muted);
             });
+            */
         }
     }
 }

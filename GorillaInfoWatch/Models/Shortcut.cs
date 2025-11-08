@@ -9,6 +9,8 @@ namespace GorillaInfoWatch.Models
 
         public readonly string Description;
 
+        public readonly ShortcutRestrictions Restrictions;
+
         public readonly bool HasState;
 
         internal readonly Func<bool> StateGetter;
@@ -17,12 +19,14 @@ namespace GorillaInfoWatch.Models
 
         internal Assembly CallingAssembly;
 
-        internal Shortcut(Assembly source, string name, string description, Action method)
+        internal Shortcut(Assembly source, string name, string description, ShortcutRestrictions restrictions, Action method)
         {
             CallingAssembly = source;
 
             Name = name;
             Description = description;
+            Restrictions = restrictions;
+
             Method = _ => method();
         }
 
@@ -45,7 +49,7 @@ namespace GorillaInfoWatch.Models
             try
             {
                 AssemblyName assemblyName = CallingAssembly.GetName();
-                return $"{assemblyName.Name}_{Name}";
+                return $"{assemblyName.Name}_{Name}_{(int)Restrictions}";
             }
             catch (Exception)
             {
