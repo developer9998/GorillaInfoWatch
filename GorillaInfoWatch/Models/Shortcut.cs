@@ -1,79 +1,78 @@
 ﻿using System;
 using System.Reflection;
 
-namespace GorillaInfoWatch.Models
+namespace GorillaInfoWatch.Models;
+
+public class Shortcut
 {
-    public class Shortcut
+    public readonly string Name;
+
+    public readonly string Description;
+
+    public readonly ShortcutRestrictions Restrictions;
+
+    public readonly bool HasState;
+
+    internal readonly Func<bool> StateGetter;
+
+    internal readonly Action<bool> Method;
+
+    internal Assembly CallingAssembly;
+
+    internal Shortcut(Assembly source, string name, string description, ShortcutRestrictions restrictions, Action method)
     {
-        public readonly string Name;
+        CallingAssembly = source;
 
-        public readonly string Description;
+        Name = name;
+        Description = description;
+        Restrictions = restrictions;
 
-        public readonly ShortcutRestrictions Restrictions;
+        Method = _ => method();
+    }
 
-        public readonly bool HasState;
+    internal Shortcut(Assembly source, string name, string description, Func<bool> stateGetter, Action<bool> method)
+    {
+        CallingAssembly = source;
 
-        internal readonly Func<bool> StateGetter;
+        Name = name;
+        Description = description;
 
-        internal readonly Action<bool> Method;
+        HasState = true;
+        StateGetter = stateGetter;
+        Method = method;
+    }
 
-        internal Assembly CallingAssembly;
+    internal string GetShortcutId()
+    {
+        if (CallingAssembly == null) return Name;
 
-        internal Shortcut(Assembly source, string name, string description, ShortcutRestrictions restrictions, Action method)
+        try
         {
-            CallingAssembly = source;
+            AssemblyName assemblyName = CallingAssembly.GetName();
+            return $"{assemblyName.Name}_{Name}_{(int)Restrictions}";
+        }
+        catch (Exception)
+        {
 
-            Name = name;
-            Description = description;
-            Restrictions = restrictions;
-
-            Method = _ => method();
         }
 
-        internal Shortcut(Assembly source, string name, string description, Func<bool> stateGetter, Action<bool> method)
+        return Name;
+    }
+
+    internal bool GetState()
+    {
+        if (!HasState || StateGetter == null) return false;
+
+        try
         {
-            CallingAssembly = source;
+            bool state = StateGetter.Invoke();
+            return state;
+        }
+        catch (Exception)
+        {
 
-            Name = name;
-            Description = description;
-
-            HasState = true;
-            StateGetter = stateGetter;
-            Method = method;
         }
 
-        internal string GetShortcutId()
-        {
-            if (CallingAssembly == null) return Name;
-
-            try
-            {
-                AssemblyName assemblyName = CallingAssembly.GetName();
-                return $"{assemblyName.Name}_{Name}_{(int)Restrictions}";
-            }
-            catch (Exception)
-            {
-
-            }
-
-            return Name;
-        }
-
-        internal bool GetState()
-        {
-            if (!HasState || StateGetter == null) return false;
-
-            try
-            {
-                bool state = StateGetter.Invoke();
-                return state;
-            }
-            catch (Exception)
-            {
-
-            }
-
-            return false;
-        }
+        return false;
     }
 }

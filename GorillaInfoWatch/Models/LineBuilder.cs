@@ -7,11 +7,12 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models
 {
-    public class LineBuilder(List<InfoLine> lines) : InfoContent
+    public class LineBuilder(List<SectionLine> lines) : InfoContent, ISectionLineProvider
     {
         public override int SectionCount => Mathf.CeilToInt(Lines.Count / (float)Constants.SectionCapacity);
+        public IEnumerable<SectionLine> SectionLines => Lines;
 
-        public List<InfoLine> Lines = lines ?? [];
+        public List<SectionLine> Lines = lines ?? [];
 
         private readonly StringBuilder str = new();
 
@@ -20,14 +21,10 @@ namespace GorillaInfoWatch.Models
 
         }
 
-        public LineBuilder(string content) : this([.. content.Split(Environment.NewLine).Select(line => new InfoLine(line))])
+        public LineBuilder(string content) : this([.. content.Split(Environment.NewLine).Select(line => new SectionLine(line))])
         {
 
         }
-
-        public override string GetTitleOfSection(int section) => string.Empty;
-
-        public override IEnumerable<InfoLine> GetLinesAtSection(int section) => Lines.Skip(section * Constants.SectionCapacity).Take(Constants.SectionCapacity);
 
         public LineBuilder Append(object value)
         {
@@ -84,7 +81,7 @@ namespace GorillaInfoWatch.Models
 
         public LineBuilder Repeat(int amount, string text, params List<Widget_Base> widgets)
         {
-            Lines.AddRange(Enumerable.Repeat<InfoLine>(new(text, widgets), amount));
+            Lines.AddRange(Enumerable.Repeat<SectionLine>(new(text, widgets), amount));
             return this;
         }
 
@@ -94,6 +91,6 @@ namespace GorillaInfoWatch.Models
             return this;
         }
 
-        public static implicit operator List<InfoLine>(LineBuilder lines) => lines.Lines;
+        public override Section GetSection(int sectionNumber) => new(title: null, lines: Lines.Skip(sectionNumber * Constants.SectionCapacity).Take(Constants.SectionCapacity));
     }
 }

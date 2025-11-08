@@ -365,7 +365,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (ActiveScreen is InfoScreen screen)
                 {
-                    _panelLines.ForEach(line => line.Build(new InfoLine("Placeholder", []), true));
+                    _panelLines.ForEach(line => line.Build(new SectionLine("Placeholder", []), true));
                     screen.OnScreenReload();
                     screen.Content = screen.GetContent();
                     UpdateScreen();
@@ -625,28 +625,31 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? MathExtensions.Wrap(ActiveScreen.SectionNumber, 0, sectionCount) : 0;
-                ActiveScreen.SectionNumber = currentSection;
+                int sectionNumber = hasSection ? MathExtensions.Wrap(ActiveScreen.SectionNumber, 0, sectionCount) : 0;
+                ActiveScreen.SectionNumber = sectionNumber;
 
                 bool multiSection = hasSection && sectionCount > 1;
                 _panelNextPageButton.gameObject.SetActive(multiSection);
                 _panelPrevPageButton.gameObject.SetActive(multiSection);
-                _panelPageText.text = multiSection ? $"{currentSection + 1}/{sectionCount}" : string.Empty;
+                _panelPageText.text = multiSection ? $"{sectionNumber + 1}/{sectionCount}" : string.Empty;
 
-                string sectionTitle = null;
+                Section section;
 
                 try
                 {
-                    sectionTitle = ActiveScreen.Content.GetTitleOfSection(currentSection);
+                    section = ActiveScreen.Content.GetSection(sectionNumber);
                 }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
-                    Logging.Fatal("Screen section title method threw exception");
+                    section = new(title: "Placeholder", lines: Enumerable.Repeat<SectionLine>(new("Placeholder"), Constants.SectionCapacity));
+
+                    Logging.Fatal($"{ActiveScreen.Content.GetType().Name} of {ActiveScreen.Content.GetType().Namespace} not could construct section at {sectionNumber}");
                     Logging.Error(ex);
-                    PlayErrorSound();
                 }
 
-                _panelTitle.text = string.Concat(ActiveScreen.Title, (!string.IsNullOrEmpty(sectionTitle) && !string.IsNullOrWhiteSpace(sectionTitle)) ? $" <color=#808080>></color> {sectionTitle}" : string.Empty);
+                string sectionTitle = section.Definition.Title;
+
+                _panelTitle.text = string.Concat(ActiveScreen.Title, (sectionTitle != null && sectionTitle.Length > 0) ? $" <color=#808080>></color> {sectionTitle}" : string.Empty);
 
                 string description = null;
 
@@ -661,20 +664,9 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                string overrideDescription = null;
+                string sectionDescription = section.Definition.Description;
 
-                try
-                {
-                    overrideDescription = ActiveScreen.Content.GetDescriptionOfSection(ActiveScreen.SectionNumber);
-                }
-                catch (Exception ex)
-                {
-                    Logging.Fatal("Screen section description method threw exception");
-                    Logging.Error(ex);
-                    PlayErrorSound();
-                }
-
-                if (overrideDescription != null && overrideDescription.Length > 0) description = overrideDescription;
+                if (sectionDescription != null && sectionDescription.Length > 0) description = sectionDescription;
 
                 bool hasDescription = description != null && description.Length > 0;
 
@@ -690,19 +682,7 @@ namespace GorillaInfoWatch.Behaviours
                     _panelTitle.GetComponent<RectTransform>().sizeDelta = _panelTitle.GetComponent<RectTransform>().sizeDelta.WithY(8);
                 }
 
-                List<InfoLine> lines = [];
-
-                try
-                {
-                    lines = [.. ActiveScreen.Content.GetLinesAtSection(ActiveScreen.SectionNumber)];
-                }
-                catch (Exception ex)
-                {
-                    lines = [.. Enumerable.Repeat<InfoLine>(new("Placeholder"), Constants.SectionCapacity)];
-
-                    Logging.Fatal("Screen section lines method threw exception");
-                    Logging.Error(ex);
-                }
+                List<SectionLine> lines = [.. section.Lines];
 
                 for (int i = 0; i < lines.Count; i++)
                 {
@@ -716,7 +696,7 @@ namespace GorillaInfoWatch.Behaviours
                         string[] textArray = _sampleLineText.GetArrayFromText(line.Text);
                         for (int j = textArray.Length - 1; j >= 0; j--)
                         {
-                            lines.Insert(insertPosition, new InfoLine(textArray[j], j == 0 ? line.Widgets : []));
+                            lines.Insert(insertPosition, new SectionLine(textArray[j], j == 0 ? line.Widgets : []));
                         }
 
                         i += textArray.Length - 1;
@@ -729,7 +709,7 @@ namespace GorillaInfoWatch.Behaviours
 
                     if (i >= Constants.SectionCapacity) Logging.Warning($"{i} >= {Constants.SectionCapacity}");
 
-                    if (lines.ElementAtOrDefault(i) is InfoLine screenLine)
+                    if (lines.ElementAtOrDefault(i) is SectionLine screenLine)
                     {
                         bool wasLineActive = panelLine.gameObject.activeSelf;
                         panelLine.gameObject.SetActive(true);

@@ -67,7 +67,8 @@ namespace GorillaInfoWatch.Screens
                 {
                     Alignment = WidgetAlignment.Left
                 });
-                pageBuilder.Add(baseCredits);
+
+                pageBuilder.Add(null, "These are contributors and testers respectively who helped create GorillaInfoWatch", baseCredits);
 
                 LineBuilder supporterCredits = new();
                 supporterCredits.Add(string.Format(creditFormat, "CBigback", "cbigbomb", "Supporter since March 9, 2025"), new Widget_Symbol(new(Symbols.Patreon))
@@ -86,7 +87,8 @@ namespace GorillaInfoWatch.Screens
                 {
                     Alignment = WidgetAlignment.Left
                 });
-                pageBuilder.Add("Supporters", supporterCredits);
+
+                pageBuilder.Add("Supporters", "These are my highest tier supporters who paid to be here", supporterCredits);
             }
         }
 

@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace GorillaInfoWatch.Models
+namespace GorillaInfoWatch.Models;
+
+[Flags]
+public enum LineRestrictions
 {
-    [Flags]
-    public enum LineRestrictions
-    {
-        None = 1 << 0,
-        Wrapping = 1 << 1
-    }
+    None = 1 << 0,
+    Wrapping = 1 << 1
 }

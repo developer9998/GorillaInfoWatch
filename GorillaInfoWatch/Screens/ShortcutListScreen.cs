@@ -49,7 +49,7 @@ namespace GorillaInfoWatch.Screens
                     }));
                 }
 
-                pages.Add(lines, registrar.Title);
+                pages.Add(registrar.Title, lines);
             }
 
             return pages;

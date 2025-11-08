@@ -53,7 +53,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             SnapSlider.gameObject.SetActive(false);
         }
 
-        public void Build(InfoLine line, bool applyWidgets)
+        public void Build(SectionLine line, bool applyWidgets)
         {
             // Logging.Message(line.Text);
 
