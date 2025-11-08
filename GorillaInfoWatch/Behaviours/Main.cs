@@ -674,7 +674,7 @@ namespace GorillaInfoWatch.Behaviours
                     PlayErrorSound();
                 }
 
-                if (string.IsNullOrEmpty(description) && overrideDescription != null && overrideDescription.Length > 0) description = overrideDescription;
+                if (overrideDescription != null && overrideDescription.Length > 0) description = overrideDescription;
 
                 bool hasDescription = description != null && description.Length > 0;
 
