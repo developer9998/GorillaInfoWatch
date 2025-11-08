@@ -78,7 +78,7 @@ namespace GorillaInfoWatch.Screens
                     widgets.Add(new Widget_Switch(configEntry.BoxedValue.ToString() == "True", ConfigureEntry, configEntry));
 
                 lines.Add($"Key: {configEntry.Definition.Key}");
-                lines.AddRange($"Description: {configEntry.Description.Description}".ToTextArray());
+                lines.Add($"Description: {configEntry.Description.Description}", LineRestrictions.Wrapping);
                 lines.Add($"Type: {settingType.Name}");
 
                 lines.Skip();

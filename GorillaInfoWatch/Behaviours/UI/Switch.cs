@@ -87,7 +87,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void OnTriggerEnter(Collider collider)
         {
-            if (Time.realtimeSinceStartup > PushButton.PressTime && collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand)
+            if (Time.realtimeSinceStartup > PushButton.PressTime && collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand)
             {
                 if (currentWidget is not null && currentWidget.IsReadOnly)
                 {

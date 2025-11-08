@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Extensions
 {
-    public static class InvocationEx
+    public static class InvocationExtensions
     {
         public static void SafeInvoke(this Action action)
         {

@@ -66,7 +66,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             if
             (
                 Time.realtimeSinceStartup > PushButton.PressTime
-                && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != InfoWatch.LocalWatch.InLeftHand
+                && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand
                 && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this)
             )
             {

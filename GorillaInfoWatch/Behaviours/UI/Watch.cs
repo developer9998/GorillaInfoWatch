@@ -18,7 +18,7 @@ using GorillaInfoWatch.Behaviours.Networking;
 namespace GorillaInfoWatch.Behaviours
 {
     [DisallowMultipleComponent]
-    public class InfoWatch : MonoBehaviour
+    public class Watch : MonoBehaviour
     {
         // Assets
         public Transform watchHeadTransform, watchCanvasTransform;
@@ -57,7 +57,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public TMP_Text trackRemaining;
 
-        public RawImage trackThumbnail;
+        public Image trackThumbnail;
 
         public Slider trackProgression;
 
@@ -69,7 +69,7 @@ namespace GorillaInfoWatch.Behaviours
         private Material screenMaterial, screenRimMaterial;
 
         // Ownership
-        public static InfoWatch LocalWatch;
+        public static Watch LocalWatch;
         public VRRig Rig;
 
         // Data
@@ -187,7 +187,7 @@ namespace GorillaInfoWatch.Behaviours
 
         #endregion
 
-        #region Media Player
+        #region Media Controller
 
         public void OnSessionFocussed(MediaManager.Session focussedSession)
         {
@@ -213,7 +213,7 @@ namespace GorillaInfoWatch.Behaviours
 
             trackTitle.text = session.Title;
             trackAuthor.text = session.Artist;
-            trackThumbnail.texture = session.Thumbnail;
+            trackThumbnail.sprite = session.Thumbnail;
 
             bool hasMedia = session.Title != null && session.Title.Length > 0;
             if (hasMedia != mediaTriggerState)

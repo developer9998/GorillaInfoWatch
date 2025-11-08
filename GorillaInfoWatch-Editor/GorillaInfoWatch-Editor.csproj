@@ -19,8 +19,8 @@
 		<Compile Include="..\GorillaInfoWatch\Models\Significance\ItemSignificanceObject.cs">
 			<Link>Models\Significance\ItemSignificanceObject.cs</Link>
 		</Compile>
-		<Compile Include="..\GorillaInfoWatch\Behaviours\InfoWatch.cs">
-			<Link>Behaviours\InfoWatch.cs</Link>
+		<Compile Include="..\GorillaInfoWatch\Behaviours\UI\Watch.cs">
+			<Link>Behaviours\UI\Watch.cs</Link>
 		</Compile>
 		<Compile Include="..\GorillaInfoWatch\Behaviours\UI\ShortcutButton.cs">
 			<Link>Behaviours\UI\ShortcutButton.cs</Link>

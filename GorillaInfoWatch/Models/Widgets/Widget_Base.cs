@@ -21,7 +21,7 @@ namespace GorillaInfoWatch.Models.Widgets
 
         internal WidgetController Controller = null;
 
-        public virtual void Initialize(WatchLine menuLine)
+        public virtual void Initialize(PanelLine menuLine)
         {
 
         }

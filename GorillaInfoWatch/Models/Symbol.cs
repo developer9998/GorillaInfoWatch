@@ -1,4 +1,5 @@
 using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Tools;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace GorillaInfoWatch.Models
 
         public Material Material;
 
-        private static readonly Dictionary<Symbols, Symbol> SymbolFromEnum = [];
+        private static readonly Dictionary<Symbols, Symbol> _sharedSymbolCache = [];
 
         public Symbol(Sprite sprite)
         {
@@ -21,17 +22,23 @@ namespace GorillaInfoWatch.Models
 
         public Symbol(Symbols symbol)
         {
-            if (Main.EnumToSprite.TryGetValue(symbol, out Sprite sprite)) Sprite = sprite;
+            if (!Main.EnumToSprite.TryGetValue(symbol, out Sprite sprite))
+            {
+                Logging.Warning($"Missing sprite for symbol {symbol.GetName()}");
+                return;
+            }
 
-            if (!SymbolFromEnum.ContainsKey(symbol)) SymbolFromEnum.Add(symbol, this);
+            Sprite = sprite;
         }
 
-        public bool Equals(Symbol symbol)
+        public static Symbol GetSharedSymbol(Symbols symbol)
         {
-            return symbol.Sprite == Sprite && symbol.Colour == Colour && symbol.Material == Material;
+            if (!_sharedSymbolCache.ContainsKey(symbol)) _sharedSymbolCache.Add(symbol, new Symbol(symbol));
+            return _sharedSymbolCache[symbol];
         }
 
-        public static implicit operator Symbol(Symbols enumeration) => SymbolFromEnum.TryGetValue(enumeration, out Symbol symbol) ? symbol : new(enumeration);
+        public bool Equals(Symbol symbol) => symbol.Sprite == Sprite && symbol.Colour == Colour && symbol.Material == Material;
+
 
         public static implicit operator Symbol(Sprite sprite) => new(sprite);
 

@@ -79,7 +79,7 @@ namespace GorillaInfoWatch.Models.Widgets
             subObject.GetOrAddComponent<RectTransform>().sizeDelta = Vector2.one * SizeDelta;
             image = subObject.AddComponent<Image>();
             image.preserveAspect = true;
-            image.sprite = ((Symbol)watchSymbol).Sprite;
+            image.sprite = Symbol.GetSharedSymbol(watchSymbol).Sprite;
             image.color = Color.white;
         }
 
@@ -91,7 +91,7 @@ namespace GorillaInfoWatch.Models.Widgets
             if (significance != null && Array.Find(significance, item => item != null) is PlayerSignificance item && item.Symbol > Symbols.None)
             {
                 useMonkeSymbol = false;
-                Image.sprite = ((Symbol)item.Symbol).Sprite;
+                Image.sprite = Symbol.GetSharedSymbol(item.Symbol).Sprite;
                 Image.enabled = Image.sprite != null;
                 monkeBase.enabled = false;
                 monkeFace.enabled = false;

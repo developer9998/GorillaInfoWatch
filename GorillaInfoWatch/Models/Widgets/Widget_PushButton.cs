@@ -24,7 +24,7 @@ namespace GorillaInfoWatch.Models.Widgets
             // Must declare a body
         }
 
-        public override void Initialize(WatchLine menuLine)
+        public override void Initialize(PanelLine menuLine)
         {
             if (Object == null || !Object)
             {

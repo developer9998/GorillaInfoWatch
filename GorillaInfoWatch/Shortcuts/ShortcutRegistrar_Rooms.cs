@@ -3,6 +3,7 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
+using GorillaLocomotion;
 using GorillaNetworking;
 using Photon.Pun;
 using Photon.Realtime;
@@ -49,7 +50,7 @@ namespace GorillaInfoWatch.Shortcuts
                 {
                     if (joinTrigger == null) continue;
 
-                    if (activeZones.Contains(joinTrigger.zone) && (GorillaComputer.instance.friendJoinCollider == null || GorillaComputer.instance.friendJoinCollider.myAllowedMapsToJoin.Contains(networkZone)))
+                    if (activeZones.Contains(joinTrigger.zone) && (GorillaComputer.instance.friendJoinCollider == null || GorillaComputer.instance.friendJoinCollider.myAllowedMapsToJoin.Contains(networkZone) || (NetworkSystem.Instance.InRoom && !NetworkSystem.Instance.SessionIsPrivate && GorillaComputer.instance.GetJoinTriggerFromFullGameModeString(NetworkSystem.Instance.GameModeString) is GorillaNetworkJoinTrigger triggerFromMode && triggerFromMode.myCollider.myAllowedMapsToJoin.Contains(networkZone))))
                     {
                         triggers.Add(joinTrigger);
                         Logging.Info($"+ {joinTrigger.zone} ({string.Join(", ", joinTrigger.myCollider?.myAllowedMapsToJoin)})");
@@ -77,13 +78,13 @@ namespace GorillaInfoWatch.Shortcuts
                 selectedTrigger.OnBoxTriggered();
             });
 
-            RegisterShortcut("Leave", "Disconnects you from the current room", () =>
+            RegisterShortcut("Leave", "Leave the room you are currently in", () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
                 NetworkSystem.Instance.ReturnToSinglePlayer();
             });
 
-            RegisterShortcut("Rejoin", "Reconnects you to the current room", async () =>
+            RegisterShortcut("Rejoin", "Leaves then joins your current room", async () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
 
@@ -95,7 +96,7 @@ namespace GorillaInfoWatch.Shortcuts
                 await PhotonNetworkController.Instance.AttemptToJoinSpecificRoomAsync(roomName, JoinType.Solo, null);
             });
 
-            RegisterShortcut("Copy Room", "Copies the name of the current room to your clipboard", () =>
+            RegisterShortcut("Copy Room", "Copies the name of your current room to the clipboard", () =>
             {
                 if (NetworkSystem.Instance.InRoom)
                 {
@@ -105,55 +106,44 @@ namespace GorillaInfoWatch.Shortcuts
                 }
             });
 
-            RegisterShortcut("Get Region", "Gets the region of the current room", () =>
-            {
-                if (!NetworkSystem.Instance.InRoom) return;
-
-                string regionCode = NetworkSystem.Instance.CurrentRegion.Replace("/*", "").ToLower();
-                string regionName = regionCode switch
-                {
-                    "us" => "United States (East)", // Washington DC
-                    "usw" => "United States (West)", // San Jose
-                    "eu" => "Europe", // Amsterdam
-
-                    // Region codes below aren't used by Gorilla Tag as of commenting this
-                    // Server locations were only ever expanded in May 2021 (including US West and Europe) and never again
-                    "asia" => "Asia", // Singapore
-                    "au" => "Australia", // Sydney
-                    "cae" => "Canada", // Montreal
-                    "hk" => "Hong Kong", // Hong Kong
-                    "in" => "India", // Chennai
-                    "jp" => "Japan", // Tokyo
-                    "za" => "South Africa", // Johannesburg
-                    "sa" => "South America", // Sao Paulo
-                    "kr" => "South Korea", // Seoul
-                    "tr" => "Turkey", // Istanbul
-                    "uae" => "United Arab Emirates", // Dubai
-                    "ussc" => "United States (South Central)", // Dallas
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-
-                Notify("Room Region", regionName, 2);
-            });
-
-            RegisterShortcut("Get Room Host", "Gets the room host of the current room", () =>
+            RegisterShortcut("Identify Master", "Identifies the master client of your current room", () =>
             {
                 if (!NetworkSystem.Instance.InRoom) return;
 
                 NetPlayer masterClient = NetworkSystem.Instance.MasterClient;
                 string userId = masterClient.UserId;
 
-                Notify("Room Host", masterClient.GetName().EnforcePlayerNameLength(), 4, screen: new Notification.ExternalScreen(typeof(PlayerInspectorScreen), "Inspect Player", () =>
+                Notify("Master Client", masterClient.GetName().EnforcePlayerNameLength(), 4, screen: new Notification.ExternalScreen(typeof(PlayerInspectorScreen), "Inspect Player", () =>
                 {
                     masterClient = PlayerUtility.GetPlayer(userId);
                     if (masterClient != null && !masterClient.IsNull) PlayerInspectorScreen.UserId = userId;
                 }));
             });
 
-            RegisterShortcut("Get Ping", "Gets the round trip time to the current server, known as your ping", () =>
+            RegisterShortcut("Mute Player", "Changes the mute state applied to the nearest player", () =>
             {
-                if (PhotonNetwork.NetworkingClient is not LoadBalancingClient client || client.LoadBalancingPeer is not LoadBalancingPeer peer) return;
-                Notify($"{peer.RoundTripTime} ms", 1);
+                if (!NetworkSystem.Instance.InRoom) return;
+
+                List<RigContainer> rigsInUse = [.. VRRigCache.rigsInUse.Values];
+                if (rigsInUse.Count == 0) return;
+
+                Vector3 position = GTPlayer.Instance.HeadCenterPosition;
+
+                float nearestDistance = -1;
+                int nearestIndex = 0;
+
+                for(int i = 0; i < rigsInUse.Count; i++)
+                {
+                    float distance = (position - rigsInUse[i].Rig.syncPos).sqrMagnitude;
+                    if (nearestDistance == -1 || nearestDistance > distance)
+                    {
+                        nearestDistance = distance;
+                        nearestIndex = i;
+                    }
+                }
+
+                RigContainer nearest = rigsInUse[nearestIndex];
+                PlayerUtility.MutePlayer(nearest.Creator, !nearest.Muted);
             });
         }
     }

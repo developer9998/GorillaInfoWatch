@@ -36,7 +36,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private float _activationTime;
 
-        private readonly float _holdDuration = 0.25f;
+        private readonly float _holdDuration = 0.35f;
 
         private readonly float _activationInterval = 1f;
 
@@ -53,7 +53,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (_activated || _touching != null) return;
 
-            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != InfoWatch.LocalWatch.InLeftHand)
+            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand)
             {
                 _touching = handIndicator;
                 _timer = 0f;
@@ -78,7 +78,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             if (_activated && _activationTime > (Time.realtimeSinceStartup - _activationInterval))
             {
                 time = Mathf.Clamp01(_activationTime - (Time.realtimeSinceStartup - _activationInterval));
-                _material.color = _buttonColour.Evaluate(time);
+                _material.color = _buttonColour.Evaluate(Mathf.Clamp01(time * 2f));
             }
             else if (_activated)
             {
@@ -90,10 +90,10 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             _timer += Time.unscaledDeltaTime;
 
-            GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 5f, Time.unscaledDeltaTime);
+            GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 4f, Time.unscaledDeltaTime);
 
             time = Mathf.Clamp01(_timer / _holdDuration);
-            _material.color = _buttonColour.Evaluate(time);
+            _material.color = _buttonColour.Evaluate(Mathf.Clamp01((time * 2f) - 1f));
 
             if (time < 1f) return;
 
@@ -108,7 +108,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
                 handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.deactivation], 0.2f);
 
-                ShortcutManager.Instance.ExcecuteShortcut(_shortcut);
+                ShortcutHandler.Instance.ExcecuteShortcut(_shortcut);
 
                 if (_shortcut.HasState) _buttonColour = _shortcut.GetState() ? ColourPalette.Green : ColourPalette.Red;
             }

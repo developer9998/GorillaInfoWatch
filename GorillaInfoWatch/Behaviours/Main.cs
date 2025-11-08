@@ -12,6 +12,7 @@ using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using HarmonyLib;
+using Newtonsoft.Json.Linq;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -78,7 +79,7 @@ namespace GorillaInfoWatch.Behaviours
 
         private GameObject localWatchObject, menu;
 
-        private InfoWatch localInfoWatch;
+        private Watch localInfoWatch;
         private Panel localPanel;
 
         // Menu
@@ -87,7 +88,8 @@ namespace GorillaInfoWatch.Behaviours
         private TMP_Text menuHeader;
         private TMP_Text menuDescription;
         private Transform menuLinesOrigin;
-        internal List<WatchLine> menuLines;
+        private List<PanelLine> _panelLines;
+        private TMP_Text _sampleLineText;
 
         // Display
 
@@ -263,7 +265,7 @@ namespace GorillaInfoWatch.Behaviours
             localWatchObject = Instantiate(Content.WatchPrefab);
             localWatchObject.name = "InfoWatch";
 
-            localInfoWatch = localWatchObject.GetComponent<InfoWatch>();
+            localInfoWatch = localWatchObject.GetComponent<Watch>();
             localInfoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
             localWatchObject.SetActive(true);
 
@@ -280,17 +282,27 @@ namespace GorillaInfoWatch.Behaviours
             menuHeader = menu.transform.Find("Canvas/Header/Title").GetComponent<TMP_Text>();
             menuDescription = menu.transform.Find("Canvas/Header/Description").GetComponent<TMP_Text>();
             menuLinesOrigin = menu.transform.Find("Canvas/Lines");
-            menuLines = new(Constants.SectionCapacity);
+            _panelLines = new(Constants.SectionCapacity);
 
             foreach (Transform transform in menuLinesOrigin)
             {
                 transform.gameObject.SetActive(true);
 
-                if (!transform.TryGetComponent(out WatchLine lineComponent))
-                    lineComponent = transform.gameObject.AddComponent<WatchLine>();
+                if (!transform.TryGetComponent(out PanelLine lineComponent))
+                    lineComponent = transform.gameObject.AddComponent<PanelLine>();
 
-                menuLines.Add(lineComponent);
+                _panelLines.Add(lineComponent);
             }
+
+            PanelLine firstLine = _panelLines[0];
+            GameObject textObject = Instantiate(firstLine.Text.gameObject, firstLine.GetComponentInParent<Canvas>(true).transform);
+            textObject.transform.localPosition = Vector3.zero;
+            textObject.transform.localRotation = Quaternion.identity;
+            _sampleLineText = textObject.GetComponent<TMP_Text>();
+            _sampleLineText.textWrappingMode = TextWrappingModes.Normal;
+            _sampleLineText.enableAutoSizing = false;
+            _sampleLineText.fontSize = _sampleLineText.fontSizeMax;
+            _sampleLineText.color = Color.clear;
 
             await new WaitForEndOfFrame().AsAwaitable();
             await Task.Yield();
@@ -355,7 +367,7 @@ namespace GorillaInfoWatch.Behaviours
             {
                 if (ActiveScreen is InfoScreen screen)
                 {
-                    menuLines.ForEach(line => line.Build(new InfoLine("", []), true));
+                    _panelLines.ForEach(line => line.Build(new InfoLine("", []), true));
                     screen.OnScreenReload();
                     screen.contents = screen.GetContent();
                     UpdateScreen();
@@ -377,6 +389,7 @@ namespace GorillaInfoWatch.Behaviours
             screenObject.SetActive(true);
             Home.SetEntries([.. screenCache.Values]);
             LoadScreen(Home);
+            RefreshInbox();
 
             Events.OnQuestCompleted += OnQuestCompleted;
             Notifications.SendRequest += HandleSentNotification;
@@ -610,7 +623,7 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int currentSection = hasSection ? Mathf.Clamp(ActiveScreen.sectionNumber, 0, sectionCount - 1) : 0;
+                int currentSection = hasSection ? MathExtensions.Wrap(ActiveScreen.sectionNumber, 0, sectionCount) : 0;
                 ActiveScreen.sectionNumber = currentSection;
 
                 bool multiSection = hasSection && sectionCount > 1;
@@ -658,34 +671,53 @@ namespace GorillaInfoWatch.Behaviours
                     menuDescription.text = ActiveScreen.Description;
                 }
 
-                IEnumerable<InfoLine> lines = [];
+                List<InfoLine> lines = [];
 
                 try
                 {
-                    lines = ActiveScreen.contents.GetLinesAtSection(ActiveScreen.sectionNumber);
+                    lines = [.. ActiveScreen.contents.GetLinesAtSection(ActiveScreen.sectionNumber)];
                 }
                 catch (Exception ex)
                 {
-                    lines = Enumerable.Repeat<InfoLine>(new("Line is null!"), Constants.SectionCapacity);
+                    lines = [.. Enumerable.Repeat<InfoLine>(new("Placeholder"), Constants.SectionCapacity)];
 
                     Logging.Fatal("Screen section lines method threw exception");
                     Logging.Error(ex);
                 }
 
-                for (int i = 0; i < menuLines.Count; i++)
+                for (int i = 0; i < lines.Count; i++)
                 {
-                    WatchLine menuLine = menuLines[i];
+                    var line = lines[i];
+
+                    if (line.Restrictions.HasFlag(LineRestrictions.Wrapping))
+                    {
+                        int insertPosition = i;
+                        lines.RemoveAt(insertPosition);
+
+                        string[] textArray = _sampleLineText.GetArrayFromText(line.Text);
+                        for (int j = textArray.Length - 1; j >= 0; j--)
+                        {
+                            lines.Insert(insertPosition, new InfoLine(textArray[j], j == 0 ? line.Widgets : []));
+                        }
+
+                        i += textArray.Length - 1;
+                    }
+                }
+
+                for (int i = 0; i < _panelLines.Count; i++)
+                {
+                    PanelLine panelLine = _panelLines[i];
 
                     if (i >= Constants.SectionCapacity) Logging.Warning($"{i} >= {Constants.SectionCapacity}");
 
                     if (lines.ElementAtOrDefault(i) is InfoLine screenLine)
                     {
-                        bool wasLineActive = menuLine.gameObject.activeSelf;
-                        menuLine.gameObject.SetActive(true);
+                        bool wasLineActive = panelLine.gameObject.activeSelf;
+                        panelLine.gameObject.SetActive(true);
 
                         try
                         {
-                            menuLine.Build(screenLine, !wasLineActive || includeWidgets);
+                            panelLine.Build(screenLine, !wasLineActive || includeWidgets);
                         }
                         catch (Exception ex)
                         {
@@ -696,7 +728,7 @@ namespace GorillaInfoWatch.Behaviours
                         continue;
                     }
 
-                    menuLine.gameObject.SetActive(false);
+                    panelLine.gameObject.SetActive(false);
                 }
             }
             catch (Exception ex)

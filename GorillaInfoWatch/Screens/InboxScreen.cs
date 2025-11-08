@@ -50,26 +50,26 @@ namespace GorillaInfoWatch.Screens
                     prepend = string.Format(formatOnline, timeDisplay, roomNameProtected);
                 }
 
-                string[] array = notification.DisplayText.ToTextArray(prepend);
+                string text = string.Concat(prepend, notification.DisplayText);
 
                 if (notification.Screen is not null)
                 {
-                    lines.AddRange(array, new Widget_PushButton(OpenFunction, notification, true)
+                    lines.Add(text, new Widget_PushButton(OpenFunction, notification, true)
                     {
                         Colour = ColourPalette.Green,
-                        Symbol = (Symbol)Symbols.Verified
+                        Symbol = Symbol.GetSharedSymbol(Symbols.Verified)
                     }, new Widget_PushButton(OpenFunction, notification, false)
                     {
                         Colour = ColourPalette.Red,
-                        Symbol = (Symbol)Symbols.Ignore
+                        Symbol = Symbol.GetSharedSymbol(Symbols.Ignore)
                     });
                     continue;
                 }
 
-                lines.AddRange(array, new Widget_PushButton(OpenFunction, notification, true)
+                lines.Add(text, new Widget_PushButton(OpenFunction, notification, true)
                 {
                     Colour = ColourPalette.Black,
-                    Symbol = (Symbol)Symbols.Invisibility
+                    Symbol = Symbol.GetSharedSymbol(Symbols.Invisibility)
                 });
             }
 

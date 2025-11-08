@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours
 {
-    internal class ShortcutManager : MonoBehaviour
+    internal class ShortcutHandler : MonoBehaviour
     {
-        public static ShortcutManager Instance { get; private set; }
+        public static ShortcutHandler Instance { get; private set; }
 
-        public Shortcut Shortcut => InfoWatch.LocalWatch.shortcutButton.Shortcut;
+        public Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
 
         private const string _shortcutIdEntry = "ShortcutName";
 
@@ -55,7 +55,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void SetShortcut(Shortcut shortcut, bool saveShortcut = true)
         {
-            InfoWatch.LocalWatch.shortcutButton.SetShortcut(shortcut);
+            Watch.LocalWatch.shortcutButton.SetShortcut(shortcut);
             if (saveShortcut) SaveShortcut(shortcut);
         }
 

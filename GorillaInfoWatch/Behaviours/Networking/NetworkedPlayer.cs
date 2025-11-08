@@ -10,7 +10,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
     [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
     public class NetworkedPlayer : MonoBehaviour
     {
-        public InfoWatch NetworkedInfoWatch { get; private set; }
+        public Watch NetworkedInfoWatch { get; private set; }
 
         public bool HasInfoWatch { get; set; }
 
@@ -46,7 +46,7 @@ namespace GorillaInfoWatch.Behaviours.Networking
                 if (NetworkedInfoWatch == null || !NetworkedInfoWatch)
                 {
                     GameObject prefab = Instantiate(Main.Content.WatchPrefab);
-                    NetworkedInfoWatch = prefab.GetComponent<InfoWatch>();
+                    NetworkedInfoWatch = prefab.GetComponent<Watch>();
                     NetworkedInfoWatch.Rig = Rig;
                     prefab.SetActive(true);
                 }

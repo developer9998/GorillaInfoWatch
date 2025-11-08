@@ -88,7 +88,7 @@ namespace GorillaInfoWatch.Screens
                 })
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = Symbols.Info
+                    Symbol = Symbol.GetSharedSymbol(Symbols.Info)
                 });
             }
 

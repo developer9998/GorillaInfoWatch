@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Models.StateMachine
 {
-    public class Menu_Notification(InfoWatch watch, Menu_StateBase previousState, Notification notification) : Menu_SubState(watch, previousState)
+    public class Menu_Notification(Watch watch, Menu_StateBase previousState, Notification notification) : Menu_SubState(watch, previousState)
     {
         public readonly Notification notification = notification;
 

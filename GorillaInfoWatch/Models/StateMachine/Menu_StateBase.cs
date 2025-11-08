@@ -3,10 +3,10 @@ using System;
 
 namespace GorillaInfoWatch.Models.StateMachine
 {
-    public class Menu_StateBase(InfoWatch watch) : State
+    public class Menu_StateBase(Watch watch) : State
     {
-        public InfoWatch Watch => watch;
+        public Watch Watch => watch;
 
-        protected InfoWatch watch = watch ?? throw new ArgumentNullException(nameof(watch));
+        protected Watch watch = watch ?? throw new ArgumentNullException(nameof(watch));
     }
 }

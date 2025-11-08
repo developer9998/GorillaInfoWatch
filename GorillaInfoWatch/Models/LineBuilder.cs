@@ -70,12 +70,9 @@ namespace GorillaInfoWatch.Models
             return this;
         }
 
-        public LineBuilder AddRange(string[] array, params List<Widget_Base> widgets)
+        public LineBuilder Add(string text, LineRestrictions restrictions, params List<Widget_Base> widgets)
         {
-            for (int i = 0; i < array.Length; i++)
-            {
-                Add(array[i], i == 0 ? widgets : null);
-            }
+            Lines.Add(new(text, restrictions, widgets));
             return this;
         }
 

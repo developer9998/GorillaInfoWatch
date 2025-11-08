@@ -154,7 +154,7 @@ namespace GorillaInfoWatch.Screens
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
                     else str.Append(string.Format(describedFormat, significance.Title, significance.Description.Replace(Constants.SignificancePlayerNameTag, normalizedName)));
 
-                    significanceLines.Add(str.ToString(), widgets: significance.Symbol != Symbols.None ? [new Widget_Symbol(significance.Symbol)
+                    significanceLines.Add(str.ToString(), widgets: significance.Symbol != Symbols.None ? [new Widget_Symbol(Symbol.GetSharedSymbol(significance.Symbol))
                     {
                         Alignment = WidgetAlignment.Left
                     }] : []);
@@ -177,7 +177,6 @@ namespace GorillaInfoWatch.Screens
             if (args.ElementAtOrDefault(0) is NetPlayer player)
             {
                 PlayerUtility.MutePlayer(player, value);
-
                 SetText();
             }
         }
@@ -187,7 +186,6 @@ namespace GorillaInfoWatch.Screens
             if (args.ElementAtOrDefault(0) is NetPlayer player)
             {
                 PlayerUtility.FriendPlayer(player, value);
-
                 SetContent();
             }
         }

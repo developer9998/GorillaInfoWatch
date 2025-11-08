@@ -203,7 +203,9 @@ namespace GorillaInfoWatch.Behaviours
                                 thumbnailCache.Add(base64String, texture);
                             }
 
-                            session.Thumbnail = texture;
+                            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero);
+
+                            session.Thumbnail = sprite;
 
                             OnMediaChanged?.SafeInvoke(session);
                             break;
@@ -312,7 +314,7 @@ namespace GorillaInfoWatch.Behaviours
 
             public string PlaybackStatus;
 
-            public Texture2D Thumbnail;
+            public Sprite Thumbnail;
         }
     }
 }

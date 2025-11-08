@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.UI
 {
-    public class WatchLine : MonoBehaviour
+    public class PanelLine : MonoBehaviour
     {
         public TMP_Text Text;
 

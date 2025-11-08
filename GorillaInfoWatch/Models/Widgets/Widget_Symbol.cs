@@ -26,7 +26,7 @@ namespace GorillaInfoWatch.Models.Widgets
             Settings = settings;
         }
 
-        public override void Initialize(WatchLine menuLine)
+        public override void Initialize(PanelLine menuLine)
         {
             if (Object == null || !Object)
             {

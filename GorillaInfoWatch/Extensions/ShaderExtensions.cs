@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 namespace GorillaInfoWatch.Extensions
 {
-    public static class UberShaderEx
+    public static class ShaderExtensions
     {
         private static readonly string[] supportedShaderNames = ["Universal Render Pipeline/Unlit", "Universal Render Pipeline/Lit", "Unlit/Texture", "Custom/UnlitAO"];
 
