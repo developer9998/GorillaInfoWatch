@@ -127,13 +127,8 @@ namespace GorillaInfoWatch.Behaviours
                 meshRenderer.materials = uberMaterials;
             }
 
-            //MeshRenderer screenRenderer = transform.Find("Watch Head/WatchScreen").GetComponent<MeshRenderer>();
-            screenMaterial = new Material(screenRenderer.material);
-            screenRenderer.material = screenMaterial;
-
-            //MeshRenderer rimRenderer = transform.Find("Watch Head/WatchScreenRing").GetComponent<MeshRenderer>();
-            screenRimMaterial = new Material(rimRenderer.material);
-            rimRenderer.material = screenRimMaterial;
+            screenRenderer.material = screenMaterial = new Material(screenRenderer.material);
+            rimRenderer.material = screenRimMaterial = new Material(rimRenderer.material);
 
             Rig.OnColorChanged += SetColour;
             Events.OnRigSetInvisibleToLocal += SetVisibilityCheck;

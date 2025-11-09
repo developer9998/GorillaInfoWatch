@@ -15,6 +15,7 @@ namespace GorillaInfoWatch.Screens
     internal class ModListScreen : InfoScreen
     {
         public override string Title => "Mods";
+        public override string Description => "View and inspect the list of your installed plugins";
 
         private PluginInfo[] stateSupportedMods, mods;
 

@@ -246,10 +246,10 @@ namespace GorillaInfoWatch.Screens
 
             return new PageBuilder
             (
-                new Section("Profile", null, profileLines),
-                new Section("Economy", null, economyLines),
-                new Section("Safety", null, safetyLines),
-                new Section("Progression", null, progressionLines)
+                new Section("Profile", profileLines),
+                new Section("Economy", economyLines),
+                new Section("Safety", safetyLines),
+                new Section("Progression", progressionLines)
             );
         }
     }

@@ -639,7 +639,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     section = ActiveScreen.Content.GetSection(sectionNumber);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     section = new(title: "Placeholder", lines: Enumerable.Repeat<SectionLine>(new("Placeholder"), Constants.SectionCapacity));
 
@@ -709,7 +709,7 @@ namespace GorillaInfoWatch.Behaviours
 
                     if (i >= Constants.SectionCapacity) Logging.Warning($"{i} >= {Constants.SectionCapacity}");
 
-                    if (lines.ElementAtOrDefault(i) is SectionLine screenLine)
+                    if (lines.ElementAtOrDefault(i) is SectionLine screenLine && !screenLine.Equals(default))
                     {
                         bool wasLineActive = panelLine.gameObject.activeSelf;
                         panelLine.gameObject.SetActive(true);

@@ -110,7 +110,7 @@ namespace GorillaInfoWatch.Models.StateMachine
 
                 if (_speakerLoudness == null) _speakerLoudness = GorillaTagger.Instance.offlineVRRig.mySpeakerLoudness ?? GorillaTagger.Instance.offlineVRRig.GetComponent<GorillaSpeakerLoudness>();
 
-                if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || (_localRecorder != null && !_localRecorder.TransmitEnabled))
+                if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || (_localRecorder != null && !_localRecorder.TransmitEnabled) || !targetRig.Rig.shouldSendSpeakingLoudness)
                 {
                     iconState = MicrophoneIconState.MuteViaPreference;
                     goto CheckMicIcon;

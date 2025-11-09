@@ -18,6 +18,7 @@ namespace GorillaInfoWatch.Screens
     internal class FriendScreen : InfoScreen
     {
         public override string Title => "Friends";
+        public override string Description => "View your list of friends and configure privacy";
 
         public List<FriendBackendController.Friend> FriendsList;
 

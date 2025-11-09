@@ -3,8 +3,9 @@ namespace GorillaInfoWatch.Models
     public enum Symbols : byte
     {
         None,
+        InfoWatch,
 
-        // People
+        // Figures
         Dev,
         Gizmo,
         Cresmondo,
@@ -15,9 +16,22 @@ namespace GorillaInfoWatch.Models
         Cyan,
         Chucken,
         Socks,
-        Maple,
+        Mia,
         Lapis,
         Kronicahl,
+
+        // Items
+        ModStick,
+        FingerPainter,
+        Illustrator,
+        ForestGuideStick,
+        AACreator,
+
+        // Media Controls
+        MediaControlPlay,
+        MediaControlStop,
+        MediaControlPause,
+        MediaControlSkip,
 
         // Icons
         Verified,
@@ -27,12 +41,6 @@ namespace GorillaInfoWatch.Models
         OpenSpeaker,
         MutedSpeaker,
         ForceMuteSpeaker,
-        ModStick,
-        FingerPainter,
-        Illustrator,
-        ForestGuideStick,
-        InfoWatch,
-        AACreator,
         TemplateHead,
         TemplateFace,
         Ignore,

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Models;
 
-public readonly struct SectionLine(string text, LineRestrictions restrictions, params List<Widget_Base> widgets)
+public class SectionLine(string text, LineRestrictions restrictions, params List<Widget_Base> widgets)
 {
     public string Text { get; } = text;
 
