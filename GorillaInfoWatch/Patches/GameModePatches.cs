@@ -7,7 +7,7 @@ namespace GorillaInfoWatch.Patches
     [HarmonyPatch(typeof(GameModeSerializer))]
     public class GameModePatches
     {
-        [HarmonyPatch(methodName: nameof(GameModeSerializer.BroadcastTag), argumentTypes: [typeof(int), typeof(int), typeof(PhotonMessageInfo)])]
+        [HarmonyPatch(nameof(GameModeSerializer.BroadcastTag), argumentTypes: [typeof(NetPlayer), typeof(NetPlayer), typeof(PhotonMessageInfo)])]
         [HarmonyPostfix]
         public static void TagPatch(NetPlayer taggedPlayer, NetPlayer taggingPlayer, PhotonMessageInfo info, GameModeSerializer __instance)
         {
