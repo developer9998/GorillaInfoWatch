@@ -709,7 +709,7 @@ namespace GorillaInfoWatch.Behaviours
 
                     if (i >= Constants.SectionCapacity) Logging.Warning($"{i} >= {Constants.SectionCapacity}");
 
-                    if (lines.ElementAtOrDefault(i) is SectionLine screenLine && !screenLine.Equals(default))
+                    if (lines.ElementAtOrDefault(i) is SectionLine screenLine)
                     {
                         bool wasLineActive = panelLine.gameObject.activeSelf;
                         panelLine.gameObject.SetActive(true);
