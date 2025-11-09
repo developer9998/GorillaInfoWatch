@@ -400,8 +400,7 @@ namespace GorillaInfoWatch.Behaviours
             MothershipClientApiUnity.OnMessageNotificationSocket += OnMothershipMessageRecieved;
 
             enabled = true;
-
-            Events.OnModInitialized?.Invoke();
+            Events.OnModInitialized?.SafeInvoke();
         }
 
         public void Update()
