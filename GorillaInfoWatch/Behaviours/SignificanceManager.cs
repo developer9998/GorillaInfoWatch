@@ -125,6 +125,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public void OnGetUserCosmetics(VRRig rig)
         {
+            /*
             NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
             if (player == null || player.IsNull || player.IsLocal || rig.isOfflineVRRig || rig.isLocal) return;
 
@@ -138,6 +139,7 @@ namespace GorillaInfoWatch.Behaviours
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
             }
+            */
         }
 
         public bool CheckPlayer(NetPlayer player, SignificanceCheckScope checkScope)
