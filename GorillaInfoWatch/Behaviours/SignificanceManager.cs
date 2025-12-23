@@ -128,6 +128,11 @@ namespace GorillaInfoWatch.Behaviours
             NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
             if (player == null || player.IsNull || player.IsLocal || rig.isOfflineVRRig || rig.isLocal) return;
 
+            CheckPlayer(player, SignificanceCheckScope.Item);
+
+            // TODO: implement a kind of "consent" check that requires permission from player before sending notification
+
+            /*
             if (CheckPlayer(player, SignificanceCheckScope.Item) && Significance.TryGetValue(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
             {
                 string userId = player.UserId;
@@ -138,6 +143,7 @@ namespace GorillaInfoWatch.Behaviours
                     if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
                 })));
             }
+            */
         }
 
         public bool CheckPlayer(NetPlayer player, SignificanceCheckScope checkScope)
