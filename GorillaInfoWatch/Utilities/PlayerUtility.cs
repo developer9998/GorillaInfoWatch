@@ -53,7 +53,7 @@ namespace GorillaInfoWatch.Utilities
             return false;
         }
 
-        public static void RunScoreboardLineAction(NetPlayer player, Action<GorillaPlayerScoreboardLine, bool> action)
+        public static void ProcessScoreboardLines(NetPlayer player, Action<GorillaPlayerScoreboardLine, bool> action)
         {
             if (player == null || player.IsNull) throw new ArgumentNullException(nameof(player));
 
@@ -77,7 +77,7 @@ namespace GorillaInfoWatch.Utilities
 
         public static void MutePlayer(NetPlayer player, bool value)
         {
-            RunScoreboardLineAction(player, (scoreboardLine, isPrimaryLine) =>
+            ProcessScoreboardLines(player, (scoreboardLine, isPrimaryLine) =>
             {
                 if (isPrimaryLine)
                 {

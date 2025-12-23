@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
 
-
-
 #if PLUGIN
 using System;
 using GorillaInfoWatch.Tools;
@@ -31,8 +29,6 @@ namespace GorillaInfoWatch.Behaviours.UI
         [Header("Menu Interface")]
 
         public Animator menuAnimator;
-
-        // public string standardTrigger, mediaTrigger;
 
         [FormerlySerializedAs("idleMenu")]
         public GameObject homeMenu;
@@ -81,7 +77,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         public StateMachine<Menu_StateBase> MenuStateMachine;
         public Menu_Home HomeState;
 
-        private MenuTrigger currentTrigger;
+        private WatchTab currentTab;
 
         private bool hasMediaSession = false;
 
@@ -129,13 +125,14 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void ConfigureWatchLocal()
         {
+            Logging.Message($"ConfigureWatchLocal: {transform.GetPath().TrimStart('/')}");
             LocalWatch = this;
 
             CustomPushButton homeNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Home").AddComponent<CustomPushButton>();
-            homeNavigationButton.OnButtonPush += _ => SetTrigger(MenuTrigger.Standard);
+            homeNavigationButton.OnButtonPush += _ => SetTab(WatchTab.Standard);
 
             mediaNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Music").AddComponent<CustomPushButton>();
-            mediaNavigationButton.OnButtonPush += _ => SetTrigger(MenuTrigger.MediaPlayer);
+            mediaNavigationButton.OnButtonPush += _ => SetTab(WatchTab.MediaPlayer);
             mediaNavigationButton.Active = hasMediaSession;
 
             MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
@@ -145,12 +142,14 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void ConfigureWatchShared()
         {
+            Logging.Message($"ConfigureWatchShared: {transform.GetPath().TrimStart('/')}");
+
             transform.SetParent(InLeftHand ? Rig.leftHandTransform.parent : Rig.rightHandTransform.parent, false);
             transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
             transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
             transform.localScale = Vector3.one;
 
-            SetTrigger(MenuTrigger.Standard);
+            SetTab(WatchTab.Standard);
             SetVisibility(HideWatch || Rig.IsInvisibleToLocalPlayer);
             SetColour(Rig.playerColor);
         }
@@ -188,11 +187,27 @@ namespace GorillaInfoWatch.Behaviours.UI
             screenMaterial.color = screenColour;
         }
 
+        private void SetTab(WatchTab newTab)
+        {
+            if (currentTab != newTab)
+            {
+                currentTab = newTab;
+                menuAnimator.SetInteger("Tab", (int)newTab);
+            }
+        }
+
+        private enum WatchTab
+        {
+            None = -1,
+            Standard,
+            MediaPlayer
+        }
+
         #endregion
 
         #region Media Controller
 
-        public void OnSessionFocussed(MediaManager.Session focussedSession)
+        private void OnSessionFocussed(MediaManager.Session focussedSession)
         {
             if (!IsLocalWatch) return;
 
@@ -208,11 +223,11 @@ namespace GorillaInfoWatch.Behaviours.UI
                 hasMediaSession = false;
                 mediaNavigationButton.Active = false;
 
-                if (currentTrigger == MenuTrigger.MediaPlayer) SetTrigger(MenuTrigger.Standard);
+                if (currentTab == WatchTab.MediaPlayer) SetTab(WatchTab.Standard);
             }
         }
 
-        public void OnMediaChanged(MediaManager.Session session)
+        private void OnMediaChanged(MediaManager.Session session)
         {
             if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
 
@@ -227,8 +242,8 @@ namespace GorillaInfoWatch.Behaviours.UI
                 hasMediaSession = isValidSession;
                 mediaNavigationButton.Active = isValidSession;
 
-                if (hasMediaSession) SetTrigger(MenuTrigger.MediaPlayer);
-                else if (currentTrigger == MenuTrigger.MediaPlayer) SetTrigger(MenuTrigger.Standard);
+                if (hasMediaSession) SetTab(WatchTab.MediaPlayer);
+                else if (currentTab == WatchTab.MediaPlayer) SetTab(WatchTab.Standard);
             }
 
             if (hasMediaSession)
@@ -245,7 +260,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             }
         }
 
-        public void OnTimelineChanged(MediaManager.Session session)
+        private void OnTimelineChanged(MediaManager.Session session)
         {
             if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
 
@@ -255,18 +270,6 @@ namespace GorillaInfoWatch.Behaviours.UI
         }
 
         #endregion
-
-        public void SetTrigger(MenuTrigger trigger)
-        {
-            currentTrigger = trigger;
-            menuAnimator.SetInteger("Tab", (int)trigger);
-        }
-
-        public enum MenuTrigger
-        {
-            Standard,
-            MediaPlayer
-        }
 #endif
     }
 }

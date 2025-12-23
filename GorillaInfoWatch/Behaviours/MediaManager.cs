@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Interfaces;
 using GorillaInfoWatch.Tools;
 using Newtonsoft.Json.Linq;
 using System;
@@ -12,318 +13,316 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours;
+
+public class MediaManager : MonoBehaviour, IInitializeWhenReady
 {
-    public class MediaManager : MonoBehaviour
+    public static MediaManager Instance { get; private set; }
+
+    public Dictionary<string, Session> Sessions { get; private set; } = [];
+
+    public string FocussedSession { get; private set; } = null;
+
+    public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
+
+    public ProcessStartInfo consoleStartInfo;
+
+    public Process consoleProcess;
+
+    public event Action<Session> OnSessionFocussed, OnPlaybackStateChanged, OnMediaChanged, OnTimelineChanged;
+
+    private readonly Dictionary<string, Texture2D> thumbnailCache = [];
+
+    public void Awake()
     {
-        public static MediaManager Instance { get; private set; }
+        bool hasCompatibility = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
 
-        public Dictionary<string, Session> Sessions { get; private set; } = [];
-
-        public string FocussedSession { get; private set; } = null;
-
-        public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
-
-        public ProcessStartInfo consoleStartInfo;
-
-        public Process consoleProcess;
-
-        public event Action<Session> OnSessionFocussed, OnPlaybackStateChanged, OnMediaChanged, OnTimelineChanged;
-
-        private readonly Dictionary<string, Texture2D> thumbnailCache = [];
-
-        public void Awake()
+        if (!hasCompatibility)
         {
-            bool hasCompatibility = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || SystemInfo.operatingSystem.ToLower().StartsWith("windows");
-
-            if (!hasCompatibility)
-            {
-                Logging.Warning("MediaManager is incompatible (not on Windows operating system)");
-                Destroy(this);
-                return;
-            }
-
-            if (Instance != null && Instance != this)
-            {
-                Destroy(this);
-                return;
-            }
-
-            Instance = this;
-
-            Events.OnModInitialized += HandleModInitialized;
-            Application.wantsToQuit += HandleGameQuit;
+            Logging.Warning("MediaManager is incompatible (not on Windows operating system)");
+            Destroy(this);
+            return;
         }
 
-        private async void HandleModInitialized()
+        if (Instance != null && Instance != this)
         {
-            await CreateExecutable();
-
-            if (!File.Exists(ExecutablePath))
-            {
-                Logging.Warning("Executable does not exist");
-                Logging.Info(ExecutablePath);
-                return;
-            }
-
-            consoleStartInfo = new ProcessStartInfo
-            {
-                FileName = ExecutablePath,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            consoleProcess = new()
-            {
-                StartInfo = consoleStartInfo,
-                EnableRaisingEvents = true
-            };
-
-            consoleProcess.OutputDataReceived += (sender, args) =>
-            {
-                if (string.IsNullOrEmpty(args.Data)) return;
-                OnDataReceived(args.Data);
-            };
-
-            consoleProcess.Start();
-
-            consoleProcess.BeginOutputReadLine();
+            Destroy(this);
+            return;
         }
 
-        public bool HandleGameQuit()
+        Instance = this;
+
+        Application.wantsToQuit += HandleGameQuit;
+    }
+
+    public async void Initialize()
+    {
+        await CreateExecutable();
+
+        if (!File.Exists(ExecutablePath))
         {
-            QuitExecutable();
-            return true;
+            Logging.Warning("Executable does not exist");
+            Logging.Info(ExecutablePath);
+            return;
         }
 
-        public void OnDataReceived(string data)
+        consoleStartInfo = new ProcessStartInfo
         {
-            // Logging.Info(data);
+            FileName = ExecutablePath,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
 
-            JObject obj = JObject.Parse(data);
+        consoleProcess = new()
+        {
+            StartInfo = consoleStartInfo,
+            EnableRaisingEvents = true
+        };
 
-            string eventName = (string)obj.Property("EventName")?.Value ?? null;
-            string sessionId = (string)obj.Property("SessionId")?.Value ?? null;
+        consoleProcess.OutputDataReceived += (sender, args) =>
+        {
+            if (string.IsNullOrEmpty(args.Data)) return;
+            OnDataReceived(args.Data);
+        };
 
-            ThreadingHelper.Instance.StartSyncInvoke(async () =>
+        consoleProcess.Start();
+
+        consoleProcess.BeginOutputReadLine();
+    }
+
+    public bool HandleGameQuit()
+    {
+        QuitExecutable();
+        return true;
+    }
+
+    public void OnDataReceived(string data)
+    {
+        // Logging.Info(data);
+
+        JObject obj = JObject.Parse(data);
+
+        string eventName = (string)obj.Property("EventName")?.Value ?? null;
+        string sessionId = (string)obj.Property("SessionId")?.Value ?? null;
+
+        ThreadingHelper.Instance.StartSyncInvoke(async () =>
+        {
+            Session session;
+
+            if (!string.IsNullOrEmpty(eventName))
             {
-                Session session;
-
-                if (!string.IsNullOrEmpty(eventName))
+                switch (eventName)
                 {
-                    switch (eventName)
-                    {
-                        case "AddSession":
-                            if (string.IsNullOrEmpty(sessionId)) return;
+                    case "AddSession":
+                        if (string.IsNullOrEmpty(sessionId)) return;
 
-                            if (!Sessions.ContainsKey(sessionId))
+                        if (!Sessions.ContainsKey(sessionId))
+                        {
+                            session = new Session()
                             {
-                                session = new Session()
+                                Id = sessionId
+                            };
+                            Sessions.Add(sessionId, session);
+
+                            Logging.Message($"Added Session: \"{sessionId}\"");
+
+                            if (string.IsNullOrEmpty(FocussedSession))
+                            {
+                                FocussedSession = sessionId;
+                                OnSessionFocussed?.SafeInvoke(session);
+                            }
+                        }
+                        break;
+
+                    case "RemoveSession":
+                        if (string.IsNullOrEmpty(sessionId)) return;
+
+                        if (Sessions.ContainsKey(sessionId))
+                        {
+                            Sessions.Remove(sessionId);
+
+                            Logging.Message($"Removed Session: \"{sessionId}\"");
+
+                            if (Sessions.Count == 0 && FocussedSession != null)
+                            {
+                                FocussedSession = null;
+                                OnSessionFocussed?.SafeInvoke(null);
+                            }
+                        }
+                        break;
+
+                    case "SessionFocusChanged":
+                        FocussedSession = sessionId;
+                        if (sessionId != null) await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+
+                        Logging.Message($"Session Focus Changed: \"{sessionId}\"");
+
+                        OnSessionFocussed?.SafeInvoke((!string.IsNullOrEmpty(sessionId) && Sessions.TryGetValue(sessionId, out session)) ? session : null);
+                        break;
+
+                    case "PlaybackStateChanged":
+                        if (sessionId == null) return;
+
+                        if (!Sessions.TryGetValue(sessionId, out session))
+                        {
+                            await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                            session = Sessions[sessionId];
+                        }
+
+                        session.PlaybackStatus = (string)obj["PlaybackStatus"];
+
+                        OnPlaybackStateChanged?.SafeInvoke(session);
+                        break;
+
+                    case "MediaPropertyChanged":
+                        if (sessionId == null) return;
+
+                        if (!Sessions.TryGetValue(sessionId, out session))
+                        {
+                            await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                            session = Sessions[sessionId];
+                        }
+
+                        session.Title = (string)obj["Title"];
+                        session.Artist = (string)obj["Artist"];
+
+                        string base64String = (string)obj["Thumbnail"];
+
+                        Texture2D texture = null;
+
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(base64String) && !thumbnailCache.TryGetValue(base64String, out texture))
+                            {
+                                texture = new(2, 2)
                                 {
-                                    Id = sessionId
+                                    filterMode = FilterMode.Point,
+                                    wrapMode = TextureWrapMode.Clamp
                                 };
-                                Sessions.Add(sessionId, session);
-
-                                Logging.Message($"Added Session: \"{sessionId}\"");
-
-                                if (string.IsNullOrEmpty(FocussedSession))
-                                {
-                                    FocussedSession = sessionId;
-                                    OnSessionFocussed?.SafeInvoke(session);
-                                }
+                                texture.LoadImage(Convert.FromBase64String(base64String));
+                                thumbnailCache.TryAdd(base64String, texture);
                             }
-                            break;
+                        }
+                        catch
+                        {
 
-                        case "RemoveSession":
-                            if (string.IsNullOrEmpty(sessionId)) return;
+                        }
 
-                            if (Sessions.ContainsKey(sessionId))
-                            {
-                                Sessions.Remove(sessionId);
+                        texture ??= Texture2D.whiteTexture;
 
-                                Logging.Message($"Removed Session: \"{sessionId}\"");
+                        Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero);
 
-                                if (Sessions.Count == 0 && FocussedSession != null)
-                                {
-                                    FocussedSession = null;
-                                    OnSessionFocussed?.SafeInvoke(null);
-                                }
-                            }
-                            break;
+                        session.Thumbnail = sprite;
 
-                        case "SessionFocusChanged":
-                            FocussedSession = sessionId;
-                            if (sessionId != null) await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                        OnMediaChanged?.SafeInvoke(session);
+                        break;
 
-                            Logging.Message($"Session Focus Changed: \"{sessionId}\"");
+                    case "TimelinePropertyChanged":
+                        if (sessionId == null) return;
 
-                            OnSessionFocussed?.SafeInvoke((!string.IsNullOrEmpty(sessionId) && Sessions.TryGetValue(sessionId, out session)) ? session : null);
-                            break;
+                        if (!Sessions.TryGetValue(sessionId, out session))
+                        {
+                            await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
+                            session = Sessions[sessionId];
+                        }
 
-                        case "PlaybackStateChanged":
-                            if (sessionId == null) return;
+                        session.Position = (double)obj["Position"];
+                        session.StartTime = (double)obj["StartTime"];
+                        session.EndTime = (double)obj["EndTime"];
 
-                            if (!Sessions.TryGetValue(sessionId, out session))
-                            {
-                                await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
-                                session = Sessions[sessionId];
-                            }
-
-                            session.PlaybackStatus = (string)obj["PlaybackStatus"];
-
-                            OnPlaybackStateChanged?.SafeInvoke(session);
-                            break;
-
-                        case "MediaPropertyChanged":
-                            if (sessionId == null) return;
-
-                            if (!Sessions.TryGetValue(sessionId, out session))
-                            {
-                                await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
-                                session = Sessions[sessionId];
-                            }
-
-                            session.Title = (string)obj["Title"];
-                            session.Artist = (string)obj["Artist"];
-
-                            string base64String = (string)obj["Thumbnail"];
-
-                            Texture2D texture = null;
-
-                            try
-                            {
-                                if (!string.IsNullOrEmpty(base64String) && !thumbnailCache.TryGetValue(base64String, out texture))
-                                {
-                                    texture = new(2, 2)
-                                    {
-                                        filterMode = FilterMode.Point,
-                                        wrapMode = TextureWrapMode.Clamp
-                                    };
-                                    texture.LoadImage(Convert.FromBase64String(base64String));
-                                    thumbnailCache.TryAdd(base64String, texture);
-                                }
-                            }
-                            catch
-                            {
-
-                            }
-
-                            texture ??= Texture2D.whiteTexture;
-
-                            Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero);
-
-                            session.Thumbnail = sprite;
-
-                            OnMediaChanged?.SafeInvoke(session);
-                            break;
-
-                        case "TimelinePropertyChanged":
-                            if (sessionId == null) return;
-
-                            if (!Sessions.TryGetValue(sessionId, out session))
-                            {
-                                await new WaitUntil(() => Sessions.ContainsKey(sessionId)).AsAwaitable();
-                                session = Sessions[sessionId];
-                            }
-
-                            session.Position = (double)obj["Position"];
-                            session.StartTime = (double)obj["StartTime"];
-                            session.EndTime = (double)obj["EndTime"];
-
-                            OnTimelineChanged?.SafeInvoke(session);
-                            break;
-                    }
-                }
-            });
-        }
-
-        public async Task CreateExecutable()
-        {
-            string directoryName = Path.GetDirectoryName(ExecutablePath);
-
-            if (!Directory.Exists(directoryName) || !File.Exists(ExecutablePath))
-            {
-                using HttpClient client = new();
-                using Stream stream = await client.GetStreamAsync("https://github.com/developer9998/WindowsMediaController/releases/download/1.0.0/GorillaInfoMediaProcess.exe");
-
-                if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
-                using FileStream fileStream = new(ExecutablePath, FileMode.OpenOrCreate);
-                await stream.CopyToAsync(fileStream);
-            }
-
-            await Task.Delay(5000);
-        }
-
-        public void QuitExecutable()
-        {
-            if (consoleProcess != null && !consoleProcess.HasExited)
-            {
-                try
-                {
-                    consoleProcess.StandardInput.WriteLine("quit");
-                    consoleProcess.StandardInput.Flush();
-
-                    if (!consoleProcess.WaitForExit(2500))
-                    {
-                        consoleProcess.Kill();
-                        consoleProcess.WaitForExit();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Fatal("Could not kill consoleProcess");
-                    Logging.Error(ex);
-                }
-                finally
-                {
-                    consoleProcess.Dispose();
-                    consoleProcess = null;
+                        OnTimelineChanged?.SafeInvoke(session);
+                        break;
                 }
             }
+        });
+    }
+
+    public async Task CreateExecutable()
+    {
+        string directoryName = Path.GetDirectoryName(ExecutablePath);
+
+        if (!Directory.Exists(directoryName) || !File.Exists(ExecutablePath))
+        {
+            using HttpClient client = new();
+            using Stream stream = await client.GetStreamAsync("https://github.com/developer9998/WindowsMediaController/releases/download/1.0.0/GorillaInfoMediaProcess.exe");
+
+            if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
+            using FileStream fileStream = new(ExecutablePath, FileMode.OpenOrCreate);
+            await stream.CopyToAsync(fileStream);
         }
 
-        public void PushKey(MediaKeyCode keyCode)
+        await Task.Delay(5000);
+    }
+
+    public void QuitExecutable()
+    {
+        if (consoleProcess != null && !consoleProcess.HasExited)
         {
-            ThreadingHelper.Instance.StartAsyncInvoke(() =>
+            try
             {
-                keybd_event((uint)keyCode, 0, 0, 0);
-                return null;
-            });
+                consoleProcess.StandardInput.WriteLine("quit");
+                consoleProcess.StandardInput.Flush();
+
+                if (!consoleProcess.WaitForExit(2500))
+                {
+                    consoleProcess.Kill();
+                    consoleProcess.WaitForExit();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Fatal("Could not kill consoleProcess");
+                Logging.Error(ex);
+            }
+            finally
+            {
+                consoleProcess.Dispose();
+                consoleProcess = null;
+            }
         }
+    }
 
-        // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event
-        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        internal static extern void keybd_event(uint bVk, uint bScan, uint dwFlags, uint dwExtraInfo);
-
-        public class Session
+    public void PushKey(MediaKeyCode keyCode)
+    {
+        ThreadingHelper.Instance.StartAsyncInvoke(() =>
         {
-            public string Id;
+            keybd_event((uint)keyCode, 0, 0, 0);
+            return null;
+        });
+    }
 
-            public string Title;
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    internal static extern void keybd_event(uint bVk, uint bScan, uint dwFlags, uint dwExtraInfo);
 
-            public string Artist;
+    public class Session
+    {
+        public string Id;
 
-            public string[] Genres;
+        public string Title;
 
-            public int TrackNumber;
+        public string Artist;
 
-            public string AlbumTitle;
+        public string[] Genres;
 
-            public string AlbumArtist;
+        public int TrackNumber;
 
-            public int AlbumTrackCount;
+        public string AlbumTitle;
 
-            public double StartTime;
+        public string AlbumArtist;
 
-            public double EndTime;
+        public int AlbumTrackCount;
 
-            public double Position;
+        public double StartTime;
 
-            public string PlaybackStatus;
+        public double EndTime;
 
-            public Sprite Thumbnail;
-        }
+        public double Position;
+
+        public string PlaybackStatus;
+
+        public Sprite Thumbnail;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using GorillaInfoWatch.Models.Interfaces;
+using System.Collections.Generic;
 
 namespace GorillaInfoWatch.Models;
 

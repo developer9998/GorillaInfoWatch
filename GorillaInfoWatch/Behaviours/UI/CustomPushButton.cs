@@ -16,6 +16,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void Awake()
         {
+            gameObject.SetLayer(UnityLayer.GorillaInteractable);
             GetComponent<Collider>().isTrigger = true;
         }
 

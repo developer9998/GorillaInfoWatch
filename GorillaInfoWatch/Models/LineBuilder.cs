@@ -1,3 +1,4 @@
+using GorillaInfoWatch.Models.Interfaces;
 using GorillaInfoWatch.Models.Widgets;
 using System;
 using System.Collections.Generic;

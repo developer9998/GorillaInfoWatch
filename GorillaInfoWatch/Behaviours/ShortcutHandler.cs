@@ -1,74 +1,72 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Interfaces;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours;
+
+internal class ShortcutHandler : MonoBehaviour, IInitializeWhenReady
 {
-    internal class ShortcutHandler : MonoBehaviour
+    public static ShortcutHandler Instance { get; private set; }
+
+    public Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
+
+    private const string _shortcutIdEntry = "ShortcutName";
+
+    public void Awake()
     {
-        public static ShortcutHandler Instance { get; private set; }
-
-        public Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
-
-        private const string _shortcutIdEntry = "ShortcutName";
-
-        public void Awake()
+        if (Instance != null && Instance != this)
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(this);
-                return;
-            }
-
-            Instance = this;
-
-            Events.OnModInitialized += Initialize;
+            Destroy(this);
+            return;
         }
 
-        public void Initialize()
+        Instance = this;
+    }
+
+    public void Initialize()
+    {
+        Shortcut lastShortcut = null;
+
+        if (DataManager.Instance.HasData(_shortcutIdEntry))
         {
-            Shortcut lastShortcut = null;
+            string value = DataManager.Instance.GetData<string>(_shortcutIdEntry);
 
-            if (DataManager.Instance.HasData(_shortcutIdEntry))
+            foreach (Shortcut shortcut in ShortcutRegistrar.AllShortcuts)
             {
-                string value = DataManager.Instance.GetData<string>(_shortcutIdEntry);
-
-                foreach (Shortcut shortcut in ShortcutRegistrar.AllShortcuts)
+                if (shortcut.GetShortcutId() == value)
                 {
-                    if (shortcut.GetShortcutId() == value)
-                    {
-                        lastShortcut = shortcut;
-                        break;
-                    }
+                    lastShortcut = shortcut;
+                    break;
                 }
             }
-
-            SetShortcut(lastShortcut, false);
         }
 
-        public void SetOrRemoveShortcut(Shortcut shortcut)
-        {
-            if (Shortcut != shortcut) SetShortcut(shortcut);
-            else RemoveShortcut();
-        }
+        SetShortcut(lastShortcut, false);
+    }
 
-        public void RemoveShortcut() => SetShortcut(null);
+    public void SetOrRemoveShortcut(Shortcut shortcut)
+    {
+        if (Shortcut != shortcut) SetShortcut(shortcut);
+        else RemoveShortcut();
+    }
 
-        public void SetShortcut(Shortcut shortcut, bool saveShortcut = true)
-        {
-            Watch.LocalWatch.shortcutButton.SetShortcut(shortcut);
-            if (saveShortcut) SaveShortcut(shortcut);
-        }
+    public void RemoveShortcut() => SetShortcut(null);
 
-        private void SaveShortcut(Shortcut shortcut)
-        {
-            if (shortcut != null) DataManager.Instance.SetData(_shortcutIdEntry, shortcut.GetShortcutId());
-            else DataManager.Instance.RemoveData(_shortcutIdEntry);
-        }
+    public void SetShortcut(Shortcut shortcut, bool saveShortcut = true)
+    {
+        Watch.LocalWatch.shortcutButton.SetShortcut(shortcut);
+        if (saveShortcut) SaveShortcut(shortcut);
+    }
 
-        public void ExcecuteShortcut(Shortcut shortcut)
-        {
-            shortcut.Method?.Invoke(!shortcut.HasState || shortcut.GetState());
-        }
+    private void SaveShortcut(Shortcut shortcut)
+    {
+        if (shortcut != null) DataManager.Instance.SetData(_shortcutIdEntry, shortcut.GetShortcutId());
+        else DataManager.Instance.RemoveData(_shortcutIdEntry);
+    }
+
+    public void ExcecuteShortcut(Shortcut shortcut)
+    {
+        shortcut.Method?.Invoke(!shortcut.HasState || shortcut.GetState());
     }
 }

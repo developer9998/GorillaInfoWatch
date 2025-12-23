@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GorillaInfoWatch.Models;
+namespace GorillaInfoWatch.Models.Interfaces;
 
 public interface ISectionLineProvider
 {
