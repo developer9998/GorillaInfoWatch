@@ -1,3 +1,4 @@
+using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
 using Photon.Realtime;

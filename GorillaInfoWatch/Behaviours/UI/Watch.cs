@@ -2,20 +2,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
-using GorillaInfoWatch.Behaviours.UI;
-
 
 #if PLUGIN
 using System;
 using System.Linq;
 using GorillaExtensions;
-using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Behaviours.Networking;
 #endif
 
-namespace GorillaInfoWatch.Behaviours
+namespace GorillaInfoWatch.Behaviours.UI
 {
     [DisallowMultipleComponent]
     public class Watch : MonoBehaviour
@@ -32,7 +29,7 @@ namespace GorillaInfoWatch.Behaviours
 
         public Animator menuAnimator;
 
-        public string standardTrigger, mediaTrigger;
+        // public string standardTrigger, mediaTrigger;
 
         [FormerlySerializedAs("idleMenu")]
         public GameObject homeMenu;
@@ -81,7 +78,11 @@ namespace GorillaInfoWatch.Behaviours
         public StateMachine<Menu_StateBase> MenuStateMachine;
         public Menu_Home HomeState;
 
-        private bool mediaTriggerState = false;
+        private MenuTrigger currentTrigger;
+
+        private bool hasMediaSession = false;
+
+        private CustomPushButton mediaNavigationButton;
 
         public async void Start()
         {
@@ -89,27 +90,14 @@ namespace GorillaInfoWatch.Behaviours
 
             if (Rig.isOfflineVRRig)
             {
-                if (LocalWatch is not null && LocalWatch != this)
-                {
-                    Logging.Warning("Duplicate local watch detected to remove");
-                    Destroy(this);
-
-                    return;
-                }
-
-                Logging.Message("Local Watch");
-                Logging.Info(transform.GetPath().TrimStart('/'));
-
-                LocalWatch = this;
-
-                MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
-                MediaManager.Instance.OnMediaChanged += OnMediaChanged;
-                MediaManager.Instance.OnTimelineChanged += OnTimelineChanged;
+                ConfigureWatchLocal();
             }
             else
             {
                 shortcutButton.SetActive(false);
             }
+
+            menuAnimator.SetBool("IsLocal", IsLocalWatch);
 
             watchHeadTransform.localEulerAngles = watchHeadTransform.localEulerAngles.WithZ(-91.251f);
 
@@ -133,16 +121,33 @@ namespace GorillaInfoWatch.Behaviours
             Rig.OnColorChanged += SetColour;
             Events.OnRigSetInvisibleToLocal += SetVisibilityCheck;
 
-            ConfigureWatch();
+            ConfigureWatchShared();
         }
 
-        public void ConfigureWatch()
+        public void ConfigureWatchLocal()
+        {
+            LocalWatch = this;
+
+            CustomPushButton homeNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Home").AddComponent<CustomPushButton>();
+            homeNavigationButton.OnButtonPush += _ => SetTrigger(MenuTrigger.Standard);
+
+            mediaNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Music").AddComponent<CustomPushButton>();
+            mediaNavigationButton.OnButtonPush += _ => SetTrigger(MenuTrigger.MediaPlayer);
+            mediaNavigationButton.Active = hasMediaSession;
+
+            MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
+            MediaManager.Instance.OnMediaChanged += OnMediaChanged;
+            MediaManager.Instance.OnTimelineChanged += OnTimelineChanged;
+        }
+
+        public void ConfigureWatchShared()
         {
             transform.SetParent(InLeftHand ? Rig.leftHandTransform.parent : Rig.rightHandTransform.parent, false);
             transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
             transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
             transform.localScale = Vector3.one;
 
+            SetTrigger(MenuTrigger.Standard);
             SetVisibility(HideWatch || Rig.IsInvisibleToLocalPlayer);
             SetColour(Rig.playerColor);
         }
@@ -175,7 +180,7 @@ namespace GorillaInfoWatch.Behaviours
         {
             screenRimMaterial.color = playerColour;
             Color.RGBToHSV(playerColour, out float H, out float S, out _);
-            float V = 0.13f * Mathf.Clamp((S + 1) * 0.9f, 1, float.MaxValue);
+            float V = 0.13f * Mathf.Max((S + 1) * 0.9f, 1f);
             Color screenColour = Color.HSVToRGB(H, S, V);
             screenMaterial.color = screenColour;
         }
@@ -195,10 +200,12 @@ namespace GorillaInfoWatch.Behaviours
                 return;
             }
 
-            if (mediaTriggerState)
+            if (hasMediaSession)
             {
-                mediaTriggerState = false;
-                menuAnimator.SetTrigger(standardTrigger);
+                hasMediaSession = false;
+                mediaNavigationButton.Active = false;
+
+                if (currentTrigger == MenuTrigger.MediaPlayer) SetTrigger(MenuTrigger.Standard);
             }
         }
 
@@ -210,15 +217,18 @@ namespace GorillaInfoWatch.Behaviours
             trackAuthor.text = session.Artist;
             trackThumbnail.sprite = session.Thumbnail;
 
-            bool hasMedia = session.Title != null && session.Title.Length > 0;
-            if (hasMedia != mediaTriggerState)
+            bool isValidSession = session.Title != null && session.Title.Length > 0;
+
+            if (isValidSession != hasMediaSession)
             {
-                mediaTriggerState = hasMedia;
-                string trigger = hasMedia ? mediaTrigger : standardTrigger;
-                menuAnimator.SetTrigger(trigger);
+                hasMediaSession = isValidSession;
+                mediaNavigationButton.Active = isValidSession;
+
+                if (hasMediaSession) SetTrigger(MenuTrigger.MediaPlayer);
+                else if (currentTrigger == MenuTrigger.MediaPlayer) SetTrigger(MenuTrigger.Standard);
             }
 
-            if (mediaTriggerState)
+            if (hasMediaSession)
             {
                 NetworkManager.Instance.SetProperty("Title", session.Title);
                 NetworkManager.Instance.SetProperty("Artist", session.Artist);
@@ -243,6 +253,20 @@ namespace GorillaInfoWatch.Behaviours
 
         #endregion
 
+        public void SetTrigger(MenuTrigger trigger)
+        {
+            if (currentTrigger == trigger) return;
+
+            currentTrigger = trigger;
+            menuAnimator.SetTrigger(trigger.GetName());
+        }
+
+        public enum MenuTrigger
+        {
+            None,
+            Standard,
+            MediaPlayer
+        }
 #endif
     }
 }

@@ -12,6 +12,5 @@
             }
             return result + min;
         }
-
     }
 }

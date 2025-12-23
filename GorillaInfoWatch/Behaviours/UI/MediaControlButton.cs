@@ -1,4 +1,6 @@
-﻿using GorillaInfoWatch.Models;
+﻿/*
+
+using GorillaInfoWatch.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,3 +23,5 @@ namespace GorillaInfoWatch.Behaviours.UI
 #endif
     }
 }
+
+*/

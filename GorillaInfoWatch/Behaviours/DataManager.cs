@@ -52,7 +52,7 @@ namespace GorillaInfoWatch.Behaviours
             ReadPersistentData();
         }
 
-        public void SetEntry(string key, object value, DataLocation dataType = DataLocation.Persistent)
+        public void SetData(string key, object value, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -63,7 +63,7 @@ namespace GorillaInfoWatch.Behaviours
             if (dataType == DataLocation.Persistent) WritePersistentData();
         }
 
-        public void RemoveEntry(string key, DataLocation dataType = DataLocation.Persistent)
+        public void RemoveData(string key, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -75,14 +75,14 @@ namespace GorillaInfoWatch.Behaviours
             }
         }
 
-        public bool HasEntry(string key, DataLocation dataType = DataLocation.Persistent)
+        public bool HasData(string key, DataLocation dataType = DataLocation.Persistent)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
             return dictionary.ContainsKey(key);
         }
 
-        public T GetEntry<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default, bool setDefaultValue = true)
+        public T GetData<T>(string key, DataLocation dataType = DataLocation.Persistent, T defaultValue = default, bool setDefaultValue = true)
         {
             EnsureDataCollection(dataType);
             Dictionary<string, object> dictionary = dataPerTypeDict[dataType];
@@ -121,11 +121,11 @@ namespace GorillaInfoWatch.Behaviours
                 }
             }
 
-            if (setDefaultValue) SetEntry(key, defaultValue);
+            if (setDefaultValue) SetData(key, defaultValue);
             return defaultValue;
         }
 
-        public void ReadPersistentData()
+        private void ReadPersistentData()
         {
             EnsureDataCollection(DataLocation.Persistent);
 
@@ -133,7 +133,7 @@ namespace GorillaInfoWatch.Behaviours
             else WritePersistentData();
         }
 
-        public void WritePersistentData()
+        private void WritePersistentData()
         {
             EnsureDataCollection(DataLocation.Persistent);
 
@@ -146,7 +146,7 @@ namespace GorillaInfoWatch.Behaviours
             });
         }
 
-        public void EnsureDataCollection(DataLocation dataType)
+        private void EnsureDataCollection(DataLocation dataType)
         {
             if (dataPerTypeDict.ContainsKey(dataType)) return;
             dataPerTypeDict.Add(dataType, []);

@@ -1,4 +1,4 @@
-﻿using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours.UI;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models.StateMachine

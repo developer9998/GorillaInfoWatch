@@ -1,4 +1,4 @@
-﻿using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours.UI;
 using Photon.Pun;
 using Photon.Realtime;
 using Photon.Voice.PUN;
@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Models.StateMachine
 
         private GorillaSpeakerLoudness _speakerLoudness;
 
-        private MicrophoneIconState _iconState;
+        private MicIconState _iconState;
 
         public override void Enter()
         {
@@ -96,13 +96,13 @@ namespace GorillaInfoWatch.Models.StateMachine
                 frameCount = 0;
             }
 
-            MicrophoneIconState iconState = MicrophoneIconState.Silent;
+            MicIconState iconState = MicIconState.Silent;
 
             if (isLocalWatch)
             {
                 if (GorillaTagger.moderationMutedTime > 0)
                 {
-                    iconState = MicrophoneIconState.MuteViaPunishment;
+                    iconState = MicIconState.MuteViaPunishment;
                     goto CheckMicIcon;
                 }
 
@@ -112,7 +112,7 @@ namespace GorillaInfoWatch.Models.StateMachine
 
                 if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || (_localRecorder != null && !_localRecorder.TransmitEnabled) || !targetRig.Rig.shouldSendSpeakingLoudness)
                 {
-                    iconState = MicrophoneIconState.MuteViaPreference;
+                    iconState = MicIconState.MuteViaPreference;
                     goto CheckMicIcon;
                 }
 
@@ -120,7 +120,7 @@ namespace GorillaInfoWatch.Models.StateMachine
                 {
                     float squareRoot = Mathf.Sqrt(_speakerLoudness.LoudnessNormalized);
                     bool isSpeaking = Mathf.FloorToInt(squareRoot * 50f) >= 3;
-                    iconState = isSpeaking ? MicrophoneIconState.Speaking : MicrophoneIconState.Silent;
+                    iconState = isSpeaking ? MicIconState.Speaking : MicIconState.Silent;
                 }
             }
             else
@@ -129,12 +129,12 @@ namespace GorillaInfoWatch.Models.StateMachine
 
                 if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || targetRig.Muted)
                 {
-                    iconState = targetRig.GetIsPlayerAutoMuted() ? MicrophoneIconState.MuteViaPunishment : MicrophoneIconState.MuteViaPreference;
+                    iconState = targetRig.GetIsPlayerAutoMuted() ? MicIconState.MuteViaPunishment : MicIconState.MuteViaPreference;
                     goto CheckMicIcon;
                 }
 
                 bool isSpeaking = targetRig.Voice is PhotonVoiceView voice && voice && voice.IsSpeaking;
-                iconState = isSpeaking ? MicrophoneIconState.Speaking : MicrophoneIconState.Silent;
+                iconState = isSpeaking ? MicIconState.Speaking : MicIconState.Silent;
             }
 
         CheckMicIcon:
@@ -144,19 +144,19 @@ namespace GorillaInfoWatch.Models.StateMachine
                 _iconState = iconState;
                 switch (_iconState)
                 {
-                    case MicrophoneIconState.Silent:
+                    case MicIconState.Silent:
                         micIcon.sprite = micSpeakSymbol.Sprite;
                         micIcon.color = Color.grey;
                         break;
-                    case MicrophoneIconState.Speaking:
+                    case MicIconState.Speaking:
                         micIcon.sprite = micSpeakSymbol.Sprite;
                         micIcon.color = Color.white;
                         break;
-                    case MicrophoneIconState.MuteViaPreference:
+                    case MicIconState.MuteViaPreference:
                         micIcon.sprite = micMuteSymbol.Sprite;
                         micIcon.color = Color.white;
                         break;
-                    case MicrophoneIconState.MuteViaPunishment:
+                    case MicIconState.MuteViaPunishment:
                         micIcon.sprite = micTimeoutSymbol.Sprite;
                         micIcon.color = Color.white;
                         break;
@@ -191,7 +191,7 @@ namespace GorillaInfoWatch.Models.StateMachine
             bellIcon.color = hasUnread ? Color.white : Color.grey;
         }
 
-        private enum MicrophoneIconState
+        private enum MicIconState
         {
             None = -1,
             Silent,

@@ -15,9 +15,9 @@ namespace GorillaInfoWatch.Models
 
         public Type CallerScreenType;
 
-        internal int SectionNumber;
+        internal int sectionNumber;
 
-        internal InfoContent Content;
+        internal InfoContent content;
 
         public void LoadScreen<T>() where T : InfoScreen => LoadScreen(typeof(T));
         public void LoadScreen(Type type) => LoadScreenRequest?.Invoke(type);

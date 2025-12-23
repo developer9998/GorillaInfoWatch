@@ -312,14 +312,14 @@ namespace GorillaInfoWatch.Behaviours
             _panelNextPageButton = _panelObject.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
             _panelNextPageButton.OnButtonPressed = () =>
             {
-                ActiveScreen.SectionNumber++;
+                ActiveScreen.sectionNumber++;
                 UpdateScreen();
             };
 
             _panelPrevPageButton = _panelObject.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
             _panelPrevPageButton.OnButtonPressed = () =>
             {
-                ActiveScreen.SectionNumber--;
+                ActiveScreen.sectionNumber--;
                 UpdateScreen();
             };
 
@@ -367,7 +367,7 @@ namespace GorillaInfoWatch.Behaviours
                 {
                     _panelLines.ForEach(line => line.Build(new SectionLine("Placeholder", []), true));
                     screen.OnScreenReload();
-                    screen.Content = screen.GetContent();
+                    screen.content = screen.GetContent();
                     UpdateScreen();
                 }
             };
@@ -549,8 +549,8 @@ namespace GorillaInfoWatch.Behaviours
                 lastScreen.OnScreenUnload();
 
                 PreserveScreenSectionAttribute preserveSection = lastScreen.GetType().GetCustomAttribute<PreserveScreenSectionAttribute>();
-                if (preserveSection == null) lastScreen.SectionNumber = 0;
-                if (preserveSection == null || preserveSection.ClearContent) lastScreen.Content = null;
+                if (preserveSection == null) lastScreen.sectionNumber = 0;
+                if (preserveSection == null || preserveSection.ClearContent) lastScreen.content = null;
 
                 if (newScreen != _homeScreen && lastScreen.CallerScreenType == newScreen.GetType()) callerScreenType = newScreen.CallerScreenType;
                 else if (newScreen != _homeScreen) callerScreenType = lastScreen.GetType();
@@ -563,14 +563,14 @@ namespace GorillaInfoWatch.Behaviours
             newScreen.LoadScreenRequest += LoadScreen;
             newScreen.UpdateScreenRequest += delegate (bool includeWidgets)
             {
-                newScreen.Content = newScreen.GetContent();
+                newScreen.content = newScreen.GetContent();
                 UpdateScreen(includeWidgets);
             };
 
             newScreen.enabled = true;
             newScreen.OnScreenLoad();
 
-            newScreen.Content = newScreen.GetContent();
+            newScreen.content = newScreen.GetContent();
             UpdateScreen();
         }
 
@@ -606,7 +606,7 @@ namespace GorillaInfoWatch.Behaviours
             _panelInboxButton.gameObject.SetActive(onHomeScreen);
             _panelReturnButton.gameObject.SetActive(!onHomeScreen && (ActiveScreen.CallerScreenType != null || considerReturnType));
 
-            ActiveScreen.Content ??= ActiveScreen.GetContent();
+            ActiveScreen.content ??= ActiveScreen.GetContent();
 
             try
             {
@@ -614,7 +614,7 @@ namespace GorillaInfoWatch.Behaviours
 
                 try
                 {
-                    sectionCount = ActiveScreen.Content.SectionCount;
+                    sectionCount = ActiveScreen.content.SectionCount;
                 }
                 catch (Exception ex)
                 {
@@ -624,8 +624,8 @@ namespace GorillaInfoWatch.Behaviours
                 }
 
                 bool hasSection = sectionCount > 0;
-                int sectionNumber = hasSection ? MathExtensions.Wrap(ActiveScreen.SectionNumber, 0, sectionCount) : 0;
-                ActiveScreen.SectionNumber = sectionNumber;
+                int sectionNumber = hasSection ? MathExtensions.Wrap(ActiveScreen.sectionNumber, 0, sectionCount) : 0;
+                ActiveScreen.sectionNumber = sectionNumber;
 
                 bool multiSection = hasSection && sectionCount > 1;
                 _panelNextPageButton.gameObject.SetActive(multiSection);
@@ -636,13 +636,13 @@ namespace GorillaInfoWatch.Behaviours
 
                 try
                 {
-                    section = ActiveScreen.Content.GetSection(sectionNumber);
+                    section = ActiveScreen.content.GetSection(sectionNumber);
                 }
                 catch (Exception ex)
                 {
                     section = new(title: "Placeholder", lines: Enumerable.Repeat<SectionLine>(new("Placeholder"), Constants.SectionCapacity));
 
-                    Logging.Fatal($"{ActiveScreen.Content.GetType().Name} of {ActiveScreen.Content.GetType().Namespace} not could construct section at {sectionNumber}");
+                    Logging.Fatal($"{ActiveScreen.content.GetType().Name} of {ActiveScreen.content.GetType().Namespace} not could construct section at {sectionNumber}");
                     Logging.Error(ex);
                 }
 

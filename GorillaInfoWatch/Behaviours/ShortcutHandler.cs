@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Models;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours
@@ -28,9 +29,9 @@ namespace GorillaInfoWatch.Behaviours
         {
             Shortcut lastShortcut = null;
 
-            if (DataManager.Instance.HasEntry(_shortcutIdEntry))
+            if (DataManager.Instance.HasData(_shortcutIdEntry))
             {
-                string value = DataManager.Instance.GetEntry<string>(_shortcutIdEntry);
+                string value = DataManager.Instance.GetData<string>(_shortcutIdEntry);
 
                 foreach (Shortcut shortcut in ShortcutRegistrar.AllShortcuts)
                 {
@@ -61,8 +62,8 @@ namespace GorillaInfoWatch.Behaviours
 
         private void SaveShortcut(Shortcut shortcut)
         {
-            if (shortcut != null) DataManager.Instance.SetEntry(_shortcutIdEntry, shortcut.GetShortcutId());
-            else DataManager.Instance.RemoveEntry(_shortcutIdEntry);
+            if (shortcut != null) DataManager.Instance.SetData(_shortcutIdEntry, shortcut.GetShortcutId());
+            else DataManager.Instance.RemoveData(_shortcutIdEntry);
         }
 
         public void ExcecuteShortcut(Shortcut shortcut)

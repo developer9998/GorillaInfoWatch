@@ -9,8 +9,7 @@ using UnityEngine;
 namespace GorillaInfoWatch
 {
     [BepInPlugin(Constants.GUID, Constants.Name, Constants.Version)]
-    [BepInDependency("net.rusjj.gorillafriends")]
-    [BepInDependency("org.legoandmars.gorillatag.utilla")]
+    [BepInDependency("net.rusjj.gorillafriends"), BepInDependency("org.legoandmars.gorillatag.utilla")]
     public class Plugin : BaseUnityPlugin
     {
         public void Awake()
