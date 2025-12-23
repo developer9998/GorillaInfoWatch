@@ -192,16 +192,25 @@ namespace GorillaInfoWatch.Behaviours
 
                             Texture2D texture = null;
 
-                            if (!string.IsNullOrEmpty(base64String) && !thumbnailCache.TryGetValue(base64String, out texture))
+                            try
                             {
-                                texture = new Texture2D(2, 2)
+                                if (!string.IsNullOrEmpty(base64String) && !thumbnailCache.TryGetValue(base64String, out texture))
                                 {
-                                    filterMode = FilterMode.Point,
-                                    wrapMode = TextureWrapMode.Clamp
-                                };
-                                texture.LoadImage(Convert.FromBase64String(base64String));
-                                thumbnailCache.Add(base64String, texture);
+                                    texture = new(2, 2)
+                                    {
+                                        filterMode = FilterMode.Point,
+                                        wrapMode = TextureWrapMode.Clamp
+                                    };
+                                    texture.LoadImage(Convert.FromBase64String(base64String));
+                                    thumbnailCache.TryAdd(base64String, texture);
+                                }
                             }
+                            catch
+                            {
+
+                            }
+
+                            texture ??= Texture2D.whiteTexture;
 
                             Sprite sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero);
 

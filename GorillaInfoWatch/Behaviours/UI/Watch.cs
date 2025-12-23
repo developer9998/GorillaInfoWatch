@@ -3,8 +3,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
 
+
+
 #if PLUGIN
 using System;
+using GorillaInfoWatch.Tools;
 using System.Linq;
 using GorillaExtensions;
 using GorillaInfoWatch.Extensions;
@@ -255,15 +258,12 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public void SetTrigger(MenuTrigger trigger)
         {
-            if (currentTrigger == trigger) return;
-
             currentTrigger = trigger;
-            menuAnimator.SetTrigger(trigger.GetName());
+            menuAnimator.SetInteger("Tab", (int)trigger);
         }
 
         public enum MenuTrigger
         {
-            None,
             Standard,
             MediaPlayer
         }

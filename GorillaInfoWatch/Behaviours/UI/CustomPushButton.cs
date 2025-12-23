@@ -14,9 +14,14 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         public bool Active = true;
 
+        public void Awake()
+        {
+            GetComponent<Collider>().isTrigger = true;
+        }
+
         public void OnTriggerEnter(Collider collider)
         {
-            if (!collider.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) || handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand || (PushButton.PressTime > Time.realtimeSinceStartup - Debounce)) return;
+            if (!collider.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) || handIndicator.isLeftHand == Watch.LocalWatch.InLeftHand || (PushButton.PressTime > Time.realtimeSinceStartup - Debounce)) return;
 
             if (Active)
             {
