@@ -28,7 +28,7 @@ namespace GorillaInfoWatch.Screens
             LineBuilder lines = new();
 
             lines.Add($"Name: {Mod.Metadata.Name}");
-            lines.Add($"Version: v{Mod.Metadata.Version}");
+            lines.Add($"Version: {Mod.Metadata.Version}");
             lines.Add($"GUID: {Mod.Metadata.GUID}");
 
             lines.Skip();

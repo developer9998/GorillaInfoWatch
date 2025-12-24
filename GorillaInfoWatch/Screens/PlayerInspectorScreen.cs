@@ -135,7 +135,7 @@ namespace GorillaInfoWatch.Screens
                 Array.ForEach(Array.FindAll(plrSignificance, item => item != null), list.Add);
             }
 
-            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) == GFriends.eRecentlyPlayed.Before)
+            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before)
                 list.Add(Main.Significance_RecentlyPlayed);
 
             if (player.IsMasterClient)

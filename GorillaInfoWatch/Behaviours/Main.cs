@@ -840,15 +840,9 @@ public class Main : MonoBehaviourPunCallbacks
 
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        Logging.Fatal("OnJoinRoomFailed");
-        Logging.Message($"{returnCode}: {message}");
+        Logging.Fatal($"OnJoinRoomFailed: {message} ({returnCode})");
 
-        switch (returnCode)
-        {
-            case ErrorCode.GameFull:
-                Notifications.SendNotification(new("Room Join failure", "Room is full", 3, Sounds.notificationNegative));
-                break;
-        }
+        Notifications.SendNotification(new("Room Join failure", returnCode == ErrorCode.GameFull ? "Room is full" : $"Code {returnCode}", 3, Sounds.notificationNegative));
     }
 
     public override void OnCustomAuthenticationFailed(string debugMessage)

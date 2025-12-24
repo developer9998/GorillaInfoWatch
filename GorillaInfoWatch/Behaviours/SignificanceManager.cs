@@ -75,7 +75,7 @@ public class SignificanceManager : MonoBehaviour
 
         if (GFriends.IsFriend(userId))
         {
-            Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
+            Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -85,7 +85,7 @@ public class SignificanceManager : MonoBehaviour
 
         if (GFriends.IsVerified(userId))
         {
-            Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforceLength(12)}", delegate ()
+            Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
