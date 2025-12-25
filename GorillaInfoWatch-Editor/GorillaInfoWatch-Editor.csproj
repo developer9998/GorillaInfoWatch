@@ -25,14 +25,6 @@
 		<Compile Include="..\GorillaInfoWatch\Behaviours\UI\ShortcutButton.cs">
 			<Link>Behaviours\UI\ShortcutButton.cs</Link>
 		</Compile>
-	
-		<!-- Media Controls Classes -->
-		<Compile Include="..\GorillaInfoWatch\Behaviours\UI\MediaControlButton.cs">
-			<Link>Behaviours\UI\MediaControlButton.cs</Link>
-		</Compile>
-		<Compile Include="..\GorillaInfoWatch\Models\MediaControlBinding.cs">
-			<Link>Behaviours\UI\MediaControlBinding.cs</Link>
-		</Compile>
 	</ItemGroup>
 
 	<ItemGroup>

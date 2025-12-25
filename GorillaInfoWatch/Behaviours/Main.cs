@@ -101,6 +101,8 @@ public class Main : MonoBehaviourPunCallbacks
 
     private bool _wasRoomAllowed = true;
 
+    private static SectionLine _placeholderLine = new("Placeholder", []);
+
     public async void Awake()
     {
         if (Instance != null && Instance != this)
@@ -262,7 +264,7 @@ public class Main : MonoBehaviourPunCallbacks
 
         Content.WatchPrefab.SetActive(false);
         _watchObject = Instantiate(Content.WatchPrefab);
-        _watchObject.name = "InfoWatch";
+        _watchObject.name = "Watch";
 
         _infoWatch = _watchObject.GetComponent<Watch>();
         _infoWatch.Rig = GorillaTagger.Instance.offlineVRRig;
@@ -273,13 +275,14 @@ public class Main : MonoBehaviourPunCallbacks
         NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
 
         _panelObject = Instantiate(Content.MenuPrefab);
-        _panelObject.name = "InfoMenu";
+        _panelObject.name = "Panel";
         _panelObject.transform.SetParent(transform);
         _panelObject.gameObject.SetActive(true);
 
         _panelBackground = _panelObject.transform.Find("Canvas/Background").GetComponent<Image>();
         _panelTitle = _panelObject.transform.Find("Canvas/Header/TextContainer/Title").GetComponent<TMP_Text>();
         _panelDescription = _panelObject.transform.Find("Canvas/Header/TextContainer/Description").GetComponent<TMP_Text>();
+
         _panelLinesRoot = _panelObject.transform.Find("Canvas/Lines");
         _panelLines = new(Constants.SectionCapacity);
 
@@ -366,7 +369,7 @@ public class Main : MonoBehaviourPunCallbacks
         {
             if (ActiveScreen is InfoScreen screen)
             {
-                _panelLines.ForEach(line => line.Build(new SectionLine("Placeholder", []), true));
+                _panelLines.ForEach(line => line.Build(_placeholderLine, true));
                 screen.OnScreenReload();
                 screen.content = screen.GetContent();
                 UpdateScreen();
@@ -642,7 +645,7 @@ public class Main : MonoBehaviourPunCallbacks
             }
             catch (Exception ex)
             {
-                section = new(title: "Placeholder", lines: Enumerable.Repeat<SectionLine>(new("Placeholder"), Constants.SectionCapacity));
+                section = new(title: "Placeholder", lines: Enumerable.Repeat(_placeholderLine, Constants.SectionCapacity));
 
                 Logging.Fatal($"{ActiveScreen.content.GetType().Name} of {ActiveScreen.content.GetType().Namespace} not could construct section at {sectionNumber}");
                 Logging.Error(ex);
@@ -687,16 +690,17 @@ public class Main : MonoBehaviourPunCallbacks
 
             for (int i = 0; i < lines.Count; i++)
             {
-                var line = lines[i];
+                SectionLine line = lines[i];
 
                 if (line.Restrictions.HasFlag(LineRestrictions.Wrapping))
                 {
                     int insertPosition = i;
-                    lines.RemoveAt(insertPosition);
+                    lines.RemoveAt(insertPosition); // Remove the initial line that we're going to extend
 
                     string[] textArray = _sampleLineText.GetArrayFromText(line.Text);
                     for (int j = textArray.Length - 1; j >= 0; j--)
                     {
+                        // Enumerates through the result of wrapping our initial line, effectively extending it
                         lines.Insert(insertPosition, new SectionLine(textArray[j], j == 0 ? line.Widgets : []));
                     }
 
@@ -713,7 +717,7 @@ public class Main : MonoBehaviourPunCallbacks
                 if (lines.ElementAtOrDefault(i) is SectionLine screenLine)
                 {
                     bool wasLineActive = panelLine.gameObject.activeSelf;
-                    panelLine.gameObject.SetActive(true);
+                    if (!wasLineActive) panelLine.gameObject.SetActive(true);
 
                     try
                     {
@@ -842,6 +846,7 @@ public class Main : MonoBehaviourPunCallbacks
     {
         Logging.Fatal($"OnJoinRoomFailed: {message} ({returnCode})");
 
+        if (returnCode == ErrorCode.GameDoesNotExist) return;
         Notifications.SendNotification(new("Room Join failure", returnCode == ErrorCode.GameFull ? "Room is full" : $"Code {returnCode}", 3, Sounds.notificationNegative));
     }
 
@@ -853,14 +858,14 @@ public class Main : MonoBehaviourPunCallbacks
         Notifications.SendNotification(new("Photon PUN failure", "Custom Auth failed", 3, Sounds.notificationNegative));
     }
 
-    public void OnQuestCompleted(RotatingQuest quest)
+    private void OnQuestCompleted(RotatingQuest quest)
     {
         Logging.Info($"Quest Completed: {quest.GetTextDescription()}");
 
         Notifications.SendNotification(new("You completed a Quest", quest.questName, 5, Sounds.notificationNeutral));
     }
 
-    public void OnMothershipMessageRecieved(NotificationsMessageResponse notification, nint _)
+    private void OnMothershipMessageRecieved(NotificationsMessageResponse notification, nint _)
     {
         string title = notification.Title;
         string body = notification.Body;

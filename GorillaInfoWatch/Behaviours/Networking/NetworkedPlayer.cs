@@ -1,15 +1,13 @@
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Tools;
 using Photon.Realtime;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Networking;
 
 [RequireComponent(typeof(RigContainer)), DisallowMultipleComponent]
-public class NetworkedPlayer : MonoBehaviour
+public class NetworkedPlayer : MonoBehaviour, IPreDisable
 {
     public Watch Watch { get; private set; }
     public bool HasInfoWatch { get; set; }
@@ -32,26 +30,36 @@ public class NetworkedPlayer : MonoBehaviour
         if (HasInfoWatch)
         {
             HasInfoWatch = false;
-            if (Watch) Destroy(Watch.gameObject);
+            Watch?.Obliterate();
         }
     }
 
     public void OnPlayerPropertyChanged(NetPlayer player, Dictionary<string, object> properties)
     {
-        if (player == Player)
+        if (!enabled || player != Player) return;
+
+        if (Watch.Null())
         {
-            Logging.Info($"{player.GetName().SanitizeName()} got properties: {string.Join(", ", properties.Select(prop => $"[{prop.Key}: {prop.Value}]"))}");
+            GameObject prefab = Instantiate(Main.Content.WatchPrefab);
+            Watch = prefab.GetComponent<Watch>();
+            Watch.Rig = Rig;
+            prefab.SetActive(true);
+        }
 
-            if (Watch == null || !Watch)
-            {
-                GameObject prefab = Instantiate(Main.Content.WatchPrefab);
-                Watch = prefab.GetComponent<Watch>();
-                Watch.Rig = Rig;
-                prefab.SetActive(true);
-            }
+        if (properties.TryGetValue("TimeOffset", out object timeOffsetObj) && timeOffsetObj is float timeObject)
+        {
+            Watch.TimeOffset = timeObject;
+        }
+    }
 
-            if (properties.TryGetValue("TimeOffset", out object timeOffsetObj) && timeOffsetObj is float timeObject)
-                Watch.TimeOffset = timeObject;
+    public void PreDisable()
+    {
+        enabled = false;
+
+        if (HasInfoWatch)
+        {
+            HasInfoWatch = false;
+            Watch?.Obliterate();
         }
     }
 }
