@@ -1,29 +1,28 @@
 ﻿using UnityEngine;
 
-namespace GorillaInfoWatch.Models.Widgets
+namespace GorillaInfoWatch.Models.Widgets;
+
+public struct WidgetAlignment
 {
-    public struct WidgetAlignment
+    public static WidgetAlignment Right = new(true);
+
+    public static WidgetAlignment Left = new(false);
+
+    public readonly string Classification;
+
+    [Range(0, 100)]
+    public float HorizontalAnchor;
+
+    public float HorizontalOffset;
+
+    public WidgetAlignment(bool alignToRight)
     {
-        public static WidgetAlignment Right = new(true);
+        Classification = alignToRight ? "right" : "left";
+    }
 
-        public static WidgetAlignment Left = new(false);
-
-        public readonly string Classification;
-
-        [Range(0, 100)]
-        public float HorizontalAnchor;
-
-        public float HorizontalOffset;
-
-        public WidgetAlignment(bool alignToRight)
-        {
-            Classification = alignToRight ? "right" : "left";
-        }
-
-        public WidgetAlignment(float anchor)
-        {
-            Classification = "custom";
-            HorizontalAnchor = Mathf.Clamp(anchor, 0, 100);
-        }
+    public WidgetAlignment(float anchor)
+    {
+        Classification = "custom";
+        HorizontalAnchor = Mathf.Clamp(anchor, 0, 100);
     }
 }

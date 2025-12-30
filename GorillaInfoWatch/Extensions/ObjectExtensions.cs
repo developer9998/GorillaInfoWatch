@@ -17,7 +17,7 @@ namespace GorillaInfoWatch.Extensions
             Object.Destroy(component);
         }
 
-        public static bool Exists(this Object obj) => obj == null || !obj;
+        public static bool Exists(this Object obj) => obj != null && obj;
 
         public static bool Null(this Object obj) => !obj.Exists();
     }

@@ -20,23 +20,19 @@ namespace GorillaInfoWatch.Screens
 
         public static string UserId;
 
-        private bool initialized;
+        private readonly Gradient _muteColour, _friendColour;
 
-        private Gradient muteColour, friendColour;
+        private readonly string _descriptionFormat = "<line-height=45%>{0}<br><size=60%>{1}";
 
-        private readonly string describedFormat = "<line-height=45%>{0}<br><size=60%>{1}";
+        public PlayerInspectorScreen()
+        {
+            _muteColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), Color.red);
+            _friendColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), GFriends.m_clrFriend);
+        }
 
         public override void OnScreenLoad()
         {
             base.OnScreenLoad();
-
-            if (!initialized)
-            {
-                initialized = true;
-
-                muteColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), Color.red);
-                friendColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), GFriends.m_clrFriend);
-            }
 
             Events.OnRigNameUpdate += OnRigNameUpdate;
             RoomSystem.PlayerLeftEvent += OnPlayerLeft;
@@ -110,13 +106,13 @@ namespace GorillaInfoWatch.Screens
 
                 lines.Add(rigContainer.Muted ? "Unmute Player" : "Mute Player", new Widget_Switch(rigContainer.Muted, OnMuteButtonClick, player)
                 {
-                    Colour = muteColour
+                    Colour = _muteColour
                 });
 
                 isFriend = GFriends.IsFriend(UserId);
                 lines.Add(isFriend ? "Remove Friend" : "Add Friend", new Widget_Switch(isFriend, OnFriendButtonClick, player)
                 {
-                    Colour = friendColour
+                    Colour = _friendColour
                 });
             }
 
@@ -128,7 +124,7 @@ namespace GorillaInfoWatch.Screens
 
             bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
 
-            if (SignificanceManager.Instance.Significance.TryGetValue(player, out PlayerSignificance[] plrSignificance))
+            if (SignificanceManager.Instance.GetSignificance(player, out PlayerSignificance[] plrSignificance))
             {
                 plrSignificance = [.. plrSignificance];
                 if (isInFriendList) plrSignificance[1] = Main.Significance_Friend;
@@ -152,7 +148,7 @@ namespace GorillaInfoWatch.Screens
                     str.Append(i + 1).Append(". ");
 
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
-                    else str.Append(string.Format(describedFormat, significance.Title, significance.Description.Replace(Constants.SignificancePlayerNameTag, normalizedName)));
+                    else str.Append(string.Format(_descriptionFormat, significance.Title, string.Format(significance.Description, normalizedName)));
 
                     significanceLines.Add(str.ToString(), widgets: significance.Symbol != Symbols.None ? [new Widget_Symbol(Symbol.GetSharedSymbol(significance.Symbol))
                     {
@@ -199,7 +195,7 @@ namespace GorillaInfoWatch.Screens
 
         private void OnPlayerLeft(NetPlayer player)
         {
-            if (player.IsNull || player.UserId != UserId) return;
+            if (player == null || player.IsNull || player.UserId != UserId) return;
             OnRoomLeft();
         }
 

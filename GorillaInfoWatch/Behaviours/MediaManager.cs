@@ -15,7 +15,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-public class MediaManager : MonoBehaviour, IInitializeWhenReady
+public class MediaManager : MonoBehaviour, IInitialize
 {
     public static MediaManager Instance { get; private set; }
 

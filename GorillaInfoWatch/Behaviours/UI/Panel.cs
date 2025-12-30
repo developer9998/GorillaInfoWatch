@@ -14,7 +14,9 @@ public class Panel : MonoBehaviour
 
     private bool startup = false;
 
-    private bool IsFacingUp => Vector3.Distance(Player.Instance.LeftHand.controllerTransform.right, Vector3.up) > 1.75f;
+    private bool IsLeftHand => Watch.LocalWatch?.InLeftHand ?? true;
+    private Player.HandState Hand => IsLeftHand ? Player.Instance.leftHand : Player.Instance.rightHand;
+    private bool IsFacingUp => Vector3.Distance(Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f), Vector3.up) > 1.75f;
 
     public void OnEnable()
     {

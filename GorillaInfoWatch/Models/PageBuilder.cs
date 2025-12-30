@@ -20,13 +20,13 @@ namespace GorillaInfoWatch.Models
 
         public PageBuilder Add(IEnumerable<SectionLine> lines) => Add(new Section(lines));
 
-        public PageBuilder Add(SectionDefinition definition, ISectionLineProvider lineProvider) => Add(new Section(definition, lineProvider));
+        public PageBuilder Add(SectionDefinition definition, ISectionLines lineProvider) => Add(new Section(definition, lineProvider));
 
-        public PageBuilder Add(string title, ISectionLineProvider lineProvider) => Add(new Section(title, lineProvider));
+        public PageBuilder Add(string title, ISectionLines lineProvider) => Add(new Section(title, lineProvider));
 
-        public PageBuilder Add(string title, string description, ISectionLineProvider lineProvider) => Add(new Section(title, description, lineProvider));
+        public PageBuilder Add(string title, string description, ISectionLines lineProvider) => Add(new Section(title, description, lineProvider));
 
-        public PageBuilder Add(ISectionLineProvider lineProvider) => Add(new Section(lineProvider));
+        public PageBuilder Add(ISectionLines lineProvider) => Add(new Section(lineProvider));
 
         public PageBuilder Add(Section section)
         {

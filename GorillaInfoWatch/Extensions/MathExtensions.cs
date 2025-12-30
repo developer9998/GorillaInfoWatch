@@ -2,7 +2,7 @@
 {
     internal static class MathExtensions
     {
-        public static int Wrap(int x, int min, int max)
+        public static int Wrap(this int x, int min, int max)
         {
             int range = max - min;
             int result = (x - min) % range;

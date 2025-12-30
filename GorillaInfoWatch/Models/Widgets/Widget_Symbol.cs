@@ -1,68 +1,63 @@
 using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Extensions;
 using System;
 using System.Linq;
 using UnityEngine.UI;
 
-namespace GorillaInfoWatch.Models.Widgets
+namespace GorillaInfoWatch.Models.Widgets;
+
+public class Widget_Symbol : Widget_Base
 {
-    public class Widget_Symbol : Widget_Base
+    public override bool Modification => Settings != null;
+    public override float Depth => 3f;
+
+    public readonly Symbol Settings;
+
+    internal Image image;
+
+    private static readonly object[] emptyControllerParams = [];
+
+    internal Widget_Symbol()
     {
-        public override bool Modification => Settings != null;
-        public override float Depth => 3f;
+        // Used alongside WidgetControllers
+    }
 
-        public readonly Symbol Settings;
+    public Widget_Symbol(Symbol settings)
+    {
+        Settings = settings;
+    }
 
-        internal Image image;
-
-        private static readonly object[] emptyControllerParams = [];
-
-        internal Widget_Symbol()
+    public override void Initialize(PanelLine menuLine)
+    {
+        if (Object.Null())
         {
-            // Used alongside WidgetControllers
+            Object = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
+            Object.name = "Symbol";
+            Object.SetActive(true);
         }
 
-        public Widget_Symbol(Symbol settings)
+        Object.TryGetComponent(out image);
+    }
+
+    public override void Modify()
+    {
+        if (image.Null() && Object.Exists() && !Object.TryGetComponent(out image))
         {
-            Settings = settings;
+            // Logging.Info("NO");
+            return;
         }
 
-        public override void Initialize(PanelLine menuLine)
-        {
-            if (Object == null || !Object)
-            {
-                Object = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
-                Object.name = "Symbol";
-                Object.SetActive(true);
-            }
+        image.enabled = true;
+        image.sprite = Settings.Sprite;
+        image.material = Settings.Material;
+        image.color = Settings.Colour;
+    }
 
-            Object.TryGetComponent(out image);
-        }
+    public override bool Equals(Widget_Base widget)
+    {
+        if (widget is null || widget is not Widget_Symbol widgetSymbol) return false;
 
-        public override void Modify()
-        {
-            if ((image == null || !image) && Object && !Object.TryGetComponent(out image))
-            {
-                // Logging.Info("NO");
-                return;
-            }
-
-            image.enabled = true;
-            image.sprite = Settings.Sprite;
-            image.material = Settings.Material;
-            image.color = Settings.Colour;
-
-
-        }
-
-        public override bool Equals(Widget_Base widget)
-        {
-            if (widget is null || widget is not Widget_Symbol widgetSymbol)
-                return false;
-
-            object[] myControllerParmas = ControllerParameters ?? emptyControllerParams;
-            object[] otherControllerParams = widgetSymbol.ControllerParameters ?? emptyControllerParams;
-
-            return /*((Settings == null && widgetSymbol.Settings == null) || (Settings != null && widgetSymbol.Settings != null && Settings.Equals(widgetSymbol.Settings))) &&*/ ControllerType == widgetSymbol.ControllerType && myControllerParmas.SequenceEqual(otherControllerParams);
-        }
+        object[] controllerParmas = ControllerParameters ?? emptyControllerParams;
+        return ControllerType == widgetSymbol.ControllerType && controllerParmas.SequenceEqual(widgetSymbol.ControllerParameters ?? emptyControllerParams);
     }
 }

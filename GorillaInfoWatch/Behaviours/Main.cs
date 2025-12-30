@@ -54,7 +54,7 @@ public class Main : MonoBehaviourPunCallbacks
     public static PlayerSignificance Significance_RecentlyPlayed { get; private set; }
 
     // Screens
-    public static InfoScreen ActiveScreen { get; private set; }
+    public static InfoScreen LoadedScreen { get; private set; }
 
     // Screens
 
@@ -70,9 +70,29 @@ public class Main : MonoBehaviourPunCallbacks
 
     private readonly List<Notification> _notifications = [];
 
+    private readonly List<Type> includedScreenTypes =
+    [
+        typeof(ScoreboardScreen),
+        typeof(RoomInspectorScreen),
+        typeof(PlayerInspectorScreen),
+        typeof(DetailsScreen),
+        typeof(FriendScreen),
+        typeof(ModListScreen),
+        typeof(ModInspectorScreen),
+        typeof(ShortcutListScreen),
+        typeof(SettingsListScreen),
+        typeof(SettingsInspectorScreen),
+        typeof(CreditScreen)
+    ];
+
     // Shortcuts
 
     private readonly Dictionary<Type, ShortcutRegistrar> _shortcutRegistars = [];
+
+    private readonly List<Type> includedShortcutsTypes =
+    [
+        typeof(ShortcutRegistrar_Rooms)
+    ];
 
     // Assets
 
@@ -89,8 +109,11 @@ public class Main : MonoBehaviourPunCallbacks
     private TMP_Text _panelTitle;
     private TMP_Text _panelDescription;
     private Transform _panelLinesRoot;
+
     private List<PanelLine> _panelLines;
     private TMP_Text _sampleLineText;
+
+    private readonly SectionLine _placeholderLine = new("Placeholder", []);
 
     // Display
 
@@ -100,8 +123,6 @@ public class Main : MonoBehaviourPunCallbacks
     // Runtime
 
     private bool _wasRoomAllowed = true;
-
-    private static SectionLine _placeholderLine = new("Placeholder", []);
 
     public async void Awake()
     {
@@ -120,28 +141,7 @@ public class Main : MonoBehaviourPunCallbacks
         _screenRoot.SetActive(false);
         _screenRoot.transform.SetParent(transform);
 
-        // This list should be expanded to encapsulate proper screens (in the form of their types)
-        // "Proper" screens refer to all but any hardcoded screens (including Home, Inbox, and Warning screens)
-        List<Type> includedScreenTypes =
-        [
-            typeof(ScoreboardScreen),
-            typeof(RoomInspectorScreen),
-            typeof(PlayerInspectorScreen),
-            typeof(DetailsScreen),
-            typeof(FriendScreen),
-            typeof(ModListScreen),
-            typeof(ShortcutListScreen),
-            typeof(ModInspectorScreen),
-            typeof(CreditScreen)
-        ];
-
         includedScreenTypes.ForEach(page => RegisterScreen(page));
-
-        List<Type> includedShortcutsTypes =
-        [
-            typeof(ShortcutRegistrar_Rooms)
-        ];
-
         includedShortcutsTypes.ForEach(funcReg => RegisterShortcuts(funcReg));
 
         Type screenType = typeof(InfoScreen);
@@ -154,19 +154,11 @@ public class Main : MonoBehaviourPunCallbacks
 
             foreach (PluginInfo pluginInfo in Chainloader.PluginInfos.Values)
             {
-                try
-                {
-                    if (pluginInfo.Metadata?.GUID == Constants.GUID) continue;
+                if (pluginInfo.Metadata?.GUID == Constants.GUID) continue;
 
-                    if (pluginInfo.Instance is BaseUnityPlugin plugin && plugin.GetType()?.Assembly is Assembly assembly)
-                    {
-                        assemblies.Add(assembly);
-                    }
-                }
-                catch
+                if (pluginInfo.Instance is BaseUnityPlugin plugin && plugin.GetType()?.Assembly is Assembly assembly)
                 {
-                    // TODO: write literally anything here
-                    // "I guess you got better things, better things to do"
+                    assemblies.Add(assembly);
                 }
             }
 
@@ -185,8 +177,11 @@ public class Main : MonoBehaviourPunCallbacks
                         continue;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logging.Fatal("Assembly derived from plugin failed with retrieving basic data");
+                    Logging.Error(ex);
+
                     continue;
                 }
 
@@ -232,11 +227,11 @@ public class Main : MonoBehaviourPunCallbacks
 
         Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Figures, figure => (FigureSignificance)figure));
         Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Cosmetics, item => (ItemSignificance)item));
-        Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, $"{Constants.SignificancePlayerNameTag} is a user of GorillaInfoWatch");
-        Significance_Verified = new("Verified", Symbols.Verified, $"{Constants.SignificancePlayerNameTag} is marked as verified by the GorillaFriends mod");
-        Significance_Master = new("Master Client", Symbols.None, $"{Constants.SignificancePlayerNameTag} is the master client of the room, responsible for hosting the game mode manager");
-        Significance_Friend = new("Friend", Symbols.None, $"You have {Constants.SignificancePlayerNameTag} added as a friend using the GorillaFriends mod");
-        Significance_RecentlyPlayed = new("Recently Played", Symbols.None, $"You have played with {Constants.SignificancePlayerNameTag} recently, according to the GorillaFriends mod");
+        Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, "{0} is a user of GorillaInfoWatch");
+        Significance_Verified = new("Verified", Symbols.Verified, "{0} is marked as verified by the GorillaFriends mod");
+        Significance_Master = new("Master Client", Symbols.None, "{0} is the host (specifically the master client) of the room");
+        Significance_Friend = new("Friend", Symbols.None, "You have {0} added as a friend (with GorillaFriends)");
+        Significance_RecentlyPlayed = new("Recently Played", Symbols.None, "You have played with {0} recently (via. GorillaFriends)");
 
         Dictionary<Sounds, AudioClip> audioClipDictionary = [];
 
@@ -316,21 +311,21 @@ public class Main : MonoBehaviourPunCallbacks
         _panelNextPageButton = _panelObject.transform.Find("Canvas/Button_Next").AddComponent<PushButton>();
         _panelNextPageButton.OnButtonPressed = () =>
         {
-            ActiveScreen.sectionNumber++;
+            LoadedScreen.sectionNumber++;
             UpdateScreen();
         };
 
         _panelPrevPageButton = _panelObject.transform.Find("Canvas/Button_Previous").AddComponent<PushButton>();
         _panelPrevPageButton.OnButtonPressed = () =>
         {
-            ActiveScreen.sectionNumber--;
+            LoadedScreen.sectionNumber--;
             UpdateScreen();
         };
 
         _panelReturnButton = _panelObject.transform.Find("Canvas/Button_Return").AddComponent<PushButton>();
         _panelReturnButton.OnButtonPressed = () =>
         {
-            if (ActiveScreen is not InfoScreen activeScreen) return;
+            if (LoadedScreen is not InfoScreen activeScreen) return;
 
             if (activeScreen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute)
             {
@@ -367,7 +362,7 @@ public class Main : MonoBehaviourPunCallbacks
         _panelReloadButton = _panelObject.transform.Find("Canvas/Button_Redraw").AddComponent<PushButton>();
         _panelReloadButton.OnButtonPressed = () =>
         {
-            if (ActiveScreen is InfoScreen screen)
+            if (LoadedScreen is InfoScreen screen)
             {
                 _panelLines.ForEach(line => line.Build(_placeholderLine, true));
                 screen.OnScreenReload();
@@ -402,7 +397,7 @@ public class Main : MonoBehaviourPunCallbacks
         Notifications.OpenRequest += HandleOpenNotification;
         MothershipClientApiUnity.OnMessageNotificationSocket += OnMothershipMessageRecieved;
 
-        IInitializeWhenReady[] list = gameObject.GetComponents<IInitializeWhenReady>();
+        IInitialize[] list = gameObject.GetComponents<IInitialize>();
         list.ForEach(initializable => initializable.Initialize());
 
         enabled = true;
@@ -495,7 +490,7 @@ public class Main : MonoBehaviourPunCallbacks
     {
         _inboxScreen.Contents = [.. _notifications.Where(notif => !notif.Opened).OrderByDescending(notif => notif.Created)];
 
-        if (ActiveScreen == _inboxScreen) _inboxScreen.SetContent();
+        if (LoadedScreen == _inboxScreen) _inboxScreen.SetContent();
 
         _infoWatch.HomeState?.UpdateBell(_inboxScreen.Contents.Count);
     }
@@ -544,7 +539,7 @@ public class Main : MonoBehaviourPunCallbacks
     {
         Type callerScreenType = null;
 
-        if (ActiveScreen is InfoScreen lastScreen)
+        if (LoadedScreen is InfoScreen lastScreen)
         {
             lastScreen.LoadScreenRequest -= LoadScreen;
             lastScreen.UpdateScreenRequest -= UpdateScreen;
@@ -561,7 +556,8 @@ public class Main : MonoBehaviourPunCallbacks
             else if (newScreen != _homeScreen) callerScreenType = lastScreen.GetType();
         }
 
-        ActiveScreen = newScreen;
+        LoadedScreen = newScreen;
+        InfoScreen.LoadedScreen = newScreen;
 
         newScreen.CallerScreenType = callerScreenType;
 
@@ -583,21 +579,22 @@ public class Main : MonoBehaviourPunCallbacks
     {
         if (type is null)
         {
-            if (ActiveScreen != _homeScreen) _panelReturnButton?.OnButtonPressed?.Invoke();
+            if (LoadedScreen != _homeScreen) _panelReturnButton?.OnButtonPressed?.Invoke();
             return;
         }
-        else if (GetScreen(type, false) is InfoScreen screen) LoadScreen(screen);
+
+        if (GetScreen(type, false) is InfoScreen screen) LoadScreen(screen);
     }
 
-    public void UpdateScreen(bool includeWidgets = true)
+    private void UpdateScreen(bool includeWidgets = true)
     {
-        bool onHomeScreen = ActiveScreen == _homeScreen;
+        bool onHomeScreen = LoadedScreen == _homeScreen;
 
         PropertyInfo returnTypeProperty = null;
 
         try
         {
-            returnTypeProperty = AccessTools.Property(ActiveScreen.GetType(), nameof(InfoScreen.ReturnType));
+            returnTypeProperty = AccessTools.Property(LoadedScreen.GetType(), nameof(InfoScreen.ReturnType));
         }
         catch (Exception ex)
         {
@@ -606,12 +603,12 @@ public class Main : MonoBehaviourPunCallbacks
             PlayErrorSound();
         }
 
-        bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(ActiveScreen) != null;
+        bool considerReturnType = returnTypeProperty != null && returnTypeProperty.GetValue(LoadedScreen) != null;
 
         _panelInboxButton.gameObject.SetActive(onHomeScreen);
-        _panelReturnButton.gameObject.SetActive(!onHomeScreen && (ActiveScreen.CallerScreenType != null || considerReturnType));
+        _panelReturnButton.gameObject.SetActive(!onHomeScreen && (LoadedScreen.CallerScreenType != null || considerReturnType));
 
-        ActiveScreen.content ??= ActiveScreen.GetContent();
+        LoadedScreen.content ??= LoadedScreen.GetContent();
 
         try
         {
@@ -619,7 +616,7 @@ public class Main : MonoBehaviourPunCallbacks
 
             try
             {
-                sectionCount = ActiveScreen.content.SectionCount;
+                sectionCount = LoadedScreen.content.SectionCount;
             }
             catch (Exception ex)
             {
@@ -629,8 +626,8 @@ public class Main : MonoBehaviourPunCallbacks
             }
 
             bool hasSection = sectionCount > 0;
-            int sectionNumber = hasSection ? MathExtensions.Wrap(ActiveScreen.sectionNumber, 0, sectionCount) : 0;
-            ActiveScreen.sectionNumber = sectionNumber;
+            int sectionNumber = hasSection ? MathExtensions.Wrap(LoadedScreen.sectionNumber, 0, sectionCount) : 0;
+            LoadedScreen.sectionNumber = sectionNumber;
 
             bool multiSection = hasSection && sectionCount > 1;
             _panelNextPageButton.gameObject.SetActive(multiSection);
@@ -641,25 +638,25 @@ public class Main : MonoBehaviourPunCallbacks
 
             try
             {
-                section = ActiveScreen.content.GetSection(sectionNumber);
+                section = LoadedScreen.content.GetSection(sectionNumber);
             }
             catch (Exception ex)
             {
                 section = new(title: "Placeholder", lines: Enumerable.Repeat(_placeholderLine, Constants.SectionCapacity));
 
-                Logging.Fatal($"{ActiveScreen.content.GetType().Name} of {ActiveScreen.content.GetType().Namespace} not could construct section at {sectionNumber}");
+                Logging.Fatal($"{LoadedScreen.content.GetType().Name} of {LoadedScreen.content.GetType().Namespace} not could construct section at {sectionNumber}");
                 Logging.Error(ex);
             }
 
             string sectionTitle = section.Definition.Title;
 
-            _panelTitle.text = string.Concat(ActiveScreen.Title, (sectionTitle != null && sectionTitle.Length > 0) ? $" <color=#808080>></color> {sectionTitle}" : string.Empty);
+            _panelTitle.text = string.Concat(LoadedScreen.Title, (sectionTitle != null && sectionTitle.Length > 0) ? $" <color=#808080>></color> {sectionTitle}" : string.Empty);
 
             string description = null;
 
             try
             {
-                description = ActiveScreen.Description;
+                description = LoadedScreen.Description;
             }
             catch (Exception ex)
             {
@@ -737,7 +734,7 @@ public class Main : MonoBehaviourPunCallbacks
         }
         catch (Exception ex)
         {
-            Logging.Fatal($"Displaying screen contents of {ActiveScreen.GetType().Name} threw exception");
+            Logging.Fatal($"Displaying screen contents of {LoadedScreen.GetType().Name} threw exception");
             Logging.Error(ex);
             PlayErrorSound();
         }
@@ -869,40 +866,49 @@ public class Main : MonoBehaviourPunCallbacks
     {
         string title = notification.Title;
         string body = notification.Body;
-        Logging.Message($"\"{title}\": \"{body}\"");
+
+        Logging.Message($"Mothership message recieved:");
+        Logging.Info("\"{title}\": \"{body}\"");
 
         string[] array;
 
-        switch (title)
+        try
         {
-            case "Warning":
-                array = body.Split('|');
-                if (array.Length != 2) break;
+            switch (title)
+            {
+                case "Warning":
+                    array = body.Split('|');
+                    if (array.Length != 2) break;
 
-                string warnCategory = array[0];
-                string[] warnReasons = array[1].Split(',');
-                if (warnReasons.Length == 0) break;
+                    string warnCategory = array[0];
+                    string[] warnReasons = array[1].Split(',');
+                    if (warnReasons.Length == 0) break;
 
-                string warnReasonString = string.Join(", ", warnReasons.Select(reason => reason.ToTitleCase().Replace('_', ' ')));
-                Notifications.SendNotification(new($"{warnCategory.ToTitleCase()} warning received", warnReasonString, 3f + (warnReasons.Length * 0.333333f), Sounds.notificationNegative));
+                    string warnReasonString = string.Join(", ", warnReasons.Select(reason => reason.ToTitleCase().Replace('_', ' ')));
+                    Notifications.SendNotification(new($"{warnCategory.ToTitleCase()} warning received", warnReasonString, 3f + (warnReasons.Length * 0.333333f), Sounds.notificationNegative));
 
-                break;
+                    break;
 
-            case "Mute":
-                array = body.Split('|');
-                if (array.Length != 3 || !array[0].Equals("voice", StringComparison.OrdinalIgnoreCase)) break;
+                case "Mute":
+                    array = body.Split('|');
+                    if (array.Length != 3 || !array[0].Equals("voice", StringComparison.OrdinalIgnoreCase)) break;
 
-                if (array[2].Length > 0 && int.TryParse(array[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int muteDuration))
-                {
-                    TimeSpan timeSpan = TimeSpan.FromSeconds(muteDuration);
-                    Notifications.SendNotification(new("Voice mute sanction", $"{(timeSpan.TotalHours >= 1f ? $"{timeSpan.TotalHours} hour" : $"{timeSpan.TotalMinutes} minute")} mute", 5, Sounds.notificationNegative));
-                }
-                else
-                {
-                    Notifications.SendNotification(new("Voice mute sanction", "Indefinite mute", 5, Sounds.notificationNegative));
-                }
+                    if (array[2].Length > 0 && int.TryParse(array[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int muteDuration))
+                    {
+                        TimeSpan timeSpan = TimeSpan.FromSeconds(muteDuration);
+                        Notifications.SendNotification(new("Voice mute sanction", $"{(timeSpan.TotalHours >= 1f ? $"{timeSpan.TotalHours} hour" : $"{timeSpan.TotalMinutes} minute")} mute", 5, Sounds.notificationNegative));
+                    }
+                    else
+                    {
+                        Notifications.SendNotification(new("Voice mute sanction", "Indefinite mute", 5, Sounds.notificationNegative));
+                    }
 
-                break;
+                    break;
+            }
+        }
+        catch
+        {
+
         }
     }
 }

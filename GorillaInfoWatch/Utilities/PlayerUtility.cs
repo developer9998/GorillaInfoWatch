@@ -1,7 +1,12 @@
-﻿using GorillaInfoWatch.Behaviours.Networking;
+﻿using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Tools;
+using PlayFab;
+using PlayFab.ClientModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using GFriends = GorillaFriends.Main;
 
@@ -9,6 +14,8 @@ namespace GorillaInfoWatch.Utilities
 {
     public static class PlayerUtility
     {
+        private static readonly Dictionary<string, (GetAccountInfoResult accountInfo, DateTime cacheTime)> accountInfoCache = [];
+
         public static NetPlayer GetPlayer(string userId) => GetPlayer(player => player.UserId == userId);
 
         public static NetPlayer GetPlayer(Func<NetPlayer, bool> predicate)
@@ -41,16 +48,22 @@ namespace GorillaInfoWatch.Utilities
             return null;
         }
 
-        public static bool HasInfoWatch(NetPlayer player)
+        public static bool HasInfoWatch(NetPlayer player) => CheckNetworkedPlayer(player, component => component.HasInfoWatch, defaultValue: false, localValue: true);
+
+        public static PlayerConsent GetConsent(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: NetworkedPlayer.GetTemporaryConsent(player.UserId), localValue: SignificanceManager.Instance?.Consent ?? PlayerConsent.None);
+
+        public static T CheckNetworkedPlayer<T>(NetPlayer player, Func<NetworkedPlayer, T> predicate, T defaultValue, T localValue)
         {
             if (player == null || player.IsNull) throw new ArgumentNullException(nameof(player));
 
-            if (player.IsLocal) return true;
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            if (player.IsLocal) return localValue;
 
             if (NetworkSystem.Instance.InRoom && VRRigCache.rigsInUse.TryGetValue(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component))
-                return component.HasInfoWatch;
+                return predicate(component);
 
-            return false;
+            return defaultValue;
         }
 
         public static void ProcessScoreboardLines(NetPlayer player, Action<GorillaPlayerScoreboardLine, bool> action)
@@ -95,6 +108,31 @@ namespace GorillaInfoWatch.Utilities
 
             if (!value && isFriend) GFriends.RemoveFriend(player.UserId);
             else if (value && !isFriend) GFriends.AddFriend(player.UserId);
+        }
+
+        public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved, double maxCacheTime = double.MaxValue)
+        {
+            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < maxCacheTime)
+                return accountInfoCache[userId].accountInfo;
+
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+                throw new InvalidOperationException("PlayFab Client must be logged in to post the account info request");
+
+            PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
+            {
+                PlayFabId = userId
+            }, accountInfo =>
+            {
+                if (accountInfoCache.ContainsKey(userId)) accountInfoCache[userId] = (accountInfo, DateTime.Now);
+                else accountInfoCache.Add(userId, (accountInfo, DateTime.Now));
+                onAccountInfoRecieved?.Invoke(accountInfo);
+            }, error =>
+            {
+                Logging.Fatal($"PlayFabClientAPI.GetAccountInfo for {userId}");
+                Logging.Error(error.GenerateErrorReport());
+            });
+
+            return null;
         }
     }
 }

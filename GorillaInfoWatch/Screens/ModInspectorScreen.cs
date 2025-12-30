@@ -1,11 +1,12 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Configuration;
 using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace GorillaInfoWatch.Screens
@@ -16,6 +17,29 @@ namespace GorillaInfoWatch.Screens
         public override Type ReturnType => typeof(ModListScreen);
 
         public static PluginInfo Mod;
+
+        private List<ConfigurableSection> _configurableList = null;
+
+        public override void OnScreenLoad()
+        {
+            if (Mod.Instance.Config is not ConfigFile file || file.Count == 0)
+                return;
+
+            var entries = file.GetEntries();
+            var sectionNames = entries.Select(entry => entry.Definition.Section).Distinct();
+            var dictionary = sectionNames.ToDictionary(section => section, section => new ConfigurableSection()
+            {
+                Title = section,
+                Entries = []
+            });
+            entries.ForEach(entry => dictionary[entry.Definition.Section].Entries.Add(new ConfigurableWrapper_BepInEntry(entry)));
+            _configurableList = [.. dictionary.Values];
+        }
+
+        public override void OnScreenUnload()
+        {
+            _configurableList = null;
+        }
 
         public override InfoContent GetContent()
         {
@@ -39,52 +63,19 @@ namespace GorillaInfoWatch.Screens
             if (!methods.Contains("OnEnable") && !methods.Contains("OnDisable"))
                 lines.Add("<color=red>This mod may not support the behaviour state!");
 
-            if (Mod.Instance.Config is null || Mod.Instance.Config.Count == 0)
-                return lines;
+            if (_configurableList == null) return lines;
 
             PageBuilder pages = new();
-
             pages.Add(Mod.Metadata.Name, lines);
 
-            var entries = Mod.Instance.Config.Keys.Select(key => Mod.Instance.Config[key]);
-
-            foreach (var configEntry in entries)
+            foreach (ConfigurableSection section in _configurableList)
             {
-                Type settingType = configEntry.SettingType;
-
-                if (!configEntry.SettingType.IsEnum && configEntry.SettingType != typeof(int) && configEntry.SettingType != typeof(bool))
-                    continue;
-
-                lines = new();
-
-                List<Widget_Base> widgets = [];
-
-                if (configEntry.SettingType.IsEnum)
+                foreach (ConfigurableWrapper wrapper in section.Entries)
                 {
-                    var names = Enum.GetNames(settingType);
-                    widgets.Add(new Widget_SnapSlider(Array.IndexOf(names, configEntry.GetSerializedValue()) is int value && value != -1 ? value : 0, 0, names.Length - 1, ConfigureEntry, configEntry));
+                    lines = new();
+                    wrapper.WriteLines(lines);
+                    pages.Add(section.Title, lines);
                 }
-                else if (configEntry.SettingType == typeof(int))
-                {
-                    if (configEntry.Description.AcceptableValues is AcceptableValueRange<int> range)
-                        widgets.Add(new Widget_SnapSlider(int.Parse(configEntry.BoxedValue.ToString(), CultureInfo.InvariantCulture), range.MinValue, range.MaxValue, ConfigureEntry, configEntry));
-                    else
-                    {
-                        // TODO: add +/- buttons for adjusting integer
-                    }
-                }
-                else if (configEntry.SettingType == typeof(bool))
-                    widgets.Add(new Widget_Switch(configEntry.BoxedValue.ToString() == "True", ConfigureEntry, configEntry));
-
-                lines.Add($"Key: {configEntry.Definition.Key}");
-                lines.Add($"Description: {configEntry.Description.Description}", LineRestrictions.Wrapping);
-                lines.Add($"Type: {settingType.Name}");
-
-                lines.Skip();
-
-                lines.Add($"Value: {configEntry.GetSerializedValue()}", widgets);
-
-                pages.Add(configEntry.Definition.Section, lines);
             }
 
             return pages;
@@ -96,32 +87,6 @@ namespace GorillaInfoWatch.Screens
             {
                 info.Instance.enabled = value;
                 SetText();
-            }
-        }
-
-        public void ConfigureEntry(bool value, object[] parameters)
-        {
-            if (parameters.ElementAtOrDefault(0) is ConfigEntryBase entry && entry.SettingType == typeof(bool))
-            {
-                entry.SetSerializedValue(value.ToString());
-                SetText();
-            }
-        }
-
-        public void ConfigureEntry(int value, object[] parameters)
-        {
-            if (parameters.ElementAtOrDefault(0) is ConfigEntryBase entry)
-            {
-                if (entry.SettingType == typeof(int))
-                {
-                    entry.SetSerializedValue(value.ToString());
-                    SetText();
-                }
-                else if (entry.SettingType.IsEnum && Enum.GetNames(entry.SettingType).ElementAtOrDefault(value) is string enumName)
-                {
-                    entry.SetSerializedValue(enumName);
-                    SetText();
-                }
             }
         }
     }

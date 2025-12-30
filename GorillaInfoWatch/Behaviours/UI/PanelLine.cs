@@ -268,7 +268,7 @@ public class PanelLine : MonoBehaviour
                 }
                 finally
                 {
-                    Logging.Info("Modified widget");
+                    // Logging.Info("Modified widget");
                 }
             }
         }

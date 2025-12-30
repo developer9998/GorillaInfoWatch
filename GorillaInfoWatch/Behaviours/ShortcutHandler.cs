@@ -5,13 +5,11 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-internal class ShortcutHandler : MonoBehaviour, IInitializeWhenReady
+internal class ShortcutHandler : MonoBehaviour, IInitialize
 {
     public static ShortcutHandler Instance { get; private set; }
 
     public Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
-
-    private const string _shortcutIdEntry = "ShortcutName";
 
     public void Awake()
     {
@@ -28,9 +26,9 @@ internal class ShortcutHandler : MonoBehaviour, IInitializeWhenReady
     {
         Shortcut lastShortcut = null;
 
-        if (DataManager.Instance.HasData(_shortcutIdEntry))
+        if (DataManager.Instance.HasData(Constants.DataEntry_ShortcutName))
         {
-            string value = DataManager.Instance.GetData<string>(_shortcutIdEntry);
+            string value = DataManager.Instance.GetData<string>(Constants.DataEntry_ShortcutName);
 
             foreach (Shortcut shortcut in ShortcutRegistrar.AllShortcuts)
             {
@@ -61,8 +59,8 @@ internal class ShortcutHandler : MonoBehaviour, IInitializeWhenReady
 
     private void SaveShortcut(Shortcut shortcut)
     {
-        if (shortcut != null) DataManager.Instance.SetData(_shortcutIdEntry, shortcut.GetShortcutId());
-        else DataManager.Instance.RemoveData(_shortcutIdEntry);
+        if (shortcut != null) DataManager.Instance.SetData(Constants.DataEntry_ShortcutName, shortcut.GetShortcutId());
+        else DataManager.Instance.RemoveData(Constants.DataEntry_ShortcutName);
     }
 
     public void ExcecuteShortcut(Shortcut shortcut)

@@ -1,64 +1,63 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Extensions;
 using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Models.Widgets
+namespace GorillaInfoWatch.Models.Widgets;
+
+public sealed class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
 {
-    public sealed class Widget_Switch(bool value, Action<bool, object[]> action, params object[] parameters) : Widget_Base
+    public override float Width => 25.5f;
+    public bool IsReadOnly => Command == null || Command.Target == null;
+
+    public bool Value = value;
+    public readonly Action<bool, object[]> Command = action;
+    public readonly object[] Parameters = parameters ?? [];
+
+    public Gradient Colour = ColourPalette.CreatePalette(ColourPalette.Red.GetInitialColour(), ColourPalette.Green.GetInitialColour());
+
+    public Widget_Switch(bool value) : this(value, (Action<bool, object[]>)null, null)
     {
-        public override float Width => 25.5f;
-        public bool IsReadOnly => Command == null || Command.Target == null;
+        // Must declare a body
+    }
 
-        public bool Value = value;
-        public readonly Action<bool, object[]> Command = action;
-        public readonly object[] Parameters = parameters ?? [];
+    public Widget_Switch(bool value, Action<bool> action) : this(value, (value, args) => action(value), [])
+    {
+        // Must declare a body
+    }
 
-        public Gradient Colour = ColourPalette.CreatePalette(ColourPalette.Red.GetInitialColour(), ColourPalette.Green.GetInitialColour());
+    public Widget_Switch(bool value, Action<object[]> action, params object[] parameters) : this(value, (value, args) => action(args), parameters)
+    {
+        // Must declare a body
+    }
 
-        public Widget_Switch(bool value) : this(value, (Action<bool, object[]>)null, null)
+    public override void Initialize(PanelLine menuLine)
+    {
+        if (Object.Null())
         {
-            // Must declare a body
+            Object = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
+            Object.name = "Switch";
+            Object.SetActive(true);
         }
+    }
 
-        public Widget_Switch(bool value, Action<bool> action) : this(value, (value, args) => action(value), [])
-        {
-            // Must declare a body
-        }
+    public override void Modify()
+    {
+        if (Object.Exists() && Object.TryGetComponent(out Switch component)) component.AssignWidget(this);
+    }
 
-        public Widget_Switch(bool value, Action<object[]> action, params object[] parameters) : this(value, (value, args) => action(args), parameters)
-        {
-            // Must declare a body
-        }
+    public override bool Equals(Widget_Base widget)
+    {
+        return true;
 
-        public override void Initialize(PanelLine menuLine)
-        {
-            if (Object == null || !Object)
-            {
-                Object = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
-                Object.name = "Switch";
-                Object.SetActive(true);
-            }
-        }
+        /*
+        if (widget is null)
+            return false;
 
-        public override void Modify()
-        {
-            if (Object && Object.TryGetComponent(out Switch component))
-                component.AssignWidget(this);
-        }
+        if (widget is not Widget_Switch widgetButton)
+            return false;
 
-        public override bool Equals(Widget_Base widget)
-        {
-            return true;
-
-            /*
-            if (widget is null)
-                return false;
-
-            if (widget is not Widget_Switch widgetButton)
-                return false;
-
-            return Command.Target == widgetButton.Command.Target && Command.Method.Equals(widgetButton.Command.Method);
-            */
-        }
+        return Command.Target == widgetButton.Command.Target && Command.Method.Equals(widgetButton.Command.Method);
+        */
     }
 }

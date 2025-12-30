@@ -4,6 +4,7 @@ using UnityEngine;
 #if PLUGIN
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Tools;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 #endif
 
@@ -36,12 +37,18 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private float _activationTime;
 
-        private readonly float _holdDuration = 0.35f;
+        private float _holdDuration = 0.35f;
 
-        private readonly float _activationInterval = 1f;
+        private float _activationInterval = 1f;
 
         public void Start()
         {
+            _holdDuration = Configuration.ShortcutHoldDuration.Value;
+            Configuration.ShortcutHoldDuration.SettingChanged += (_, _) => _holdDuration = Configuration.ShortcutHoldDuration.Value;
+
+            _activationInterval = Configuration.ShortcutHoldDuration.Value;
+            Configuration.ShortcutInterval.SettingChanged += (_, _) => _activationInterval = Configuration.ShortcutInterval.Value;
+
             Material[] materials = buttonRenderer.materials;
             _material = materials[materialIndex] = new Material(materials[materialIndex]);
             buttonRenderer.materials = materials;

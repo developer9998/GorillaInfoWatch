@@ -27,22 +27,22 @@ public readonly struct Section(SectionDefinition definition, IEnumerable<Section
 
     // line provider constructors
 
-    public Section(SectionDefinition definition, ISectionLineProvider lineProvider) : this(definition, lineProvider.SectionLines)
+    public Section(SectionDefinition definition, ISectionLines lineProvider) : this(definition, lineProvider.SectionLines)
     {
 
     }
 
-    public Section(string title, ISectionLineProvider lineProvider) : this(title, lineProvider.SectionLines)
+    public Section(string title, ISectionLines lineProvider) : this(title, lineProvider.SectionLines)
     {
 
     }
 
-    public Section(string title, string description, ISectionLineProvider lineProvider) : this(title, description, lineProvider.SectionLines)
+    public Section(string title, string description, ISectionLines lineProvider) : this(title, description, lineProvider.SectionLines)
     {
 
     }
 
-    public Section(ISectionLineProvider lineProvider) : this(lineProvider.SectionLines)
+    public Section(ISectionLines lineProvider) : this(lineProvider.SectionLines)
     {
 
     }

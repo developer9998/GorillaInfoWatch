@@ -5,6 +5,7 @@ namespace GorillaInfoWatch.Models
 {
     public abstract class InfoScreen : MonoBehaviour
     {
+        public static InfoScreen LoadedScreen { get; internal set; }
         public abstract string Title { get; }
         public virtual string Description { get; set; }
         public virtual Type ReturnType { get; set; } = null;

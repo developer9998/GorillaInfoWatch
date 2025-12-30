@@ -13,7 +13,9 @@ public class Trigger : MonoBehaviour
 
     public AudioSource AudioSource;
 
-    private bool IsFacingUp => Vector3.Distance(Player.Instance.leftHand.controllerTransform.right, Vector3.up) > 1.82f;
+    private bool IsLeftHand => Watch.LocalWatch?.InLeftHand ?? true;
+    private Player.HandState Hand => IsLeftHand ? Player.Instance.leftHand : Player.Instance.rightHand;
+    private bool IsFacingUp => Vector3.Distance(Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f), Vector3.up) > 1.82f;
     private bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (transform.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
 
     private float touchTime;

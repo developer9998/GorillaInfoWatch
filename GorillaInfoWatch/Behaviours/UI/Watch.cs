@@ -128,6 +128,9 @@ namespace GorillaInfoWatch.Behaviours.UI
             Logging.Message($"ConfigureWatchLocal: {transform.GetPath().TrimStart('/')}");
             LocalWatch = this;
 
+            InLeftHand = Convert.ToBoolean(Configuration.Orientation.Value);
+            Configuration.Orientation.SettingChanged += (_, _) => SetHand(Convert.ToBoolean(Configuration.Orientation.Value));
+
             CustomPushButton homeNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Home").AddComponent<CustomPushButton>();
             homeNavigationButton.OnButtonPush += _ => SetTab(WatchTab.Standard);
 
@@ -144,11 +147,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             Logging.Message($"ConfigureWatchShared: {transform.GetPath().TrimStart('/')}");
 
-            transform.SetParent(InLeftHand ? Rig.leftHandTransform.parent : Rig.rightHandTransform.parent, false);
-            transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
-            transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
-            transform.localScale = Vector3.one;
-
+            SetHand(InLeftHand);
             SetTab(WatchTab.Standard);
             SetVisibility(HideWatch || Rig.IsInvisibleToLocalPlayer);
             SetColour(Rig.playerColor);
@@ -166,6 +165,18 @@ namespace GorillaInfoWatch.Behaviours.UI
         }
 
         #region Appearance
+
+        public void SetHand(bool inLeftHand)
+        {
+            InLeftHand = inLeftHand;
+
+            transform.SetParent(InLeftHand ? Rig.leftHandTransform.parent : Rig.rightHandTransform.parent, false);
+            transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
+            transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
+            transform.localScale = Vector3.one;
+
+            if (IsLocalWatch) NetworkManager.Instance.SetProperty("Orientation", inLeftHand);
+        }
 
         public void SetVisibilityCheck(VRRig rig, bool invisible)
         {
