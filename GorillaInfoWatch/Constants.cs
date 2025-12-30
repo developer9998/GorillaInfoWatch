@@ -18,5 +18,7 @@
 
         public const string DataEntry_ShortcutName = "ShortcutName";
         public const string DataEntry_Consent = "Consent";
+
+        public const string VersionCheckUri = "67";
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Bootstrap;
 using BepInEx.Configuration;
+using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
@@ -31,6 +32,11 @@ namespace GorillaInfoWatch.Screens
             }).OrderBy(pluginInfo => pluginInfo.Metadata.Name)];
 
             mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods).OrderBy(pluginInfo => pluginInfo.Metadata.Name).OrderByDescending(pluginInfo => pluginInfo.Instance.Config is ConfigFile config ? config.Count : -1)).Where(pluginInfo => pluginInfo.Metadata.GUID != Constants.GUID)];
+
+            // Set the active state of the necessary mods
+            mods.ToDictionary(mod => mod, Main.Instance.GetPersistentPluginState)
+                .Where(element => (element.Key.Instance?.enabled ?? true) != element.Value)
+                .ForEach(element => element.Key.Instance?.enabled = element.Value);
         }
 
         public override InfoContent GetContent()
@@ -65,6 +71,8 @@ namespace GorillaInfoWatch.Screens
             if (args.ElementAtOrDefault(0) is PluginInfo pluginInfo)
             {
                 pluginInfo.Instance.enabled = value;
+                Main.Instance.SetPersistentPluginState(pluginInfo, value);
+
                 SetText();
             }
         }

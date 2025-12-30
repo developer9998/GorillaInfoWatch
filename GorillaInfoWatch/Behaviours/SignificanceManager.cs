@@ -72,7 +72,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
             return;
         }
 
-        SetConsent(PlayerConsent.None, true);
+        SetConsent(PlayerConsent.None);
     }
 
     public void OnJoinedRoom()
@@ -185,7 +185,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
 
         PlayerSignificance[] array = _significance.ContainsKey(player) ? [.. _significance[player]] : [.. Enumerable.Repeat<PlayerSignificance>(null, 5)];
 
-        if (checkScope.HasFlag(SignificanceCheckScope.RemovalCandidate) && _significance.ContainsKey(player) && !player.IsLocal && (!NetworkSystem.Instance.InRoom || !player.InRoom))
+        if (checkScope.HasFlag(SignificanceCheckScope.RemovalCandidate) && _significance.ContainsKey(player) && !player.IsLocal)
         {
             Logging.Info($"Removed significant player {player.GetName()}");
             _significance.Remove(player);

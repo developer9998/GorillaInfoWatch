@@ -911,4 +911,23 @@ public class Main : MonoBehaviourPunCallbacks
 
         }
     }
+
+    #region Plugin management
+
+    public string GetPluginStateKey(PluginInfo plugin) => $"ModState_{plugin.Metadata.GUID}";
+
+    public bool GetPersistentPluginState(PluginInfo plugin)
+    {
+        string key = GetPluginStateKey(plugin);
+        return !DataManager.Instance.HasData(key) || !DataManager.Instance.GetData(key, defaultValue: true, setDefaultValue: false);
+    }
+
+    public void SetPersistentPluginState(PluginInfo plugin, bool state)
+    {
+        string key = GetPluginStateKey(plugin);
+        if (state && DataManager.Instance.HasData(key)) DataManager.Instance.RemoveData(key);
+        else DataManager.Instance.SetData(key, state);
+    }
+
+    #endregion
 }

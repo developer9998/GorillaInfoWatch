@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Configuration;
@@ -83,9 +84,11 @@ namespace GorillaInfoWatch.Screens
 
         public void ToggleMod(bool value, object[] parameters)
         {
-            if (parameters.ElementAtOrDefault(0) is PluginInfo info)
+            if (parameters.ElementAtOrDefault(0) is PluginInfo pluginInfo)
             {
-                info.Instance.enabled = value;
+                pluginInfo.Instance.enabled = value;
+                Main.Instance.SetPersistentPluginState(pluginInfo, value);
+
                 SetText();
             }
         }
