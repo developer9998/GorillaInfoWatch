@@ -850,7 +850,7 @@ public class Main : MonoBehaviourPunCallbacks
 
     #region Methods
 
-    public async void CheckVersion(Action<(bool isOutdated, string latestVersion)> result) // TODO: make result readable enum
+    public async void CheckVersion(Action<(bool isOutdated, string latestVersion)> result)
     {
         using UnityWebRequest request = UnityWebRequest.Get(Constants.Uri_LatestVersion);
         UnityWebRequestAsyncOperation asyncOperation = request.SendWebRequest();
