@@ -1,9 +1,8 @@
 using ExitGames.Client.Photon;
-using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
 using Photon.Pun;
 using Photon.Realtime;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,6 +11,8 @@ namespace GorillaInfoWatch.Behaviours.Networking;
 internal class NetworkManager : MonoBehaviourPunCallbacks
 {
     public static NetworkManager Instance { get; private set; }
+
+    public Action<NetPlayer, Dictionary<string, object>> OnPlayerPropertyChanged;
 
     private readonly Dictionary<string, object> properties = [];
 
@@ -68,15 +69,8 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
 
     public void SetProperty(string key, object value)
     {
-        if (properties.ContainsKey(key))
-        {
-            bool isEquivalent = value.Equals(properties[key]);
-            properties[key] = value;
-            setProperties = isEquivalent || setProperties;
-            return;
-        }
-
-        properties.Add(key, value);
+        if (properties.ContainsKey(key)) properties[key] = value;
+        else properties.Add(key, value);
         setProperties = true;
     }
 
@@ -93,20 +87,6 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
     {
         NetPlayer netPlayer = NetworkSystem.Instance.GetPlayer(targetPlayer.ActorNumber);
 
-        if (netPlayer.IsLocal || !VRRigCache.rigsInUse.TryGetValue(netPlayer, out RigContainer playerRig) || !playerRig.TryGetComponent(out NetworkedPlayer networkedPlayer) || !changedProps.TryGetValue(Constants.NetworkPropertyKey, out object propertiesObject) || propertiesObject is not Dictionary<string, object> properties)
-            return;
-
-        Logging.Message($"{netPlayer.NickName} has updated properties:");
-        properties.ForEach(element => Logging.Info($"{element.Key}: {element.Value}"));
-
-        if (!networkedPlayer.HasInfoWatch)
-        {
-            networkedPlayer.HasInfoWatch = true;
-
-            Logging.Message($"{netPlayer.GetName()} has GorillaInfoWatch");
-            SignificanceManager.Instance.CheckPlayer(netPlayer, SignificanceCheckScope.InfoWatch);
-        }
-
-        networkedPlayer.OnPlayerPropertyChanged(properties);
+        if (netPlayer != null && !netPlayer.IsLocal && changedProps.TryGetValue(Constants.NetworkPropertyKey, out object propertiesObject) && propertiesObject is Dictionary<string, object> properties) OnPlayerPropertyChanged?.Invoke(netPlayer, properties);
     }
 }

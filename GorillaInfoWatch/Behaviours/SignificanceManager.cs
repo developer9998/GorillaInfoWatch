@@ -110,7 +110,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
             return;
         }
 
-        if (PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificanceClass(player, out FigureSignificance _) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
+        if (PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
             Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforcePlayerNameLength(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
             {
@@ -136,7 +136,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
             goto CheckPlayer;
         }
 
-        if (PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificanceClass(player, out FigureSignificance _) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
+        if (PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
             Notifications.SendNotification(new("A notable user has left", player.GetName().EnforcePlayerNameLength(), 5, Sounds.notificationNegative));
             goto CheckPlayer;
@@ -164,18 +164,16 @@ public class SignificanceManager : MonoBehaviour, IInitialize
         NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
         if (player == null || player.IsNull || player.IsLocal || rig.isOfflineVRRig || rig.isLocal) return;
 
-        bool result = CheckPlayer(player, SignificanceCheckScope.Item);
-        PlayerConsent consent = PlayerUtility.GetConsent(player);
-
-        if (!result || !consent.HasFlag(PlayerConsent.Item) || !GetSignificanceClass(player, out ItemSignificance item) || !Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.CosmeticSignificant)) return;
-
-        string userId = player.UserId;
-        string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
-        Notifications.SendNotification(new($"A notable cosmetic was detected", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+        if (CheckPlayer(player, SignificanceCheckScope.Item) && PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Item) && GetSignificance(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
         {
-            player = PlayerUtility.GetPlayer(userId);
-            if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
-        })));
+            string userId = player.UserId;
+            string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
+            Notifications.SendNotification(new($"A notable cosmetic was detected", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+            {
+                player = PlayerUtility.GetPlayer(userId);
+                if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
+            })));
+        }
     }
 
     public bool CheckPlayer(NetPlayer player, SignificanceCheckScope checkScope)
@@ -242,19 +240,6 @@ public class SignificanceManager : MonoBehaviour, IInitialize
     #region Utilities (significance/consent)
 
     public bool GetSignificance(NetPlayer player, out PlayerSignificance[] significance) => _significance.TryGetValue(player, out significance);
-
-    public bool GetSignificanceClass<T>(NetPlayer player, out T significanceClass) where T : class
-    {
-        if (GetSignificance(player, out PlayerSignificance[] significance))
-        {
-            PlayerSignificance search = Array.Find(significance, sigClass => sigClass is T);
-            significanceClass = search != null ? search as T : null;
-            return significanceClass != null;
-        }
-
-        significanceClass = null;
-        return false;
-    }
 
     public void SetConsent(PlayerConsent consent, bool saveData = true)
     {

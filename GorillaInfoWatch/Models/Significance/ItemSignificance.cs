@@ -11,7 +11,7 @@ public class ItemSignificance : PlayerSignificance
         get
         {
             if (string.IsNullOrEmpty(itemDisplayName)) itemDisplayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(ItemId));
-            return "{0} owns the \"{itemDisplayName}\" item";
+            return string.Concat("{0} owns the \"", itemDisplayName, "\" item");
         }
     }
 
