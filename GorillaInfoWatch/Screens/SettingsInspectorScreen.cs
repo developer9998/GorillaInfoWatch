@@ -7,7 +7,7 @@ internal class SettingsInspectorScreen : InfoScreen
 {
     public override string Title => Section.Title;
 
-    public override string Description => $"Section contains {Section.Entries.Count} entries";
+    public override string Description => $"Configuation section contains {Section.Entries.Count} entries";
 
     public static ConfigurableSection Section;
 

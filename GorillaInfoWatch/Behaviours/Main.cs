@@ -440,11 +440,10 @@ public class Main : MonoBehaviourPunCallbacks
 
         _notifications.Add(notification);
 
-        if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip))
-            _infoWatch.audioDevice.PlayOneShot(audioClip);
+        if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip)) _infoWatch.audioDevice.PlayOneShot(audioClip, Configuration.NotificationSoundVolume.Value);
 
         bool isSilent = notification.Sound == Sounds.None;
-        GorillaTagger.Instance.StartVibration(_infoWatch.InLeftHand, isSilent ? 0.2f : 0.04f, isSilent ? 0.1f : 0.2f);
+        GorillaTagger.Instance.StartVibration(_infoWatch.InLeftHand, isSilent ? Configuration.SilentNotifHapticAmplitude.Value : Configuration.NotifHapticAmplitude.Value, isSilent ? Configuration.SilentNotifHapticDuration.Value : Configuration.NotifHapticDuration.Value);
 
         var stateMachine = _infoWatch.MenuStateMachine;
         Menu_StateBase currentState = stateMachine.CurrentState is Menu_SubState subState ? subState.previousState : stateMachine.CurrentState;

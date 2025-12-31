@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Widgets;
 using System;
 using System.Collections.Generic;
@@ -120,9 +121,30 @@ internal abstract class ConfigurableWrapper
 
         if (settingType == typeof(bool))
         {
+            value = value.ToTitleCase();
+
             widgets.Add(new Widget_Switch(SerializedValue.ToLower() == "true", (bool value) =>
             {
                 SerializedValue = value.ToString();
+                InfoScreen.LoadedScreen?.SetText();
+            }));
+
+            goto WriteLines;
+        }
+
+        if (settingType == typeof(float))
+        {
+            if (acceptableValues is not AcceptableValueRange<float> floatRange) goto WriteLines;
+
+            double current = Math.Round(Convert.ToSingle(BoxedValue), 2);
+            value = current.ToString();
+
+            int integerPlaces = 100;
+
+            widgets.Add(new Widget_SnapSlider(Mathf.RoundToInt((float)current * integerPlaces), 0, integerPlaces, integerValue =>
+            {
+                float value = (float)Math.Round(Mathf.Lerp(floatRange.MinValue, floatRange.MaxValue, integerValue / (float)integerPlaces));
+                BoxedValue = value;
                 InfoScreen.LoadedScreen?.SetText();
             }));
 
@@ -179,11 +201,11 @@ internal abstract class ConfigurableWrapper
 
             if (names.Length == 2)
             {
-                Enum[] values = [.. Enum.GetValues(settingType).Cast<Enum>().OrderBy(Convert.ToUInt64)];
+                Enum[] values = [.. Enum.GetValues(settingType).Cast<Enum>().OrderBy(Convert.ToInt64)];
                 Enum falseValue = values.First();
                 Enum trueValue = values.Last();
 
-                widgets.Add(new Widget_Switch((Convert.ToUInt64(BoxedValue) & Convert.ToUInt64(trueValue)) == Convert.ToUInt64(trueValue), value =>
+                widgets.Add(new Widget_Switch((Convert.ToInt64(BoxedValue) & Convert.ToInt64(trueValue)) == Convert.ToInt64(trueValue), value =>
                 {
                     BoxedValue = value ? trueValue : falseValue;
                     InfoScreen.LoadedScreen?.SetText();
@@ -245,12 +267,21 @@ internal class ConfigurableWrapper_BepInEntry(ConfigEntryBase entryBase) : Confi
     public override object BoxedValue
     {
         get => EntryBase.BoxedValue;
-        set => EntryBase.BoxedValue = value;
+        set
+        {
+            EntryBase.BoxedValue = value;
+            if (!EntryBase.ConfigFile.SaveOnConfigSet) EntryBase.ConfigFile.Save();
+        }
     }
+
     public override string SerializedValue
     {
         get => EntryBase.GetSerializedValue();
-        set => EntryBase.SetSerializedValue(value);
+        set
+        {
+            EntryBase.SetSerializedValue(value);
+            if (!EntryBase.ConfigFile.SaveOnConfigSet) EntryBase.ConfigFile.Save();
+        }
     }
 
     public override string UnsupportedText => $"This setting can be edited at {Path.GetFileName(EntryBase.ConfigFile.ConfigFilePath)}";
