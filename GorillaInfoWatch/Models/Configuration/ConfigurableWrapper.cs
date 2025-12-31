@@ -2,8 +2,10 @@
 using GorillaInfoWatch.Models.Widgets;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Models.Configuration;
@@ -19,6 +21,8 @@ internal abstract class ConfigurableWrapper
     public abstract string SerializedValue { get; set; }
 
     public virtual string UnsupportedText => "This setting does not support editing here";
+
+    private readonly string _descriptionFormat = "<line-height=45%>{0}<br><size=60%>{1}";
 
     public virtual void WriteLines(LineBuilder lines)
     {
@@ -145,7 +149,10 @@ internal abstract class ConfigurableWrapper
                     ulong flagLong = Convert.ToUInt64(flag);
                     bool hasFlag = (valueLong & flagLong) == flagLong;
 
-                    flagLines.Add(flag.ToString(), new Widget_PushButton(() =>
+                    MemberInfo memberInfo = SettingType.GetMember(flag.ToString())?.FirstOrDefault(m => m.DeclaringType == SettingType);
+                    DescriptionAttribute description = (DescriptionAttribute)memberInfo?.GetCustomAttributes(typeof(DescriptionAttribute), false)?.FirstOrDefault();
+
+                    flagLines.Add(description != null ? string.Format(_descriptionFormat, flag.ToString(), description.Description) : flag.ToString(), new Widget_PushButton(() =>
                     {
                         valueLong = Convert.ToUInt64(BoxedValue);
                         ulong result = valueLong ^ flagLong;
@@ -172,11 +179,11 @@ internal abstract class ConfigurableWrapper
 
             if (names.Length == 2)
             {
-                Enum[] values = [.. Enum.GetValues(settingType).Cast<Enum>().OrderBy(Convert.ToInt64)];
+                Enum[] values = [.. Enum.GetValues(settingType).Cast<Enum>().OrderBy(Convert.ToUInt64)];
                 Enum falseValue = values.First();
                 Enum trueValue = values.Last();
 
-                widgets.Add(new Widget_Switch((Convert.ToInt64(BoxedValue) & Convert.ToInt64(trueValue)) == Convert.ToInt64(trueValue), value =>
+                widgets.Add(new Widget_Switch((Convert.ToUInt64(BoxedValue) & Convert.ToUInt64(trueValue)) == Convert.ToUInt64(trueValue), value =>
                 {
                     BoxedValue = value ? trueValue : falseValue;
                     InfoScreen.LoadedScreen?.SetText();
@@ -200,7 +207,7 @@ internal abstract class ConfigurableWrapper
         postDefineFunction?.Invoke();
         if (widgets.Count == 0 && postDefineFunction == null) lines.BeginCentre().AppendColour(UnsupportedText, Color.red).EndAlign().AppendLine();
 
-        lines.Skip().Add($"Description: {Description}", LineRestrictions.Wrapping);
+        lines.Skip().Add($"Description: {Description}", LineOptions.Wrapping);
 
         lines.Skip().Add($"Type: {typeName}");
     }

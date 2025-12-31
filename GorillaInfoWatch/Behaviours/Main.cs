@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 using InfoScreen = GorillaInfoWatch.Models.InfoScreen;
 using PushButton = GorillaInfoWatch.Behaviours.UI.PushButton;
@@ -82,7 +83,8 @@ public class Main : MonoBehaviourPunCallbacks
         typeof(ShortcutListScreen),
         typeof(SettingsListScreen),
         typeof(SettingsInspectorScreen),
-        typeof(CreditScreen)
+        typeof(CreditScreen),
+        typeof(VersionWarningScreen)
     ];
 
     // Shortcuts
@@ -390,6 +392,18 @@ public class Main : MonoBehaviourPunCallbacks
         _homeScreen.SetEntries([.. _screens.Values]);
         LoadScreen(_homeScreen);
 
+        CheckVersion(result =>
+        {
+            if (!result.isOutdated) return;
+
+            VersionWarningScreen.LatestVersion = result.latestVersion;
+            LoadScreen(typeof(VersionWarningScreen));
+
+            _panelReloadButton.gameObject.SetActive(false);
+            _panelReturnButton.gameObject.SetActive(false);
+            _panelInboxButton.gameObject.SetActive(false);
+        });
+
         RefreshInbox();
 
         Events.OnQuestCompleted += OnQuestCompleted;
@@ -417,9 +431,11 @@ public class Main : MonoBehaviourPunCallbacks
         }
     }
 
+    #region Notification handling
+
     public void HandleSentNotification(Notification notification)
     {
-        if (notification is null || notification.Opened || _notifications.Contains(notification))
+        if (notification is null || notification.Opened || _notifications.Contains(notification) || LoadedScreen.GetType() == typeof(VersionWarningScreen))
             return;
 
         _notifications.Add(notification);
@@ -495,41 +511,9 @@ public class Main : MonoBehaviourPunCallbacks
         _infoWatch.HomeState?.UpdateBell(_inboxScreen.Contents.Count);
     }
 
-    public void PlayErrorSound()
-    {
-        string soundName = string.Concat("error", Random.Range(1, 7));
-        if (Enum.TryParse(soundName, out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip)) _infoWatch.audioDevice.PlayOneShot(audioClip);
-    }
+    #endregion
 
-    public void PressButton(PushButton button, bool isLeftHand)
-    {
-        if (button)
-        {
-            AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : EnumToAudio[Sounds.widgetButton];
-            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
-            handPlayer.PlayOneShot(clip, 0.2f);
-        }
-    }
-
-    public void PressSlider(SnapSlider slider, bool isLeftHand)
-    {
-        if (slider)
-        {
-            AudioClip clip = EnumToAudio[Sounds.widgetSlider];
-            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
-            handPlayer.PlayOneShot(clip, 0.2f);
-        }
-    }
-
-    public void PressSwitch(Switch button, bool isLeftHand)
-    {
-        if (button)
-        {
-            AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : EnumToAudio[Sounds.widgetSwitch];
-            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
-            handPlayer.PlayOneShot(clip, 0.2f);
-        }
-    }
+    #region Screen utilities and handling
 
     public T GetScreen<T>(bool registerFallback = true) where T : InfoScreen => (T)GetScreen(typeof(T), registerFallback);
 
@@ -689,7 +673,7 @@ public class Main : MonoBehaviourPunCallbacks
             {
                 SectionLine line = lines[i];
 
-                if (line.Restrictions.HasFlag(LineRestrictions.Wrapping))
+                if (line.Options.HasFlag(LineOptions.Wrapping))
                 {
                     int insertPosition = i;
                     lines.RemoveAt(insertPosition); // Remove the initial line that we're going to extend
@@ -739,6 +723,10 @@ public class Main : MonoBehaviourPunCallbacks
             PlayErrorSound();
         }
     }
+
+    #endregion
+
+    #region Registration utilities
 
     public bool RegisterScreen(Type type)
     {
@@ -839,11 +827,87 @@ public class Main : MonoBehaviourPunCallbacks
         return true;
     }
 
+    #endregion
+
+    #region Plugin utilities
+
+    public string GetPluginStateKey(PluginInfo plugin) => $"ModState_{plugin.Metadata.GUID}";
+
+    public bool GetPersistentPluginState(PluginInfo plugin)
+    {
+        string key = GetPluginStateKey(plugin);
+        return !DataManager.Instance.HasData(key) || DataManager.Instance.GetData(key, defaultValue: true, setDefaultValue: false);
+    }
+
+    public void SetPersistentPluginState(PluginInfo plugin, bool state)
+    {
+        string key = GetPluginStateKey(plugin);
+        if (state && DataManager.Instance.HasData(key)) DataManager.Instance.RemoveData(key);
+        else DataManager.Instance.SetData(key, state);
+    }
+
+    #endregion
+
+    #region Methods
+
+    public async void CheckVersion(Action<(bool isOutdated, string latestVersion)> result) // TODO: make result readable enum
+    {
+        using UnityWebRequest request = UnityWebRequest.Get(Constants.Uri_LatestVersion);
+        UnityWebRequestAsyncOperation asyncOperation = request.SendWebRequest();
+        await asyncOperation;
+
+        if (request.result > UnityWebRequest.Result.Success) return;
+
+        Version installedVersion = new(Constants.Version);
+        string latestVersionString = request.downloadHandler.text.Trim();
+        result?.Invoke((Version.TryParse(latestVersionString, out Version latestVersion) && latestVersion > installedVersion, latestVersionString));
+    }
+
+    public void PlayErrorSound()
+    {
+        string soundName = string.Concat("error", Random.Range(1, 7));
+        if (Enum.TryParse(soundName, out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip)) _infoWatch.audioDevice.PlayOneShot(audioClip);
+    }
+
+    public void PressButton(PushButton button, bool isLeftHand)
+    {
+        if (button)
+        {
+            AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : EnumToAudio[Sounds.widgetButton];
+            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
+            handPlayer.PlayOneShot(clip, 0.2f);
+        }
+    }
+
+    public void PressSlider(SnapSlider slider, bool isLeftHand)
+    {
+        if (slider)
+        {
+            AudioClip clip = EnumToAudio[Sounds.widgetSlider];
+            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
+            handPlayer.PlayOneShot(clip, 0.2f);
+        }
+    }
+
+    public void PressSwitch(Switch button, bool isLeftHand)
+    {
+        if (button)
+        {
+            AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : EnumToAudio[Sounds.widgetSwitch];
+            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
+            handPlayer.PlayOneShot(clip, 0.2f);
+        }
+    }
+
+    #endregion
+
+    #region Events
+
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         Logging.Fatal($"OnJoinRoomFailed: {message} ({returnCode})");
 
-        if (returnCode == ErrorCode.GameDoesNotExist) return;
+        if (returnCode == ErrorCode.GameDoesNotExist || !Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Server)) return;
         Notifications.SendNotification(new("Room Join failure", returnCode == ErrorCode.GameFull ? "Room is full" : $"Code {returnCode}", 3, Sounds.notificationNegative));
     }
 
@@ -852,6 +916,7 @@ public class Main : MonoBehaviourPunCallbacks
         Logging.Fatal("OnCustomAuthenticationFailed");
         Logging.Message(debugMessage);
 
+        if (!Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Server)) return;
         Notifications.SendNotification(new("Photon PUN failure", "Custom Auth failed", 3, Sounds.notificationNegative));
     }
 
@@ -859,6 +924,7 @@ public class Main : MonoBehaviourPunCallbacks
     {
         Logging.Info($"Quest Completed: {quest.GetTextDescription()}");
 
+        if (!Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Quest)) return;
         Notifications.SendNotification(new("You completed a Quest", quest.questName, 5, Sounds.notificationNeutral));
     }
 
@@ -869,6 +935,8 @@ public class Main : MonoBehaviourPunCallbacks
 
         Logging.Message($"Mothership message recieved:");
         Logging.Info("\"{title}\": \"{body}\"");
+
+        if (!Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Server)) return;
 
         string[] array;
 
@@ -910,23 +978,6 @@ public class Main : MonoBehaviourPunCallbacks
         {
 
         }
-    }
-
-    #region Plugin management
-
-    public string GetPluginStateKey(PluginInfo plugin) => $"ModState_{plugin.Metadata.GUID}";
-
-    public bool GetPersistentPluginState(PluginInfo plugin)
-    {
-        string key = GetPluginStateKey(plugin);
-        return !DataManager.Instance.HasData(key) || !DataManager.Instance.GetData(key, defaultValue: true, setDefaultValue: false);
-    }
-
-    public void SetPersistentPluginState(PluginInfo plugin, bool state)
-    {
-        string key = GetPluginStateKey(plugin);
-        if (state && DataManager.Instance.HasData(key)) DataManager.Instance.RemoveData(key);
-        else DataManager.Instance.SetData(key, state);
     }
 
     #endregion

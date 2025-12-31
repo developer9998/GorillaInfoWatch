@@ -22,7 +22,7 @@ namespace GorillaInfoWatch.Models
 
         }
 
-        public LineBuilder(string content) : this([.. content.Split(Environment.NewLine).Select(line => new SectionLine(line, LineRestrictions.Wrapping))])
+        public LineBuilder(string content) : this([.. content.Split(Environment.NewLine).Select(line => new SectionLine(line, LineOptions.Wrapping))])
         {
 
         }
@@ -68,9 +68,9 @@ namespace GorillaInfoWatch.Models
             return this;
         }
 
-        public LineBuilder Add(string text, LineRestrictions restrictions, params List<Widget_Base> widgets)
+        public LineBuilder Add(string text, LineOptions options, params List<Widget_Base> widgets)
         {
-            Lines.Add(new(text, restrictions, widgets));
+            Lines.Add(new(text, options, widgets));
             return this;
         }
 

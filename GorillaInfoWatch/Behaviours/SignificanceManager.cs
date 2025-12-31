@@ -90,7 +90,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
 
         string userId = player.UserId;
 
-        if (GFriends.IsFriend(userId))
+        if (GFriends.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
         {
             Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
             {
@@ -100,7 +100,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
             return;
         }
 
-        if (GFriends.IsVerified(userId))
+        if (GFriends.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
         {
             Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
             {
@@ -110,7 +110,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
             return;
         }
 
-        if (CheckPlayer(player, SignificanceCheckScope.Item) && PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificanceClass(player, out FigureSignificance _))
+        if (PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificanceClass(player, out FigureSignificance _) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
             Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforcePlayerNameLength(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
             {
@@ -124,19 +124,19 @@ public class SignificanceManager : MonoBehaviour, IInitialize
     {
         string userId = player.UserId;
 
-        if (GFriends.IsFriend(userId))
+        if (GFriends.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
         {
             Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 
-        if (GFriends.IsVerified(userId))
+        if (GFriends.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
         {
             Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 
-        if (CheckPlayer(player, SignificanceCheckScope.Item) && PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificanceClass(player, out FigureSignificance _))
+        if (PlayerUtility.GetConsent(player).HasFlag(PlayerConsent.Figure) && GetSignificanceClass(player, out FigureSignificance _) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
             Notifications.SendNotification(new("A notable user has left", player.GetName().EnforcePlayerNameLength(), 5, Sounds.notificationNegative));
             goto CheckPlayer;
@@ -167,7 +167,7 @@ public class SignificanceManager : MonoBehaviour, IInitialize
         bool result = CheckPlayer(player, SignificanceCheckScope.Item);
         PlayerConsent consent = PlayerUtility.GetConsent(player);
 
-        if (!result || !consent.HasFlag(PlayerConsent.Item) || !GetSignificanceClass(player, out ItemSignificance item)) return;
+        if (!result || !consent.HasFlag(PlayerConsent.Item) || !GetSignificanceClass(player, out ItemSignificance item) || !Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.CosmeticSignificant)) return;
 
         string userId = player.UserId;
         string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));

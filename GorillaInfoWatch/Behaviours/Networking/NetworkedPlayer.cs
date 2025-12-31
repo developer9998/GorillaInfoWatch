@@ -35,14 +35,14 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
     public void OnDestroy()
     {
         HasInfoWatch = false;
-        Watch?.gameObject?.Obliterate();
+        if (Watch.Exists()) Watch.gameObject.Obliterate();
     }
 
     public void PreDisable()
     {
         enabled = false;
         HasInfoWatch = false;
-        Watch?.gameObject?.Obliterate();
+        if (Watch.Exists()) Watch.gameObject.Obliterate();
     }
 
     public void OnPlayerPropertyChanged(Dictionary<string, object> properties)

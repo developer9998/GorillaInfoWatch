@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using GorillaInfoWatch.Models;
 
 namespace GorillaInfoWatch.Tools
 {
@@ -8,13 +9,17 @@ namespace GorillaInfoWatch.Tools
 
         // General
 
-        public static ConfigEntry<WatchHand> Orientation;
+        internal static ConfigEntry<WatchHand> Orientation;
+
+        // Notifications
+
+        internal static ConfigEntry<NotificationSource> AllowedNotifcationSources;
 
         // Shortcuts
 
-        public static ConfigEntry<float> ShortcutHoldDuration;
+        internal static ConfigEntry<float> ShortcutHoldDuration;
 
-        public static ConfigEntry<float> ShortcutInterval;
+        internal static ConfigEntry<float> ShortcutInterval;
 
         // Privacy
 
@@ -28,6 +33,8 @@ namespace GorillaInfoWatch.Tools
             File.SaveOnConfigSet = true;
 
             Orientation = File.Bind("General", "Preferred Hand", WatchHand.Left, "Which hand your watch is placed on");
+
+            AllowedNotifcationSources = File.Bind("Notifications", "Notification Sources", NotificationSource.All, "The list of sources you have allowed to send their respective notifications");
 
             // Use ShortcutHandler class to manage the value of this setting
             ShortcutHoldDuration = File.Bind("Shortcuts", "Shortcut Hold Duration", 0.25f, new ConfigDescription("The maximum duration needed to activate a shortcut using the shortcut button", new AcceptableValueRange<float>(0.25f, 1f), "Increment 0.25"));
