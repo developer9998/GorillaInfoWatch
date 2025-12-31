@@ -132,25 +132,6 @@ internal abstract class ConfigurableWrapper
             goto WriteLines;
         }
 
-        if (settingType == typeof(float))
-        {
-            if (acceptableValues is not AcceptableValueRange<float> floatRange) goto WriteLines;
-
-            double current = Math.Round(Convert.ToSingle(BoxedValue), 2);
-            value = current.ToString();
-
-            int integerPlaces = 100;
-
-            widgets.Add(new Widget_SnapSlider(Mathf.RoundToInt((float)current * integerPlaces), 0, integerPlaces, integerValue =>
-            {
-                float value = (float)Math.Round(Mathf.Lerp(floatRange.MinValue, floatRange.MaxValue, integerValue / (float)integerPlaces));
-                BoxedValue = value;
-                InfoScreen.LoadedScreen?.SetText();
-            }));
-
-            goto WriteLines;
-        }
-
         if (settingType.IsEnum)
         {
             if (settingType.GetCustomAttributes(typeof(FlagsAttribute), true).Any())
