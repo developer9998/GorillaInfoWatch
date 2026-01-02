@@ -6,7 +6,6 @@ using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Utilities;
 using PlayFab.ClientModels;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -120,32 +119,37 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder significanceLines = new();
 
-            List<PlayerSignificance> list = [];
+            var array = Enumerable.Repeat<PlayerSignificance>(null, Enum.GetValues(typeof(SignificanceLayer)).Length).ToArray();
 
-            bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
-
-            if (SignificanceManager.Instance.GetSignificance(player, out PlayerSignificance[] plrSignificance))
+            if (SignificanceManager.Instance.GetSignificance(player, out PlayerSignificance[] playerSignificance))
             {
-                plrSignificance = [.. plrSignificance];
-                if (isInFriendList) plrSignificance[1] = Main.Significance_Friend;
-                Array.ForEach(Array.FindAll(plrSignificance, item => item != null), list.Add);
+                for (int i = 0; i < playerSignificance.Length; i++)
+                {
+                    array[i] = playerSignificance[i];
+                }
             }
 
-            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before)
-                list.Add(Main.Significance_RecentlyPlayed);
+            bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
+            if (isInFriendList) array[(int)SignificanceLayer.Friend] = Main.Significance_Friend;
 
-            if (player.IsMasterClient)
-                list.Add(Main.Significance_Master);
+            if (player.IsMasterClient) array[(int)SignificanceLayer.Master] = Main.Significance_Master;
 
-            if (list.Count > 0)
+            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before) array[(int)SignificanceLayer.RecentlyPlayed] = Main.Significance_RecentlyPlayed;
+
+            if (array.Length > 0)
             {
+                int number = 1;
+
                 StringBuilder str = new();
 
-                for (int i = 0; i < list.Count; i++)
+                for (int i = 0; i < array.Length; i++)
                 {
-                    PlayerSignificance significance = list[i];
+                    PlayerSignificance significance = array[i];
 
-                    str.Append(i + 1).Append(". ");
+                    if (significance == null) continue;
+
+                    str.Append(number).Append(". ");
+                    number++;
 
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
                     else str.Append(string.Format(_descriptionFormat, significance.Title, string.Format(significance.Description, normalizedName)));

@@ -73,7 +73,7 @@ public class Main : MonoBehaviourPunCallbacks
         typeof(ScoreboardScreen),
         typeof(RoomInspectorScreen),
         typeof(PlayerInspectorScreen),
-        typeof(DetailsScreen),
+        typeof(StatisticsScreen),
         typeof(FriendScreen),
         typeof(ModListScreen),
         typeof(ModInspectorScreen),
@@ -243,7 +243,7 @@ public class Main : MonoBehaviourPunCallbacks
         Sprite[] spriteSheet = await _assetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
         foreach (Symbols symbol in Enum.GetValues(typeof(Symbols)).Cast<Symbols>())
         {
-            if (Array.Find(spriteSheet, sprite => sprite.name != symbol.GetName()) is not Sprite sprite) continue;
+            if (Array.Find(spriteSheet, sprite => sprite.name == symbol.GetName()) is not Sprite sprite) continue;
             UnityObjectDictionary.Add(symbol, sprite);
         }
 

@@ -2,9 +2,11 @@
 
 internal enum SignificanceLayer
 {
-    Figure,
     Friend,
+    Figure,
     Item,
     InfoWatch,
-    Verified
+    Master,
+    Verified,
+    RecentlyPlayed
 }

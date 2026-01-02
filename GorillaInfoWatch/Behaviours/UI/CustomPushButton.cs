@@ -22,7 +22,7 @@ internal class CustomPushButton : MonoBehaviour
 
     public void OnTriggerEnter(Collider collider)
     {
-        if (!collider.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) || handIndicator.isLeftHand == Watch.LocalWatch.InLeftHand || Main.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, Active ? Debounce : 0.05f)) return;
+        if (!collider.TryGetComponent(out GorillaTriggerColliderHandIndicator handIndicator) || handIndicator.isLeftHand == Watch.LocalWatch.InLeftHand || !Main.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, Active ? Debounce : 0.05f)) return;
 
         if (Active)
         {

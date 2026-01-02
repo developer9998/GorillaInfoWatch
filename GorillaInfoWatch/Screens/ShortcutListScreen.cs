@@ -41,6 +41,7 @@ namespace GorillaInfoWatch.Screens
                         ShortcutHandler.Instance.ExcecuteShortcut(shortcut);
                     })
                     {
+                        Alignment = WidgetAlignment.Left,
                         Colour = ColourPalette.Green,
                         Symbol = Symbol.GetSharedSymbol(Symbols.Play)
                     }, new Widget_Switch(ShortcutHandler.Instance.Shortcut == shortcut, (bool value) =>

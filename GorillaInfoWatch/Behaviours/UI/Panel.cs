@@ -14,7 +14,7 @@ public class Panel : MonoBehaviour
     private bool _initialized = false;
 
     public bool Active => gameObject.activeSelf;
-    public bool Upright => (Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f) - Vector3.up).IsLongerThan(1.75f);
+    public Vector3 UprightVector => Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f) - Vector3.up;
     public bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (Trigger.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
 
     private bool IsLeftHand => Watch.LocalWatch?.InLeftHand ?? true;
@@ -51,7 +51,7 @@ public class Panel : MonoBehaviour
         transform.localScale = Vector3.one * 1.7f * GorillaTagger.Instance.offlineVRRig.lastScaleFactor;
 
         // Turn off the menu if we're not looking at it, or if our hand is facing down
-        if (!Upright) gameObject.SetActive(false);
+        if (UprightVector.IsShorterThan(1.75f)) gameObject.SetActive(false);
     }
 
     public void SetPosition()

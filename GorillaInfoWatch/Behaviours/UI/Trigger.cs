@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Models;
+﻿using GorillaExtensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Utilities;
 using UnityEngine;
@@ -18,12 +19,12 @@ public class Trigger : MonoBehaviour
     {
         _audioDevice = GetComponent<AudioSource>();
 
-        if (!XRUtility.IsXRSubsystemActive) panel.SetActive(true);
+        panel.SetActive(!XRUtility.IsXRSubsystemActive);
     }
 
     public void OnTriggerEnter(Collider other)
     {
-        if (panel.Upright && panel.InView && other.TryGetComponent(out HandIndicator handIndicator) && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, _debounce))
+        if (panel.UprightVector.IsLongerThan(1.82f) && panel.InView && other.TryGetComponent(out HandIndicator handIndicator) && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, _debounce))
         {
             GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 
