@@ -5,6 +5,7 @@ using UnityEngine;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Models.Shortcuts;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 #endif
 

@@ -1,4 +1,5 @@
 ﻿using GorillaNetworking;
+using System.Linq;
 
 namespace GorillaInfoWatch.Models.Significance;
 
@@ -6,30 +7,48 @@ public class ItemSignificance : PlayerSignificance
 {
     public string ItemId { get; }
 
+    public override SignificanceVisibility Visibility => SignificanceVisibility.Item;
     public override string Description
     {
         get
         {
-            if (string.IsNullOrEmpty(itemDisplayName)) itemDisplayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(ItemId));
-            return string.Concat("{0} owns the \"", itemDisplayName, "\" item");
+            if (string.IsNullOrEmpty(_itemDisplayName)) _itemDisplayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(ItemId));
+            return string.Concat("{0} owns the \"", _itemDisplayName, "\" item");
         }
     }
 
-    private string itemDisplayName = null;
+    private string _itemDisplayName = null;
 
     internal ItemSignificance(string title, Symbols symbol, string itemId) : base(title, symbol) => ItemId = itemId;
 
-    public override bool IsValid(NetPlayer player)
+    public override bool IsValid(NetPlayer player) => GetState(player) > 0;
+
+    internal ItemState GetState(NetPlayer player)
     {
-        if (player is null || player.IsNull)
-            return false;
+        if (player == null || player.IsNull) return ItemState.None;
+
+        string cosmeticAllowedString;
+        CosmeticsController.CosmeticSet cosmeticSet;
 
         if (player.IsLocal)
-            return CosmeticsController.instance?.concatStringCosmeticsAllowed is string localAllowedCosmetics && localAllowedCosmetics.Contains(ItemId);
+        {
+            cosmeticAllowedString = CosmeticsController.instance?.concatStringCosmeticsAllowed ?? string.Empty;
+            cosmeticSet = CosmeticsController.instance?.currentWornSet ?? CosmeticsController.CosmeticSet.EmptySet;
+        }
+        else if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer rigContainer) && rigContainer.Rig.InitializedCosmetics)
+        {
+            cosmeticAllowedString = rigContainer.Rig.concatStringOfCosmeticsAllowed ?? string.Empty;
+            cosmeticSet = rigContainer.Rig.cosmeticSet ?? CosmeticsController.CosmeticSet.EmptySet;
+        }
+        else return ItemState.None;
 
-        if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer playerRig))
-            return playerRig.Rig.concatStringOfCosmeticsAllowed is string allowedCosmetics && allowedCosmetics.Contains(ItemId);
+        return cosmeticSet.items.Where(item => !item.isNullItem).Any(item => item.itemName == ItemId) ? ItemState.Equipped : (cosmeticAllowedString.Contains(ItemId) ? ItemState.Allowed : ItemState.None);
+    }
 
-        return false;
+    internal enum ItemState
+    {
+        None,
+        Allowed,
+        Equipped
     }
 }

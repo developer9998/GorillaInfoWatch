@@ -1,6 +1,7 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
+using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.Widgets;
 using System.Collections.Generic;
 using System.Linq;

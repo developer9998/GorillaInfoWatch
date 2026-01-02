@@ -1,4 +1,4 @@
-﻿namespace GorillaInfoWatch.Models
+﻿namespace GorillaInfoWatch.Models.MediaControl
 {
     public enum MediaControlBinding
     {

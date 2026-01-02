@@ -1,6 +1,6 @@
 ﻿namespace GorillaInfoWatch.Models.Interfaces;
 
-internal interface IInitialize
+internal interface IInitializable
 {
     public void Initialize();
 }

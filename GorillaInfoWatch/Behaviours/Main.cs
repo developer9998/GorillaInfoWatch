@@ -3,10 +3,12 @@ using BepInEx.Bootstrap;
 using GorillaExtensions;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Behaviours.UI.Widgets;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Interfaces;
+using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
@@ -28,9 +30,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using InfoScreen = GorillaInfoWatch.Models.InfoScreen;
-using PushButton = GorillaInfoWatch.Behaviours.UI.PushButton;
+using PushButton = GorillaInfoWatch.Behaviours.UI.Widgets.PushButton;
 using Random = UnityEngine.Random;
-using SnapSlider = GorillaInfoWatch.Behaviours.UI.SnapSlider;
+using SnapSlider = GorillaInfoWatch.Behaviours.UI.Widgets.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours;
 
@@ -125,6 +127,8 @@ public class Main : MonoBehaviourPunCallbacks
     // Runtime
 
     private bool _wasRoomAllowed = true;
+
+    private readonly Dictionary<WatchInteractionSource, float> _interactionTime = [];
 
     public async void Awake()
     {
@@ -383,7 +387,8 @@ public class Main : MonoBehaviourPunCallbacks
         _panel.Origin = _watchObject.transform.Find("Point");
 
         Trigger watchTrigger = _watchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<Trigger>();
-        watchTrigger.Menu = _panel;
+        watchTrigger.panel = _panel;
+        _panel.Trigger = watchTrigger.transform;
 
         _screenRoot.SetActive(true);
 
@@ -411,7 +416,7 @@ public class Main : MonoBehaviourPunCallbacks
         Notifications.OpenRequest += HandleOpenNotification;
         MothershipClientApiUnity.OnMessageNotificationSocket += OnMothershipMessageRecieved;
 
-        IInitialize[] list = gameObject.GetComponents<IInitialize>();
+        IInitializable[] list = gameObject.GetComponents<IInitializable>();
         list.ForEach(initializable => initializable.Initialize());
 
         enabled = true;
@@ -860,6 +865,33 @@ public class Main : MonoBehaviourPunCallbacks
         Version installedVersion = new(Constants.Version);
         string latestVersionString = request.downloadHandler.text.Trim();
         result?.Invoke((Version.TryParse(latestVersionString, out Version latestVersion) && latestVersion > installedVersion, latestVersionString));
+    }
+
+    public bool CheckInteractionInterval(WatchInteractionSource source, float debounce, bool setInterval = true)
+    {
+        float time = Time.realtimeSinceStartup;
+
+        if (!_interactionTime.TryGetValue(source, out float touchTime))
+        {
+            if (setInterval) _interactionTime.Add(source, time);
+            return true;
+        }
+
+        if (time > (touchTime + debounce))
+        {
+            if (setInterval) _interactionTime[source] = time;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void SetInteractionInterval(WatchInteractionSource source)
+    {
+        float time = Time.realtimeSinceStartup;
+
+        if (_interactionTime.ContainsKey(source)) _interactionTime[source] = time;
+        else _interactionTime.Add(source, time);
     }
 
     public void PlayErrorSound()

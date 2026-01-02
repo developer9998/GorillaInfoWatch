@@ -1,4 +1,5 @@
 ﻿using GorillaExtensions;
+using GorillaInfoWatch.Behaviours.UI.Widgets;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;

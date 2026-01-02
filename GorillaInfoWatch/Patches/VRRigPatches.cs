@@ -27,6 +27,13 @@ namespace GorillaInfoWatch.Patches
             Events.OnRigRecievedCosmetics?.SafeInvoke(__instance);
         }
 
+        [HarmonyPatch(nameof(VRRig.LocalUpdateCosmeticsWithTryon)), HarmonyPriority(Priority.Low), HarmonyPostfix]
+        private static void UpdateCosmeticsPatch(VRRig __instance)
+        {
+            if (!IsValid(__instance)) return;
+            Events.OnRigUpdatedCosmetics?.SafeInvoke(__instance);
+        }
+
         [HarmonyPatch(nameof(VRRig.UpdateName), typeof(bool)), HarmonyPostfix, HarmonyPriority(150)]
         private static void UpdateNamePatch(VRRig __instance)
         {

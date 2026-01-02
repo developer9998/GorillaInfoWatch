@@ -3,6 +3,7 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Configuration;
+using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +33,7 @@ internal class SettingsListScreen : InfoScreen
         str.AppendLine("The permissions you have set for viewing significance of your account, measured with:");
         str.AppendLine("Item: allocated entirely for users with distinctive cosmetics, like creator badges and sticks");
         str.AppendLine("Figure: allocated usually for users that helped with the mod, as shown on the credits screen");
-        dictionary["Privacy"].Entries.Insert(0, new ConfigurableWrapper_Woaw<PlayerConsent>("Significance Visibility", str.ToString(), () => SignificanceManager.Instance.Consent, consent => SignificanceManager.Instance.SetConsent(consent)));
+        dictionary["Privacy"].Entries.Insert(0, new ConfigurableWrapper_Woaw<SignificanceVisibility>("Significance Visibility", str.ToString(), () => SignificanceManager.Instance.Visibility, consent => SignificanceManager.Instance.SetVisibility(consent)));
 
         entries.ForEach(entry => dictionary[entry.Definition.Section].Entries.Add(new ConfigurableWrapper_BepInEntry(entry)));
         _configurableList = [.. dictionary.Values];

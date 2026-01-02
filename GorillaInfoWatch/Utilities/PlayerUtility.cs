@@ -1,8 +1,9 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
+using GorillaNetworking;
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
@@ -50,7 +51,7 @@ namespace GorillaInfoWatch.Utilities
 
         public static bool HasInfoWatch(NetPlayer player) => CheckNetworkedPlayer(player, component => component.HasInfoWatch, defaultValue: false, localValue: true);
 
-        public static PlayerConsent GetConsent(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: NetworkedPlayer.GetTemporaryConsent(player.UserId), localValue: SignificanceManager.Instance?.Consent ?? PlayerConsent.None);
+        public static SignificanceVisibility GetConsent(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: NetworkedPlayer.GetTemporaryConsent(player.UserId), localValue: SignificanceManager.Instance?.Visibility ?? SignificanceVisibility.None);
 
         public static T CheckNetworkedPlayer<T>(NetPlayer player, Func<NetworkedPlayer, T> predicate, T defaultValue, T localValue)
         {
@@ -86,6 +87,14 @@ namespace GorillaInfoWatch.Utilities
             }
 
             Logging.Warning($"No scoreboard lines detected for player {player.GetName().EnforcePlayerNameLength()} (what the fuck map are you in??)");
+        }
+
+        public static bool HasActiveCosmetic(VRRig rig, string itemId)
+        {
+            if (!rig.InitializedCosmetics) return false;
+
+            CosmeticsController.CosmeticSet cosmeticSet = rig.cosmeticSet;
+            return cosmeticSet.items is CosmeticsController.CosmeticItem[] items && items.Where(item => !item.isNullItem).Any(item => item.itemName == itemId);
         }
 
         public static void MutePlayer(NetPlayer player, bool value)

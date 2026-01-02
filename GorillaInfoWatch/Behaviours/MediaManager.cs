@@ -1,7 +1,7 @@
 ﻿using BepInEx;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Interfaces;
+using GorillaInfoWatch.Models.MediaControl;
 using GorillaInfoWatch.Tools;
 using Newtonsoft.Json.Linq;
 using System;
@@ -15,7 +15,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-public class MediaManager : MonoBehaviour, IInitialize
+public class MediaManager : MonoBehaviour, IInitializable
 {
     public static MediaManager Instance { get; private set; }
 

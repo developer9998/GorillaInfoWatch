@@ -151,4 +151,10 @@ public class DataManager : MonoBehaviour
         if (dataPerTypeDict.ContainsKey(dataType)) return;
         dataPerTypeDict.Add(dataType, []);
     }
+
+    public enum DataLocation
+    {
+        Persistent,
+        Session
+    }
 }
