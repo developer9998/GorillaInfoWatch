@@ -30,6 +30,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using InfoScreen = GorillaInfoWatch.Models.InfoScreen;
+using Object = UnityEngine.Object;
 using PushButton = GorillaInfoWatch.Behaviours.UI.Widgets.PushButton;
 using Random = UnityEngine.Random;
 using SnapSlider = GorillaInfoWatch.Behaviours.UI.Widgets.SnapSlider;
@@ -43,9 +44,7 @@ public class Main : MonoBehaviourPunCallbacks
     // Content
     public static ModContent Content { get; private set; }
 
-    // Enum/Unity Object dictionaries
-    public static ReadOnlyDictionary<Sounds, AudioClip> EnumToAudio { get; private set; }
-    public static ReadOnlyDictionary<Symbols, Sprite> EnumToSprite { get; private set; }
+    public static readonly Dictionary<Enum, Object> UnityObjectDictionary = [];
 
     // Significance
     public static ReadOnlyCollection<FigureSignificance> Significance_Figures { get; private set; }
@@ -59,11 +58,7 @@ public class Main : MonoBehaviourPunCallbacks
     // Screens
     public static InfoScreen LoadedScreen { get; private set; }
 
-    // Screens
-
     private HomeScreen _homeScreen;
-
-    private WarningScreen _warnScreen;
 
     private InboxScreen _inboxScreen;
 
@@ -224,7 +219,6 @@ public class Main : MonoBehaviourPunCallbacks
 
         // Hardcoded screens are retrieved here, ensure registerFallback parameter is turned set to True for each method
         _homeScreen = GetScreen<HomeScreen>();
-        _warnScreen = GetScreen<WarningScreen>();
         _inboxScreen = GetScreen<InboxScreen>();
 
         _assetLoader = new AssetLoader("GorillaInfoWatch.Content.watchbundle");
@@ -239,27 +233,19 @@ public class Main : MonoBehaviourPunCallbacks
         Significance_Friend = new("Friend", Symbols.None, "You have {0} added as a friend (with GorillaFriends)");
         Significance_RecentlyPlayed = new("Recently Played", Symbols.None, "You have played with {0} recently (via. GorillaFriends)");
 
-        Dictionary<Sounds, AudioClip> audioClipDictionary = [];
-
-        foreach (Sounds enumeration in Enum.GetValues(typeof(Sounds)).Cast<Sounds>())
+        foreach (Sounds sound in Enum.GetValues(typeof(Sounds)).Cast<Sounds>())
         {
-            if (enumeration == Sounds.None) continue;
-
-            AudioClip clip = await _assetLoader.LoadAsset<AudioClip>(enumeration.GetName());
-
-            if (clip is not null)
-            {
-                audioClipDictionary.Add(enumeration, clip);
-                continue;
-            }
-
-            Logging.Warning($"Missing AudioClip asset for sound: {enumeration.GetName()}");
+            if (sound == Sounds.None) continue;
+            AudioClip clip = await _assetLoader.LoadAsset<AudioClip>(sound.GetName());
+            UnityObjectDictionary.Add(sound, clip);
         }
 
-        EnumToAudio = new ReadOnlyDictionary<Sounds, AudioClip>(audioClipDictionary);
-
-        Sprite[] spriteCollection = await _assetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
-        EnumToSprite = new ReadOnlyDictionary<Symbols, Sprite>(Array.FindAll(spriteCollection, sprite => Enum.IsDefined(typeof(Symbols), sprite.name)).ToDictionary(sprite => (Symbols)Enum.Parse(typeof(Symbols), sprite.name), sprite => sprite));
+        Sprite[] spriteSheet = await _assetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
+        foreach (Symbols symbol in Enum.GetValues(typeof(Symbols)).Cast<Symbols>())
+        {
+            if (Array.Find(spriteSheet, sprite => sprite.name != symbol.GetName()) is not Sprite sprite) continue;
+            UnityObjectDictionary.Add(symbol, sprite);
+        }
 
         // Objects
 
@@ -386,9 +372,11 @@ public class Main : MonoBehaviourPunCallbacks
         _panel = _panelObject.AddComponent<Panel>();
         _panel.Origin = _watchObject.transform.Find("Point");
 
-        Trigger watchTrigger = _watchObject.transform.Find("Hand Model/Trigger").gameObject.AddComponent<Trigger>();
+        Transform triggerTransform = _watchObject.transform.Find("Hand Model/Trigger");
+        _panel.Trigger = triggerTransform;
+
+        Trigger watchTrigger = triggerTransform.gameObject.AddComponent<Trigger>();
         watchTrigger.panel = _panel;
-        _panel.Trigger = watchTrigger.transform;
 
         _screenRoot.SetActive(true);
 
@@ -445,7 +433,7 @@ public class Main : MonoBehaviourPunCallbacks
 
         _notifications.Add(notification);
 
-        if (EnumToAudio.TryGetValue(notification.Sound, out AudioClip audioClip)) _infoWatch.audioDevice.PlayOneShot(audioClip, Configuration.NotificationSoundVolume.Value);
+        if (notification.Sound.AsAudioClip() is AudioClip audioClip) _infoWatch.audioDevice.PlayOneShot(audioClip, Configuration.NotificationSoundVolume.Value);
 
         bool isSilent = notification.Sound == Sounds.None;
         GorillaTagger.Instance.StartVibration(_infoWatch.InLeftHand, isSilent ? Configuration.SilentNotifHapticAmplitude.Value : Configuration.NotifHapticAmplitude.Value, isSilent ? Configuration.SilentNotifHapticDuration.Value : Configuration.NotifHapticDuration.Value);
@@ -897,37 +885,28 @@ public class Main : MonoBehaviourPunCallbacks
     public void PlayErrorSound()
     {
         string soundName = string.Concat("error", Random.Range(1, 7));
-        if (Enum.TryParse(soundName, out Sounds sound) && EnumToAudio.TryGetValue(sound, out AudioClip audioClip)) _infoWatch.audioDevice.PlayOneShot(audioClip);
+        if (Enum.TryParse(soundName, out Sounds sound)) _infoWatch.audioDevice.PlayOneShot(sound.AsAudioClip());
     }
 
     public void PressButton(PushButton button, bool isLeftHand)
     {
-        if (button)
-        {
-            AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : EnumToAudio[Sounds.widgetButton];
-            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
-            handPlayer.PlayOneShot(clip, 0.2f);
-        }
+        if (button.Null()) return;
+        AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
+        handPlayer.PlayOneShot(button.TryGetComponent(out AudioSource component) ? component.clip : Sounds.widgetButton.AsAudioClip(), 0.2f);
     }
 
     public void PressSlider(SnapSlider slider, bool isLeftHand)
     {
-        if (slider)
-        {
-            AudioClip clip = EnumToAudio[Sounds.widgetSlider];
-            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
-            handPlayer.PlayOneShot(clip, 0.2f);
-        }
+        if (slider.Null()) return;
+        AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
+        handPlayer.PlayOneShot(Sounds.widgetSlider.AsAudioClip(), 0.2f);
     }
 
     public void PressSwitch(Switch button, bool isLeftHand)
     {
-        if (button)
-        {
-            AudioClip clip = button.TryGetComponent(out AudioSource component) ? component.clip : EnumToAudio[Sounds.widgetSwitch];
-            AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
-            handPlayer.PlayOneShot(clip, 0.2f);
-        }
+        if (button.Null()) return;
+        AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
+        handPlayer.PlayOneShot(button.TryGetComponent(out AudioSource component) ? component.clip : Sounds.widgetSwitch.AsAudioClip(), 0.2f);
     }
 
     #endregion

@@ -67,7 +67,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 _timer = 0f;
 
                 AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
-                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.activationGeneric], 0.2f);
+                handPlayer.PlayOneShot(Sounds.activationGeneric.AsAudioClip(), 0.2f);
             }
         }
 
@@ -116,7 +116,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
                 AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
-                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.deactivation], 0.2f);
+                handPlayer.PlayOneShot(Sounds.deactivation.AsAudioClip(), 0.2f);
 
                 ShortcutHandler.Instance.ExcecuteShortcut(_shortcut);
 

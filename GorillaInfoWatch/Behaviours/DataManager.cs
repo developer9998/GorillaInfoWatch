@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using GorillaInfoWatch.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

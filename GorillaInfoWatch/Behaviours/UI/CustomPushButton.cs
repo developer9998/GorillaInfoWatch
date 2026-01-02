@@ -27,7 +27,7 @@ internal class CustomPushButton : MonoBehaviour
         if (Active)
         {
             AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(handIndicator.isLeftHand);
-            handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.widgetButton], 0.2f);
+            handPlayer.PlayOneShot(Sounds.widgetButton.AsAudioClip(), 0.2f);
 
             GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
             OnButtonPush?.SafeInvoke(handIndicator.isLeftHand);
