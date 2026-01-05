@@ -2,7 +2,6 @@ using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
-using GorillaNetworking;
 using Photon.Realtime;
 using System;
 using System.Collections.Generic;
@@ -20,8 +19,6 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
     public VRRig Rig;
 
     public NetPlayer Player;
-
-    private static readonly Dictionary<string, SignificanceVisibility> _consentCache = [];
 
     public void Start()
     {
@@ -84,7 +81,6 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
             {
                 SignificanceVisibility consent = (SignificanceVisibility)Enum.ToObject(typeof(SignificanceVisibility), consentInteger);
                 Consent = consent;
-                _consentCache.AddOrUpdate(Player.UserId, consent);
                 SignificanceManager.Instance.CheckPlayer(Player, SignificanceCheckScope.Item | SignificanceCheckScope.Figure);
             }
         }
@@ -93,13 +89,5 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
             Logging.Fatal("Failed to make changes from properties");
             Logging.Error(ex);
         }
-    }
-
-    public static SignificanceVisibility GetTemporaryConsent(string userId) => _consentCache.TryGetValue(userId ?? "", out SignificanceVisibility consent) ? consent : SignificanceVisibility.None;
-
-    public static void RemoveTemporaryConsent(string userId)
-    {
-        if (!_consentCache.ContainsKey(userId)) return;
-        _consentCache.Remove(userId);
     }
 }

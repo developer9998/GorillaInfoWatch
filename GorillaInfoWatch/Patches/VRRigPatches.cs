@@ -9,7 +9,7 @@ namespace GorillaInfoWatch.Patches
     [HarmonyPatch(typeof(VRRig)), HarmonyWrapSafe]
     internal class VRRigPatches
     {
-        private static readonly HashSet<VRRig> initializedRigSet = [];
+        private static readonly HashSet<VRRig> initializedRigSet = [], requestedCosmeticRigSet = [];
 
         [HarmonyPatch(nameof(VRRig.NetInitialize)), HarmonyPostfix, HarmonyPriority(650)]
         public static void NetInitPatch(VRRig __instance) => initializedRigSet.Add(__instance);
@@ -18,7 +18,11 @@ namespace GorillaInfoWatch.Patches
         private static void PreDisablePatch(VRRig __instance) => __instance.TemporaryCosmeticEffects.Where(effect => effect.Key == EffectType.Skin).ForEach(__instance.RemoveTemporaryCosmeticEffects);
 
         [HarmonyPatch(nameof(VRRig.OnDisable)), HarmonyPostfix, HarmonyPriority(650)]
-        private static void PostDisablePatch(VRRig __instance) => initializedRigSet.Remove(__instance);
+        private static void PostDisablePatch(VRRig __instance)
+        {
+            initializedRigSet.Remove(__instance);
+            if (requestedCosmeticRigSet.Contains(__instance)) requestedCosmeticRigSet.Remove(__instance);
+        }
 
         [HarmonyPatch("IUserCosmeticsCallback.OnGetUserCosmetics"), HarmonyPriority(Priority.Low), HarmonyPostfix]
         private static void GetCosmeticsPatch(VRRig __instance)
@@ -31,7 +35,7 @@ namespace GorillaInfoWatch.Patches
         private static void UpdateCosmeticsPatch(VRRig __instance)
         {
             if (!IsValid(__instance)) return;
-            Events.OnRigUpdatedCosmetics?.SafeInvoke(__instance);
+            Events.OnRigUpdatedCosmetics?.SafeInvoke(__instance, requestedCosmeticRigSet.Add(__instance));
         }
 
         [HarmonyPatch(nameof(VRRig.UpdateName), typeof(bool)), HarmonyPostfix, HarmonyPriority(150)]

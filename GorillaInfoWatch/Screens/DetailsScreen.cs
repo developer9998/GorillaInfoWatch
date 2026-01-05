@@ -10,9 +10,9 @@ using UnityEngine;
 namespace GorillaInfoWatch.Screens
 {
     [ShowOnHomeScreen, PreserveScreenSection(ClearContent = true)]
-    internal class StatisticsScreen : InfoScreen
+    internal class DetailsScreen : InfoScreen
     {
-        public override string Title => "Statistics";
+        public override string Title => "Details";
 
         private int _gameModeRecordIndex;
 
@@ -44,7 +44,7 @@ namespace GorillaInfoWatch.Screens
             var gameModes = StatisticsManager.GameModeRecords;
             _gameModeRecordIndex = _gameModeRecordIndex.Wrap(0, gameModes.Count);
 
-            lines.Skip().Add($"Selected Game Mode: {gameModes[_gameModeRecordIndex].DisplayName}", new Widget_PushButton(IncrementGameMode, -1)
+            lines.Skip().Add($"Inspect Game Mode: {gameModes[_gameModeRecordIndex].DisplayName}", new Widget_PushButton(IncrementGameMode, -1)
             {
                 Colour = ColourPalette.Red,
                 Symbol = new Symbol(Symbols.Minus)
@@ -62,9 +62,8 @@ namespace GorillaInfoWatch.Screens
 
             var gameMode = gameModes[_gameModeRecordIndex];
             lines.Add($"Player Tags: {gameMode.TagCount}");
-            lines.Add($"Tagged: {gameMode.TaggedCount}");
+            lines.Add($"Players Tagged: {gameMode.TaggedCount}");
             lines.Add($"Rounds Played: {gameMode.RoundCount}");
-            if (gameMode.GameManager.GetType() != typeof(GorillaTagManager)) lines.Skip().BeginCentre().AppendColour("Game Mode data may be inaccurate outside of Infection", Color.red).EndAlign().AppendLine();
 
             return lines;
         }

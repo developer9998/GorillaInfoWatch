@@ -15,7 +15,7 @@ public class StatisticsManager : MonoBehaviour, IInitializable
 {
     public static ReadOnlyCollection<GameModeRecord> GameModeRecords;
 
-    private Dictionary<GorillaGameManager, GameModeRecord> _gameModeRecords = [];
+    private readonly Dictionary<GorillaGameManager, GameModeRecord> _gameModeRecords = [];
 
     public void Awake()
     {
@@ -37,11 +37,8 @@ public class StatisticsManager : MonoBehaviour, IInitializable
             .Select(gameManager => _gameModeRecords.SingleOrDefault(pair => pair.Key == gameManager))
             .Where(pair => pair.Value.IsTagBasedMode).ToList();
 
-        var sortedList = _gameModeRecords.ToList();
-        sortedList.Sort((pair1, pair2) => pair1.Value.DisplayName.CompareTo(pair2.Value.DisplayName));
-
-        _gameModeRecords = standardList.Concat(sortedList.Where(pair => pair.Value.IsTagBasedMode).Except(standardList)).ToDictionary(pair => pair.Key, pair => pair.Value);
-        GameModeRecords = _gameModeRecords.Values.ToList().AsReadOnly();
+        GameModeRecords = new([.. standardList.Concat(_gameModeRecords
+            .Where(pair => pair.Value.IsTagBasedMode).Except(standardList)).Select(pair => pair.Value)]);
     }
 
     public GameModeRecord GetRecord(GorillaGameManager gameManager)
@@ -101,7 +98,7 @@ public class StatisticsManager : MonoBehaviour, IInitializable
             _gameModeIndex = (int)gameModeType;
 
             MethodInfo methodInfo = AccessTools.Method(gameManager.GetType(), nameof(GorillaGameManager.LocalCanTag));
-            IsTagBasedMode = methodInfo != null && (methodInfo.IsDeclaredMember() || methodInfo.DeclaringType == typeof(GorillaTagManager));
+            IsTagBasedMode = methodInfo != null && methodInfo.DeclaringType != typeof(GorillaGameManager);
 
             Load();
         }

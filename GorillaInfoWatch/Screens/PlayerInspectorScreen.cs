@@ -130,11 +130,12 @@ namespace GorillaInfoWatch.Screens
             }
 
             bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
-            if (isInFriendList) array[(int)SignificanceLayer.Friend] = Main.Significance_Friend;
+            if (isInFriendList) array[(int)SignificanceLayer.Friend] = SignificanceManager.Significance_Friend;
 
-            if (player.IsMasterClient) array[(int)SignificanceLayer.Master] = Main.Significance_Master;
+            if (player.IsMasterClient) array[(int)SignificanceLayer.Master] = SignificanceManager.Significance_Master;
 
-            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before) array[(int)SignificanceLayer.RecentlyPlayed] = Main.Significance_RecentlyPlayed;
+            if (!isLocal && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before)
+                array[(int)SignificanceLayer.RecentlyPlayed] = SignificanceManager.Significance_RecentlyPlayed;
 
             if (array.Length > 0)
             {

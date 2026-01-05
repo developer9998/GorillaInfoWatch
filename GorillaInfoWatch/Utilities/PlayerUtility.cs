@@ -51,7 +51,7 @@ namespace GorillaInfoWatch.Utilities
 
         public static bool HasInfoWatch(NetPlayer player) => CheckNetworkedPlayer(player, component => component.HasInfoWatch, defaultValue: false, localValue: true);
 
-        public static SignificanceVisibility GetConsent(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: NetworkedPlayer.GetTemporaryConsent(player.UserId), localValue: SignificanceManager.Instance?.Visibility ?? SignificanceVisibility.None);
+        public static SignificanceVisibility GetSignificanceVisibility(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: SignificanceVisibility.None, localValue: SignificanceManager.Instance?.Visibility ?? SignificanceVisibility.None);
 
         public static T CheckNetworkedPlayer<T>(NetPlayer player, Func<NetworkedPlayer, T> predicate, T defaultValue, T localValue)
         {

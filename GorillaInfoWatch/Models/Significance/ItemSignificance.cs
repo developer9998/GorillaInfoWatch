@@ -29,20 +29,23 @@ public class ItemSignificance : PlayerSignificance
 
         string cosmeticAllowedString;
         CosmeticsController.CosmeticSet cosmeticSet;
+        VRRig targetRig;
 
         if (player.IsLocal)
         {
+            targetRig = GorillaTagger.Instance.offlineVRRig;
             cosmeticAllowedString = CosmeticsController.instance?.concatStringCosmeticsAllowed ?? string.Empty;
             cosmeticSet = CosmeticsController.instance?.currentWornSet ?? CosmeticsController.CosmeticSet.EmptySet;
         }
         else if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer rigContainer) && rigContainer.Rig.InitializedCosmetics)
         {
-            cosmeticAllowedString = rigContainer.Rig.concatStringOfCosmeticsAllowed ?? string.Empty;
-            cosmeticSet = rigContainer.Rig.cosmeticSet ?? CosmeticsController.CosmeticSet.EmptySet;
+            targetRig = rigContainer.Rig;
+            cosmeticAllowedString = targetRig.concatStringOfCosmeticsAllowed ?? string.Empty;
+            cosmeticSet = targetRig.cosmeticSet ?? CosmeticsController.CosmeticSet.EmptySet;
         }
         else return ItemState.None;
 
-        return cosmeticSet.items.Where(item => !item.isNullItem).Any(item => item.itemName == ItemId) ? ItemState.Equipped : (cosmeticAllowedString.Contains(ItemId) ? ItemState.Allowed : ItemState.None);
+        return cosmeticSet.items.Where(item => !item.isNullItem).Any(item => item.itemName == ItemId && (targetRig?.IsItemAllowed(ItemId) ?? true)) ? ItemState.Equipped : (cosmeticAllowedString.Contains(ItemId) ? ItemState.Allowed : ItemState.None);
     }
 
     internal enum ItemState

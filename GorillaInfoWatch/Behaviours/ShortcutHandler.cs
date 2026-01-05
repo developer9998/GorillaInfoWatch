@@ -9,7 +9,7 @@ internal class ShortcutHandler : MonoBehaviour, IInitializable
 {
     public static ShortcutHandler Instance { get; private set; }
 
-    public Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
+    public static Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
 
     public void Awake()
     {

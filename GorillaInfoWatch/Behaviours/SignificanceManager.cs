@@ -9,6 +9,7 @@ using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEngine;
 using GFriends = GorillaFriends.Main;
@@ -20,6 +21,14 @@ public class SignificanceManager : MonoBehaviour, IInitializable
 {
     public static SignificanceManager Instance { get; private set; }
     public SignificanceVisibility Visibility { get; private set; }
+
+    public static ReadOnlyCollection<FigureSignificance> Significance_Figures { get; private set; }
+    public static ReadOnlyCollection<ItemSignificance> Significance_Cosmetics { get; private set; }
+    public static PlayerSignificance Significance_Watch { get; private set; }
+    public static PlayerSignificance Significance_Verified { get; private set; }
+    public static PlayerSignificance Significance_Master { get; private set; }
+    public static PlayerSignificance Significance_Friend { get; private set; }
+    public static PlayerSignificance Significance_RecentlyPlayed { get; private set; }
 
     public event Action<NetPlayer, PlayerSignificance[]> OnSignificanceChanged;
 
@@ -42,13 +51,27 @@ public class SignificanceManager : MonoBehaviour, IInitializable
         NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
         RoomSystem.LeftRoomEvent += OnLeftRoom;
 
-        Events.OnRigRecievedCosmetics += OnGetUserCosmetics;
+        Events.OnRigRecievedCosmetics += OnPlayerCosmeticsRecieved;
         Events.OnRigUpdatedCosmetics += OnPlayerCosmeticsUpdated;
         CosmeticsV2Spawner_Dirty.OnPostInstantiateAllPrefabs2 += () => OnPlayerCosmeticsUpdated(GorillaTagger.Instance.offlineVRRig);
     }
 
-    public async void Start()
+    public async void Initialize()
     {
+        ModContent content = Main.Content;
+        Significance_Figures = Array.AsReadOnly(Array.ConvertAll(content.Figures, figure => (FigureSignificance)figure));
+        Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(content.Cosmetics, item => (ItemSignificance)item));
+        Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, "{0} is a user of GorillaInfoWatch");
+        Significance_Verified = new("Verified", Symbols.Verified, "{0} is marked as verified by the GorillaFriends mod");
+        Significance_Master = new("Master Client", Symbols.None, "{0} is the host (specifically the master client) of the room");
+        Significance_Friend = new("Friend", Symbols.None, "You have {0} added as a friend (with GorillaFriends)");
+        Significance_RecentlyPlayed = new("Recently Played", Symbols.None, "You have played with {0} recently (via. GorillaFriends)");
+
+        if (DataManager.Instance.HasData(Constants.DataEntry_Consent))
+            SetVisibility((SignificanceVisibility)DataManager.Instance.GetData<int>(Constants.DataEntry_Consent), false);
+        else
+            SetVisibility(SignificanceVisibility.None);
+
         if (NetworkSystem.Instance is not NetworkSystem netSys || PlayFabAuthenticator.instance is not PlayFabAuthenticator authenticator) return;
 
         await new WaitWhile(() =>
@@ -66,18 +89,6 @@ public class SignificanceManager : MonoBehaviour, IInitializable
         }
     }
 
-    public void Initialize()
-    {
-        if (DataManager.Instance.HasData(Constants.DataEntry_Consent))
-        {
-            SetVisibility((SignificanceVisibility)DataManager.Instance.GetData<int>(Constants.DataEntry_Consent), false);
-            if (PlayFabAuthenticator.instance.GetPlayFabPlayerId() is string playerId && !string.IsNullOrEmpty(playerId)) CheckPlayer(NetworkSystem.Instance.GetLocalPlayer(), SignificanceCheckScope.LocalPlayer);
-            return;
-        }
-
-        SetVisibility(SignificanceVisibility.None);
-    }
-
     public bool CheckPlayer(NetPlayer player, SignificanceCheckScope checkScope)
     {
         if (player is null) throw new ArgumentNullException(nameof(player));
@@ -85,17 +96,21 @@ public class SignificanceManager : MonoBehaviour, IInitializable
 
         PlayerSignificance[] array = _significance.ContainsKey(player) ? [.. _significance[player]] : [.. Enumerable.Repeat<PlayerSignificance>(null, _layerCount)];
 
-        if (checkScope.HasFlag(SignificanceCheckScope.RemovalCandidate) && _significance.ContainsKey(player) && !player.IsLocal)
+        if (checkScope.HasFlag(SignificanceCheckScope.RemovalCandidate))
         {
-            Logging.Info($"Removed significant player {player.GetName()}");
-            _significance.Remove(player);
-            OnSignificanceChanged?.SafeInvoke(player, null);
+            if (_significance.ContainsKey(player))
+            {
+                Logging.Info($"Removed significant player {player.GetName()}");
+                _significance.Remove(player);
+                OnSignificanceChanged?.SafeInvoke(player, null);
+            }
+
             return false;
         }
 
         if (checkScope.HasFlag(SignificanceCheckScope.Figure))
         {
-            array[(int)SignificanceLayer.Figure] = UseConsensualSignificance(player, (Array.Find(Main.Significance_Figures.ToArray(), figure => figure.IsValid(player)) is FigureSignificance figure) ? figure : null);
+            array[(int)SignificanceLayer.Figure] = UseVisibleSignificance(player, (Array.Find(Significance_Figures.ToArray(), figure => figure.IsValid(player)) is FigureSignificance figure) ? figure : null);
         }
 
         // Position 1 (array[1]) in array is used in PlayerInspectorScreen which may occupy the friend significance object in that particular circumstance
@@ -103,26 +118,26 @@ public class SignificanceManager : MonoBehaviour, IInitializable
 
         if (checkScope.HasFlag(SignificanceCheckScope.Item))
         {
-            var tuple = Main.Significance_Cosmetics.Select(cosmetic => Tuple.Create(cosmetic, cosmetic.GetState(player)));
+            var tuple = Significance_Cosmetics.Select(cosmetic => Tuple.Create(cosmetic, cosmetic.GetState(player)));
             var element = tuple.FirstOrDefault(element => element.Item2 > ItemSignificance.ItemState.None);
-            array[(int)SignificanceLayer.Item] = element != null ? ((element?.Item2 == ItemSignificance.ItemState.Allowed) ? UseConsensualSignificance(player, element.Item1) : element?.Item1) : null;
+            array[(int)SignificanceLayer.Item] = element != null ? ((element?.Item2 == ItemSignificance.ItemState.Allowed) ? UseVisibleSignificance(player, element.Item1) : element?.Item1) : null;
         }
 
         if (checkScope.HasFlag(SignificanceCheckScope.InfoWatch))
         {
-            array[(int)SignificanceLayer.InfoWatch] = PlayerUtility.HasInfoWatch(player) ? Main.Significance_Watch : null;
+            array[(int)SignificanceLayer.InfoWatch] = PlayerUtility.HasInfoWatch(player) ? Significance_Watch : null;
         }
 
         if (checkScope.HasFlag(SignificanceCheckScope.Verified))
         {
-            array[(int)SignificanceLayer.Verified] = GFriends.IsVerified(player.UserId) ? Main.Significance_Verified : null;
+            array[(int)SignificanceLayer.Verified] = GFriends.IsVerified(player.UserId) ? Significance_Verified : null;
         }
 
         // Add record if player doesn't have any
         if (!_significance.ContainsKey(player))
         {
             Logging.Message($"Added significant player {player.GetName()}");
-            Logging.Info(string.Join(", ", array.Where(item => item != null).Select(item => item.Title)));
+            array.Select(element => element?.Title ?? "None").Select((element, index) => new { element, index }).ForEach(a => Logging.Info($"{(SignificanceLayer)a.index}: {a.element}"));
             _significance.Add(player, array);
             OnSignificanceChanged?.SafeInvoke(player, array);
             return true;
@@ -132,7 +147,7 @@ public class SignificanceManager : MonoBehaviour, IInitializable
         if (!_significance[player].SequenceEqual(array))
         {
             Logging.Message($"Changed significant player {player.GetName()}");
-            Logging.Info(string.Join(", ", array.Where(item => item != null).Select(item => item.Title)));
+            array.Select(element => element?.Title ?? "None").Select((element, index) => new { element, index }).ForEach(a => Logging.Info($"{(SignificanceLayer)a.index}: {a.element}"));
             _significance[player] = array;
             OnSignificanceChanged?.SafeInvoke(player, array);
             return true;
@@ -154,12 +169,12 @@ public class SignificanceManager : MonoBehaviour, IInitializable
         if (saveData) DataManager.Instance.SetData(Constants.DataEntry_Consent, (int)visibility);
     }
 
-    public PlayerSignificance UseConsensualSignificance(NetPlayer player, PlayerSignificance significance)
+    public PlayerSignificance UseVisibleSignificance(NetPlayer player, PlayerSignificance significance)
     {
         if (significance == null) return significance;
         SignificanceVisibility significanceVisibility = significance.Visibility;
         if (significanceVisibility == SignificanceVisibility.None) return significance;
-        SignificanceVisibility playerVisibility = PlayerUtility.GetConsent(player);
+        SignificanceVisibility playerVisibility = PlayerUtility.GetSignificanceVisibility(player);
         return (playerVisibility & significanceVisibility) == significanceVisibility ? significance : null;
     }
 
@@ -167,17 +182,20 @@ public class SignificanceManager : MonoBehaviour, IInitializable
 
     #region Events
 
-    public void OnGetUserCosmetics(VRRig rig)
+    public void OnPlayerCosmeticsRecieved(VRRig rig)
     {
         NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
-        if (player == null || player.IsNull || player.IsLocal || rig.isOfflineVRRig || rig.isLocal) return;
+        if (player == null || player.IsNull || player.IsLocal) return;
 
-        CheckPlayer(player, SignificanceCheckScope.Item);
-        if (GetSignificance(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
+        Logging.Message($"{player.GetName()} Cosmetics: {rig.concatStringOfCosmeticsAllowed}");
+
+        if (CheckPlayer(player, SignificanceCheckScope.Item) && GetSignificance(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
         {
+            Logging.Info($"Special Cosmetic (OnPlayerCosmeticsRecieved): {item.Title}");
+
             string userId = player.UserId;
             string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
-            Notifications.SendNotification(new($"A notable cosmetic was detected", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+            Notifications.SendNotification(new($"A special cosmetic has been identified", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -185,10 +203,26 @@ public class SignificanceManager : MonoBehaviour, IInitializable
         }
     }
 
-    public void OnPlayerCosmeticsUpdated(VRRig rig)
+    public void OnPlayerCosmeticsUpdated(VRRig rig) => OnPlayerCosmeticsUpdated(rig, false);
+
+    public void OnPlayerCosmeticsUpdated(VRRig rig, bool showNotification)
     {
         NetPlayer player = rig.isOfflineVRRig ? NetworkSystem.Instance.GetLocalPlayer() : (rig.Creator ?? rig.OwningNetPlayer);
-        if (player != null && !player.IsNull) CheckPlayer(player, SignificanceCheckScope.Item);
+        if (player == null || player.IsNull) return;
+
+        bool result = CheckPlayer(player, SignificanceCheckScope.Item);
+        if (showNotification && result && !player.IsLocal && GetSignificance(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
+        {
+            Logging.Info($"Special Cosmetic (OnPlayerCosmeticsUpdated): {item.Title}");
+
+            string userId = player.UserId;
+            string displayName = CosmeticsController.instance.GetItemDisplayName(CosmeticsController.instance.GetItemFromDict(item.ItemId));
+            Notifications.SendNotification(new($"A special cosmetic has been identified", displayName, 5, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
+            {
+                player = PlayerUtility.GetPlayer(userId);
+                if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
+            })));
+        }
     }
 
     public void OnJoinedRoom()
@@ -226,7 +260,7 @@ public class SignificanceManager : MonoBehaviour, IInitializable
             return;
         }
 
-        if (PlayerUtility.GetConsent(player).HasFlag(SignificanceVisibility.Figure) && GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
+        if (GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
             Notifications.SendNotification(new("A notable user has joined", player.GetName().EnforcePlayerNameLength(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.NickName.SanitizeName()}", delegate ()
             {
@@ -252,26 +286,24 @@ public class SignificanceManager : MonoBehaviour, IInitializable
             goto CheckPlayer;
         }
 
-        if (PlayerUtility.GetConsent(player).HasFlag(SignificanceVisibility.Figure) && GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
+        if (GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
             Notifications.SendNotification(new("A notable user has left", player.GetName().EnforcePlayerNameLength(), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 
     CheckPlayer:
-
         CheckPlayer(player, SignificanceCheckScope.PlayerLeft);
-        NetworkedPlayer.RemoveTemporaryConsent(userId);
     }
 
     public void OnLeftRoom()
     {
-        var playersInRoom = _significance.Keys.Where(player => player.IsNull || !player.IsLocal).ToArray();
-        for (int i = 0; i < playersInRoom.Length; i++)
+        NetPlayer[] significantPlayers = [.. _significance.Keys.Where(player => player == null || player.IsNull || !player.IsLocal)];
+
+        for (int i = 0; i < significantPlayers.Length; i++)
         {
-            var player = playersInRoom[i];
+            NetPlayer player = significantPlayers[i];
             CheckPlayer(player, SignificanceCheckScope.PlayerLeft);
-            NetworkedPlayer.RemoveTemporaryConsent(!player.IsNull ? player.UserId : string.Empty);
         }
     }
 

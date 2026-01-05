@@ -1,6 +1,7 @@
 ﻿using GorillaExtensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
+using GorillaInfoWatch.Models.UserInput;
 using GorillaInfoWatch.Utilities;
 using UnityEngine;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
@@ -32,16 +33,18 @@ public class Trigger : MonoBehaviour
 
             Watch localWatch = Watch.LocalWatch;
 
+            bool active = !panel.Active;
+
             if (localWatch.MenuStateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
             {
                 Notifications.OpenNotification(notification, true);
                 localWatch.MenuStateMachine.SwitchState(subState.previousState);
 
-                panel.SetActive(true);
-                return;
+                active = true;
             }
 
-            panel.SetActive(!panel.Active);
+            panel.SetActive(active);
+            if (active) UserInput.Instance.ProcessBinding(UserInputBinding.Return);
         }
     }
 }
