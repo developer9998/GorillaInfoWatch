@@ -366,6 +366,7 @@ public class Main : MonoBehaviourPunCallbacks
         _homeScreen.SetEntries([.. _screens.Values]);
         LoadScreen(_homeScreen);
 
+#if RELEASE
         CheckVersion(result =>
         {
             if (!result.isOutdated) return;
@@ -377,6 +378,7 @@ public class Main : MonoBehaviourPunCallbacks
             _panelReturnButton.gameObject.SetActive(false);
             _panelInboxButton.gameObject.SetActive(false);
         });
+#endif
 
         RefreshInbox();
 
