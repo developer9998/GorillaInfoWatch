@@ -187,7 +187,7 @@ public class SignificanceManager : MonoBehaviour, IInitializable
         NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
         if (player == null || player.IsNull || player.IsLocal) return;
 
-        Logging.Message($"{player.GetName()} Cosmetics: {rig.concatStringOfCosmeticsAllowed}");
+        Logging.Message($"{player.GetName()} Cosmetics: {rig.rawCosmeticString}");
 
         if (CheckPlayer(player, SignificanceCheckScope.Item) && GetSignificance(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
         {

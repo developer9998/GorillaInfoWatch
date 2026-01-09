@@ -40,7 +40,7 @@ public class ItemSignificance : PlayerSignificance
         else if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer rigContainer) && rigContainer.Rig.InitializedCosmetics)
         {
             targetRig = rigContainer.Rig;
-            cosmeticAllowedString = targetRig.concatStringOfCosmeticsAllowed ?? string.Empty;
+            cosmeticAllowedString = targetRig.rawCosmeticString ?? string.Empty;
             cosmeticSet = targetRig.cosmeticSet ?? CosmeticsController.CosmeticSet.EmptySet;
         }
         else return ItemState.None;
