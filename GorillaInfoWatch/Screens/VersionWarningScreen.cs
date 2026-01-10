@@ -7,7 +7,7 @@ namespace GorillaInfoWatch.Screens
     {
         public override string Title => "GorillaInfoWatch is outdated!";
 
-        public static string LatestVersion;
+        public static string LatestVersion = string.Empty;
 
         public override InfoContent GetContent()
         {

@@ -38,9 +38,18 @@ public enum UserInputBinding
     B,
     N,
     M,
+    Minus,
+    Equal,
+    LeftBracket,
+    RightBracket,
+    SemiColon,
+    Apostrophe,
+    Comma,
+    Period,
+    Slash,
     Return,
     Delete,
     Enter,
-    Space
-    //Shift
+    Space,
+    Shift
 }

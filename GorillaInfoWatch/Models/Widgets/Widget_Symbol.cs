@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace GorillaInfoWatch.Models.Widgets;
 
-public class Widget_Symbol : Widget_Base
+public sealed class Widget_Symbol : Widget_Base
 {
     public override bool Modification => Settings != null;
     public override float Depth => 3f;

@@ -9,8 +9,6 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 
-// Easily the messiest class in the entire mod :3
-
 namespace GorillaInfoWatch.Behaviours.UI;
 
 public class PanelLine : MonoBehaviour
@@ -20,6 +18,7 @@ public class PanelLine : MonoBehaviour
     public RectTransform container, containerLeftAlign, containerRightAlign;
 
     public PushButton Button;
+    public PromptButton PromptButton;
     public SnapSlider SnapSlider;
     public Switch Switch;
     public GameObject Symbol;
@@ -39,6 +38,7 @@ public class PanelLine : MonoBehaviour
         container = transform.Find("Widgets") as RectTransform;
         Symbol = container.Find("Symbol").gameObject;
         Button = container.Find("Button").gameObject.GetOrAddComponent<PushButton>();
+        PromptButton = container.Find("PromptButton").gameObject.GetOrAddComponent<PromptButton>();
         Switch = container.Find("Switch").gameObject.GetOrAddComponent<Switch>();
         SnapSlider = container.Find("Slider").gameObject.GetOrAddComponent<SnapSlider>();
 
@@ -50,6 +50,7 @@ public class PanelLine : MonoBehaviour
     {
         Symbol.SetActive(false);
         Button.gameObject.SetActive(false);
+        PromptButton.gameObject.SetActive(false);
         Switch.gameObject.SetActive(false);
         SnapSlider.gameObject.SetActive(false);
     }

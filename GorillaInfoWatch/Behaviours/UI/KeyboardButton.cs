@@ -1,16 +1,21 @@
 ﻿using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.UserInput;
 using System;
+using TMPro;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Models.UserInput;
+namespace GorillaInfoWatch.Behaviours.UI;
 
-internal class Key : MonoBehaviour
+internal class KeyboardButton : MonoBehaviour
 {
+    public static event Action<UserInputBinding> OnKeyClicked;
+
     public UserInputBinding Binding;
 
     public bool IsLargeKey;
 
-    public static event Action<UserInputBinding> OnKeyClicked;
+    public TMP_Text Text;
 
     private bool CanClick => Time.time > (_clickTime + 0.25f);
 
@@ -28,6 +33,8 @@ internal class Key : MonoBehaviour
 
     public void Awake()
     {
+        Text = transform.GetChild(0).GetComponent<TMP_Text>();
+
         _colour = ColourPalette.Button;
 
         _meshRenderer = GetComponent<Renderer>();

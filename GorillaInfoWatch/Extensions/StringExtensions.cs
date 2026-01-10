@@ -27,7 +27,7 @@ public static class StringExtensions
 
     public static string ToTitleCase(this string original, bool forceLower = true) => TextInfo.ToTitleCase(forceLower ? original.ToLower() : original);
 
-    public static string EnforceLength(this string str, int maxLength) => str.Length > maxLength ? str[..maxLength] : str;
+    public static string LimitLength(this string str, int maxLength) => str.Length > maxLength ? str[..maxLength] : str;
 
-    public static string EnforcePlayerNameLength(this string str) => str.EnforceLength(12);
+    public static string EnforcePlayerNameLength(this string str) => str.LimitLength(12);
 }
