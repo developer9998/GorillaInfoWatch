@@ -59,7 +59,7 @@ namespace GorillaInfoWatch.Screens
             lines.Append("In ").Append(configuredPrivacy ? $"Room {NetworkSystem.Instance.RoomName}" : $"{(roomPrivacy ? "Private" : "Public")} Room").Append(": ");
 
             string gameModeString = NetworkSystem.Instance.GameModeString;
-            int maxPlayers = (RoomSystem.UseRoomSizeOverride || NetworkSystem.Instance is not NetworkSystemPUN) ? RoomSystem.GetRoomSize(gameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
+            int maxPlayers = (RoomSystem.UseRoomSizeOverride || NetworkSystem.Instance is not NetworkSystemPUN) ? RoomSystem.GetCurrentRoomExpectedSize() : PhotonNetwork.CurrentRoom.MaxPlayers;
             lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => LoadScreen<RoomInspectorScreen>())
             {
                 Colour = ColourPalette.Blue,

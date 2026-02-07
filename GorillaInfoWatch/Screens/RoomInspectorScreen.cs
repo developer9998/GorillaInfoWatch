@@ -74,7 +74,7 @@ namespace GorillaInfoWatch.Screens
             lines.Append("Privacy: ").AppendLine(PhotonNetwork.CurrentRoom.IsOpen ? privacyString : "Closed");
 
             int playerCount = NetworkSystem.Instance.RoomPlayerCount;
-            int maxPlayers = RoomSystem.UseRoomSizeOverride ? RoomSystem.GetRoomSize(NetworkSystem.Instance.GameModeString) : PhotonNetwork.CurrentRoom.MaxPlayers;
+            int maxPlayers = RoomSystem.UseRoomSizeOverride ? RoomSystem.GetCurrentRoomExpectedSize() : PhotonNetwork.CurrentRoom.MaxPlayers;
             lines.Append("Capacity: ").BeginColour(playerCount == maxPlayers ? ColourPalette.Green.GetInitialColour() : Color.white).Append(playerCount).Append(" out of ").Append(maxPlayers).EndColour().AppendLine();
 
             lines.Skip();

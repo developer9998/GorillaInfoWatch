@@ -25,7 +25,7 @@ public class StatisticsManager : MonoBehaviour, IInitializable
 
     public void Initialize()
     {
-        GameMode.GameModeZoneMapping.init();
+        GameMode.GameModeZoneMapping.Init();
 
         IEnumerable<GorillaGameManager> activeGameManagers = GameMode.GameModeZoneMapping.zoneGameModes
             .Where(element => !element.zone.Contains(GTZone.customMaps)).SelectMany(element => element.modes)
