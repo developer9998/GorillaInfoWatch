@@ -29,7 +29,7 @@ internal class ShiftButton : MonoBehaviour
 
         _meshRenderer = GetComponent<Renderer>();
         _propertyBlock = new MaterialPropertyBlock();
-        
+
     }
 
     public void OnEnable()

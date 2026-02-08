@@ -9,7 +9,6 @@ using System;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -25,8 +24,8 @@ namespace GorillaInfoWatch.Screens
 
         public PlayerInspectorScreen()
         {
-            _muteColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), Color.red);
-            _friendColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), GFriends.m_clrFriend);
+            _muteColour = ColourPalette.CreatePalette(ColourPalette.Button.GetInitialColour(), Color.red);
+            _friendColour = ColourPalette.CreatePalette(ColourPalette.Button.GetInitialColour(), FriendUtility.FriendColour);
         }
 
         public override void OnScreenLoad()
@@ -99,23 +98,27 @@ namespace GorillaInfoWatch.Screens
 
             bool isFriend = false;
 
-            if (!isLocal)
+            if (isLocal) goto Significance;
+
+            lines.Skip();
+
+            lines.Add(rigContainer.Muted ? "Unmute Player" : "Mute Player", new Widget_Switch(rigContainer.Muted, OnMuteButtonClick, player)
             {
-                lines.Skip();
+                Colour = _muteColour
+            });
 
-                lines.Add(rigContainer.Muted ? "Unmute Player" : "Mute Player", new Widget_Switch(rigContainer.Muted, OnMuteButtonClick, player)
-                {
-                    Colour = _muteColour
-                });
-
-                isFriend = GFriends.IsFriend(UserId);
+            if (FriendUtility.HasFriendSupport)
+            {
+                isFriend = FriendUtility.IsFriend(UserId);
                 lines.Add(isFriend ? "Remove Friend" : "Add Friend", new Widget_Switch(isFriend, OnFriendButtonClick, player)
                 {
                     Colour = _friendColour
                 });
             }
 
-            #region Significance
+        #region Significance
+
+        Significance:
 
             LineBuilder significanceLines = new();
 
@@ -129,12 +132,12 @@ namespace GorillaInfoWatch.Screens
                 }
             }
 
-            bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
+            bool isInFriendList = !isLocal && FriendUtility.IsInFriendList(player.UserId);
             if (isInFriendList) array[(int)SignificanceLayer.Friend] = SignificanceManager.Significance_Friend;
 
             if (player.IsMasterClient) array[(int)SignificanceLayer.Master] = SignificanceManager.Significance_Master;
 
-            if (!isLocal && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before)
+            if (!isLocal && !FriendUtility.NeedToCheckRecently(UserId) && FriendUtility.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == FriendUtility.RecentlyPlayed.Before)
                 array[(int)SignificanceLayer.RecentlyPlayed] = SignificanceManager.Significance_RecentlyPlayed;
 
             if (array.Length > 0)

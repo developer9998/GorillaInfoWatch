@@ -179,7 +179,7 @@ internal class UserInput : MonoBehaviour
     {
         _useSpecialCharacters = useSpecialCharacters;
 
-        foreach(var key in _keys)
+        foreach (var key in _keys)
         {
             if (key.Binding.IsFunctionKey()) return;
 

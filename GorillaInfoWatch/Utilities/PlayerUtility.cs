@@ -9,7 +9,6 @@ using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Utilities
 {
@@ -113,10 +112,10 @@ namespace GorillaInfoWatch.Utilities
 
         public static void FriendPlayer(NetPlayer player, bool value)
         {
-            bool isFriend = GFriends.IsFriend(player.UserId);
+            bool isFriend = FriendUtility.IsFriend(player.UserId);
 
-            if (!value && isFriend) GFriends.RemoveFriend(player.UserId);
-            else if (value && !isFriend) GFriends.AddFriend(player.UserId);
+            if (!value && isFriend) FriendUtility.RemoveFriend(player.UserId);
+            else if (value && !isFriend) FriendUtility.AddFriend(player.UserId);
         }
 
         public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved, double maxCacheTime = double.MaxValue)

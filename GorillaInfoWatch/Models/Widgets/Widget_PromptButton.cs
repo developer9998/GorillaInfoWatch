@@ -21,7 +21,7 @@ public sealed class Widget_PromptButton(string input, int limit, UserInputBoard 
         // this requires a body
     }
 
-    public Widget_PromptButton(string input, EventHandler<UserInputArgs> submit): this(input, int.MaxValue, UserInputBoard.Standard, submit)
+    public Widget_PromptButton(string input, EventHandler<UserInputArgs> submit) : this(input, int.MaxValue, UserInputBoard.Standard, submit)
     {
         // this requires a body
     }

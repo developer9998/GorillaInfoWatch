@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEngine;
-using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Behaviours;
 
@@ -130,7 +129,7 @@ public class SignificanceManager : MonoBehaviour, IInitializable
 
         if (checkScope.HasFlag(SignificanceCheckScope.Verified))
         {
-            array[(int)SignificanceLayer.Verified] = GFriends.IsVerified(player.UserId) ? Significance_Verified : null;
+            array[(int)SignificanceLayer.Verified] = FriendUtility.IsVerified(player.UserId) ? Significance_Verified : null;
         }
 
         // Add record if player doesn't have any
@@ -240,9 +239,9 @@ public class SignificanceManager : MonoBehaviour, IInitializable
 
         string userId = player.UserId;
 
-        if (GFriends.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
+        if (FriendUtility.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
         {
-            Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
+            Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.FriendColour), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -250,9 +249,9 @@ public class SignificanceManager : MonoBehaviour, IInitializable
             return;
         }
 
-        if (GFriends.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
+        if (FriendUtility.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
         {
-            Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
+            Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.VerifiedColour), player.GetName().EnforcePlayerNameLength()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName().EnforcePlayerNameLength()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -274,15 +273,15 @@ public class SignificanceManager : MonoBehaviour, IInitializable
     {
         string userId = player.UserId;
 
-        if (GFriends.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
+        if (FriendUtility.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
         {
-            Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrFriend), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
+            Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.FriendColour), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 
-        if (GFriends.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
+        if (FriendUtility.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
         {
-            Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(GFriends.m_clrVerified), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
+            Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.VerifiedColour), player.GetName().EnforcePlayerNameLength()), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 

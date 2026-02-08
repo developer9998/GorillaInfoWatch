@@ -55,7 +55,7 @@ public static class EnumExtensions
     }
 
     public static char ToChar(this UserInputBinding binding) => binding.TryParseNumber(out int number) ? char.Parse(number.ToString()) : binding switch
-    { 
+    {
         UserInputBinding.Space => ' ',
         UserInputBinding.Minus => '-',
         UserInputBinding.Equal => '=',
