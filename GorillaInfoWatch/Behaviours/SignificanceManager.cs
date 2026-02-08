@@ -16,7 +16,7 @@ using UnityEngine;
 namespace GorillaInfoWatch.Behaviours;
 
 // This code also handles notifications surrounding players (for friends and verified/notable users joining/leaving/etc)
-public class SignificanceManager : MonoBehaviour, IInitializable
+public class SignificanceManager : MonoBehaviour, IInitializeCallback
 {
     public static SignificanceManager Instance { get; private set; }
     public SignificanceVisibility Visibility { get; private set; }

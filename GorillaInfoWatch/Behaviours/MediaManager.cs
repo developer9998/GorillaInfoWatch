@@ -15,23 +15,20 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-public class MediaManager : MonoBehaviour, IInitializable
+public class MediaManager : MonoBehaviour, IInitializeCallback
 {
     public static MediaManager Instance { get; private set; }
-
     public Dictionary<string, Session> Sessions { get; private set; } = [];
-
     public string FocussedSession { get; private set; } = null;
-
     public string ExecutablePath => Path.Combine(Application.streamingAssetsPath, "GorillaInfoWatch", "GorillaInfoMediaProcess.exe");
-
-    public ProcessStartInfo consoleStartInfo;
-
-    public Process consoleProcess;
 
     public event Action<Session> OnSessionFocussed, OnPlaybackStateChanged, OnMediaChanged, OnTimelineChanged;
 
-    private readonly Dictionary<string, Texture2D> thumbnailCache = [];
+    private ProcessStartInfo _startInfo;
+
+    private Process _process;
+
+    private readonly Dictionary<string, Texture2D> _thumbnailCache = [];
 
     public void Awake()
     {
@@ -66,7 +63,7 @@ public class MediaManager : MonoBehaviour, IInitializable
             return;
         }
 
-        consoleStartInfo = new ProcessStartInfo
+        _startInfo = new ProcessStartInfo
         {
             FileName = ExecutablePath,
             RedirectStandardInput = true,
@@ -75,21 +72,21 @@ public class MediaManager : MonoBehaviour, IInitializable
             CreateNoWindow = true
         };
 
-        consoleProcess = new()
+        _process = new()
         {
-            StartInfo = consoleStartInfo,
+            StartInfo = _startInfo,
             EnableRaisingEvents = true
         };
 
-        consoleProcess.OutputDataReceived += (sender, args) =>
+        _process.OutputDataReceived += (sender, args) =>
         {
             if (string.IsNullOrEmpty(args.Data)) return;
             OnDataReceived(args.Data);
         };
 
-        consoleProcess.Start();
+        _process.Start();
 
-        consoleProcess.BeginOutputReadLine();
+        _process.BeginOutputReadLine();
     }
 
     public bool HandleGameQuit()
@@ -194,7 +191,7 @@ public class MediaManager : MonoBehaviour, IInitializable
 
                         try
                         {
-                            if (!string.IsNullOrEmpty(base64String) && !thumbnailCache.TryGetValue(base64String, out texture))
+                            if (!string.IsNullOrEmpty(base64String) && !_thumbnailCache.TryGetValue(base64String, out texture))
                             {
                                 texture = new(2, 2)
                                 {
@@ -202,7 +199,7 @@ public class MediaManager : MonoBehaviour, IInitializable
                                     wrapMode = TextureWrapMode.Clamp
                                 };
                                 texture.LoadImage(Convert.FromBase64String(base64String));
-                                thumbnailCache.TryAdd(base64String, texture);
+                                _thumbnailCache.TryAdd(base64String, texture);
                             }
                         }
                         catch
@@ -245,6 +242,8 @@ public class MediaManager : MonoBehaviour, IInitializable
 
         if (!Directory.Exists(directoryName) || !File.Exists(ExecutablePath))
         {
+            // NOTE: Unity's web request functionality doesn't work as intended when downloading and writing this file, please avoid it
+
             using HttpClient client = new();
             using Stream stream = await client.GetStreamAsync("https://github.com/developer9998/WindowsMediaController/releases/download/1.0.0/GorillaInfoMediaProcess.exe");
 
@@ -258,17 +257,17 @@ public class MediaManager : MonoBehaviour, IInitializable
 
     public void QuitExecutable()
     {
-        if (consoleProcess != null && !consoleProcess.HasExited)
+        if (_process != null && !_process.HasExited)
         {
             try
             {
-                consoleProcess.StandardInput.WriteLine("quit");
-                consoleProcess.StandardInput.Flush();
+                _process.StandardInput.WriteLine("quit");
+                _process.StandardInput.Flush();
 
-                if (!consoleProcess.WaitForExit(2500))
+                if (!_process.WaitForExit(2500))
                 {
-                    consoleProcess.Kill();
-                    consoleProcess.WaitForExit();
+                    _process.Kill();
+                    _process.WaitForExit();
                 }
             }
             catch (Exception ex)
@@ -278,8 +277,8 @@ public class MediaManager : MonoBehaviour, IInitializable
             }
             finally
             {
-                consoleProcess.Dispose();
-                consoleProcess = null;
+                _process.Dispose();
+                _process = null;
             }
         }
     }

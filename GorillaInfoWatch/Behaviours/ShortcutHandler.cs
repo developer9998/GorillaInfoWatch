@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-internal class ShortcutHandler : MonoBehaviour, IInitializable
+internal class ShortcutHandler : MonoBehaviour, IInitializeCallback
 {
     public static ShortcutHandler Instance { get; private set; }
 

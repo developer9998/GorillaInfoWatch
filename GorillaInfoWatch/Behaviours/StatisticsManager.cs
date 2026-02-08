@@ -11,7 +11,7 @@ using Utilla.Utils;
 
 namespace GorillaInfoWatch.Behaviours;
 
-public class StatisticsManager : MonoBehaviour, IInitializable
+public class StatisticsManager : MonoBehaviour, IInitializeCallback
 {
     public static ReadOnlyCollection<GameModeRecord> GameModeRecords;
 

@@ -387,7 +387,7 @@ public class Main : MonoBehaviourPunCallbacks
         Notifications.OpenRequest += HandleOpenNotification;
         MothershipClientApiUnity.OnMessageNotificationSocket += OnMothershipMessageRecieved;
 
-        IInitializable[] initializable = gameObject.GetComponents<IInitializable>();
+        IInitializeCallback[] initializable = gameObject.GetComponents<IInitializeCallback>();
         initializable.ForEach(obj => obj.Initialize());
 
         enabled = true;
