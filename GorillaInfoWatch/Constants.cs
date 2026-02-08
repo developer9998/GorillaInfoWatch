@@ -3,7 +3,7 @@
     public class Constants
     {
         public const string GUID = "dev.gorillainfowatch";
-        public const string Name = "GorillaInfoWatch Early Access";
+        public const string Name = "GorillaInfoWatch";
         public const string Version = "1.1.2";
 
         public const int SectionCapacity = 14;
