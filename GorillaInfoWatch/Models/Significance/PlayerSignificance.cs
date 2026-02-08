@@ -5,16 +5,18 @@ public class PlayerSignificance
     public string Title { get; }
     public Symbols Symbol { get; }
 
-    public virtual string Description => string.IsNullOrEmpty(_description) ? string.Empty : _description;
-    public virtual SignificanceVisibility Visibility => SignificanceVisibility.None;
+    public virtual string Description
+    {
+        get => string.IsNullOrEmpty(internalDescription) ? string.Empty : internalDescription;
+    }
 
-    private readonly string _description;
+    private readonly string internalDescription;
 
     internal PlayerSignificance(string title, Symbols symbol, string description = null)
     {
         Title = title;
         Symbol = symbol;
-        _description = description;
+        internalDescription = description;
     }
 
     public virtual bool IsValid(NetPlayer player) => false;

@@ -1,50 +1,52 @@
-﻿using GorillaExtensions;
-using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
-using GorillaInfoWatch.Models.UserInput;
 using GorillaInfoWatch.Utilities;
 using UnityEngine;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
+using Player = GorillaLocomotion.GTPlayer;
 
 namespace GorillaInfoWatch.Behaviours.UI;
 
 public class Trigger : MonoBehaviour
 {
-    public Panel panel;
+    public Panel Menu;
 
-    private AudioSource _audioDevice;
+    public AudioSource AudioSource;
 
-    private readonly float _debounce = 0.3f;
+    private bool IsLeftHand => Watch.LocalWatch?.InLeftHand ?? true;
+    private Player.HandState Hand => IsLeftHand ? Player.Instance.leftHand : Player.Instance.rightHand;
+    private bool IsFacingUp => Vector3.Distance(Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f), Vector3.up) > 1.82f;
+    private bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (transform.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
+
+    private float touchTime;
 
     public void Start()
     {
-        _audioDevice = GetComponent<AudioSource>();
+        AudioSource = GetComponent<AudioSource>();
 
-        panel.SetActive(!XRUtility.IsXRSubsystemActive);
+        Menu.SetActive(!XRUtility.IsXRSubsystemActive);
     }
 
     public void OnTriggerEnter(Collider other)
     {
-        if (panel.UprightVector.IsLongerThan(1.82f) && panel.InView && other.TryGetComponent(out HandIndicator handIndicator) && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, _debounce))
+        if (IsFacingUp && InView && other.TryGetComponent(out HandIndicator handIndicator) && Time.realtimeSinceStartup > touchTime)
         {
+            touchTime = Time.realtimeSinceStartup + 0.3f;
+
             GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 
-            _audioDevice.PlayOneShot(_audioDevice.clip, 0.4f);
+            AudioSource.PlayOneShot(AudioSource.clip, 0.4f);
 
-            Watch localWatch = Watch.LocalWatch;
-
-            bool active = !panel.Active;
-
-            if (localWatch.MenuStateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
+            if (Watch.LocalWatch is Watch watch && watch.MenuStateMachine.CurrentState is Menu_Notification subState && subState.notification is Notification notification)
             {
                 Notifications.OpenNotification(notification, true);
-                localWatch.MenuStateMachine.SwitchState(subState.previousState);
+                watch.MenuStateMachine.SwitchState(subState.previousState);
 
-                active = true;
+                Menu.SetActive(true);
+                return;
             }
 
-            panel.SetActive(active);
-            if (active) UserInput.Instance.ProcessBinding(UserInputBinding.Return);
+            Menu.SetActive(!Menu.Active);
         }
     }
 }

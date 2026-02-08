@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GorillaInfoWatch.Models.Shortcuts;
+namespace GorillaInfoWatch.Models;
 
 [Flags]
 public enum ShortcutRestrictions

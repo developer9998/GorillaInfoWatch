@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
-using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;

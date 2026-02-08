@@ -3,7 +3,7 @@ using GorillaInfoWatch.Models.Widgets;
 using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours.UI.Widgets;
+namespace GorillaInfoWatch.Behaviours.UI;
 
 public class SnapSlider : MonoBehaviour
 {
@@ -65,7 +65,7 @@ public class SnapSlider : MonoBehaviour
     {
         if
         (
-            Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.5f, false)
+            Time.realtimeSinceStartup > PushButton.PressTime
             && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand
             && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this)
         )
@@ -106,7 +106,7 @@ public class SnapSlider : MonoBehaviour
         {
             currentHandIndicator = null;
             currentSnapSlider = null;
-            Main.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
+            PushButton.PressTime = Time.realtimeSinceStartup + 0.5f;
         }
     }
 

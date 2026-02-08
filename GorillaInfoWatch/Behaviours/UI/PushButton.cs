@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 
-namespace GorillaInfoWatch.Behaviours.UI.Widgets;
+namespace GorillaInfoWatch.Behaviours.UI;
 
 public class PushButton : MonoBehaviour
 {
@@ -26,6 +26,8 @@ public class PushButton : MonoBehaviour
     [SerializeField, HideInInspector]
     private bool bumped;
 
+    public static float PressTime;
+
     private float? currentValue = null;
     private float targetValue;
 
@@ -35,8 +37,6 @@ public class PushButton : MonoBehaviour
     [HideInInspector]
     private MaterialPropertyBlock matProperties;
     private readonly int matIndex = 1;
-
-    private bool _isReadOnly;
 
     public void Awake()
     {
@@ -104,8 +104,6 @@ public class PushButton : MonoBehaviour
                 }
             }
 
-            _isReadOnly = Widget is not null && Widget.IsReadOnly;
-
             return;
         }
 
@@ -114,7 +112,6 @@ public class PushButton : MonoBehaviour
         gameObject.SetActive(false);
         OnButtonPressed = null;
         OnReleased = null;
-        _isReadOnly = false;
     }
 
     public void OnDisable()
@@ -134,7 +131,7 @@ public class PushButton : MonoBehaviour
             renderer.SetPropertyBlock(matProperties, matIndex);
         }
 
-        if (bumped && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
+        if (bumped && Time.realtimeSinceStartup > PressTime)
         {
             bumped = false;
             targetValue = 0f;
@@ -144,13 +141,16 @@ public class PushButton : MonoBehaviour
 
     public void OnTriggerEnter(Collider collider)
     {
-        if (collider.TryGetComponent(out HandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, _isReadOnly ? 0.05f : 0.25f))
+        if (Time.realtimeSinceStartup > PressTime && collider.TryGetComponent(out HandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand)
         {
-            if (_isReadOnly)
+            if (Widget is not null && Widget.IsReadOnly)
             {
+                PressTime = Time.realtimeSinceStartup + (GorillaTagger.Instance.tapHapticDuration / 2f);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength * 2f, GorillaTagger.Instance.tapHapticDuration / 2f);
                 return;
             }
+
+            PressTime = Time.realtimeSinceStartup + 0.25f;
 
             bumped = true;
             targetValue = 1f;

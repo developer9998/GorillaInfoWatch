@@ -1,5 +1,4 @@
 using GorillaInfoWatch.Behaviours.UI;
-using GorillaInfoWatch.Behaviours.UI.Widgets;
 using GorillaInfoWatch.Extensions;
 using System;
 using UnityEngine;

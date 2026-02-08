@@ -2,38 +2,39 @@
 using TMPro;
 using UnityEngine.UI;
 
-namespace GorillaInfoWatch.Extensions;
-
-internal static class TextExtensions
+namespace GorillaInfoWatch.Extensions
 {
-    public static string[] GetArrayFromText(this TMP_Text component, string text, string prepend = null)
+    internal static class TextExtensions
     {
-        component.text = text;
-        component.ForceMeshUpdate(true, true);
-        CanvasUpdateRegistry.RegisterCanvasElementForGraphicRebuild(component);
-
-        TMP_TextInfo textInfo = component.textInfo;
-
-        string[] lines = new string[textInfo.lineCount];
-
-        StringBuilder str = new();
-
-        for (int i = 0; i < textInfo.lineCount; i++)
+        public static string[] GetArrayFromText(this TMP_Text component, string text, string prepend = null)
         {
-            TMP_LineInfo lineInfo = textInfo.lineInfo[i];
-            int startCharIndex = lineInfo.firstCharacterIndex;
-            int endCharIndex = startCharIndex + lineInfo.characterCount;
+            component.text = text;
+            component.ForceMeshUpdate(true, true);
+            CanvasUpdateRegistry.RegisterCanvasElementForGraphicRebuild(component);
 
-            for (int charIndex = startCharIndex; charIndex < endCharIndex; charIndex++)
+            TMP_TextInfo textInfo = component.textInfo;
+
+            string[] lines = new string[textInfo.lineCount];
+
+            StringBuilder str = new();
+
+            for (int i = 0; i < textInfo.lineCount; i++)
             {
-                TMP_CharacterInfo charInfo = textInfo.characterInfo[charIndex];
-                str.Append(charInfo.character);
+                TMP_LineInfo lineInfo = textInfo.lineInfo[i];
+                int startCharIndex = lineInfo.firstCharacterIndex;
+                int endCharIndex = startCharIndex + lineInfo.characterCount;
+
+                for (int charIndex = startCharIndex; charIndex < endCharIndex; charIndex++)
+                {
+                    TMP_CharacterInfo charInfo = textInfo.characterInfo[charIndex];
+                    str.Append(charInfo.character);
+                }
+
+                lines[i] = i != 0 || string.IsNullOrEmpty(prepend) ? str.ToString() : string.Concat(prepend, str.ToString());
+                str.Clear();
             }
 
-            lines[i] = i != 0 || string.IsNullOrEmpty(prepend) ? str.ToString() : string.Concat(prepend, str.ToString());
-            str.Clear();
+            return lines;
         }
-
-        return lines;
     }
 }

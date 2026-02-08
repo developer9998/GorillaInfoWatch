@@ -1,15 +1,16 @@
-﻿namespace GorillaInfoWatch.Extensions;
-
-internal static class MathExtensions
+﻿namespace GorillaInfoWatch.Extensions
 {
-    public static int Wrap(this int x, int min, int max)
+    internal static class MathExtensions
     {
-        int range = max - min;
-        int result = (x - min) % range;
-        if (result < 0)
+        public static int Wrap(this int x, int min, int max)
         {
-            result += range;
+            int range = max - min;
+            int result = (x - min) % range;
+            if (result < 0)
+            {
+                result += range;
+            }
+            return result + min;
         }
-        return result + min;
     }
 }

@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace GorillaInfoWatch.Models.Significance;
+namespace GorillaInfoWatch.Models;
 
 [Flags]
-public enum SignificanceVisibility
+public enum PlayerConsent
 {
     None = 0,
     Item = 1 << 0,

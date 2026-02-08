@@ -1,5 +1,4 @@
-﻿using GorillaExtensions;
-using GorillaInfoWatch.Utilities;
+﻿using GorillaInfoWatch.Utilities;
 using UnityEngine;
 using Player = GorillaLocomotion.GTPlayer;
 
@@ -7,40 +6,41 @@ namespace GorillaInfoWatch.Behaviours.UI;
 
 public class Panel : MonoBehaviour
 {
-    public Transform Origin, Head, Trigger;
+    public bool Active => gameObject.activeSelf;
+
+    public Transform Origin, Head;
 
     public Vector3 OriginOffset;
 
-    private bool _initialized = false;
-
-    public bool Active => gameObject.activeSelf;
-    public Vector3 UprightVector => Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f) - Vector3.up;
-    public bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (Trigger.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
+    private bool startup = false;
 
     private bool IsLeftHand => Watch.LocalWatch?.InLeftHand ?? true;
     private Player.HandState Hand => IsLeftHand ? Player.Instance.leftHand : Player.Instance.rightHand;
-
-    public void Start()
-    {
-        _initialized = true;
-        Head = Player.Instance.headCollider.transform;
-
-        if (XRUtility.IsXRSubsystemActive) return;
-
-        enabled = false;
-        SetActive(true);
-        SetPosition();
-
-        transform.position += Player.Instance.headCollider.transform.forward * 0.35f + Vector3.up * (Player.Instance.headCollider.radius * 3f);
-        transform.rotation = Quaternion.identity;
-    }
+    private bool IsFacingUp => Vector3.Distance(Hand.controllerTransform.right * (IsLeftHand ? 1f : -1f), Vector3.up) > 1.75f;
 
     public void OnEnable()
     {
-        if (!_initialized) return;
+        if (startup)
+        {
+            SetPosition();
+            SetRotation();
+        }
+    }
 
-        SetPosition();
-        SetRotation();
+    public void Start()
+    {
+        Head = Player.Instance.headCollider.transform;
+        startup = true;
+
+        if (!XRUtility.IsXRSubsystemActive)
+        {
+            enabled = false;
+            SetActive(true);
+
+            SetPosition();
+            transform.position += Player.Instance.headCollider.transform.forward * 0.35f + Vector3.up * (Player.Instance.headCollider.radius * 3f);
+            transform.rotation = Quaternion.identity;
+        }
     }
 
     public void LateUpdate()
@@ -51,7 +51,7 @@ public class Panel : MonoBehaviour
         transform.localScale = Vector3.one * 1.7f * GorillaTagger.Instance.offlineVRRig.lastScaleFactor;
 
         // Turn off the menu if we're not looking at it, or if our hand is facing down
-        if (UprightVector.IsShorterThan(1.75f)) gameObject.SetActive(false);
+        if (!IsFacingUp) gameObject.SetActive(false);
     }
 
     public void SetPosition()

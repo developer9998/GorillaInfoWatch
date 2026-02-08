@@ -3,7 +3,7 @@ using GorillaInfoWatch.Models.Widgets;
 using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Behaviours.UI.Widgets;
+namespace GorillaInfoWatch.Behaviours.UI;
 
 [RequireComponent(typeof(BoxCollider)), DisallowMultipleComponent]
 public class Switch : MonoBehaviour
@@ -25,8 +25,6 @@ public class Switch : MonoBehaviour
 
     [SerializeField, HideInInspector]
     private Gradient colour = ColourPalette.CreatePalette(ColourPalette.Red.Evaluate(0), ColourPalette.Green.Evaluate(0));
-
-    private bool _isReadOnly;
 
     public void Awake()
     {
@@ -60,8 +58,6 @@ public class Switch : MonoBehaviour
             needle.localPosition = Vector3.Lerp(min.localPosition, max.localPosition, targetValue);
             renderer.materials[1].color = colour.Evaluate(targetValue);
 
-            _isReadOnly = currentWidget is not null && currentWidget.IsReadOnly;
-
             return;
         }
 
@@ -70,7 +66,6 @@ public class Switch : MonoBehaviour
         currentValue = null;
         OnSwitchFlipped = null;
         OnReleased = null;
-        _isReadOnly = false;
     }
 
     public void OnDisable()
@@ -92,13 +87,16 @@ public class Switch : MonoBehaviour
 
     public void OnTriggerEnter(Collider collider)
     {
-        if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, _isReadOnly ? 0.05f : 0.25f))
+        if (Time.realtimeSinceStartup > PushButton.PressTime && collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand)
         {
-            if (_isReadOnly)
+            if (currentWidget is not null && currentWidget.IsReadOnly)
             {
+                PushButton.PressTime = Time.realtimeSinceStartup + (GorillaTagger.Instance.tapHapticDuration / 2f);
                 GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength * 2f, GorillaTagger.Instance.tapHapticDuration / 2f);
                 return;
             }
+
+            PushButton.PressTime = Time.realtimeSinceStartup + 0.25f;
 
             bumped ^= true;
             targetValue = Convert.ToInt32(bumped);

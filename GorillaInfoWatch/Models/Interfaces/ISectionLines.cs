@@ -2,7 +2,7 @@
 
 namespace GorillaInfoWatch.Models.Interfaces;
 
-public interface ILineBuilder
+public interface ISectionLines
 {
     public IEnumerable<SectionLine> SectionLines { get; }
 }

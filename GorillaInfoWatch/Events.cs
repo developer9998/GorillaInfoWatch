@@ -4,9 +4,11 @@ namespace GorillaInfoWatch
 {
     public class Events
     {
-        internal static Action<VRRig> OnRigNameUpdate, OnRigRecievedCosmetics;
+        internal static Action<VRRig> OnRigNameUpdate;
 
-        internal static Action<VRRig, bool> OnRigSetInvisibleToLocal, OnRigUpdatedCosmetics;
+        internal static Action<VRRig> OnRigRecievedCosmetics;
+
+        internal static Action<VRRig, bool> OnRigSetInvisibleToLocal;
 
         internal static Action<RotatingQuest> OnQuestCompleted;
 
