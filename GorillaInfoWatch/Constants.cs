@@ -3,7 +3,7 @@
     public class Constants
     {
         public const string GUID = "dev.gorillainfowatch";
-        public const string Name = "GorillaInfoWatch";
+        public const string Name = "GorillaInfoWatch Early Access";
         public const string Version = "1.1.2";
 
         public const int SectionCapacity = 14;
@@ -19,6 +19,6 @@
         public const string DataEntry_ShortcutName = "ShortcutName";
         public const string DataEntry_Consent = "Consent";
 
-        public const string Uri_LatestVersion = "https://raw.githubusercontent.com/developer9998/GorillaInfoWatch-Lite/main/LatestVersion.txt";
+        public const string Uri_LatestVersion = "https://raw.githubusercontent.com/developer9998/GorillaInfoWatch/main/LatestVersion.txt";
     }
 }
