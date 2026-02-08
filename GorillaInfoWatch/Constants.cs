@@ -19,6 +19,6 @@
         public const string DataEntry_ShortcutName = "ShortcutName";
         public const string DataEntry_Consent = "Consent";
 
-        public const string Uri_LatestVersion = "https://raw.githubusercontent.com/developer9998/GorillaInfoWatch-Lite/main/LatestVersion.txt";
+        public const string Uri_LatestVersion = "https://raw.githubusercontent.com/developer9998/GorillaInfoWatch/main/LatestVersion.txt";
     }
 }
