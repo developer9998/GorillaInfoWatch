@@ -1,14 +1,14 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
+using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
+using GorillaNetworking;
 using PlayFab;
 using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Utilities
 {
@@ -50,7 +50,7 @@ namespace GorillaInfoWatch.Utilities
 
         public static bool HasInfoWatch(NetPlayer player) => CheckNetworkedPlayer(player, component => component.HasInfoWatch, defaultValue: false, localValue: true);
 
-        public static PlayerConsent GetConsent(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: NetworkedPlayer.GetTemporaryConsent(player.UserId), localValue: SignificanceManager.Instance?.Consent ?? PlayerConsent.None);
+        public static SignificanceVisibility GetSignificanceVisibility(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: SignificanceVisibility.None, localValue: SignificanceManager.Instance?.Visibility ?? SignificanceVisibility.None);
 
         public static T CheckNetworkedPlayer<T>(NetPlayer player, Func<NetworkedPlayer, T> predicate, T defaultValue, T localValue)
         {
@@ -88,6 +88,14 @@ namespace GorillaInfoWatch.Utilities
             Logging.Warning($"No scoreboard lines detected for player {player.GetName().EnforcePlayerNameLength()} (what the fuck map are you in??)");
         }
 
+        public static bool HasActiveCosmetic(VRRig rig, string itemId)
+        {
+            if (!rig.InitializedCosmetics) return false;
+
+            CosmeticsController.CosmeticSet cosmeticSet = rig.cosmeticSet;
+            return cosmeticSet.items is CosmeticsController.CosmeticItem[] items && items.Where(item => !item.isNullItem).Any(item => item.itemName == itemId);
+        }
+
         public static void MutePlayer(NetPlayer player, bool value)
         {
             ProcessScoreboardLines(player, (scoreboardLine, isPrimaryLine) =>
@@ -104,10 +112,10 @@ namespace GorillaInfoWatch.Utilities
 
         public static void FriendPlayer(NetPlayer player, bool value)
         {
-            bool isFriend = GFriends.IsFriend(player.UserId);
+            bool isFriend = FriendUtility.IsFriend(player.UserId);
 
-            if (!value && isFriend) GFriends.RemoveFriend(player.UserId);
-            else if (value && !isFriend) GFriends.AddFriend(player.UserId);
+            if (!value && isFriend) FriendUtility.RemoveFriend(player.UserId);
+            else if (value && !isFriend) FriendUtility.AddFriend(player.UserId);
         }
 
         public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved, double maxCacheTime = double.MaxValue)

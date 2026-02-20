@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using GorillaInfoWatch.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -150,5 +149,11 @@ public class DataManager : MonoBehaviour
     {
         if (dataPerTypeDict.ContainsKey(dataType)) return;
         dataPerTypeDict.Add(dataType, []);
+    }
+
+    public enum DataLocation
+    {
+        Persistent,
+        Session
     }
 }

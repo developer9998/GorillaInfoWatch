@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace GorillaInfoWatch.Models;
+namespace GorillaInfoWatch.Models.Shortcuts;
 
 public class Shortcut
 {

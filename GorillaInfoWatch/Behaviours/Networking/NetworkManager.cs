@@ -36,11 +36,14 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
             SetProperty("Version", Constants.Version);
 
             PhotonNetwork.AddCallbackTarget(this);
+
             Application.quitting += delegate ()
             {
                 Logging.Message("Disabling NetworkHandler");
+
                 PhotonNetwork.RemoveCallbackTarget(this);
             };
+
             return;
         }
 

@@ -54,9 +54,6 @@
 		<Reference Include="Fusion.Runtime">
 			<HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
 		</Reference>
-		<Reference Include="GorillaFriends">
-		  <HintPath>$(PluginsPath)\GorillaFriends\GorillaFriends.dll</HintPath>
-		</Reference>
 		<Reference Include="KID">
 		  <HintPath>$(GameAssemblyPath)\KID.dll</HintPath>
 		</Reference>

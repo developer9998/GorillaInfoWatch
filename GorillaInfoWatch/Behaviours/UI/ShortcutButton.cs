@@ -5,6 +5,7 @@ using UnityEngine;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Models.Shortcuts;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 #endif
 
@@ -37,18 +38,8 @@ namespace GorillaInfoWatch.Behaviours.UI
 
         private float _activationTime;
 
-        private float _holdDuration = 0.35f;
-
-        private float _activationInterval = 1f;
-
         public void Start()
         {
-            _holdDuration = Configuration.ShortcutHoldDuration.Value;
-            Configuration.ShortcutHoldDuration.SettingChanged += (_, _) => _holdDuration = Configuration.ShortcutHoldDuration.Value;
-
-            _activationInterval = Configuration.ShortcutHoldDuration.Value;
-            Configuration.ShortcutInterval.SettingChanged += (_, _) => _activationInterval = Configuration.ShortcutInterval.Value;
-
             Material[] materials = buttonRenderer.materials;
             _material = materials[materialIndex] = new Material(materials[materialIndex]);
             buttonRenderer.materials = materials;
@@ -60,13 +51,13 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (_activated || _touching != null) return;
 
-            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand)
+            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
             {
                 _touching = handIndicator;
                 _timer = 0f;
 
                 AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
-                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.activationGeneric], 0.2f);
+                handPlayer.PlayOneShot(Sounds.activationGeneric.AsAudioClip(), 0.2f);
             }
         }
 
@@ -78,15 +69,17 @@ namespace GorillaInfoWatch.Behaviours.UI
             _timer = 0f;
 
             _material.color = _buttonColour.Evaluate(0);
+
+            Main.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
         }
 
         public void Update()
         {
             float time;
 
-            if (_activated && _activationTime > (Time.realtimeSinceStartup - _activationInterval))
+            if (_activated && _activationTime > (Time.realtimeSinceStartup - Configuration.ShortcutInterval.Value))
             {
-                time = Mathf.Clamp01(_activationTime - (Time.realtimeSinceStartup - _activationInterval));
+                time = Mathf.Clamp01(_activationTime - (Time.realtimeSinceStartup - Configuration.ShortcutInterval.Value));
                 _material.color = _buttonColour.Evaluate(Mathf.Clamp01(time * 2f));
             }
             else if (_activated)
@@ -101,7 +94,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 4f, Time.unscaledDeltaTime);
 
-            time = Mathf.Clamp01(_timer / _holdDuration);
+            time = Mathf.Clamp01(_timer / Configuration.ShortcutHoldDuration.Value);
             _material.color = _buttonColour.Evaluate(Mathf.Clamp01((time * 2f) - 1f));
 
             if (time < 1f) return;
@@ -115,7 +108,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 GorillaTagger.Instance.StartVibration(_touching.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
                 AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(_touching.isLeftHand);
-                handPlayer.PlayOneShot(Main.EnumToAudio[Sounds.deactivation], 0.2f);
+                handPlayer.PlayOneShot(Sounds.deactivation.AsAudioClip(), 0.2f);
 
                 ShortcutHandler.Instance.ExcecuteShortcut(_shortcut);
 

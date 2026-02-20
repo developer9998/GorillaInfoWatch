@@ -6,11 +6,9 @@ using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Utilities;
 using PlayFab.ClientModels;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using GFriends = GorillaFriends.Main;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -26,8 +24,8 @@ namespace GorillaInfoWatch.Screens
 
         public PlayerInspectorScreen()
         {
-            _muteColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), Color.red);
-            _friendColour = ColourPalette.CreatePalette(ColourPalette.Button.Evaluate(0), GFriends.m_clrFriend);
+            _muteColour = ColourPalette.CreatePalette(ColourPalette.Button.GetInitialColour(), Color.red);
+            _friendColour = ColourPalette.CreatePalette(ColourPalette.Button.GetInitialColour(), FriendUtility.FriendColour);
         }
 
         public override void OnScreenLoad()
@@ -100,52 +98,62 @@ namespace GorillaInfoWatch.Screens
 
             bool isFriend = false;
 
-            if (!isLocal)
+            if (isLocal) goto Significance;
+
+            lines.Skip();
+
+            lines.Add(rigContainer.Muted ? "Unmute Player" : "Mute Player", new Widget_Switch(rigContainer.Muted, OnMuteButtonClick, player)
             {
-                lines.Skip();
+                Colour = _muteColour
+            });
 
-                lines.Add(rigContainer.Muted ? "Unmute Player" : "Mute Player", new Widget_Switch(rigContainer.Muted, OnMuteButtonClick, player)
-                {
-                    Colour = _muteColour
-                });
-
-                isFriend = GFriends.IsFriend(UserId);
+            if (FriendUtility.HasFriendSupport)
+            {
+                isFriend = FriendUtility.IsFriend(UserId);
                 lines.Add(isFriend ? "Remove Friend" : "Add Friend", new Widget_Switch(isFriend, OnFriendButtonClick, player)
                 {
                     Colour = _friendColour
                 });
             }
 
-            #region Significance
+        #region Significance
+
+        Significance:
 
             LineBuilder significanceLines = new();
 
-            List<PlayerSignificance> list = [];
+            var array = Enumerable.Repeat<PlayerSignificance>(null, Enum.GetValues(typeof(SignificanceLayer)).Length).ToArray();
 
-            bool isInFriendList = !isLocal && GFriends.IsInFriendList(player.UserId);
-
-            if (SignificanceManager.Instance.GetSignificance(player, out PlayerSignificance[] plrSignificance))
+            if (SignificanceManager.Instance.GetSignificance(player, out PlayerSignificance[] playerSignificance))
             {
-                plrSignificance = [.. plrSignificance];
-                if (isInFriendList) plrSignificance[1] = Main.Significance_Friend;
-                Array.ForEach(Array.FindAll(plrSignificance, item => item != null), list.Add);
+                for (int i = 0; i < playerSignificance.Length; i++)
+                {
+                    array[i] = playerSignificance[i];
+                }
             }
 
-            if (!isLocal && !isInFriendList && !GFriends.NeedToCheckRecently(UserId) && GFriends.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == GFriends.eRecentlyPlayed.Before)
-                list.Add(Main.Significance_RecentlyPlayed);
+            bool isInFriendList = !isLocal && FriendUtility.IsInFriendList(player.UserId);
+            if (isInFriendList) array[(int)SignificanceLayer.Friend] = SignificanceManager.Significance_Friend;
 
-            if (player.IsMasterClient)
-                list.Add(Main.Significance_Master);
+            if (player.IsMasterClient) array[(int)SignificanceLayer.Master] = SignificanceManager.Significance_Master;
 
-            if (list.Count > 0)
+            if (!isLocal && !FriendUtility.NeedToCheckRecently(UserId) && FriendUtility.HasPlayedWithUsRecently(UserId) is var hasRecentlyPlayed && hasRecentlyPlayed.recentlyPlayed == FriendUtility.RecentlyPlayed.Before)
+                array[(int)SignificanceLayer.RecentlyPlayed] = SignificanceManager.Significance_RecentlyPlayed;
+
+            if (array.Length > 0)
             {
+                int number = 1;
+
                 StringBuilder str = new();
 
-                for (int i = 0; i < list.Count; i++)
+                for (int i = 0; i < array.Length; i++)
                 {
-                    PlayerSignificance significance = list[i];
+                    PlayerSignificance significance = array[i];
 
-                    str.Append(i + 1).Append(". ");
+                    if (significance == null) continue;
+
+                    str.Append(number).Append(". ");
+                    number++;
 
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
                     else str.Append(string.Format(_descriptionFormat, significance.Title, string.Format(significance.Description, normalizedName)));

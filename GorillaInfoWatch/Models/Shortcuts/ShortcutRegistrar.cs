@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using static GorillaInfoWatch.Models.Notification;
 
-namespace GorillaInfoWatch.Models;
+namespace GorillaInfoWatch.Models.Shortcuts;
 
 public abstract class ShortcutRegistrar
 {

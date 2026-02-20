@@ -1,5 +1,4 @@
-using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Extensions;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,13 +21,7 @@ namespace GorillaInfoWatch.Models
 
         public Symbol(Symbols symbol)
         {
-            if (!Main.EnumToSprite.TryGetValue(symbol, out Sprite sprite))
-            {
-                Logging.Warning($"Missing sprite for symbol {symbol.GetName()}");
-                return;
-            }
-
-            Sprite = sprite;
+            Sprite = symbol.AsSprite();
         }
 
         public static Symbol GetSharedSymbol(Symbols symbol)

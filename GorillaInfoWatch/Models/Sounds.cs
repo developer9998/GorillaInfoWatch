@@ -17,6 +17,8 @@
         error6,
         activationMain,
         activationGeneric,
-        deactivation
+        deactivation,
+        KeyPush,
+        KeyPushLarge
     }
 }

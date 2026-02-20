@@ -1,6 +1,7 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
+using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.Widgets;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,9 +41,10 @@ namespace GorillaInfoWatch.Screens
                         ShortcutHandler.Instance.ExcecuteShortcut(shortcut);
                     })
                     {
+                        Alignment = WidgetAlignment.Left,
                         Colour = ColourPalette.Green,
                         Symbol = Symbol.GetSharedSymbol(Symbols.Play)
-                    }, new Widget_Switch(ShortcutHandler.Instance.Shortcut == shortcut, (bool value) =>
+                    }, new Widget_Switch(ShortcutHandler.Shortcut == shortcut, (bool value) =>
                     {
                         ShortcutHandler.Instance.SetOrRemoveShortcut(shortcut);
                         SetContent();

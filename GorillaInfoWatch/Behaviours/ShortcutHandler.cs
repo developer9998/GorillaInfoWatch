@@ -1,15 +1,15 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
-using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Interfaces;
+using GorillaInfoWatch.Models.Shortcuts;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-internal class ShortcutHandler : MonoBehaviour, IInitialize
+internal class ShortcutHandler : MonoBehaviour, IInitializeCallback
 {
     public static ShortcutHandler Instance { get; private set; }
 
-    public Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
+    public static Shortcut Shortcut => Watch.LocalWatch.shortcutButton.Shortcut;
 
     public void Awake()
     {

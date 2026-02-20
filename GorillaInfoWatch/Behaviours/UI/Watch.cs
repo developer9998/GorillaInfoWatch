@@ -137,6 +137,10 @@ namespace GorillaInfoWatch.Behaviours.UI
             mediaNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Music").AddComponent<CustomPushButton>();
             mediaNavigationButton.OnButtonPush += _ => SetTab(WatchTab.MediaPlayer);
             mediaNavigationButton.Active = hasMediaSession;
+
+            MediaManager.Instance.OnSessionFocussed += OnSessionFocussed;
+            MediaManager.Instance.OnMediaChanged += OnMediaChanged;
+            MediaManager.Instance.OnTimelineChanged += OnTimelineChanged;
         }
 
         public void ConfigureWatchShared()
@@ -208,6 +212,72 @@ namespace GorillaInfoWatch.Behaviours.UI
             None = -1,
             Standard,
             MediaPlayer
+        }
+
+        #endregion
+
+        #region Media Controller
+
+        private void OnSessionFocussed(MediaManager.Session focussedSession)
+        {
+            if (!IsLocalWatch) return;
+
+            if (focussedSession != null)
+            {
+                OnMediaChanged(focussedSession);
+                OnTimelineChanged(focussedSession);
+                return;
+            }
+
+            if (hasMediaSession)
+            {
+                hasMediaSession = false;
+                mediaNavigationButton.Active = false;
+
+                if (currentTab == WatchTab.MediaPlayer) SetTab(WatchTab.Standard);
+            }
+        }
+
+        private void OnMediaChanged(MediaManager.Session session)
+        {
+            if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
+
+            trackTitle.text = session.Title;
+            trackAuthor.text = session.Artist;
+            trackThumbnail.sprite = session.Thumbnail;
+
+            bool isValidSession = session.Title != null && session.Title.Length > 0;
+
+            if (isValidSession != hasMediaSession)
+            {
+                hasMediaSession = isValidSession;
+                mediaNavigationButton.Active = isValidSession;
+
+                if (hasMediaSession) SetTab(WatchTab.MediaPlayer);
+                else if (currentTab == WatchTab.MediaPlayer) SetTab(WatchTab.Standard);
+            }
+
+            if (hasMediaSession)
+            {
+                NetworkManager.Instance.SetProperty("Title", session.Title);
+                NetworkManager.Instance.SetProperty("Artist", session.Artist);
+                NetworkManager.Instance.SetProperty("Length", session.EndTime);
+            }
+            else
+            {
+                NetworkManager.Instance.RemoveProperty("Title");
+                NetworkManager.Instance.RemoveProperty("Artist");
+                NetworkManager.Instance.RemoveProperty("Length");
+            }
+        }
+
+        private void OnTimelineChanged(MediaManager.Session session)
+        {
+            if (!IsLocalWatch || MediaManager.Instance.FocussedSession != session.Id) return;
+
+            trackElapsed.text = TimeSpan.FromSeconds(session.Position).ToString(@"mm\:ss");
+            trackRemaining.text = string.Concat("-", TimeSpan.FromSeconds(session.EndTime - session.Position).ToString(@"mm\:ss"));
+            trackProgression.value = (session.EndTime > 0) ? Mathf.Lerp(trackProgression.minValue, trackProgression.maxValue, Convert.ToSingle(Math.Round(session.Position / session.EndTime, 3))) : trackProgression.minValue;
         }
 
         #endregion

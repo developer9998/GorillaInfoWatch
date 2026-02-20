@@ -1,4 +1,4 @@
-﻿using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using Photon.Voice.Unity;
@@ -17,23 +17,23 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
 
     public NetPlayer Player = player;
 
-    private RigContainer playerRig;
-
-    private Recorder recorder;
-    private Sprite open_speaker, muted_speaker, force_mute_speaker;
-    private bool is_mute_manual;
-
     private Image Image => (Widget as Widget_Symbol).image;
+
+    private RigContainer _rigContainer;
+    private Recorder _recorder;
+    private bool _isPlayerAutoMuted;
+
+    private Sprite _spriteOpenSpeaker, _spriteMuteSpeaker, _spriteForceMuteSpeaker;
 
     public override void OnEnable()
     {
-        Main.EnumToSprite.TryGetValue(Symbols.OpenSpeaker, out open_speaker);
-        Main.EnumToSprite.TryGetValue(Symbols.MutedSpeaker, out muted_speaker);
-        Main.EnumToSprite.TryGetValue(Symbols.ForceMuteSpeaker, out force_mute_speaker);
+        _spriteOpenSpeaker = Symbols.OpenSpeaker.AsSprite();
+        _spriteMuteSpeaker = Symbols.MutedSpeaker.AsSprite();
+        _spriteForceMuteSpeaker = Symbols.ForceMuteSpeaker.AsSprite();
 
-        if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
+        if (VRRigCache.Instance.TryGetVrrig(Player, out _rigContainer))
         {
-            is_mute_manual = PlayerPrefs.HasKey(Player.UserId);
+            _isPlayerAutoMuted = PlayerPrefs.HasKey(Player.UserId);
             Image.enabled = false;
 
             SetSpeakerState();
@@ -44,46 +44,46 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
     {
         base.Update();
 
-        if (Player is not null && playerRig is not null && playerRig.Creator != Player)
+        if (Player is not null && _rigContainer is not null && _rigContainer.Creator != Player)
         {
             Logging.Info($"PlayerSpeaker for {Player.NickName} will be shut off");
             Enabled = false;
-            playerRig = null;
+            _rigContainer = null;
 
             return;
         }
 
-        if (playerRig is not null) SetSpeakerState();
+        if (_rigContainer is not null) SetSpeakerState();
     }
     public void SetSpeakerState()
     {
-        if (!is_mute_manual && playerRig.GetIsPlayerAutoMuted())
+        if (!_isPlayerAutoMuted && _rigContainer.GetIsPlayerAutoMuted())
         {
-            if (!Image.enabled || Image.sprite != force_mute_speaker)
+            if (!Image.enabled || Image.sprite != _spriteForceMuteSpeaker)
             {
-                Image.sprite = force_mute_speaker;
+                Image.sprite = _spriteForceMuteSpeaker;
                 Image.enabled = true;
             }
             return;
         }
 
-        if (playerRig.Muted)
+        if (_rigContainer.Muted)
         {
-            if (!Image.enabled || Image.sprite != muted_speaker)
+            if (!Image.enabled || Image.sprite != _spriteMuteSpeaker)
             {
-                Image.sprite = muted_speaker;
+                Image.sprite = _spriteMuteSpeaker;
                 Image.enabled = true;
             }
             return;
         }
 
-        if (playerRig.Rig.remoteUseReplacementVoice || playerRig.Rig.localUseReplacementVoice || GorillaComputer.instance.voiceChatOn == "FALSE")
+        if (_rigContainer.Rig.remoteUseReplacementVoice || _rigContainer.Rig.localUseReplacementVoice || GorillaComputer.instance.voiceChatOn == "FALSE")
         {
-            if (playerRig.Rig.SpeakingLoudness > playerRig.Rig.replacementVoiceLoudnessThreshold && !playerRig.ForceMute && !playerRig.Muted)
+            if (_rigContainer.Rig.SpeakingLoudness > _rigContainer.Rig.replacementVoiceLoudnessThreshold && !_rigContainer.ForceMute && !_rigContainer.Muted)
             {
-                if (!Image.enabled || Image.sprite != open_speaker)
+                if (!Image.enabled || Image.sprite != _spriteOpenSpeaker)
                 {
-                    Image.sprite = open_speaker;
+                    Image.sprite = _spriteOpenSpeaker;
                     Image.enabled = true;
                 }
                 return;
@@ -92,13 +92,13 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
             goto HideSpeaker;
         }
 
-        if (recorder == null) recorder = NetworkSystem.Instance.LocalRecorder; ;
+        if (_recorder == null) _recorder = NetworkSystem.Instance.LocalRecorder; ;
 
-        if ((playerRig.Voice != null && playerRig.Voice.IsSpeaking) || (playerRig.Rig.isLocal && recorder.IsCurrentlyTransmitting))
+        if ((_rigContainer.Voice != null && _rigContainer.Voice.IsSpeaking) || (_rigContainer.Rig.isLocal && _recorder.IsCurrentlyTransmitting))
         {
-            if (!Image.enabled || Image.sprite != open_speaker)
+            if (!Image.enabled || Image.sprite != _spriteOpenSpeaker)
             {
-                Image.sprite = open_speaker;
+                Image.sprite = _spriteOpenSpeaker;
                 Image.enabled = true;
             }
             return;

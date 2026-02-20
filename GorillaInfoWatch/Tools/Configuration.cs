@@ -13,6 +13,8 @@ namespace GorillaInfoWatch.Tools
 
         // Notifications
 
+        internal static ConfigEntry<NotificationSource> AllowedNotifcationSources;
+
         internal static ConfigEntry<float> NotifHapticAmplitude;
 
         internal static ConfigEntry<float> NotifHapticDuration;
@@ -42,6 +44,7 @@ namespace GorillaInfoWatch.Tools
 
             Orientation = File.Bind("General", "Preferred Hand", WatchHand.Left, "Which hand your watch is placed on");
 
+            AllowedNotifcationSources = File.Bind("Notifications", "Notification Sources", NotificationSource.All, "The list of sources you have allowed to send their respective notifications");
             NotifHapticAmplitude = File.Bind("Notifications", "Notification Haptic Amplitude", 0.04f, new ConfigDescription("The amplitude of the haptic sent when a notification is recieved", new AcceptableValueRange<float>(0.01f, 0.2f)));
             NotifHapticDuration = File.Bind("Notifications", "Notification Haptic Duration", 0.2f, new ConfigDescription("The duration of the haptic sent when a notification is recieved", new AcceptableValueRange<float>(0.05f, 0.3f)));
             SilentNotifHapticAmplitude = File.Bind("Notifications", "Silent Notification Haptic Amplitude", 0.2f, new ConfigDescription("The amplitude of the haptic sent when a silent notification is recieved", new AcceptableValueRange<float>(0.01f, 0.2f)));

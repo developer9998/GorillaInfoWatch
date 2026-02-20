@@ -64,7 +64,22 @@ namespace GorillaInfoWatch.Screens
             if (!methods.Contains("OnEnable") && !methods.Contains("OnDisable"))
                 lines.Add("<color=red>This mod may not support the behaviour state!");
 
-            return lines;
+            if (_configurableList == null) return lines;
+
+            PageBuilder pages = new();
+            pages.Add(Mod.Metadata.Name, lines);
+
+            foreach (ConfigurableSection section in _configurableList)
+            {
+                foreach (ConfigurableWrapper wrapper in section.Entries)
+                {
+                    lines = new();
+                    wrapper.WriteLines(lines);
+                    pages.Add(section.Title, lines);
+                }
+            }
+
+            return pages;
         }
 
         public void ToggleMod(bool value, object[] parameters)
