@@ -20,5 +20,7 @@
         public const string DataEntry_Consent = "Consent";
 
         public const string Uri_LatestVersion = "https://raw.githubusercontent.com/developer9998/GorillaInfoWatch/main/LatestVersion.txt";
+
+        internal const string GorillaFriendsGUID = "net.rusjj.gorillafriends";
     }
 }

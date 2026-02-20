@@ -11,6 +11,7 @@ using GorillaInfoWatch.Models.Interfaces;
 using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
+using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using HarmonyLib;

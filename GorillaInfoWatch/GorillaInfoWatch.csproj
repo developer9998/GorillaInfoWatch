@@ -22,10 +22,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="Content\watchbundle" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<EmbeddedResource Include="Content\watchbundle" />
 	</ItemGroup>
 
