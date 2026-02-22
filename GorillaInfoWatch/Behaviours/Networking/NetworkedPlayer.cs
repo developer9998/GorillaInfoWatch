@@ -1,10 +1,10 @@
+using ExitGames.Client.Photon;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
 using Photon.Realtime;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours.Networking;
@@ -22,14 +22,14 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
 
     public void Start()
     {
-        NetworkManager.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
+        // NetworkManager.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
 
         if (!HasInfoWatch && Player is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef) NetworkManager.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
     }
 
     public void OnDestroy()
     {
-        NetworkManager.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
+        // NetworkManager.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
 
         HasInfoWatch = false;
         if (Watch.Exists()) Watch.gameObject.Obliterate();
@@ -42,9 +42,9 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
         if (Watch.Exists()) Watch.gameObject.Obliterate();
     }
 
-    public void OnPlayerPropertyChanged(NetPlayer player, Dictionary<string, object> properties)
+    public void OnPlayerPropertyChanged(Hashtable properties)
     {
-        if (!enabled || player != Player) return;
+        if (!enabled) return;
 
         if (!HasInfoWatch)
         {
@@ -53,9 +53,6 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
             Logging.Message($"{Player.GetName()} has GorillaInfoWatch");
             SignificanceManager.Instance.CheckPlayer(Player, SignificanceCheckScope.InfoWatch);
         }
-
-        Logging.Message($"{player.NickName} has updated properties:");
-        properties.ForEach(element => Logging.Info($"{element.Key}: {element.Value}"));
 
         if (Watch.Null())
         {
