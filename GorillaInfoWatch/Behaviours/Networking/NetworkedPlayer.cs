@@ -22,15 +22,11 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
 
     public void Start()
     {
-        // NetworkManager.Instance.OnPlayerPropertyChanged += OnPlayerPropertyChanged;
-
         if (!HasInfoWatch && Player is PunNetPlayer punPlayer && punPlayer.PlayerRef is Player playerRef) NetworkManager.Instance.OnPlayerPropertiesUpdate(playerRef, playerRef.CustomProperties);
     }
 
     public void OnDestroy()
     {
-        // NetworkManager.Instance.OnPlayerPropertyChanged -= OnPlayerPropertyChanged;
-
         HasInfoWatch = false;
         if (Watch.Exists()) Watch.gameObject.Obliterate();
     }
