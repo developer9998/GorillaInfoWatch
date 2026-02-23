@@ -10,11 +10,9 @@ namespace GorillaInfoWatch.Screens
     public class HomeScreen : InfoScreen
     {
         public override string Title => Constants.Name;
-        public override string Description => "Created by Dev [dev9998] and Gizmo [gizmogoat]";
+        public override string Description => "Created by Dev/dev9998 and Gizmo/ggizmogoat";
 
-        internal readonly Dictionary<string, InfoScreen> entries = [];
-
-        internal readonly LineBuilder lineBuilder = new();
+        internal readonly List<(string title, InfoScreen screen, bool native)> entries = [];
 
         internal void SetEntries(List<InfoScreen> screens)
         {
@@ -23,28 +21,36 @@ namespace GorillaInfoWatch.Screens
             var nativeScreens = screens.Where(screen => screen.GetType().Assembly == nativeAssembly);
             var orderedScreens = nativeScreens.Concat(screens.Except(nativeScreens)).ToList();
 
-            if (entries.Count > 0) entries.Clear();
             foreach (var screen in orderedScreens)
             {
                 if (screen.GetType().GetCustomAttribute<ShowOnHomeScreenAttribute>() is ShowOnHomeScreenAttribute attribute && attribute != null)
                 {
                     string title = (string.IsNullOrEmpty(attribute.DisplayTitle) || string.IsNullOrWhiteSpace(attribute.DisplayTitle)) ? screen.Title : attribute.DisplayTitle;
-                    entries.Add(title, screen);
+                    entries.Add((title, screen, nativeScreens.Contains(screen)));
                 }
             }
         }
 
         public override InfoContent GetContent()
         {
-            lineBuilder.Clear();
+            LineBuilder internalLines = new(), externalLines = new();
 
             for (int i = 0; i < entries.Count; i++)
             {
-                (string title, InfoScreen screen) = entries.ElementAt(i);
-                lineBuilder.Add(title, new Widget_PushButton(SelectScreen, screen));
+                (string screenTitle, InfoScreen screenInstance, bool internalScreen) = entries[i];
+                LineBuilder lines = internalScreen ? internalLines : externalLines;
+                lines.Add(screenTitle, new Widget_PushButton(SelectScreen, screenInstance));
             }
 
-            return lineBuilder;
+            if (externalLines.Lines.Count > 0)
+            {
+                PageBuilder pages = new();
+                pages.Add(internalLines);
+                pages.Add(externalLines);
+                return externalLines;
+            }
+
+            return internalLines;
         }
 
         internal void SelectScreen(object[] args)
