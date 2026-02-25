@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace GorillaInfoWatch.Screens
 {
-    [ShowOnHomeScreen, PreserveScreenSection]
+    [ShowOnHomeScreen, PreserveSection]
     internal class ModListScreen : InfoScreen
     {
         public override string Title => "Mods";
@@ -50,7 +50,7 @@ namespace GorillaInfoWatch.Screens
                 Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = Symbol.GetSharedSymbol(Symbols.Info)
+                    Symbol = Content.Shared.Symbols["Info"]
                 };
 
                 if (stateSupportedMods.Contains(pluginInfo))

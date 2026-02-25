@@ -41,8 +41,8 @@ public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : Wi
             RectTransform rectTransform = Image.GetComponent<RectTransform>();
             rectTransform.sizeDelta = Vector2.one * SizeDelta;
 
-            CreateSubSymbol(ref monkeBase, Symbols.TemplateHead);
-            CreateSubSymbol(ref monkeFace, Symbols.TemplateFace);
+            CreateSubSymbol(ref monkeBase, Content.Shared.Symbols["Template Head"]);
+            CreateSubSymbol(ref monkeFace, Content.Shared.Symbols["Template Face"]);
 
             OnSignificanceChanged(Player, SignificanceManager.Instance.GetSignificance(Player, out PlayerSignificance[] significance) ? significance : null);
 
@@ -61,7 +61,7 @@ public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : Wi
     }
 
 
-    private void CreateSubSymbol(ref Image image, Symbols watchSymbol)
+    private void CreateSubSymbol(ref Image image, Symbol watchSymbol)
     {
         string objectName = $"SubSymbol {watchSymbol}";
 
@@ -79,8 +79,8 @@ public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : Wi
         subObject.GetOrAddComponent<RectTransform>().sizeDelta = Vector2.one * SizeDelta;
         image = subObject.AddComponent<Image>();
         image.preserveAspect = true;
-        image.sprite = Symbol.GetSharedSymbol(watchSymbol).Sprite;
-        image.color = Color.white;
+        image.sprite = watchSymbol.Sprite;
+        image.color = watchSymbol.Colour;
     }
 
     public void OnSignificanceChanged(NetPlayer player, PlayerSignificance[] significance)
@@ -88,10 +88,10 @@ public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : Wi
         if (Player != player)
             return;
 
-        if (significance != null && Array.Find(significance, item => item != null) is PlayerSignificance item && item.Symbol > Symbols.None)
+        if (significance != null && Array.Find(significance, item => item != null) is PlayerSignificance item && item.Symbol != null)
         {
             useMonkeSymbol = false;
-            Image.sprite = Symbol.GetSharedSymbol(item.Symbol).Sprite;
+            Image.sprite = item.Symbol.Sprite;
             Image.enabled = Image.sprite != null;
             monkeBase.enabled = false;
             monkeFace.enabled = false;

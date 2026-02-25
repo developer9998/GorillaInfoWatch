@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Tools;
 using GorillaNetworking;
 using Photon.Voice.Unity;
 using System;
@@ -23,13 +22,13 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
     private Recorder _recorder;
     private bool _isPlayerAutoMuted;
 
-    private Sprite _spriteOpenSpeaker, _spriteMuteSpeaker, _spriteForceMuteSpeaker;
+    private static Sprite _spriteOpenSpeaker, _spriteMuteSpeaker, _spriteForceMuteSpeaker;
 
     public override void OnEnable()
     {
-        _spriteOpenSpeaker = Symbols.OpenSpeaker.AsSprite();
-        _spriteMuteSpeaker = Symbols.MutedSpeaker.AsSprite();
-        _spriteForceMuteSpeaker = Symbols.ForceMuteSpeaker.AsSprite();
+        _spriteOpenSpeaker ??= Content.Shared.Symbols["Speaker Open"].Sprite;
+        _spriteMuteSpeaker ??= Content.Shared.Symbols["Speaker Muted"].Sprite;
+        _spriteForceMuteSpeaker ??= Content.Shared.Symbols["Speaker ForceMuted"].Sprite;
 
         if (VRRigCache.Instance.TryGetVrrig(Player, out _rigContainer))
         {

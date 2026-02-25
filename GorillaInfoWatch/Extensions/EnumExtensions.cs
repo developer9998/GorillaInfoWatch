@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.UserInput;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ namespace GorillaInfoWatch.Extensions;
 
 public static class EnumExtensions
 {
-    private static Dictionary<UserInputBinding, char> _specialCharacterVariants = new()
+    private static readonly Dictionary<UserInputBinding, char> _specialCharacterVariants = new()
     {
         { UserInputBinding.One, '!' },
         { UserInputBinding.Two, '@' },
@@ -32,9 +31,7 @@ public static class EnumExtensions
         { UserInputBinding.Slash, '?' }
     };
 
-    public static AudioClip AsAudioClip(this Sounds sound) => Main.UnityObjectDictionary[sound] as AudioClip;
-
-    public static Sprite AsSprite(this Symbols symbol) => Main.UnityObjectDictionary[symbol] as Sprite;
+    public static AudioClip AsAudioClip(this Sounds sound) => Content.Shared.Sounds[sound] as AudioClip;
 
     public static bool IsNumericKey(this UserInputBinding binding) => binding >= UserInputBinding.Zero && binding <= UserInputBinding.Nine;
 

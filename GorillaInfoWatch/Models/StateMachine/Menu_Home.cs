@@ -56,11 +56,11 @@ public class Menu_Home(Watch watch) : Menu_StateBase(watch)
         bellIcon = Watch.homeMenu.transform.Find("BottomRightCorner/Bell").GetComponent<Image>();
         bellIcon.enabled = isLocalWatch;
 
-        micSpeakSymbol = Symbol.GetSharedSymbol(Symbols.OpenSpeaker);
-        micMuteSymbol = Symbol.GetSharedSymbol(Symbols.MutedSpeaker);
-        micTimeoutSymbol = Symbol.GetSharedSymbol(Symbols.ForceMuteSpeaker);
-        bellIdleSymbol = Symbol.GetSharedSymbol(Symbols.Bell);
-        bellRingSymbol = Symbol.GetSharedSymbol(Symbols.BellRing);
+        micSpeakSymbol = Content.Shared.Symbols["Speaker Open"];
+        micMuteSymbol = Content.Shared.Symbols["Speaker Muted"];
+        micTimeoutSymbol = Content.Shared.Symbols["Speaker ForceMuted"];
+        bellIdleSymbol = Content.Shared.Symbols["Bell Idle"];
+        bellRingSymbol = Content.Shared.Symbols["Bell Ring"];
 
         InfrequentUpdate();
     }

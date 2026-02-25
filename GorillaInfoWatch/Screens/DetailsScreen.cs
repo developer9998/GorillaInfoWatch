@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
 {
-    [ShowOnHomeScreen, PreserveScreenSection(ClearContent = true)]
+    [ShowOnHomeScreen, PreserveSection(ClearContent = true)]
     internal class DetailsScreen : InfoScreen
     {
         public override string Title => "Details";
@@ -47,14 +47,14 @@ namespace GorillaInfoWatch.Screens
             lines.Skip().Add($"Inspect Game Mode: {gameModes[_gameModeRecordIndex].DisplayName}", new Widget_PushButton(IncrementGameMode, -1)
             {
                 Colour = ColourPalette.Red,
-                Symbol = new Symbol(Symbols.Minus)
+                Symbol = new Symbol(Content.Shared.Symbols["Minus"])
                 {
                     Colour = Color.black
                 }
             }, new Widget_PushButton(IncrementGameMode, 1)
             {
                 Colour = ColourPalette.Green,
-                Symbol = new Symbol(Symbols.Plus)
+                Symbol = new Symbol(Content.Shared.Symbols["Plus"])
                 {
                     Colour = Color.black
                 }

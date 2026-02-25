@@ -57,14 +57,13 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
     public async void Initialize()
     {
-        ModContent content = Main.Content;
-        Significance_Figures = Array.AsReadOnly(Array.ConvertAll(content.Figures, figure => (FigureSignificance)figure));
-        Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(content.Cosmetics, item => (ItemSignificance)item));
-        Significance_Watch = new("GorillaInfoWatch User", Symbols.InfoWatch, "{0} is a user of GorillaInfoWatch");
-        Significance_Verified = new("Verified", Symbols.Verified, "{0} is marked as verified by the GorillaFriends mod");
-        Significance_Master = new("Master Client", Symbols.None, "{0} is the host (specifically the master client) of the room");
-        Significance_Friend = new("Friend", Symbols.None, "You have {0} added as a friend (with GorillaFriends)");
-        Significance_RecentlyPlayed = new("Recently Played", Symbols.None, "You have played with {0} recently (via. GorillaFriends)");
+        Significance_Figures = Array.AsReadOnly(Array.ConvertAll(Content.Shared.Figures.ToArray(), figure => (FigureSignificance)figure));
+        Significance_Cosmetics = Array.AsReadOnly(Array.ConvertAll(Content.Shared.Cosmetics.ToArray(), item => (ItemSignificance)item));
+        Significance_Watch = new("GorillaInfoWatch User", Content.Shared.Symbols["Info Watch"], "{0} is a user of GorillaInfoWatch");
+        Significance_Verified = new("Verified", Content.Shared.Symbols["Verified"], "{0} is marked as verified by the GorillaFriends mod");
+        Significance_Master = new("Master Client", null, "{0} is the host (specifically the master client) of the room");
+        Significance_Friend = new("Friend", null, "You have {0} added as a friend (with GorillaFriends)");
+        Significance_RecentlyPlayed = new("Recently Played", null, "You have played with {0} recently (via. GorillaFriends)");
 
         if (DataManager.Instance.HasData(Constants.DataEntry_Consent))
             SetVisibility((SignificanceVisibility)DataManager.Instance.GetData<int>(Constants.DataEntry_Consent), false);
@@ -183,7 +182,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
     public void OnPlayerCosmeticsRecieved(VRRig rig)
     {
-        NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
+        NetPlayer player = rig.Creator;
         if (player == null || player.IsNull || player.IsLocal) return;
 
         Logging.Message($"{player.GetName()} Cosmetics: {rig.rawCosmeticString}");
@@ -206,7 +205,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
     public void OnPlayerCosmeticsUpdated(VRRig rig, bool showNotification)
     {
-        NetPlayer player = rig.isOfflineVRRig ? NetworkSystem.Instance.GetLocalPlayer() : (rig.Creator ?? rig.OwningNetPlayer);
+        NetPlayer player = rig.isOfflineVRRig ? NetworkSystem.Instance.GetLocalPlayer() : rig.Creator;
         if (player == null || player.IsNull) return;
 
         bool result = CheckPlayer(player, SignificanceCheckScope.Item);

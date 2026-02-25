@@ -19,6 +19,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -38,12 +39,6 @@ namespace GorillaInfoWatch.Behaviours;
 public class Main : MonoBehaviourPunCallbacks
 {
     public static Main Instance { get; private set; }
-
-    // Content
-
-    public static ModContent Content { get; private set; }
-
-    public static readonly Dictionary<Enum, Object> UnityObjectDictionary = [];
 
     // Screens
 
@@ -151,26 +146,26 @@ public class Main : MonoBehaviourPunCallbacks
 
             foreach (Assembly assembly in assemblies.Distinct())
             {
-                string assemblyName;
-
                 try
                 {
-                    assemblyName = assembly.GetName().Name;
-                    Logging.Info(assemblyName);
 
-                    if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() == null)
+
+                    if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() is not InfoWatchCompatibleAttribute attribute) continue;
+
+                    if (attribute.MinimumVersion > Version.Parse(Constants.Version))
                     {
-                        //Logging.Warning("Assembly missing InfoWatchCompatibleAttribute, which is probably okay, not every mod has to be compatible!");
+                        Logging.Warning($"Assembly has minimum version of {attribute.MinimumVersion}");
                         continue;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logging.Fatal("Assembly derived from plugin failed with retrieving basic data");
                     Logging.Error(ex);
-
                     continue;
                 }
+
+                string assemblyName = assembly.GetName().Name;
+                Logging.Message($"Assembly {assemblyName}");
 
                 List<Type> screenTypes = [], shortcutRegTypes = [];
 
@@ -182,8 +177,16 @@ public class Main : MonoBehaviourPunCallbacks
                     {
                         if (type is null) continue;
 
-                        if (type.IsSubclassOf(screenType) && screenType.IsAssignableFrom(type)) screenTypes.Add(type);
-                        else if (type.IsSubclassOf(shortcutRegType) && shortcutRegType.IsAssignableFrom(type)) shortcutRegTypes.Add(type);
+                        if (type.IsSubclassOf(screenType) && screenType.IsAssignableFrom(type))
+                        {
+                            screenTypes.Add(type);
+                            Logging.Info($"Screen {type.FullName}");
+                        }
+                        else if (type.IsSubclassOf(shortcutRegType) && shortcutRegType.IsAssignableFrom(type))
+                        {
+                            shortcutRegTypes.Add(type);
+                            Logging.Info($"Shortcut {type.FullName}");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -209,26 +212,32 @@ public class Main : MonoBehaviourPunCallbacks
 
         _assetLoader = new AssetLoader("GorillaInfoWatch.Content.watchbundle");
 
-        Content = await _assetLoader.LoadAsset<ModContent>("Data");
+        ContentObject contentObject = await _assetLoader.LoadAsset<ContentObject>("Content");
 
+        Content content = new();
+        Content.Shared = content;
+        content.WatchPrefab = contentObject.WatchPrefab;
+        content.MenuPrefab = contentObject.MenuPrefab;
+        content.KeyboardPrefab = contentObject.KeyboardPrefab;
+        content.Figures = new(contentObject.Figures);
+        content.Cosmetics = new(contentObject.Cosmetics);
+        content.Symbols = new ReadOnlyDictionary<string, Symbol>(contentObject.Symbols.ToDictionary(symbol => symbol.Label, symbol => new Symbol(symbol)));
+
+        Dictionary<Enum, Object> sounds = [];
         foreach (Sounds sound in Enum.GetValues(typeof(Sounds)).Cast<Sounds>())
         {
-            if (sound == Sounds.None) continue;
-            AudioClip clip = await _assetLoader.LoadAsset<AudioClip>(sound.GetName());
-            UnityObjectDictionary.Add(sound, clip);
+            if (sound > Sounds.None)
+            {
+                AudioClip clip = await _assetLoader.LoadAsset<AudioClip>(sound.GetName());
+                sounds.Add(sound, clip);
+            }
         }
-
-        Sprite[] spriteSheet = await _assetLoader.LoadAssetsWithSubAssets<Sprite>("Sheet");
-        foreach (Symbols symbol in Enum.GetValues(typeof(Symbols)).Cast<Symbols>())
-        {
-            if (Array.Find(spriteSheet, sprite => sprite.name == symbol.GetName()) is not Sprite sprite) continue;
-            UnityObjectDictionary.Add(symbol, sprite);
-        }
+        content.Sounds = new(sounds);
 
         // Objects
 
-        Content.WatchPrefab.SetActive(false);
-        _watchObject = Instantiate(Content.WatchPrefab);
+        content.WatchPrefab.SetActive(false);
+        _watchObject = Instantiate(content.WatchPrefab);
         _watchObject.name = "Watch";
 
         _infoWatch = _watchObject.GetComponent<Watch>();
@@ -239,7 +248,7 @@ public class Main : MonoBehaviourPunCallbacks
         _infoWatch.TimeOffset = timeOffset;
         NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
 
-        _panelObject = Instantiate(Content.MenuPrefab);
+        _panelObject = Instantiate(content.MenuPrefab);
         _panelObject.name = "Panel";
         _panelObject.transform.SetParent(transform);
         _panelObject.gameObject.SetActive(true);
@@ -351,7 +360,7 @@ public class Main : MonoBehaviourPunCallbacks
         Trigger watchTrigger = triggerTransform.gameObject.AddComponent<Trigger>();
         watchTrigger.panel = _panel;
 
-        _userInputObject = Instantiate(await _assetLoader.LoadAsset<GameObject>("UserInput"));
+        _userInputObject = Instantiate(content.KeyboardPrefab);
         _userInputObject.name = "User Input";
         _userInputObject.transform.SetParent(transform);
 
@@ -507,7 +516,7 @@ public class Main : MonoBehaviourPunCallbacks
 
             lastScreen.OnScreenUnload();
 
-            PreserveScreenSectionAttribute preserveSection = lastScreen.GetType().GetCustomAttribute<PreserveScreenSectionAttribute>();
+            PreserveSectionAttribute preserveSection = lastScreen.GetType().GetCustomAttribute<PreserveSectionAttribute>();
             if (preserveSection == null) lastScreen.sectionNumber = 0;
             if (preserveSection == null || preserveSection.ClearContent) lastScreen.content = null;
 
@@ -707,11 +716,11 @@ public class Main : MonoBehaviourPunCallbacks
     {
         if (type == null) return false;
 
-        Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
+        // Logging.Info($"RegisterScreen: {type.Name} of {type.Namespace}");
 
         if (_screens.ContainsKey(type))
         {
-            Logging.Warning("Registry contains key");
+            // Logging.Warning("Registry contains key");
             return false;
         }
 
@@ -719,14 +728,14 @@ public class Main : MonoBehaviourPunCallbacks
 
         if (!type.IsSubclassOf(screenType))
         {
-            Logging.Warning("Type is not subclass of screen");
+            // Logging.Warning("Type is not subclass of screen");
             PlayErrorSound();
             return false;
         }
 
         if (!screenType.IsAssignableFrom(type))
         {
-            Logging.Warning("Type is not assignable from screen");
+            // Logging.Warning("Type is not assignable from screen");
             PlayErrorSound();
             return false;
         }
@@ -737,7 +746,7 @@ public class Main : MonoBehaviourPunCallbacks
         {
             if (_screens.ContainsValue(screen))
             {
-                Logging.Warning("Registry contains value (component of type)");
+                // Logging.Warning("Registry contains value (component of type)");
                 Destroy(component);
                 return false;
             }
@@ -746,11 +755,11 @@ public class Main : MonoBehaviourPunCallbacks
 
             _screens[type] = screen;
 
-            Logging.Info("Register success");
+            // Logging.Info("Register success");
             return true;
         }
 
-        Logging.Warning("Component of type is not screen (this shouldn't happen)");
+        // Logging.Warning("Component of type is not screen (this shouldn't happen)");
 
         Destroy(component);
         PlayErrorSound();

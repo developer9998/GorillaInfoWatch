@@ -88,7 +88,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
         PhotonNetwork.RaiseEvent(eventCode, content, raiseEventOptions, SendOptions.SendReliable);
     }
 
-    public bool IsCompatiblePlayer(Player player)
+    public bool IsCompatiblePlayer(Player _)
     {
         return true;
     }

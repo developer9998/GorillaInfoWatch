@@ -63,7 +63,7 @@ namespace GorillaInfoWatch.Screens
             lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => LoadScreen<RoomInspectorScreen>())
             {
                 Colour = ColourPalette.Blue,
-                Symbol = Symbol.GetSharedSymbol(Symbols.Info)
+                Symbol = Content.Shared.Symbols["Info"]
             });
 
             lines.Append("Game Mode: ").AppendLine(GameModeUtils.CurrentGamemode is Gamemode gamemode ? gamemode.DisplayName : GorillaScoreBoard.error.ToTitleCase()).AppendLine();
@@ -96,7 +96,7 @@ namespace GorillaInfoWatch.Screens
                 }, new Widget_PushButton(InspectPlayer, player)
                 {
                     Colour = ColourPalette.Blue,
-                    Symbol = Symbol.GetSharedSymbol(Symbols.Info)
+                    Symbol = Content.Shared.Symbols["Info"]
                 }];
 
                 lines.AppendColour(player.GetName().EnforcePlayerNameLength(), GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white);
@@ -119,7 +119,7 @@ namespace GorillaInfoWatch.Screens
         {
             if (!rig.isLocal)
             {
-                NetPlayer player = rig.Creator ?? rig.OwningNetPlayer;
+                NetPlayer player = rig.Creator;
                 if (player == null || player.IsNull || player.InRoom) return;
             }
 

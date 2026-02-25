@@ -5,7 +5,7 @@ namespace GorillaInfoWatch.Models.Significance
     [CreateAssetMenu(fileName = "Cosmetic", menuName = "Info Watch/Item (significance)", order = 1)]
     public class ItemSignificanceObject : ScriptableObject
     {
-        public Symbols Symbol;
+        public SymbolObject Symbol;
 
         public string ItemId;
 

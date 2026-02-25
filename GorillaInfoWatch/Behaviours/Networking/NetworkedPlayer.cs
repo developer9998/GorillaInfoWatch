@@ -1,6 +1,7 @@
 using ExitGames.Client.Photon;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
 using Photon.Realtime;
@@ -52,7 +53,7 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
 
         if (Watch.Null())
         {
-            GameObject prefab = Instantiate(Main.Content.WatchPrefab);
+            GameObject prefab = Instantiate(Content.Shared.WatchPrefab);
             Watch = prefab.GetComponent<Watch>();
             Watch.Rig = Rig;
             prefab.SetActive(true);

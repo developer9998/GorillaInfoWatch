@@ -3,18 +3,15 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
+using GorillaNetworking;
+using GorillaTagScripts.VirtualStumpCustomMaps;
+using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-
-#region Junk
-using GorillaNetworking;
-using GorillaTagScripts.VirtualStumpCustomMaps;
-using PlayFab.ClientModels;
-using GorillaInfoWatch.Utilities;
-#endregion
 
 namespace GorillaInfoWatch.Screens
 {
@@ -143,7 +140,7 @@ namespace GorillaInfoWatch.Screens
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                     {
                         Colour = ColourPalette.Yellow,
-                        Symbol = Symbol.GetSharedSymbol(Symbols.LightBulb)
+                        Symbol = Content.Shared.Symbols["Lightbulb"]
                     });
                     continue;
                 }
@@ -154,7 +151,7 @@ namespace GorillaInfoWatch.Screens
                     lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton(JoinFriend, friend, inVirtualStump)
                     {
                         Colour = ColourPalette.Green,
-                        Symbol = Symbol.GetSharedSymbol(Symbols.GreenFlag)
+                        Symbol = Content.Shared.Symbols["Flag Green"]
                     });
                     continue;
                 }
@@ -163,7 +160,7 @@ namespace GorillaInfoWatch.Screens
                 lines.Append(playerName).Append(": ").Append(playerStatus).Add(new Widget_PushButton()
                 {
                     Colour = ColourPalette.Red,
-                    Symbol = Symbol.GetSharedSymbol(Symbols.RedFlag)
+                    Symbol = Content.Shared.Symbols["Flag Red"]
                 });
             }
 

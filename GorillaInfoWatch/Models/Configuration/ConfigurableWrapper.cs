@@ -62,7 +62,7 @@ internal abstract class ConfigurableWrapper
             widgets.Add(new Widget_PushButton(InvokeCustomAction, -1)
             {
                 Colour = ColourPalette.Red,
-                Symbol = new Symbol(Symbols.Minus)
+                Symbol = new Symbol(Content.Shared.Symbols["Minus"])
                 {
                     Colour = Color.black
                 }
@@ -71,7 +71,7 @@ internal abstract class ConfigurableWrapper
             widgets.Add(new Widget_PushButton(InvokeCustomAction, 1)
             {
                 Colour = ColourPalette.Green,
-                Symbol = new Symbol(Symbols.Plus)
+                Symbol = new Symbol(Content.Shared.Symbols["Plus"])
                 {
                     Colour = Color.black
                 }
@@ -164,7 +164,7 @@ internal abstract class ConfigurableWrapper
                     })
                     {
                         Colour = hasFlag ? ColourPalette.Green : ColourPalette.Red,
-                        Symbol = Symbol.GetSharedSymbol(hasFlag ? Symbols.GreenFlag : Symbols.RedFlag),
+                        Symbol = Content.Shared.Symbols[hasFlag ? "Flag Green" : "Flag Red"],
                         Alignment = WidgetAlignment.Left
                     });
                 }

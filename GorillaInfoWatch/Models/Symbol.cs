@@ -1,40 +1,70 @@
-using GorillaInfoWatch.Extensions;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
-namespace GorillaInfoWatch.Models
+namespace GorillaInfoWatch.Models;
+
+public class Symbol
 {
-    public class Symbol
+    public Sprite Sprite
     {
-        public Sprite Sprite;
-
-        public Color Colour = Color.white;
-
-        public Material Material;
-
-        private static readonly Dictionary<Symbols, Symbol> _sharedSymbolCache = [];
-
-        public Symbol(Sprite sprite)
+        get => _sprite;
+        set
         {
-            Sprite = sprite;
+            if (_isReadOnly) throw new InvalidOperationException();
+            _sprite = value;
         }
-
-        public Symbol(Symbols symbol)
-        {
-            Sprite = symbol.AsSprite();
-        }
-
-        public static Symbol GetSharedSymbol(Symbols symbol)
-        {
-            if (!_sharedSymbolCache.ContainsKey(symbol)) _sharedSymbolCache.Add(symbol, new Symbol(symbol));
-            return _sharedSymbolCache[symbol];
-        }
-
-        public bool Equals(Symbol symbol) => symbol.Sprite == Sprite && symbol.Colour == Colour && symbol.Material == Material;
-
-
-        public static implicit operator Symbol(Sprite sprite) => new(sprite);
-
-        public static implicit operator Symbol(Texture2D texture) => Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
     }
+
+    public Color Colour
+    {
+        get => _colour;
+        set
+        {
+            if (_isReadOnly) throw new InvalidOperationException();
+            _colour = value;
+        }
+    }
+
+    public Material Material
+    {
+        get => _material;
+        set
+        {
+            if (_isReadOnly) throw new InvalidOperationException();
+            _material = value;
+        }
+    }
+
+    private Sprite _sprite;
+
+    private Color _colour = Color.white;
+
+    private Material _material;
+
+    private readonly bool _isReadOnly;
+
+    public Symbol(Sprite sprite)
+    {
+        _sprite = sprite;
+    }
+
+    public Symbol(SymbolObject symbol, bool isReadOnly = true)
+    {
+        _sprite = symbol?.Asset;
+        _isReadOnly = isReadOnly;
+    }
+
+    public Symbol(Symbol symbol)
+    {
+        _sprite = symbol._sprite;
+        _material = symbol._material;
+        _colour = symbol._colour;
+    }
+
+    public bool Equals(Symbol symbol) => symbol._sprite == _sprite && symbol._colour == _colour && symbol._material == _material;
+
+
+    public static implicit operator Symbol(Sprite sprite) => new(sprite);
+
+    public static implicit operator Symbol(Texture2D texture) => Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
 }

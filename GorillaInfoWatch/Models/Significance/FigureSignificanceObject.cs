@@ -5,7 +5,7 @@ namespace GorillaInfoWatch.Models.Significance
     [CreateAssetMenu(fileName = "Figure", menuName = "Info Watch/Figure (significance)", order = 0)]
     public class FigureSignificanceObject : ScriptableObject
     {
-        public Symbols Symbol;
+        public SymbolObject Symbol;
 
         public string Description;
 

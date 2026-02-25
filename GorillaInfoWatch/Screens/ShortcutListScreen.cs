@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace GorillaInfoWatch.Screens
 {
-    [ShowOnHomeScreen, PreserveScreenSection]
+    [ShowOnHomeScreen, PreserveSection]
     internal class ShortcutListScreen : InfoScreen
     {
         public override string Title => "Shortcuts";
@@ -43,7 +43,7 @@ namespace GorillaInfoWatch.Screens
                     {
                         Alignment = WidgetAlignment.Left,
                         Colour = ColourPalette.Green,
-                        Symbol = Symbol.GetSharedSymbol(Symbols.Play)
+                        Symbol = Content.Shared.Symbols["Play"]
                     }, new Widget_Switch(ShortcutHandler.Shortcut == shortcut, (bool value) =>
                     {
                         ShortcutHandler.Instance.SetOrRemoveShortcut(shortcut);

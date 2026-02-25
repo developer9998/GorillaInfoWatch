@@ -92,7 +92,7 @@ namespace GorillaInfoWatch.Screens
             float[] colourDigits = [playerColour.r, playerColour.g, playerColour.b];
             lines.AppendLine().Append("Colour: ").AppendColour(string.Join(' ', colourDigits.Select(digit => Mathf.Round(digit * 9f))), playerColour).AppendLine();
 
-            lines.Append("Creation Date: ").AppendLine((accountInfo != null && accountInfo.AccountInfo?.TitleInfo?.Created is DateTime utcTime && utcTime.ToLocalTime() is DateTime localTime) ? $"{localTime.ToShortDateString()} at {localTime.ToShortTimeString()}" : ". . .");
+            lines.Append("Creation Date: ").AppendLine((accountInfo != null && accountInfo.AccountInfo?.TitleInfo?.Created is DateTime utcTime && utcTime.ToLocalTime() is DateTime localTime) ? $"{localTime:d} at {localTime:t}" : ". . .");
 
             bool isLocal = player.IsLocal;
 
@@ -116,7 +116,7 @@ namespace GorillaInfoWatch.Screens
                 });
             }
 
-        #region Significance
+            #region Significance
 
         Significance:
 
@@ -158,7 +158,7 @@ namespace GorillaInfoWatch.Screens
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
                     else str.Append(string.Format(_descriptionFormat, significance.Title, string.Format(significance.Description, normalizedName)));
 
-                    significanceLines.Add(str.ToString(), widgets: significance.Symbol != Symbols.None ? [new Widget_Symbol(Symbol.GetSharedSymbol(significance.Symbol))
+                    significanceLines.Add(str.ToString(), widgets: significance.Symbol != null ? [new Widget_Symbol(significance.Symbol)
                     {
                         Alignment = WidgetAlignment.Left
                     }] : []);
@@ -196,7 +196,7 @@ namespace GorillaInfoWatch.Screens
 
         private void OnRigNameUpdate(VRRig targetRig)
         {
-            NetPlayer player = targetRig.Creator ?? targetRig.OwningNetPlayer;
+            NetPlayer player = targetRig.Creator;
             if (player == null || player.IsNull || player.UserId != UserId) return;
             SetContent();
         }

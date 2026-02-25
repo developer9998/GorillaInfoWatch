@@ -50,7 +50,7 @@ namespace GorillaInfoWatch.Utilities
 
         public static bool HasInfoWatch(NetPlayer player) => CheckNetworkedPlayer(player, component => component.HasInfoWatch, defaultValue: false, localValue: true);
 
-        public static SignificanceVisibility GetSignificanceVisibility(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: SignificanceVisibility.None, localValue: SignificanceManager.Instance?.Visibility ?? SignificanceVisibility.None);
+        public static SignificanceVisibility GetSignificanceVisibility(NetPlayer player) => CheckNetworkedPlayer(player, component => component.Consent, defaultValue: SignificanceVisibility.Figure, localValue: SignificanceManager.Instance?.Visibility ?? SignificanceVisibility.Figure);
 
         public static T CheckNetworkedPlayer<T>(NetPlayer player, Func<NetworkedPlayer, T> predicate, T defaultValue, T localValue)
         {
@@ -106,6 +106,7 @@ namespace GorillaInfoWatch.Utilities
                     scoreboardLine.PressButton(value, GorillaPlayerLineButton.ButtonType.Mute);
                     return;
                 }
+
                 scoreboardLine.InitializeLine();
             });
         }
@@ -113,7 +114,6 @@ namespace GorillaInfoWatch.Utilities
         public static void FriendPlayer(NetPlayer player, bool value)
         {
             bool isFriend = FriendUtility.IsFriend(player.UserId);
-
             if (!value && isFriend) FriendUtility.RemoveFriend(player.UserId);
             else if (value && !isFriend) FriendUtility.AddFriend(player.UserId);
         }

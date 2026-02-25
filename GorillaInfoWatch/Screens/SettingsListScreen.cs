@@ -48,7 +48,7 @@ internal class SettingsListScreen : InfoScreen
             lines.Add(section.Title, new Widget_PushButton(OpenSection, section)
             {
                 Colour = ColourPalette.Black,
-                Symbol = Symbol.GetSharedSymbol(Symbols.ExternalLink)
+                Symbol = Content.Shared.Symbols["External Link"]
             });
         }
 

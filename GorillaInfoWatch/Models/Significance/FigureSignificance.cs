@@ -12,7 +12,7 @@ public class FigureSignificance : PlayerSignificance
 
     private readonly string _figureDescription;
 
-    internal FigureSignificance(string title, Symbols symbol, string description, string[] userIds) : base(title, symbol)
+    internal FigureSignificance(string title, SymbolObject symbol, string description, string[] userIds) : base(title, new(symbol))
     {
         UserIDs = Array.ConvertAll(userIds, userId => userId.Contains(" ") ? userId.Split(" ").First() : userId);
         _figureDescription = description;

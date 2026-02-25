@@ -19,7 +19,7 @@ public class ItemSignificance : PlayerSignificance
 
     private string _itemDisplayName = null;
 
-    internal ItemSignificance(string title, Symbols symbol, string itemId) : base(title, symbol) => ItemId = itemId;
+    internal ItemSignificance(string title, SymbolObject symbol, string itemId) : base(title, new(symbol)) => ItemId = itemId;
 
     public override bool IsValid(NetPlayer player) => GetState(player) > 0;
 
