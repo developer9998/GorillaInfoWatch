@@ -83,70 +83,81 @@ internal class CreditScreen : InfoScreen
 
         if (_supporters != null)
         {
-            Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
-
-            LineBuilder generalSupporterLines = new();
-
-            generalSupporterLines.BeginCentre().Append("Basic Tier").EndAlign().AppendLine();
-
-            Supporter[] basic = _supporters["Basic"];
-            List<int> supporterIndicies = [.. Enumerable.Range(0, basic.Length)];
-
-            for (int i = 0; i < 5; i++)
+            try
             {
-                int realIndex = random.Next() % supporterIndicies.Count;
-                int index = supporterIndicies[realIndex];
-                Supporter supporter = basic[index];
-                supporterIndicies.RemoveAt(realIndex);
+                Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
 
-                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                // Basic/Dweller tier
+
+                LineBuilder generalSupporterLines = new();
+
+                generalSupporterLines.BeginCentre().Append("Basic Tier").EndAlign().AppendLine();
+
+                Supporter[] basic = _supporters["Basic"];
+                List<int> supporterIndicies = [.. Enumerable.Range(0, basic.Length)];
+
+                for (int i = 0; i < 5; i++)
                 {
-                    Alignment = WidgetAlignment.Left
-                }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
+                    int realIndex = random.Next() % supporterIndicies.Count;
+                    int index = supporterIndicies[realIndex];
+                    Supporter supporter = basic[index];
+                    supporterIndicies.RemoveAt(realIndex);
+
+                    generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
+                    {
+                        Alignment = WidgetAlignment.Right
+                    });
+                }
+
+                generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier").EndAlign().AppendLine();
+
+                Supporter[] dweller = _supporters["Dweller"];
+                supporterIndicies = [.. Enumerable.Range(0, dweller.Length)];
+
+                for (int i = 0; i < 5; i++)
                 {
-                    Alignment = WidgetAlignment.Right
-                });
+                    int realIndex = random.Next() % supporterIndicies.Count;
+                    int index = supporterIndicies[realIndex];
+                    Supporter supporter = dweller[index];
+                    supporterIndicies.RemoveAt(realIndex);
+
+                    generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
+                    {
+                        Alignment = WidgetAlignment.Right
+                    });
+                }
+
+                // Prestige tier
+
+                LineBuilder topSupporterLines = new();
+                topSupporterLines.BeginCentre().Append("Prestige Tier").EndAlign().AppendLine();
+
+                Supporter[] prestige = _supporters["Prestige"];
+                foreach (Supporter supporter in prestige)
+                {
+                    topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
+                    {
+                        Alignment = WidgetAlignment.Right
+                    });
+                }
+
+                // Add pages
+                pageBuilder.Add(new SectionDefinition("Supporters", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
+                pageBuilder.Add(new SectionDefinition("Supporters", "These are all supporters of the Prestige tier"), topSupporterLines);
             }
-
-            generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier").EndAlign().AppendLine();
-
-            Supporter[] dweller = _supporters["Dweller"];
-            supporterIndicies = [.. Enumerable.Range(0, dweller.Length)];
-
-            for (int i = 0; i < 5; i++)
+            catch
             {
-                int realIndex = random.Next() % supporterIndicies.Count;
-                int index = supporterIndicies[realIndex];
-                Supporter supporter = dweller[index];
-                supporterIndicies.RemoveAt(realIndex);
 
-                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
-                {
-                    Alignment = WidgetAlignment.Left
-                }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
-                {
-                    Alignment = WidgetAlignment.Right
-                });
             }
-
-            pageBuilder.Add(new SectionDefinition("Supporters", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
-
-            LineBuilder topSupporterLines = new();
-            topSupporterLines.BeginCentre().Append("Prestige Tier").EndAlign().AppendLine();
-
-            Supporter[] prestige = _supporters["Prestige"];
-            foreach (Supporter supporter in prestige)
-            {
-                topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
-                {
-                    Alignment = WidgetAlignment.Left
-                }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
-                {
-                    Alignment = WidgetAlignment.Right
-                });
-            }
-
-            pageBuilder.Add(new SectionDefinition("Supporters", "These are all supporters of the Prestige tier"), topSupporterLines);
         }
     }
 

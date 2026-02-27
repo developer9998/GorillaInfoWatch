@@ -1,11 +1,7 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
-using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.UserInput;
-using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
-using GorillaInfoWatch.Utilities;
 using GorillaNetworking;
 using Photon.Realtime;
 using System;
@@ -41,7 +37,7 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
             }
         };
 
-        RegisterShortcut("Join Random Room", "Joins a random public room for a loaded map", async () =>
+        RegisterShortcut("Join Random Room", "Joins a random public room under a map that is loaded", async () =>
         {
             List<GTZone> activeZones = ZoneManagement.instance.activeZones;
 
@@ -79,7 +75,7 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
             selectedTrigger.OnBoxTriggered();
         });
 
-        RegisterShortcut("Join Specific Room", "Joins a specific room provided by the user", () =>
+        RegisterShortcut("Join Specific Room", "Joins a specific room of the name provided by the player", () =>
         {
             UserInput.Activate(GorillaComputer.instance.roomToJoin, UserInputBoard.Standard, 10, (sender, args) =>
             {
@@ -98,13 +94,13 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
             });
         });
 
-        RegisterShortcut("Leave", "Leave the room you are currently in", ShortcutRestrictions.Multiplayer, () =>
+        RegisterShortcut("Leave", "The current room containing the player is left", ShortcutRestrictions.Multiplayer, () =>
         {
             if (!NetworkSystem.Instance.InRoom) return;
             NetworkSystem.Instance.ReturnToSinglePlayer();
         });
 
-        RegisterShortcut("Rejoin", "Leaves then joins your current room", ShortcutRestrictions.Multiplayer, async () =>
+        RegisterShortcut("Rejoin", "The current room containing the player is re-joined (left and then joined)", ShortcutRestrictions.Multiplayer, async () =>
         {
             if (!NetworkSystem.Instance.InRoom) return;
 
@@ -115,28 +111,13 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
             await PhotonNetworkController.Instance.AttemptToJoinSpecificRoomAsync(roomName, JoinType.Solo, null);
         });
 
-        RegisterShortcut("Copy Room", "Copies the name of your current room to the clipboard", ShortcutRestrictions.Multiplayer, () =>
+        RegisterShortcut("Copy Room Name", "Copies the name of the current room to your clipboard", ShortcutRestrictions.Multiplayer, () =>
         {
             if (NetworkSystem.Instance.InRoom)
             {
                 string roomName = NetworkSystem.Instance.RoomName;
                 GUIUtility.systemCopyBuffer = roomName;
-                Notify("Room Name", roomName, 2f);
             }
-        });
-
-        RegisterShortcut("Identify Master", "Identifies the master client of your current room", ShortcutRestrictions.Multiplayer, () =>
-        {
-            if (!NetworkSystem.Instance.InRoom) return;
-
-            NetPlayer masterClient = NetworkSystem.Instance.MasterClient;
-            string userId = masterClient.UserId;
-
-            Notify("Master Client", masterClient.GetPlayerName(), 4, screen: new Notification.ExternalScreen(typeof(PlayerInspectorScreen), "Inspect Player", () =>
-            {
-                masterClient = PlayerUtility.GetPlayer(userId);
-                if (masterClient != null && !masterClient.IsNull) PlayerInspectorScreen.UserId = userId;
-            }));
         });
     }
 }
