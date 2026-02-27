@@ -53,127 +53,126 @@ internal class CreditScreen : InfoScreen
 
     public override void OnScreenLoad()
     {
-        if (pageBuilder == null)
+        if (pageBuilder != null) return;
+
+        pageBuilder = new();
+
+        ReadOnlyCollection<FigureSignificance> figures = SignificanceManager.Significance_Figures;
+
+        LineBuilder developerLines = new();
+        bool hasReadTester = false;
+
+        foreach (FigureSignificance figure in figures)
         {
-            pageBuilder = new();
+            if (string.IsNullOrEmpty(figure.Description) || string.IsNullOrWhiteSpace(figure.Description)) continue;
 
-            ReadOnlyCollection<FigureSignificance> figures = SignificanceManager.Significance_Figures;
-
-            LineBuilder developerLines = new();
-            bool hasReadTester = false;
-
-            foreach (FigureSignificance figure in figures)
+            string[] split = figure.Description.Split(": ");
+            if (!hasReadTester && split.Last().ToLower().Contains("tester"))
             {
-                if (string.IsNullOrEmpty(figure.Description) || string.IsNullOrWhiteSpace(figure.Description)) continue;
+                hasReadTester = true;
+                developerLines.Skip();
+            }
 
-                string[] split = figure.Description.Split(": ");
-                if (!hasReadTester && split.Last().ToLower().Contains("tester"))
+            developerLines.Add(string.Format(creditFormat, figure.Title, split.First(), split.Last()), new Widget_Symbol(figure.Symbol)
+            {
+                Alignment = WidgetAlignment.Left
+            });
+        }
+
+        pageBuilder.Add(new SectionDefinition("", "These are the lead developers, contributors, and testers of GorillaInfoWatch"), developerLines);
+
+        if (_supporters != null)
+        {
+            Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
+
+            LineBuilder generalSupporterLines = new();
+
+            generalSupporterLines.BeginCentre().Append("Basic Tier").EndAlign().AppendLine();
+
+            List<Supporter> implementedSupporters = [];
+            Supporter[] basic = _supporters["Basic"];
+            for (int i = 0; i < 5; i++)
+            {
+                Supporter supporter = null;
+
+                while (supporter != null && !implementedSupporters.Contains(supporter))
                 {
-                    hasReadTester = true;
-                    developerLines.Skip();
+                    supporter = basic[random.Next() % basic.Length];
                 }
 
-                developerLines.Add(string.Format(creditFormat, figure.Title, split.First(), split.Last()), new Widget_Symbol(figure.Symbol)
+                implementedSupporters.Add(supporter);
+
+                string platform = supporter.Platform switch
+                {
+                    "kofi" => "Ko-fi",
+                    "patreon" => "Patreon",
+                    _ => "Unknown"
+                };
+
+                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
                 {
                     Alignment = WidgetAlignment.Left
+                }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                {
+                    Alignment = WidgetAlignment.Right
                 });
             }
 
-            pageBuilder.Add(new SectionDefinition("", "These are the lead developers, contributors, and testers of GorillaInfoWatch"), developerLines);
+            generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier").EndAlign().AppendLine();
 
-            if (_supporters != null)
+            Supporter[] dweller = _supporters["Dweller"];
+            for (int i = 0; i < 5; i++)
             {
-                Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
+                Supporter supporter = null;
 
-                LineBuilder generalSupporterLines = new();
-
-                generalSupporterLines.BeginCentre().Append("Basic Tier").EndAlign().AppendLine();
-
-                List<Supporter> implementedSupporters = [];
-                Supporter[] basic = _supporters["Basic"];
-                for (int i = 0; i < 5; i++)
+                while (supporter != null && !implementedSupporters.Contains(supporter))
                 {
-                    Supporter supporter = null;
-
-                    while (supporter != null && !implementedSupporters.Contains(supporter))
-                    {
-                        supporter = basic[random.Next() % basic.Length];
-                    }
-
-                    implementedSupporters.Add(supporter);
-
-                    string platform = supporter.Platform switch
-                    {
-                        "kofi" => "Ko-fi",
-                        "patreon" => "Patreon",
-                        _ => "Unknown"
-                    };
-
-                    generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
-                    {
-                        Alignment = WidgetAlignment.Left
-                    }, new Widget_Symbol(Content.Shared.Symbols[platform])
-                    {
-                        Alignment = WidgetAlignment.Right
-                    });
+                    supporter = dweller[random.Next() % dweller.Length];
                 }
 
-                generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier").EndAlign().AppendLine();
+                implementedSupporters.Add(supporter);
 
-                Supporter[] dweller = _supporters["Dweller"];
-                for (int i = 0; i < 5; i++)
+                string platform = supporter.Platform switch
                 {
-                    Supporter supporter = null;
+                    "kofi" => "Ko-fi",
+                    "patreon" => "Patreon",
+                    _ => "Unknown"
+                };
 
-                    while (supporter != null && !implementedSupporters.Contains(supporter))
-                    {
-                        supporter = dweller[random.Next() % dweller.Length];
-                    }
-
-                    implementedSupporters.Add(supporter);
-
-                    string platform = supporter.Platform switch
-                    {
-                        "kofi" => "Ko-fi",
-                        "patreon" => "Patreon",
-                        _ => "Unknown"
-                    };
-
-                    generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
-                    {
-                        Alignment = WidgetAlignment.Left
-                    }, new Widget_Symbol(Content.Shared.Symbols[platform])
-                    {
-                        Alignment = WidgetAlignment.Right
-                    });
-                }
-
-                pageBuilder.Add(new SectionDefinition("Supporters", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
-
-                LineBuilder topSupporterLines = new();
-                topSupporterLines.BeginCentre().Append("Prestige Tier").EndAlign().AppendLine();
-
-                Supporter[] prestige = _supporters["Prestige"];
-                foreach (Supporter supporter in prestige)
+                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
                 {
-                    string platform = supporter.Platform switch
-                    {
-                        "kofi" => "Ko-fi",
-                        "patreon" => "Patreon",
-                        _ => "Unknown"
-                    };
-
-                    topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
-                    {
-                        Alignment = WidgetAlignment.Left
-                    }, new Widget_Symbol(Content.Shared.Symbols[platform])
-                    {
-                        Alignment = WidgetAlignment.Right
-                    });
-                }
-
-                pageBuilder.Add(new SectionDefinition("Supporters", "These are all supporters of the Prestige tier"), topSupporterLines);
+                    Alignment = WidgetAlignment.Left
+                }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                {
+                    Alignment = WidgetAlignment.Right
+                });
             }
+
+            pageBuilder.Add(new SectionDefinition("Supporters", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
+
+            LineBuilder topSupporterLines = new();
+            topSupporterLines.BeginCentre().Append("Prestige Tier").EndAlign().AppendLine();
+
+            Supporter[] prestige = _supporters["Prestige"];
+            foreach (Supporter supporter in prestige)
+            {
+                string platform = supporter.Platform switch
+                {
+                    "kofi" => "Ko-fi",
+                    "patreon" => "Patreon",
+                    _ => "Unknown"
+                };
+
+                topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                {
+                    Alignment = WidgetAlignment.Left
+                }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                {
+                    Alignment = WidgetAlignment.Right
+                });
+            }
+
+            pageBuilder.Add(new SectionDefinition("Supporters", "These are all supporters of the Prestige tier"), topSupporterLines);
         }
     }
 
