@@ -89,30 +89,20 @@ internal class CreditScreen : InfoScreen
 
             generalSupporterLines.BeginCentre().Append("Basic Tier").EndAlign().AppendLine();
 
-            List<Supporter> implementedSupporters = [];
             Supporter[] basic = _supporters["Basic"];
+            List<int> supporterIndicies = [.. Enumerable.Range(0, basic.Length)];
+
             for (int i = 0; i < 5; i++)
             {
-                Supporter supporter = null;
+                int realIndex = random.Next() % supporterIndicies.Count;
+                int index = supporterIndicies[realIndex];
+                Supporter supporter = basic[index];
+                supporterIndicies.RemoveAt(realIndex);
 
-                while (supporter != null && !implementedSupporters.Contains(supporter))
-                {
-                    supporter = basic[random.Next() % basic.Length];
-                }
-
-                implementedSupporters.Add(supporter);
-
-                string platform = supporter.Platform switch
-                {
-                    "kofi" => "Ko-fi",
-                    "patreon" => "Patreon",
-                    _ => "Unknown"
-                };
-
-                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
                 {
                     Alignment = WidgetAlignment.Left
-                }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
                 {
                     Alignment = WidgetAlignment.Right
                 });
@@ -121,28 +111,19 @@ internal class CreditScreen : InfoScreen
             generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier").EndAlign().AppendLine();
 
             Supporter[] dweller = _supporters["Dweller"];
+            supporterIndicies = [.. Enumerable.Range(0, dweller.Length)];
+
             for (int i = 0; i < 5; i++)
             {
-                Supporter supporter = null;
+                int realIndex = random.Next() % supporterIndicies.Count;
+                int index = supporterIndicies[realIndex];
+                Supporter supporter = dweller[index];
+                supporterIndicies.RemoveAt(realIndex);
 
-                while (supporter != null && !implementedSupporters.Contains(supporter))
-                {
-                    supporter = dweller[random.Next() % dweller.Length];
-                }
-
-                implementedSupporters.Add(supporter);
-
-                string platform = supporter.Platform switch
-                {
-                    "kofi" => "Ko-fi",
-                    "patreon" => "Patreon",
-                    _ => "Unknown"
-                };
-
-                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
                 {
                     Alignment = WidgetAlignment.Left
-                }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
                 {
                     Alignment = WidgetAlignment.Right
                 });
@@ -156,17 +137,10 @@ internal class CreditScreen : InfoScreen
             Supporter[] prestige = _supporters["Prestige"];
             foreach (Supporter supporter in prestige)
             {
-                string platform = supporter.Platform switch
-                {
-                    "kofi" => "Ko-fi",
-                    "patreon" => "Patreon",
-                    _ => "Unknown"
-                };
-
-                topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{GetNormalizedPlatform(supporter.Platform)} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
                 {
                     Alignment = WidgetAlignment.Left
-                }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                }, new Widget_Symbol(Content.Shared.Symbols[GetNormalizedPlatform(supporter.Platform)])
                 {
                     Alignment = WidgetAlignment.Right
                 });
@@ -177,6 +151,13 @@ internal class CreditScreen : InfoScreen
     }
 
     public override InfoContent GetContent() => pageBuilder;
+
+    private string GetNormalizedPlatform(string rawString) => rawString switch
+    {
+        "kofi" => "Ko-fi",
+        "patreon" => "Patreon",
+        _ => "Unknown"
+    };
 
     [Serializable]
     private class Supporter
