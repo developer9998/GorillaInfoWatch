@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch.Behaviours;
 
-public class DataManager : MonoBehaviour
+internal class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
 

@@ -1,6 +1,17 @@
+using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
+using GorillaInfoWatch.Models.Significance;
+using GorillaInfoWatch.Models.Widgets;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using UnityEngine;
+using UnityEngine.Networking;
+using Random = System.Random;
 
 namespace GorillaInfoWatch.Screens;
 
@@ -13,86 +24,159 @@ internal class CreditScreen : InfoScreen
 
     private PageBuilder pageBuilder;
 
+    private Dictionary<string, Supporter[]> _supporters;
+
+    private readonly Dictionary<string, Texture2D> _avatars = [];
+
+    public async void Awake()
+    {
+        using UnityWebRequest request = UnityWebRequest.Get(Constants.URL_Supporters);
+        UnityWebRequestAsyncOperation asyncOperation = request.SendWebRequest();
+        await asyncOperation.AsAwaitable();
+
+        _supporters = request.result == UnityWebRequest.Result.Success ? JsonConvert.DeserializeObject<Dictionary<string, Supporter[]>>(request.downloadHandler.text) : null;
+
+        _supporters?.SelectMany(section => section.Value).ForEach(async supporter =>
+        {
+            string avatar = supporter.Avatar;
+            using UnityWebRequest texRequest = UnityWebRequest.Get(avatar);
+            UnityWebRequestAsyncOperation texAsyncOperation = texRequest.SendWebRequest();
+            await texAsyncOperation;
+            Texture2D tex = new(128, 128, TextureFormat.RGB24, false)
+            {
+                filterMode = FilterMode.Point
+            };
+            tex.LoadImage(texRequest.downloadHandler.data);
+            _avatars[avatar] = tex;
+        });
+    }
+
     public override void OnScreenLoad()
     {
         if (pageBuilder == null)
         {
             pageBuilder = new();
 
-            var figures = Content.Shared.Figures;
-            var testers = figures.Where(figure => figure.Description.ToLower().Contains("tester"));
+            ReadOnlyCollection<FigureSignificance> figures = SignificanceManager.Significance_Figures;
 
-            /*
-            LineBuilder baseCredits = new();
+            LineBuilder developerLines = new();
+            bool hasReadTester = false;
 
-            baseCredits.Add(string.Format(creditFormat, "Dev", "dev9998", "Creator and Developer"), new Widget_Symbol(new(Symbols.Dev))
+            foreach (FigureSignificance figure in figures)
             {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Gizmo", "gizmogoat", "Creator and Developer"), new Widget_Symbol(new(Symbols.Gizmo))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Cresmondo", "crescent.mondo", "2D Artist"), new Widget_Symbol(new(Symbols.Cresmondo))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "H4RNS", "hr4ns", "3D Artist"), new Widget_Symbol(new(Symbols.H4RNS))
-            {
-                Alignment = WidgetAlignment.Left
-            });
+                if (string.IsNullOrEmpty(figure.Description) || string.IsNullOrWhiteSpace(figure.Description)) continue;
 
-            baseCredits.Skip();
+                string[] split = figure.Description.Split(": ");
+                if (!hasReadTester && split.Last().ToLower().Contains("tester"))
+                {
+                    hasReadTester = true;
+                    developerLines.Skip();
+                }
 
-            baseCredits.Add(string.Format(creditFormat, "Astrid", "astridgt", "Tester"), new Widget_Symbol(new(Symbols.Astrid))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Cyan", "cyangt", "Tester"), new Widget_Symbol(new(Symbols.Cyan))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Deactivated", "knownperson", "Tester"), new Widget_Symbol(new(Symbols.Deactivated))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Mia", "mia7z", "Tester"), new Widget_Symbol(new(Symbols.Mia))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Lapis", "lapisgit", "Tester"), new Widget_Symbol(new(Symbols.Lapis))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            baseCredits.Add(string.Format(creditFormat, "Kronicahl", "kronicahl", "Tester"), new Widget_Symbol(new(Symbols.Kronicahl))
-            {
-                Alignment = WidgetAlignment.Left
-            });
+                developerLines.Add(string.Format(creditFormat, figure.Title, split.First(), split.Last()), new Widget_Symbol(figure.Symbol)
+                {
+                    Alignment = WidgetAlignment.Left
+                });
+            }
 
-            pageBuilder.Add(null, $"These are contributors and testers respectively who helped create {Constants.Name} {Constants.Version}", baseCredits);
+            pageBuilder.Add(new SectionDefinition("", "These are the lead developers, contributors, and testers of GorillaInfoWatch"), developerLines);
 
-            LineBuilder supporterCredits = new();
-            supporterCredits.Add(string.Format(creditFormat, "CBigback", "cbigbomb", "Supporter since March 9, 2025"), new Widget_Symbol(new(Symbols.Patreon))
+            if (_supporters != null)
             {
-                Alignment = WidgetAlignment.Left
-            });
-            supporterCredits.Add(string.Format(creditFormat, "Koda", "kodagtt", "Supporter since April 6, 2025"), new Widget_Symbol(new(Symbols.KoFi))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            supporterCredits.Add(string.Format(creditFormat, "Guy", "saul15.sgma", "Supporter since May 19, 2025"), new Widget_Symbol(new(Symbols.Patreon))
-            {
-                Alignment = WidgetAlignment.Left
-            });
-            supporterCredits.Add(string.Format(creditFormat, "iceyonly yapps", "icey_yapps", "Supporter since June 30, 2025"), new Widget_Symbol(new(Symbols.KoFi))
-            {
-                Alignment = WidgetAlignment.Left
-            });
+                Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
 
-            pageBuilder.Add("Supporters", "These are my highest tier supporters who paid to be here", supporterCredits);
-            */
+                LineBuilder generalSupporterLines = new();
+
+                generalSupporterLines.BeginCentre().Append("Basic Tier - $5 CAD").EndAlign().AppendLine();
+
+                Supporter[] basic = _supporters["Basic"];
+                for (int i = 0; i < 5; i++)
+                {
+                    Supporter supporter = basic[random.Next() % basic.Length];
+
+                    string platform = supporter.Platform switch
+                    {
+                        "kofi" => "Ko-fi",
+                        "patreon" => "Patreon",
+                        _ => "Unknown"
+                    };
+
+                    generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                    {
+                        Alignment = WidgetAlignment.Right
+                    });
+                }
+
+                generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier - $12.50 CAD").EndAlign().AppendLine();
+
+                Supporter[] dweller = _supporters["Dweller"];
+                for (int i = 0; i < 5; i++)
+                {
+                    Supporter supporter = dweller[random.Next() % dweller.Length];
+
+                    string platform = supporter.Platform switch
+                    {
+                        "kofi" => "Ko-fi",
+                        "patreon" => "Patreon",
+                        _ => "Unknown"
+                    };
+
+                    generalSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                    {
+                        Alignment = WidgetAlignment.Right
+                    });
+                }
+
+                pageBuilder.Add(new SectionDefinition("", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
+
+                LineBuilder topSupporterLines = new();
+                topSupporterLines.BeginCentre().Append("Prestige Tier - $25 CAD").EndAlign().AppendLine();
+
+                Supporter[] prestige = _supporters["Prestige"];
+                foreach (Supporter supporter in prestige)
+                {
+                    string platform = supporter.Platform switch
+                    {
+                        "kofi" => "Ko-fi",
+                        "patreon" => "Patreon",
+                        _ => "Unknown"
+                    };
+
+                    topSupporterLines.Add(string.Format(creditFormat, supporter.DisplayName, supporter.Username, $"{platform} Supporter"), new Widget_Symbol(_avatars[supporter.Avatar])
+                    {
+                        Alignment = WidgetAlignment.Left
+                    }, new Widget_Symbol(Content.Shared.Symbols[platform])
+                    {
+                        Alignment = WidgetAlignment.Right
+                    });
+                }
+
+                pageBuilder.Add(new SectionDefinition("", "These are all supporters of the Prestige tier"), topSupporterLines);
+            }
         }
     }
 
     public override InfoContent GetContent() => pageBuilder;
+
+    [Serializable]
+    private class Supporter
+    {
+        [JsonProperty("display")]
+        public string DisplayName { get; set; }
+
+        [JsonProperty("user")]
+        public string Username { get; set; }
+
+        [JsonProperty("avatar")]
+        public string Avatar { get; set; }
+
+        [JsonProperty("origin")]
+        public string Platform { get; set; }
+    }
 }

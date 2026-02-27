@@ -96,7 +96,7 @@ namespace GorillaInfoWatch.Behaviours.UI
                 shortcutButton.SetActive(false);
             }
 
-            menuAnimator.SetBool("IsLocal", IsLocalWatch);
+            menuAnimator.SetBool(Constants.AnimatorProperty_IsLocal, IsLocalWatch);
 
             watchHeadTransform.localEulerAngles = watchHeadTransform.localEulerAngles.WithZ(-91.251f);
 
@@ -175,7 +175,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
             transform.localScale = Vector3.one;
 
-            if (IsLocalWatch) NetworkManager.Instance.SetProperty("Orientation", inLeftHand);
+            if (IsLocalWatch) NetworkManager.Instance.SetProperty(Constants.NetworkProperty_Orientation, inLeftHand);
         }
 
         public void SetVisibilityCheck(VRRig rig, bool invisible)
@@ -203,7 +203,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             if (currentTab != newTab)
             {
                 currentTab = newTab;
-                menuAnimator.SetInteger("Tab", (int)newTab);
+                menuAnimator.SetInteger(Constants.AnimatorProperty_Tab, (int)newTab);
             }
         }
 
@@ -259,15 +259,17 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             if (hasMediaSession)
             {
-                NetworkManager.Instance.SetProperty("Title", session.Title);
-                NetworkManager.Instance.SetProperty("Artist", session.Artist);
-                NetworkManager.Instance.SetProperty("Length", session.EndTime);
+                NetworkManager.Instance
+                    .SetProperty(Constants.NetworkProperty_MediaTitle, session.Title)
+                    .SetProperty(Constants.NetworkProperty_MediaArtist, session.Artist)
+                    .SetProperty(Constants.NetworkProperty_MediaLength, session.EndTime);
             }
             else
             {
-                NetworkManager.Instance.RemoveProperty("Title");
-                NetworkManager.Instance.RemoveProperty("Artist");
-                NetworkManager.Instance.RemoveProperty("Length");
+                NetworkManager.Instance
+                    .RemoveProperty(Constants.NetworkProperty_MediaTitle)
+                    .RemoveProperty(Constants.NetworkProperty_MediaArtist)
+                    .RemoveProperty(Constants.NetworkProperty_MediaLength);
             }
         }
 

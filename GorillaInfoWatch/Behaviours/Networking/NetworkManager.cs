@@ -17,7 +17,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
 
     private readonly byte eventCode = 176;
 
-    private readonly int id = StaticHash.Compute(Constants.NetworkPropertyKey.GetStaticHash());
+    private readonly int id = StaticHash.Compute(Constants.Networking_PropertyKey.GetStaticHash());
 
     private readonly Hashtable _properties = [];
     private bool _isPropertiesReady;
@@ -31,7 +31,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
 
         PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
 
-        PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Constants.NetworkPropertyKey, Constants.Version } });
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Constants.Networking_PropertyKey, Constants.Version } });
     }
 
     public void Update()
@@ -41,7 +41,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
         if (_isPropertiesReady && _propertySetTimer <= 0)
         {
             _isPropertiesReady = false;
-            _propertySetTimer = Constants.NetworkRaiseInterval;
+            _propertySetTimer = Constants.Networking_RaiseInterval;
 
             try
             {
@@ -55,19 +55,21 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void SetProperty(string key, object value)
+    public NetworkManager SetProperty(string key, object value)
     {
         if (_properties.ContainsKey(key)) _properties[key] = value;
         else _properties.Add(key, value);
 
         _isPropertiesReady = PhotonNetwork.InRoom || _isPropertiesReady;
+        return this;
     }
 
-    public void RemoveProperty(string key)
+    public NetworkManager RemoveProperty(string key)
     {
         if (_properties.ContainsKey(key)) _properties.Remove(key);
 
         _isPropertiesReady = PhotonNetwork.InRoom || _isPropertiesReady;
+        return this;
     }
 
     public void NotifyPropertiesRecieved(Player player, Hashtable properties)

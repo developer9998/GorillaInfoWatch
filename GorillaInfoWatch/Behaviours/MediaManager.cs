@@ -36,7 +36,7 @@ public class MediaManager : MonoBehaviour, IInitializeCallback
 
         if (!hasCompatibility)
         {
-            Logging.Warning("MediaManager is incompatible (not on Windows operating system)");
+            Logging.Warning("MediaManager is incompatible (not on a Windows operating system)");
             Destroy(this);
             return;
         }
@@ -245,7 +245,7 @@ public class MediaManager : MonoBehaviour, IInitializeCallback
             // NOTE: Unity's web request functionality doesn't work as intended when downloading and writing this file, please avoid it
 
             using HttpClient client = new();
-            using Stream stream = await client.GetStreamAsync("https://github.com/developer9998/WindowsMediaController/releases/download/1.0.0/GorillaInfoMediaProcess.exe");
+            using Stream stream = await client.GetStreamAsync(Constants.URL_MediaProcess);
 
             if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
             using FileStream fileStream = new(ExecutablePath, FileMode.OpenOrCreate);

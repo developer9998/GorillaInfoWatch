@@ -99,7 +99,7 @@ namespace GorillaInfoWatch.Screens
                     Symbol = Content.Shared.Symbols["Info"]
                 }];
 
-                lines.AppendColour(player.GetName().EnforcePlayerNameLength(), GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white);
+                lines.AppendColour(player.GetPlayerName(), GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig) ? rig.playerText1.color : Color.white);
                 lines.Add(widgets);
             }
 

@@ -1,6 +1,8 @@
-﻿using GorillaInfoWatch.Extensions;
+﻿using GorillaInfoWatch.Behaviours.UI;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Shortcuts;
+using GorillaInfoWatch.Models.UserInput;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
@@ -77,6 +79,25 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
             selectedTrigger.OnBoxTriggered();
         });
 
+        RegisterShortcut("Join Specific Room", "Joins a specific room provided by the user", () =>
+        {
+            UserInput.Activate(GorillaComputer.instance.roomToJoin, UserInputBoard.Standard, 10, (sender, args) =>
+            {
+                string roomCode = args.Input;
+                GorillaComputer.instance.roomToJoin = roomCode;
+
+                if (!args.IsTyping)
+                {
+                    if (GorillaComputer.instance.currentStateIndex != 0)
+                    {
+                        GorillaComputer.instance.currentStateIndex = 0;
+                        GorillaComputer.instance.SwitchState(GorillaComputer.instance.GetState(GorillaComputer.instance.currentStateIndex), true);
+                    }
+                    GorillaComputer.instance.ProcessRoomState(GorillaKeyboardBindings.enter);
+                }
+            });
+        });
+
         RegisterShortcut("Leave", "Leave the room you are currently in", ShortcutRestrictions.Multiplayer, () =>
         {
             if (!NetworkSystem.Instance.InRoom) return;
@@ -91,7 +112,6 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
 
             await NetworkSystem.Instance.ReturnToSinglePlayer();
             await Task.Delay(250);
-
             await PhotonNetworkController.Instance.AttemptToJoinSpecificRoomAsync(roomName, JoinType.Solo, null);
         });
 
@@ -112,39 +132,11 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
             NetPlayer masterClient = NetworkSystem.Instance.MasterClient;
             string userId = masterClient.UserId;
 
-            Notify("Master Client", masterClient.GetName().EnforcePlayerNameLength(), 4, screen: new Notification.ExternalScreen(typeof(PlayerInspectorScreen), "Inspect Player", () =>
+            Notify("Master Client", masterClient.GetPlayerName(), 4, screen: new Notification.ExternalScreen(typeof(PlayerInspectorScreen), "Inspect Player", () =>
             {
                 masterClient = PlayerUtility.GetPlayer(userId);
                 if (masterClient != null && !masterClient.IsNull) PlayerInspectorScreen.UserId = userId;
             }));
         });
-
-        /*
-        RegisterShortcut("Mute Player", "Changes the mute state applied to the nearest player", () =>
-        {
-            if (!NetworkSystem.Instance.InRoom) return;
-
-            List<RigContainer> rigsInUse = [.. VRRigCache.rigsInUse.Values];
-            if (rigsInUse.Count == 0) return;
-
-            Vector3 position = GTPlayer.Instance.HeadCenterPosition;
-
-            float nearestDistance = -1;
-            int nearestIndex = 0;
-
-            for (int i = 0; i < rigsInUse.Count; i++)
-            {
-                float distance = (position - rigsInUse[i].Rig.syncPos).sqrMagnitude;
-                if (nearestDistance == -1 || nearestDistance > distance)
-                {
-                    nearestDistance = distance;
-                    nearestIndex = i;
-                }
-            }
-
-            RigContainer nearest = rigsInUse[nearestIndex];
-            PlayerUtility.MutePlayer(nearest.Creator, !nearest.Muted);
-        });
-        */
     }
 }

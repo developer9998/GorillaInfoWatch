@@ -117,7 +117,7 @@ namespace GorillaInfoWatch.Screens
                 bool? isPublic = presence.IsPublic;
                 string zoneName = presence.Zone;
 
-                string playerName = ((string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4].EnforcePlayerNameLength() : userName;
+                string playerName = ((string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(userName)) && accountInfo.AccountInfo.TitleInfo.DisplayName != null && accountInfo.AccountInfo.TitleInfo.DisplayName.Length > 4) ? accountInfo.AccountInfo.TitleInfo.DisplayName[0..^4] : userName;
 
                 bool isRoomPublic = isPublic.GetValueOrDefault(false);
                 bool isOffline = string.IsNullOrEmpty(roomId) || roomId.Length == 0;

@@ -16,9 +16,9 @@ public class Content
 
     internal GameObject KeyboardPrefab;
 
-    internal ReadOnlyCollection<FigureSignificanceObject> Figures;
+    internal ReadOnlyCollection<FigureSignificance> Figures;
 
-    internal ReadOnlyCollection<ItemSignificanceObject> Cosmetics;
+    internal ReadOnlyCollection<ItemSignificance> Cosmetics;
 
     public ReadOnlyDictionary<string, Symbol> Symbols;
 

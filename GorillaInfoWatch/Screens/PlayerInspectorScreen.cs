@@ -63,9 +63,10 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder lines = new();
 
-            string playerName = player.GetName();
-            string normalizedName = playerName.EnforcePlayerNameLength();
-            lines.AppendColour(normalizedName, rig.playerText1.color).Add(new Widget_Symbol()
+            string playerName = player.GetPlayerName(false);
+            string playerNameLimited = player.GetPlayerName(true);
+
+            lines.AppendColour(playerNameLimited, rig.playerText1.color).Add(new Widget_Symbol()
             {
                 Alignment = new(47.5f),
                 ControllerType = typeof(WidgetController_PlayerSwatch),
@@ -86,7 +87,7 @@ namespace GorillaInfoWatch.Screens
             });
 
             string displayName = playerName.SanitizeName();
-            if (displayName != null && displayName.Length > 0 && normalizedName != displayName) lines.Append("Display Name: ").AppendLine(displayName);
+            if (displayName != null && displayName.Length > 0 && playerNameLimited != displayName) lines.Append("Display Name: ").AppendLine(displayName);
 
             Color playerColour = rig.playerColor;
             float[] colourDigits = [playerColour.r, playerColour.g, playerColour.b];
@@ -156,7 +157,7 @@ namespace GorillaInfoWatch.Screens
                     number++;
 
                     if (string.IsNullOrEmpty(significance.Description)) str.Append(significance.Title);
-                    else str.Append(string.Format(_descriptionFormat, significance.Title, string.Format(significance.Description, normalizedName)));
+                    else str.Append(string.Format(_descriptionFormat, significance.Title, string.Format(significance.Description, playerNameLimited)));
 
                     significanceLines.Add(str.ToString(), widgets: significance.Symbol != null ? [new Widget_Symbol(significance.Symbol)
                     {

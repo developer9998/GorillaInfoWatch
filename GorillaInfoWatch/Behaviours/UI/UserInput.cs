@@ -112,7 +112,8 @@ internal class UserInput : MonoBehaviour
 
     public static void Activate(string input, UserInputBoard board, int limit = int.MaxValue, EventHandler<UserInputArgs> submit = null, UserInput userInput = null)
     {
-        (userInput ?? Instance).Activate(input, board, limit, submit);
+        UserInput instance = userInput ?? Instance;
+        instance?.Activate(input, board, limit, submit);
     }
 
     public void Activate(string input, UserInputBoard board, int limit = int.MaxValue, EventHandler<UserInputArgs> submit = null)
@@ -133,7 +134,7 @@ internal class UserInput : MonoBehaviour
 
         transform.position = Panel.transform.position;
         transform.eulerAngles = Panel.transform.eulerAngles;
-        transform.localScale = Panel.transform.localScale * 1.5f;
+        transform.localScale = Panel.transform.localScale * 1.2f;
     }
 
     public void ProcessBinding(UserInputBinding binding)

@@ -63,7 +63,7 @@ public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : Wi
 
     private void CreateSubSymbol(ref Image image, Symbol watchSymbol)
     {
-        string objectName = $"SubSymbol {watchSymbol}";
+        string objectName = $"SubSymbol {watchSymbol.Sprite.name}";
 
         if (Widget.Object && Widget.Object.transform.Find(objectName) is var child && child && child.TryGetComponent(out Image childImage))
         {
@@ -80,7 +80,7 @@ public class WidgetController_PlayerIcon(NetPlayer player, float sizeDelta) : Wi
         image = subObject.AddComponent<Image>();
         image.preserveAspect = true;
         image.sprite = watchSymbol.Sprite;
-        image.color = watchSymbol.Colour;
+        image.color = Color.white;
     }
 
     public void OnSignificanceChanged(NetPlayer player, PlayerSignificance[] significance)

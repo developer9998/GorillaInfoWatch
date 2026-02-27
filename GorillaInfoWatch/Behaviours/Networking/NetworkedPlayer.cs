@@ -47,7 +47,7 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
         {
             HasInfoWatch = true;
 
-            Logging.Message($"{Player.GetName()} has GorillaInfoWatch");
+            Logging.Message($"{Player.GetPlayerName()} has GorillaInfoWatch");
             SignificanceManager.Instance.CheckPlayer(Player, SignificanceCheckScope.InfoWatch);
         }
 

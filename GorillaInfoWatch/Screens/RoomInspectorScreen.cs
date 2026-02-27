@@ -81,7 +81,7 @@ namespace GorillaInfoWatch.Screens
 
             if (NetworkSystem.Instance.MasterClient is NetPlayer host)
             {
-                lines.Append("Host: ").Append(host.GetName().EnforcePlayerNameLength()).Add(new Widget_PushButton(() =>
+                lines.Append("Host: ").Append(host.GetPlayerName()).Add(new Widget_PushButton(() =>
                 {
                     PlayerInspectorScreen.UserId = host.UserId;
                     LoadScreen<PlayerInspectorScreen>();

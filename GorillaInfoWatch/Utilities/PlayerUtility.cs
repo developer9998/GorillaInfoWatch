@@ -66,11 +66,11 @@ namespace GorillaInfoWatch.Utilities
             return defaultValue;
         }
 
-        public static void ProcessScoreboardLines(NetPlayer player, Action<GorillaPlayerScoreboardLine, bool> action)
+        public static void FindScoreBoardLines(NetPlayer player, Action<GorillaPlayerScoreboardLine, bool> result)
         {
             if (player == null || player.IsNull) throw new ArgumentNullException(nameof(player));
 
-            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (result == null) throw new ArgumentNullException(nameof(result));
 
             GorillaPlayerScoreboardLine[] lines = [.. GorillaScoreboardTotalUpdater.allScoreboards
                 .Select(scoreboard => scoreboard.lines).SelectMany(lines => lines)
@@ -80,12 +80,12 @@ namespace GorillaInfoWatch.Utilities
             {
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    action.Invoke(lines[i], i == 0);
+                    result.Invoke(lines[i], i == 0);
                 }
                 return;
             }
 
-            Logging.Warning($"No scoreboard lines detected for player {player.GetName().EnforcePlayerNameLength()} (what the fuck map are you in??)");
+            Logging.Warning($"No scoreboard lines detected for player {player.GetPlayerName()}");
         }
 
         public static bool HasActiveCosmetic(VRRig rig, string itemId)
@@ -98,7 +98,7 @@ namespace GorillaInfoWatch.Utilities
 
         public static void MutePlayer(NetPlayer player, bool value)
         {
-            ProcessScoreboardLines(player, (scoreboardLine, isPrimaryLine) =>
+            FindScoreBoardLines(player, (scoreboardLine, isPrimaryLine) =>
             {
                 if (isPrimaryLine)
                 {

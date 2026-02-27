@@ -9,6 +9,7 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Interfaces;
 using GorillaInfoWatch.Models.Shortcuts;
+using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Shortcuts;
@@ -36,7 +37,7 @@ using SnapSlider = GorillaInfoWatch.Behaviours.UI.Widgets.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours;
 
-public class Main : MonoBehaviourPunCallbacks
+internal class Main : MonoBehaviourPunCallbacks
 {
     public static Main Instance { get; private set; }
 
@@ -45,11 +46,13 @@ public class Main : MonoBehaviourPunCallbacks
     private GameObject _screenRoot;
 
     private readonly Dictionary<Type, InfoScreen> _screens = [];
+
     private InfoScreen _loadedScreen;
 
     private HomeScreen _homeScreen;
 
     private InboxScreen _inboxScreen;
+
     private readonly List<Notification> _notifications = [];
 
     private readonly List<Type> includedScreenTypes =
@@ -210,17 +213,17 @@ public class Main : MonoBehaviourPunCallbacks
         _homeScreen = GetScreen<HomeScreen>();
         _inboxScreen = GetScreen<InboxScreen>();
 
-        _assetLoader = new AssetLoader("GorillaInfoWatch.Content.watchbundle");
+        _assetLoader = new AssetLoader(Constants.AssetBundlePath);
 
-        ContentObject contentObject = await _assetLoader.LoadAsset<ContentObject>("Content");
+        ContentObject contentObject = await _assetLoader.LoadAsset<ContentObject>(Constants.AssetName_Content);
 
         Content content = new();
         Content.Shared = content;
         content.WatchPrefab = contentObject.WatchPrefab;
         content.MenuPrefab = contentObject.MenuPrefab;
         content.KeyboardPrefab = contentObject.KeyboardPrefab;
-        content.Figures = new(contentObject.Figures);
-        content.Cosmetics = new(contentObject.Cosmetics);
+        content.Figures = new(Array.ConvertAll(contentObject.Figures.ToArray(), figure => (FigureSignificance)figure));
+        content.Cosmetics = new(Array.ConvertAll(contentObject.Cosmetics.ToArray(), item => (ItemSignificance)item));
         content.Symbols = new ReadOnlyDictionary<string, Symbol>(contentObject.Symbols.ToDictionary(symbol => symbol.Label, symbol => new Symbol(symbol)));
 
         Dictionary<Enum, Object> sounds = [];
@@ -246,7 +249,7 @@ public class Main : MonoBehaviourPunCallbacks
 
         float timeOffset = Convert.ToSingle(TimeZoneInfo.Local.GetUtcOffset(DateTime.UtcNow).TotalMinutes);
         _infoWatch.TimeOffset = timeOffset;
-        NetworkManager.Instance.SetProperty("TimeOffset", timeOffset);
+        NetworkManager.Instance.SetProperty(Constants.NetworkProperty_TimeOffset, timeOffset);
 
         _panelObject = Instantiate(content.MenuPrefab);
         _panelObject.name = "Panel";
@@ -836,7 +839,7 @@ public class Main : MonoBehaviourPunCallbacks
 
     public async void CheckVersion(Action<(bool isOutdated, string latestVersion)> result)
     {
-        using UnityWebRequest request = UnityWebRequest.Get(Constants.Uri_LatestVersion);
+        using UnityWebRequest request = UnityWebRequest.Get(Constants.URL_ModVersion);
         UnityWebRequestAsyncOperation asyncOperation = request.SendWebRequest();
         await asyncOperation;
 
