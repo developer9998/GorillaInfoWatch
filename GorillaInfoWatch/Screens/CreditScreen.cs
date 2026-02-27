@@ -87,12 +87,20 @@ internal class CreditScreen : InfoScreen
 
                 LineBuilder generalSupporterLines = new();
 
-                generalSupporterLines.BeginCentre().Append("Basic Tier - $5 CAD").EndAlign().AppendLine();
+                generalSupporterLines.BeginCentre().Append("Basic Tier").EndAlign().AppendLine();
 
+                List<Supporter> implementedSupporters = [];
                 Supporter[] basic = _supporters["Basic"];
                 for (int i = 0; i < 5; i++)
                 {
-                    Supporter supporter = basic[random.Next() % basic.Length];
+                    Supporter supporter = null;
+
+                    while (supporter != null && !implementedSupporters.Contains(supporter))
+                    {
+                        supporter = basic[random.Next() % basic.Length];
+                    }
+
+                    implementedSupporters.Add(supporter);
 
                     string platform = supporter.Platform switch
                     {
@@ -110,12 +118,19 @@ internal class CreditScreen : InfoScreen
                     });
                 }
 
-                generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier - $12.50 CAD").EndAlign().AppendLine();
+                generalSupporterLines.Skip().BeginCentre().Append("Dweller Tier").EndAlign().AppendLine();
 
                 Supporter[] dweller = _supporters["Dweller"];
                 for (int i = 0; i < 5; i++)
                 {
-                    Supporter supporter = dweller[random.Next() % dweller.Length];
+                    Supporter supporter = null;
+
+                    while (supporter != null && !implementedSupporters.Contains(supporter))
+                    {
+                        supporter = dweller[random.Next() % dweller.Length];
+                    }
+
+                    implementedSupporters.Add(supporter);
 
                     string platform = supporter.Platform switch
                     {
@@ -133,10 +148,10 @@ internal class CreditScreen : InfoScreen
                     });
                 }
 
-                pageBuilder.Add(new SectionDefinition("", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
+                pageBuilder.Add(new SectionDefinition("Supporters", "These are five random users of both the Basic and Dweller tiers"), generalSupporterLines);
 
                 LineBuilder topSupporterLines = new();
-                topSupporterLines.BeginCentre().Append("Prestige Tier - $25 CAD").EndAlign().AppendLine();
+                topSupporterLines.BeginCentre().Append("Prestige Tier").EndAlign().AppendLine();
 
                 Supporter[] prestige = _supporters["Prestige"];
                 foreach (Supporter supporter in prestige)
@@ -157,7 +172,7 @@ internal class CreditScreen : InfoScreen
                     });
                 }
 
-                pageBuilder.Add(new SectionDefinition("", "These are all supporters of the Prestige tier"), topSupporterLines);
+                pageBuilder.Add(new SectionDefinition("Supporters", "These are all supporters of the Prestige tier"), topSupporterLines);
             }
         }
     }

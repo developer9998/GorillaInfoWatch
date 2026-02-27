@@ -958,7 +958,7 @@ internal class Main : MonoBehaviourPunCallbacks
                     if (warnReasons.Length == 0) break;
 
                     string warnReasonString = string.Join(", ", warnReasons.Select(reason => reason.ToTitleCase().Replace('_', ' ')));
-                    Notifications.SendNotification(new($"{warnCategory.ToTitleCase()} warning received", warnReasonString, 3f + (warnReasons.Length * 0.333333f), Sounds.notificationNegative));
+                    Notifications.SendNotification(new($"{warnCategory.ToTitleCase()} warning received", warnReasonString, 3f + (warnReasons.Length * 0.5f), Sounds.notificationNegative));
 
                     break;
 
