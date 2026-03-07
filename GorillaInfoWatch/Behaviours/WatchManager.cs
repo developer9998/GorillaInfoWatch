@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Bootstrap;
-using GorillaExtensions;
+﻿using GorillaExtensions;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Behaviours.UI.Widgets;
@@ -14,8 +12,10 @@ using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
+using GorillaLibrary.Extensions;
 using GorillaNetworking;
 using HarmonyLib;
+using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -37,9 +37,9 @@ using SnapSlider = GorillaInfoWatch.Behaviours.UI.Widgets.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours;
 
-internal class Main : MonoBehaviourPunCallbacks
+internal class WatchManager : MonoBehaviourPunCallbacks
 {
-    public static Main Instance { get; private set; }
+    public static WatchManager Instance { get; private set; }
 
     // Screens
 
@@ -137,11 +137,11 @@ internal class Main : MonoBehaviourPunCallbacks
         {
             List<Assembly> assemblies = [];
 
-            foreach (PluginInfo pluginInfo in Chainloader.PluginInfos.Values)
+            foreach (MelonBase pluginInfo in MelonBase.RegisteredMelons)
             {
-                if (pluginInfo.Metadata?.GUID == Constants.GUID) continue;
+                if (pluginInfo is not MelonMod mod || mod == Melon<InfoMelonMod>.Instance) continue;
 
-                if (pluginInfo.Instance is BaseUnityPlugin plugin && plugin.GetType()?.Assembly is Assembly assembly)
+                if (mod.GetType().Assembly is Assembly assembly)
                 {
                     assemblies.Add(assembly);
                 }
@@ -155,7 +155,7 @@ internal class Main : MonoBehaviourPunCallbacks
 
                     if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() is not InfoWatchCompatibleAttribute attribute) continue;
 
-                    if (attribute.MinimumVersion > Version.Parse(Constants.Version))
+                    if (attribute.MinimumVersion > Version.Parse(Melon<InfoMelonMod>.Instance.Info.Version))
                     {
                         Logging.Warning($"Assembly has minimum version of {attribute.MinimumVersion}");
                         continue;
@@ -469,12 +469,14 @@ internal class Main : MonoBehaviourPunCallbacks
             {
                 if (notification.Screen.Task is Task task)
                 {
-                    ThreadingHelper.Instance.StartSyncInvoke(async () =>
+                    async void Method()
                     {
                         await task;
                         notification.Processing = false;
                         LoadScreen(screen);
-                    });
+                    }
+
+                    Method();
                 }
                 else LoadScreen(screen);
             }
@@ -818,15 +820,15 @@ internal class Main : MonoBehaviourPunCallbacks
 
     #region Plugin utilities
 
-    public string GetPluginStateKey(PluginInfo plugin) => $"ModState_{plugin.Metadata.GUID}";
+    public string GetPluginStateKey(MelonMod plugin) => $"ModState_{plugin.Info.Name}";
 
-    public bool GetPersistentPluginState(PluginInfo plugin)
+    public bool GetPersistentPluginState(MelonMod plugin)
     {
         string key = GetPluginStateKey(plugin);
         return !DataManager.Instance.HasData(key) || DataManager.Instance.GetData(key, defaultValue: true, setDefaultValue: false);
     }
 
-    public void SetPersistentPluginState(PluginInfo plugin, bool state)
+    public void SetPersistentPluginState(MelonMod plugin, bool state)
     {
         string key = GetPluginStateKey(plugin);
         if (state && DataManager.Instance.HasData(key)) DataManager.Instance.RemoveData(key);
@@ -845,7 +847,7 @@ internal class Main : MonoBehaviourPunCallbacks
 
         if (request.result > UnityWebRequest.Result.Success) return;
 
-        Version installedVersion = new(Constants.Version);
+        Version installedVersion = new(Melon<InfoMelonMod>.Instance.Info.Version);
         string latestVersionString = request.downloadHandler.text.Trim();
         result?.Invoke((Version.TryParse(latestVersionString, out Version latestVersion) && latestVersion > installedVersion, latestVersionString));
     }

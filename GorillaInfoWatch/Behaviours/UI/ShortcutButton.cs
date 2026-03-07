@@ -51,7 +51,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (_activated || _touching != null) return;
 
-            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
+            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
             {
                 _touching = handIndicator;
                 _timer = 0f;
@@ -70,7 +70,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             _material.color = _buttonColour.Evaluate(0);
 
-            Main.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
+            WatchManager.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
         }
 
         public void Update()

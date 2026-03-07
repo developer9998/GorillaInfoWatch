@@ -3,7 +3,7 @@ using HarmonyLib;
 
 namespace GorillaInfoWatch.Patches
 {
-    [HarmonyPatch(typeof(RotatingQuest), nameof(RotatingQuest.Complete)), HarmonyPriority(Priority.HigherThanNormal)]
+    [HarmonyPatch(typeof(RotatingQuest), "Complete"), HarmonyPriority(Priority.HigherThanNormal)]
     public class RotatingQuestPatch
     {
         public static void Prefix(RotatingQuest __instance)

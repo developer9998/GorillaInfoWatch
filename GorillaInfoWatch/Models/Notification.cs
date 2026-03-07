@@ -1,4 +1,4 @@
-﻿using BepInEx;
+﻿using GorillaLibrary.Utilities;
 using System;
 using System.Threading.Tasks;
 
@@ -33,7 +33,7 @@ namespace GorillaInfoWatch.Models
             public string DisplayText { get; } = displayText;
             public Task Task { get; } = task;
 
-            public ExternalScreen(Type screen, string displayText, Action action) : this(screen, displayText, Task.Run(() => ThreadingHelper.Instance.StartSyncInvoke(action)))
+            public ExternalScreen(Type screen, string displayText, Action action) : this(screen, displayText, Task.Run(() => ThreadUtility.StartSyncMethod(action)))
             {
                 // Must require a body
             }

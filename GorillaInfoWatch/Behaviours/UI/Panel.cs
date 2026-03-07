@@ -1,5 +1,7 @@
 ﻿using GorillaExtensions;
 using GorillaInfoWatch.Utilities;
+using GorillaLibrary.Extensions;
+using GorillaLibrary.Utilities;
 using UnityEngine;
 using Player = GorillaLocomotion.GTPlayer;
 
@@ -18,7 +20,7 @@ public class Panel : MonoBehaviour
     public bool InView => Vector3.Dot(Player.Instance.headCollider.transform.forward, (Trigger.position - Player.Instance.headCollider.transform.position).normalized) > 0.64f;
 
     private bool IsLeftHand => Watch.LocalWatch?.InLeftHand ?? true;
-    private Player.HandState Hand => IsLeftHand ? Player.Instance.leftHand : Player.Instance.rightHand;
+    private Player.HandState Hand => IsLeftHand ? Player.Instance.LeftHand : Player.Instance.RightHand;
 
     public void Start()
     {
@@ -48,7 +50,7 @@ public class Panel : MonoBehaviour
         SetPosition();
         SetRotation();
 
-        transform.localScale = Vector3.one * 1.7f * GorillaTagger.Instance.offlineVRRig.lastScaleFactor;
+        transform.localScale = Vector3.one * 1.7f * GorillaTagger.Instance.offlineVRRig.GetScaleFactor();
 
         // Turn off the menu if we're not looking at it, or if our hand is facing down
         if (UprightVector.IsShorterThan(1.75f)) gameObject.SetActive(false);

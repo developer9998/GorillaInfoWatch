@@ -65,7 +65,7 @@ public class SnapSlider : MonoBehaviour
     {
         if
         (
-            Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.5f, false)
+            WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.5f, false)
             && other.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand
             && (currentHandIndicator == null || currentHandIndicator == component) && (currentSnapSlider == null || currentSnapSlider == this)
         )
@@ -87,7 +87,7 @@ public class SnapSlider : MonoBehaviour
                 if (currentHandIndicator is not null)
                 {
                     GorillaTagger.Instance.StartVibration(component.isLeftHand, 0.2f, 0.02f);
-                    Main.Instance.PressSlider(this, component.isLeftHand);
+                    WatchManager.Instance.PressSlider(this, component.isLeftHand);
                 }
             }
 
@@ -106,7 +106,7 @@ public class SnapSlider : MonoBehaviour
         {
             currentHandIndicator = null;
             currentSnapSlider = null;
-            Main.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
+            WatchManager.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
         }
     }
 

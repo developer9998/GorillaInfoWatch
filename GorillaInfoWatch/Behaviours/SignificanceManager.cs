@@ -6,6 +6,7 @@ using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Screens;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
+using GorillaLibrary.Extensions;
 using GorillaNetworking;
 using System;
 using System.Collections.Generic;
@@ -45,14 +46,14 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
         Instance = this;
 
-        RoomSystem.JoinedRoomEvent += OnJoinedRoom;
-        NetworkSystem.Instance.OnPlayerJoined += OnPlayerJoined;
-        NetworkSystem.Instance.OnPlayerLeft += OnPlayerLeft;
-        RoomSystem.LeftRoomEvent += OnLeftRoom;
+        GorillaLibrary.Events.Room.OnRoomJoined.Subscribe(OnJoinedRoom);
+        GorillaLibrary.Events.Player.OnPlayerEnteredRoom.Subscribe(OnPlayerJoined);
+        GorillaLibrary.Events.Player.OnPlayerLeftRoom.Subscribe(OnPlayerLeft);
+        GorillaLibrary.Events.Room.OnRoomLeft.Subscribe(OnLeftRoom);
 
         Events.OnRigRecievedCosmetics += OnPlayerCosmeticsRecieved;
         Events.OnRigUpdatedCosmetics += OnPlayerCosmeticsUpdated;
-        CosmeticsV2Spawner_Dirty.OnPostInstantiateAllPrefabs2 += () => OnPlayerCosmeticsUpdated(GorillaTagger.Instance.offlineVRRig);
+        CosmeticsV2Spawner_Dirty.OnPostInstantiateAllPrefabs += () => OnPlayerCosmeticsUpdated(GorillaTagger.Instance.offlineVRRig);
     }
 
     public async void Initialize()
@@ -98,7 +99,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
         {
             if (_significance.ContainsKey(player))
             {
-                Logging.Info($"Removed significant player {player.GetPlayerName()}");
+                Logging.Info($"Removed significant player {player.GetName()}");
                 _significance.Remove(player);
                 OnSignificanceChanged?.SafeInvoke(player, null);
             }
@@ -134,7 +135,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
         // Add record if player doesn't have any
         if (!_significance.ContainsKey(player))
         {
-            Logging.Message($"Added significant player {player.GetPlayerName()}");
+            Logging.Message($"Added significant player {player.GetName()}");
             array.Select(element => element?.Title ?? "None").Select((element, index) => new { element, index }).ForEach(a => Logging.Info($"{(SignificanceLayer)a.index}: {a.element}"));
             _significance.Add(player, array);
             OnSignificanceChanged?.SafeInvoke(player, array);
@@ -144,7 +145,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
         // Update record if existing sequence isn't equal to proposed sequence
         if (!_significance[player].SequenceEqual(array))
         {
-            Logging.Message($"Changed significant player {player.GetPlayerName()}");
+            Logging.Message($"Changed significant player {player.GetName()}");
             array.Select(element => element?.Title ?? "None").Select((element, index) => new { element, index }).ForEach(a => Logging.Info($"{(SignificanceLayer)a.index}: {a.element}"));
             _significance[player] = array;
             OnSignificanceChanged?.SafeInvoke(player, array);
@@ -185,7 +186,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
         NetPlayer player = rig.Creator;
         if (player == null || player.IsNull || player.IsLocal) return;
 
-        Logging.Message($"{player.GetPlayerName()} Cosmetics: {rig.rawCosmeticString}");
+        //Logging.Message($"{player.GetPlayerName()} Cosmetics: {rig.rawCosmeticString}");
 
         if (CheckPlayer(player, SignificanceCheckScope.Item) && GetSignificance(player, out PlayerSignificance[] significance) && Array.Find(significance, item => item is ItemSignificance) is ItemSignificance item)
         {
@@ -240,7 +241,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
         if (FriendUtility.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
         {
-            Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.FriendColour), player.GetPlayerName()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetPlayerName()}", delegate ()
+            Notifications.SendNotification(new("Your friend has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.FriendColour), player.GetName()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -250,7 +251,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
         if (FriendUtility.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
         {
-            Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.VerifiedColour), player.GetPlayerName()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetPlayerName()}", delegate ()
+            Notifications.SendNotification(new("A verified user has joined", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.VerifiedColour), player.GetName()), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -260,7 +261,7 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
         if (GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
-            Notifications.SendNotification(new("A notable user has joined", player.GetPlayerName(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetPlayerName()}", delegate ()
+            Notifications.SendNotification(new("A notable user has joined", player.GetName(), 3f, Sounds.notificationPositive, new Notification.ExternalScreen(typeof(PlayerInspectorScreen), $"Inspect {player.GetName()}", delegate ()
             {
                 player = PlayerUtility.GetPlayer(userId);
                 if (player != null && !player.IsNull) PlayerInspectorScreen.UserId = player.UserId;
@@ -274,19 +275,19 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
         if (FriendUtility.IsFriend(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Friend))
         {
-            Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.FriendColour), player.GetPlayerName()), 5, Sounds.notificationNegative));
+            Notifications.SendNotification(new("Your friend has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.FriendColour), player.GetName()), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 
         if (FriendUtility.IsVerified(userId) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.Verified))
         {
-            Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.VerifiedColour), player.GetPlayerName()), 5, Sounds.notificationNegative));
+            Notifications.SendNotification(new("A verified user has left", string.Format("<color=#{0}>{1}</color>", ColorUtility.ToHtmlStringRGB(FriendUtility.VerifiedColour), player.GetName()), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 
         if (GetSignificance(player, out PlayerSignificance[] significance) && significance.Any(item => item is FigureSignificance) && Configuration.AllowedNotifcationSources.Value.HasFlag(NotificationSource.ModSignificant))
         {
-            Notifications.SendNotification(new("A notable user has left", player.GetPlayerName(), 5, Sounds.notificationNegative));
+            Notifications.SendNotification(new("A notable user has left", player.GetName(), 5, Sounds.notificationNegative));
             goto CheckPlayer;
         }
 

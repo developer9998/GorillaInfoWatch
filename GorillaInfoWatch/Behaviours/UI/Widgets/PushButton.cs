@@ -134,7 +134,7 @@ public class PushButton : MonoBehaviour
             renderer.SetPropertyBlock(matProperties, matIndex);
         }
 
-        if (bumped && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
+        if (bumped && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
         {
             bumped = false;
             targetValue = 0f;
@@ -144,7 +144,7 @@ public class PushButton : MonoBehaviour
 
     public void OnTriggerEnter(Collider collider)
     {
-        if (collider.TryGetComponent(out HandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, _isReadOnly ? 0.05f : 0.25f))
+        if (collider.TryGetComponent(out HandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, _isReadOnly ? 0.05f : 0.25f))
         {
             if (_isReadOnly)
             {
@@ -159,7 +159,7 @@ public class PushButton : MonoBehaviour
             matProperties.SetColor(ShaderProps._Color, colour.Evaluate(1f));
             renderer.SetPropertyBlock(matProperties, matIndex);
 
-            Main.Instance.PressButton(this, component.isLeftHand);
+            WatchManager.Instance.PressButton(this, component.isLeftHand);
             GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
             OnButtonPressed?.SafeInvoke();

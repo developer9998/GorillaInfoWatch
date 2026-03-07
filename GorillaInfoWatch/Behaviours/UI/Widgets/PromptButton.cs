@@ -24,7 +24,7 @@ public class PromptButton : MonoBehaviour
 
     public void OnTriggerEnter(Collider collider)
     {
-        if (collider.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f))
+        if (collider.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f))
         {
             AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(handIndicator.isLeftHand);
             handPlayer.PlayOneShot(Sounds.widgetButton.AsAudioClip(), 0.2f);

@@ -1,9 +1,8 @@
-﻿using BepInEx;
-using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Tools;
+﻿using GorillaInfoWatch.Tools;
 using HarmonyLib;
+using MelonLoader;
 using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using UnityEngine;
 
@@ -11,28 +10,32 @@ namespace GorillaInfoWatch.Utilities;
 
 public static class FriendUtility
 {
-    public static bool HasFriendSupport => _friendPlugin?.Exists() ?? false;
+    public static bool HasFriendSupport => _friendPlugin != null;
     public static Color FriendColour => _friendColour;
     public static Color VerifiedColour => _verifiedColour;
     public static Color RecentlyPlayedColour => _recentlyPlayedColour;
 
-    private static BaseUnityPlugin _friendPlugin;
+    private static MelonMod _friendPlugin;
 
     private static Color _friendColour, _verifiedColour, _recentlyPlayedColour;
 
     private static MethodInfo _isVerified, _isFriend, _isInFriendList, _hasPlayedWithUsRecently, _needToCheckRecently, _addFriend, _removeFriend;
 
-    public static void ScanPlugins(Dictionary<string, PluginInfo> loadedPlugins)
+    public static void ScanPlugins(ReadOnlyCollection<MelonBase> loadedPlugins)
     {
         Logging.Message("FriendUtility: ScanPlugins");
 
-        if (loadedPlugins.TryGetValue(Constants.GorillaFriendsGUID, out PluginInfo plugin))
+        foreach(var melonBase in loadedPlugins)
         {
-            Initialize(plugin.Instance);
+            if (melonBase is MelonMod mod && mod.Info.Name == "GorillaFriends")
+            {
+                Initialize(mod);
+                break;
+            }
         }
     }
 
-    private static void Initialize(BaseUnityPlugin plugin)
+    private static void Initialize(MelonMod plugin)
     {
         Logging.Message("FriendUtility: Initialize");
 

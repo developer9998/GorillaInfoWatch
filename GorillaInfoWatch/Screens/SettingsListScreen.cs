@@ -1,13 +1,8 @@
-﻿using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Configuration;
-using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace GorillaInfoWatch.Screens;
 
@@ -21,7 +16,8 @@ internal class SettingsListScreen : InfoScreen
 
     public void Awake()
     {
-        var entries = Plugin.Config.File.GetEntries();
+        /*
+        var entries = InfoMelonMod.Config.File.GetEntries();
         var sectionNames = entries.Select(entry => entry.Definition.Section).Distinct();
         var dictionary = sectionNames.ToDictionary(section => section, section => new ConfigurableSection()
         {
@@ -37,6 +33,7 @@ internal class SettingsListScreen : InfoScreen
 
         entries.ForEach(entry => dictionary[entry.Definition.Section].Entries.Add(new ConfigurableWrapper_BepInEntry(entry)));
         _configurableList = [.. dictionary.Values];
+        */
     }
 
     public override InfoContent GetContent()

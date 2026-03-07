@@ -1,9 +1,9 @@
 using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaLibrary.Extensions;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -85,7 +85,7 @@ internal class CreditScreen : InfoScreen
         {
             try
             {
-                Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
+                Random random = new(Mathf.FloorToInt((DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year) / (DateTime.UtcNow.Hour + 1)));
 
                 // Basic/Dweller tier
 

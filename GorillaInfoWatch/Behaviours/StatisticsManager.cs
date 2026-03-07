@@ -1,5 +1,6 @@
 ﻿using GorillaGameModes;
 using GorillaInfoWatch.Models.Interfaces;
+using GorillaLibrary.GameModes.Utilities;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using Utilla.Utils;
 
 namespace GorillaInfoWatch.Behaviours;
 
@@ -25,9 +25,10 @@ public class StatisticsManager : MonoBehaviour, IInitializeCallback
 
     public void Initialize()
     {
-        GameMode.GameModeZoneMapping.Init();
+        GameModeZoneMapping mapping = GameMode.GameModeZoneMapping;
+        AccessTools.Method(mapping.GetType(), "Init").Invoke(mapping, null);
 
-        IEnumerable<GorillaGameManager> activeGameManagers = GameMode.GameModeZoneMapping.zoneGameModes
+        IEnumerable<GorillaGameManager> activeGameManagers = ((ZoneGameModes[])AccessTools.Field(mapping.GetType(), "zoneGameModes").GetValue(mapping))
             .Where(element => !element.zone.Contains(GTZone.customMaps)).SelectMany(element => element.modes)
             .Distinct().Select(GameMode.GetGameModeInstance);
 
@@ -94,7 +95,7 @@ public class StatisticsManager : MonoBehaviour, IInitializeCallback
             GameManager = gameManager;
 
             GameModeType gameModeType = gameManager.GameType();
-            DisplayName = GameModeUtils.GetGameModeName(gameModeType);
+            DisplayName = GameModeUtility.GetGameModeName(gameModeType);
             _gameModeIndex = (int)gameModeType;
 
             MethodInfo methodInfo = AccessTools.Method(gameManager.GetType(), nameof(GorillaGameManager.LocalCanTag));

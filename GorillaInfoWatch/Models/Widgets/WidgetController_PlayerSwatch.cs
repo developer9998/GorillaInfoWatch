@@ -1,4 +1,5 @@
 ﻿using GorillaInfoWatch.Tools;
+using GorillaLibrary.Utilities;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,7 +23,7 @@ public class WidgetController_PlayerSwatch(NetPlayer player) : WidgetController
 
     public override void OnEnable()
     {
-        if (VRRigCache.Instance.TryGetVrrig(Player, out playerRig))
+        if (RigUtility.TryGetRig(Player, out playerRig))
         {
             Image.enabled = true;
 

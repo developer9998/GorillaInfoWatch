@@ -10,6 +10,8 @@ using System.Linq;
 using GorillaExtensions;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.StateMachine;
+using HarmonyLib;
+using GorillaLibrary.Extensions;
 using GorillaInfoWatch.Behaviours.Networking;
 #endif
 
@@ -129,7 +131,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             LocalWatch = this;
 
             InLeftHand = Convert.ToBoolean(Configuration.Orientation.Value);
-            Configuration.Orientation.SettingChanged += (_, _) => SetHand(Convert.ToBoolean(Configuration.Orientation.Value));
+            Configuration.Orientation.OnEntryValueChanged.Subscribe((_, _) => SetHand(Convert.ToBoolean(Configuration.Orientation.Value)));
 
             CustomPushButton homeNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Home").AddComponent<CustomPushButton>();
             homeNavigationButton.OnButtonPush += _ => SetTab(WatchTab.Standard);
@@ -149,7 +151,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             SetHand(InLeftHand);
             SetTab(WatchTab.Standard);
-            SetVisibility(HideWatch || Rig.IsInvisibleToLocalPlayer);
+            SetVisibility(HideWatch || (bool)AccessTools.Field(typeof(VRRig), "IsInvisibleToLocalPlayer").GetValue(Rig));
             SetColour(Rig.playerColor);
         }
 

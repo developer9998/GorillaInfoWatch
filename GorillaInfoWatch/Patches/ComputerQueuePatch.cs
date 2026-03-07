@@ -5,14 +5,14 @@ using System.Reflection.Emit;
 
 namespace GorillaInfoWatch.Patches
 {
-    [HarmonyPatch(typeof(GorillaComputer), nameof(GorillaComputer.ProcessQueueState))]
+    [HarmonyPatch(typeof(GorillaComputer), "ProcessQueueState")]
     internal class ComputerQueuePatch
     {
         public static List<string> baseGameQueueNames = [];
 
         [HarmonyPriority(Priority.Low)]
         [HarmonyWrapSafe]
-        private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             if (baseGameQueueNames.Count > 0) return instructions;
 

@@ -1,6 +1,7 @@
 ﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
+using MelonLoader;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +11,15 @@ namespace GorillaInfoWatch.Screens;
 [PreserveSection]
 public class HomeScreen : InfoScreen
 {
-    public override string Title => Constants.Name;
+    public override string Title
+    {
+        get
+        {
+            var info = Melon<InfoMelonMod>.Instance.Info;
+            return $"{info.Name} {info.Version}";
+        }
+    }
+
     public override string Description => "Created by Dev / dev9998 and Gizmo / gizmogoat";
 
     internal readonly List<(string title, InfoScreen screen, bool native)> entries = [];

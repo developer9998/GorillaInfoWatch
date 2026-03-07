@@ -1,4 +1,7 @@
-﻿using GorillaNetworking;
+﻿using GorillaLibrary.Utilities;
+using GorillaNetworking;
+using HarmonyLib;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace GorillaInfoWatch.Models.Significance;
@@ -37,10 +40,11 @@ public class ItemSignificance : PlayerSignificance
             cosmeticAllowedString = CosmeticsController.instance?.concatStringCosmeticsAllowed ?? string.Empty;
             cosmeticSet = CosmeticsController.instance?.currentWornSet ?? CosmeticsController.CosmeticSet.EmptySet;
         }
-        else if (VRRigCache.Instance.TryGetVrrig(player, out RigContainer rigContainer) && rigContainer.Rig.InitializedCosmetics)
+        else if (RigUtility.TryGetRig(player, out RigContainer rigContainer) && (bool)AccessTools.Field(typeof(VRRig), "initializedCosmetics").GetValue(rigContainer.Rig))
         {
             targetRig = rigContainer.Rig;
-            cosmeticAllowedString = targetRig.rawCosmeticString ?? string.Empty;
+            HashSet<string> playerOwnedCosmetics = (HashSet<string>)AccessTools.Field(typeof(VRRig), "_playerOwnedCosmetics").GetValue(rigContainer.Rig);
+            cosmeticAllowedString = string.Concat(playerOwnedCosmetics);
             cosmeticSet = targetRig.cosmeticSet ?? CosmeticsController.CosmeticSet.EmptySet;
         }
         else return ItemState.None;

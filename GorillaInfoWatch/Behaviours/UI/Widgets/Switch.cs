@@ -92,7 +92,7 @@ public class Switch : MonoBehaviour
 
     public void OnTriggerEnter(Collider collider)
     {
-        if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, _isReadOnly ? 0.05f : 0.25f))
+        if (collider.TryGetComponent(out GorillaTriggerColliderHandIndicator component) && component.isLeftHand != Watch.LocalWatch.InLeftHand && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, _isReadOnly ? 0.05f : 0.25f))
         {
             if (_isReadOnly)
             {
@@ -105,7 +105,7 @@ public class Switch : MonoBehaviour
             currentValue = currentValue.GetValueOrDefault(targetValue);
             Update();
 
-            Main.Instance.PressSwitch(this, component.isLeftHand);
+            WatchManager.Instance.PressSwitch(this, component.isLeftHand);
             GorillaTagger.Instance.StartVibration(component.isLeftHand, GorillaTagger.Instance.tapHapticStrength / 2f, GorillaTagger.Instance.tapHapticDuration);
 
             currentWidget?.Value = bumped;

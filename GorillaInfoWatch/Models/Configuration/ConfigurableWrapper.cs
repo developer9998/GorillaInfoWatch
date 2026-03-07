@@ -1,10 +1,11 @@
-﻿using BepInEx.Configuration;
-using GorillaInfoWatch.Extensions;
+﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaLibrary.Extensions;
+using MelonLoader;
+using MelonLoader.Preferences;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -16,7 +17,7 @@ internal abstract class ConfigurableWrapper
     public abstract Type SettingType { get; }
     public abstract string Entry { get; }
     public abstract string Description { get; }
-    public abstract AcceptableValueBase AcceptableValues { get; }
+    public abstract ValueValidator AcceptableValues { get; }
 
     public abstract object BoxedValue { get; set; }
     public abstract string SerializedValue { get; set; }
@@ -47,7 +48,7 @@ internal abstract class ConfigurableWrapper
 
         Action postDefineFunction = null;
 
-        AcceptableValueBase acceptableValues = AcceptableValues;
+        ValueValidator acceptableValues = AcceptableValues;
 
         List<Widget_Base> CreateIncrementalButtons(Action<int> action)
         {
@@ -82,11 +83,11 @@ internal abstract class ConfigurableWrapper
 
         if (settingType == typeof(short))
         {
-            if (acceptableValues is not AcceptableValueRange<short> shortRange) goto WriteLines;
+            if (acceptableValues is not ValueRange<short> shortRange) goto WriteLines;
 
             widgets.AddRange(CreateIncrementalButtons(increment =>
             {
-                short value = (short)shortRange.Clamp((short)TomlTypeConverter.ConvertToValue(SerializedValue, SettingType) + increment);
+                short value = (short)shortRange.EnsureValid(/*(short)TomlMapper.ConvertToValue(SerializedValue, SettingType)*/ 0 + increment);
                 BoxedValue = value;
             }));
 
@@ -95,11 +96,11 @@ internal abstract class ConfigurableWrapper
 
         if (settingType == typeof(int))
         {
-            if (acceptableValues is not AcceptableValueRange<int> intRange) goto WriteLines;
+            if (acceptableValues is not ValueRange<int> intRange) goto WriteLines;
 
             widgets.AddRange(CreateIncrementalButtons(increment =>
             {
-                int value = (int)intRange.Clamp((int)TomlTypeConverter.ConvertToValue(SerializedValue, SettingType) + increment);
+                int value = (int)intRange.EnsureValid(/*(short)TomlMapper.ConvertToValue(SerializedValue, SettingType)*/ 0 + increment);
                 BoxedValue = value;
             }));
 
@@ -108,11 +109,11 @@ internal abstract class ConfigurableWrapper
 
         if (settingType == typeof(long))
         {
-            if (acceptableValues is not AcceptableValueRange<long> longRange) goto WriteLines;
+            if (acceptableValues is not ValueRange<long> longRange) goto WriteLines;
 
             widgets.AddRange(CreateIncrementalButtons(increment =>
             {
-                long value = (long)longRange.Clamp((long)TomlTypeConverter.ConvertToValue(SerializedValue, SettingType) + increment);
+                long value = (long)longRange.EnsureValid(/*(short)TomlMapper.ConvertToValue(SerializedValue, SettingType)*/ 0 + increment);
                 BoxedValue = value;
             }));
 
@@ -222,7 +223,7 @@ internal class ConfigurableWrapper_Woaw<T>(string key, string description, Func<
     public override Type SettingType => typeof(T);
     public override string Entry => key;
     public override string Description => description;
-    public override AcceptableValueBase AcceptableValues => null; // TODO: implement custom AcceptableValues
+    public override ValueValidator AcceptableValues => null; // TODO: implement custom AcceptableValues
 
     public override object BoxedValue
     {
@@ -231,19 +232,19 @@ internal class ConfigurableWrapper_Woaw<T>(string key, string description, Func<
     }
     public override string SerializedValue
     {
-        get => TomlTypeConverter.ConvertToString(BoxedValue, SettingType);
-        set => TomlTypeConverter.ConvertToValue(value, SettingType);
+        get => throw new NotImplementedException();
+        set => throw new NotImplementedException();
     }
 }
 
-internal class ConfigurableWrapper_BepInEntry(ConfigEntryBase entryBase) : ConfigurableWrapper
+internal class ConfigurableWrapper_BepInEntry(MelonPreferences_Entry entryBase) : ConfigurableWrapper
 {
-    public ConfigEntryBase EntryBase = entryBase;
+    public MelonPreferences_Entry EntryBase = entryBase;
 
-    public override Type SettingType => EntryBase.SettingType;
-    public override string Entry => EntryBase.Definition.Key;
-    public override string Description => EntryBase.Description.Description;
-    public override AcceptableValueBase AcceptableValues => EntryBase.Description.AcceptableValues;
+    public override Type SettingType => EntryBase.GetReflectedType();
+    public override string Entry => EntryBase.DisplayName;
+    public override string Description => EntryBase.Description;
+    public override ValueValidator AcceptableValues => EntryBase.Validator;
 
     public override object BoxedValue
     {
@@ -251,19 +252,18 @@ internal class ConfigurableWrapper_BepInEntry(ConfigEntryBase entryBase) : Confi
         set
         {
             EntryBase.BoxedValue = value;
-            if (!EntryBase.ConfigFile.SaveOnConfigSet) EntryBase.ConfigFile.Save();
         }
     }
 
     public override string SerializedValue
     {
-        get => EntryBase.GetSerializedValue();
+        get => EntryBase.GetValueAsString();
         set
         {
-            EntryBase.SetSerializedValue(value);
-            if (!EntryBase.ConfigFile.SaveOnConfigSet) EntryBase.ConfigFile.Save();
+            EntryBase.BoxedValue = value.ToString();
+            // EntryBase.SetSerializedValue(value);
         }
     }
 
-    public override string UnsupportedText => $"This setting can be edited at {Path.GetFileName(EntryBase.ConfigFile.ConfigFilePath)}";
+    public override string UnsupportedText => $"woaw";
 }

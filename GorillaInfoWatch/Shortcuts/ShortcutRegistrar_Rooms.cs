@@ -3,6 +3,7 @@ using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.UserInput;
 using GorillaInfoWatch.Tools;
 using GorillaNetworking;
+using HarmonyLib;
 using Photon.Realtime;
 using System;
 using System.Collections.Generic;
@@ -84,12 +85,15 @@ internal class ShortcutRegistrar_Rooms : ShortcutRegistrar
 
                 if (!args.IsTyping)
                 {
+                    /*
                     if (GorillaComputer.instance.currentStateIndex != 0)
                     {
                         GorillaComputer.instance.currentStateIndex = 0;
                         GorillaComputer.instance.SwitchState(GorillaComputer.instance.GetState(GorillaComputer.instance.currentStateIndex), true);
                     }
-                    GorillaComputer.instance.ProcessRoomState(GorillaKeyboardBindings.enter);
+                    */
+
+                    AccessTools.Method(typeof(GorillaComputer), "ProcessRoomState").Invoke(GorillaComputer.instance, [GorillaKeyboardBindings.enter]);
                 }
             });
         });

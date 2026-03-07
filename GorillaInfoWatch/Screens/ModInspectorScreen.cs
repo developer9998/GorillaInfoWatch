@@ -1,11 +1,9 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Extensions;
+﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Configuration;
 using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
+using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,12 +15,11 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Mod Inspector";
         public override Type ReturnType => typeof(ModListScreen);
 
-        public static PluginInfo Mod;
-
-        private List<ConfigurableSection> _configurableList = null;
+        public static MelonMod Mod;
 
         public override void OnScreenLoad()
         {
+            /*
             if (Mod.Instance.Config is not ConfigFile file || file.Count == 0)
                 return;
 
@@ -35,11 +32,12 @@ namespace GorillaInfoWatch.Screens
             });
             entries.ForEach(entry => dictionary[entry.Definition.Section].Entries.Add(new ConfigurableWrapper_BepInEntry(entry)));
             _configurableList = [.. dictionary.Values];
+            */
         }
 
         public override void OnScreenUnload()
         {
-            _configurableList = null;
+            //_configurableList = null;
         }
 
         public override InfoContent GetContent()
@@ -52,12 +50,15 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder lines = new();
 
-            lines.Add($"Name: {Mod.Metadata.Name}");
-            lines.Add($"Version: {Mod.Metadata.Version}");
-            lines.Add($"GUID: {Mod.Metadata.GUID}");
+            lines.Add($"Name: {Mod.Info.Name}");
+            lines.Add($"Version: {Mod.Info.Version}");
 
             lines.Skip();
 
+            PageBuilder pages = new();
+            pages.Add(lines);
+
+            /*
             lines.Add($"State: {(Mod.Instance.enabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>")}", new Widget_Switch(Mod.Instance.enabled, ToggleMod, Mod));
 
             var methods = AccessTools.GetMethodNames(Mod.Instance);
@@ -78,19 +79,9 @@ namespace GorillaInfoWatch.Screens
                     pages.Add(section.Title, lines);
                 }
             }
+            */
 
             return pages;
-        }
-
-        public void ToggleMod(bool value, object[] parameters)
-        {
-            if (parameters.ElementAtOrDefault(0) is PluginInfo pluginInfo)
-            {
-                pluginInfo.Instance.enabled = value;
-                Main.Instance.SetPersistentPluginState(pluginInfo, value);
-
-                SetText();
-            }
         }
     }
 }

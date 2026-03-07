@@ -4,6 +4,7 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
+using GorillaLibrary.Extensions;
 using Photon.Realtime;
 using System;
 using UnityEngine;
@@ -47,7 +48,7 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
         {
             HasInfoWatch = true;
 
-            Logging.Message($"{Player.GetPlayerName()} has GorillaInfoWatch");
+            Logging.Message($"{Player.GetName()} has GorillaInfoWatch");
             SignificanceManager.Instance.CheckPlayer(Player, SignificanceCheckScope.InfoWatch);
         }
 

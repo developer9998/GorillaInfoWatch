@@ -1,8 +1,8 @@
-﻿using BepInEx.Configuration;
-using GameObjectScheduling;
+﻿using GameObjectScheduling;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
+using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +45,7 @@ namespace GorillaInfoWatch.Screens
 
                 if (notification.RoomName != null && notification.RoomName.Length > 0)
                 {
-                    ConfigEntry<bool> roomPrivacySetting = notification.SessionIsPrivate ? Configuration.ShowPrivate : Configuration.ShowPublic;
+                    MelonPreferences_Entry<bool> roomPrivacySetting = notification.SessionIsPrivate ? Configuration.ShowPrivate : Configuration.ShowPublic;
                     string roomNameProtected = roomPrivacySetting.Value ? notification.RoomName : (notification.SessionIsPrivate ? "private session" : "public session");
                     prepend = string.Format(formatOnline, timeDisplay, roomNameProtected);
                 }

@@ -1,11 +1,9 @@
-﻿using BepInEx;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
-using GorillaInfoWatch.Behaviours;
+﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using HarmonyLib;
+using MelonLoader;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,14 +16,15 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Mods";
         public override string Description => "View and inspect the list of your installed plugins";
 
-        private PluginInfo[] stateSupportedMods, mods;
+        private MelonMod[] mods;
 
         public void Awake()
         {
-            Dictionary<string, PluginInfo> _loadedPlugins = Chainloader.PluginInfos;
-            PluginInfo[] _pluginInfos = [.. _loadedPlugins.Values];
+            /*
+            Dictionary<string, MelonMod> _loadedPlugins = Chainloader.PluginInfos;
+            MelonMod[] _pluginInfos = [.. _loadedPlugins.Values];
 
-            stateSupportedMods = [.. _pluginInfos.Where(delegate(PluginInfo pluginInfo)
+            stateSupportedMods = [.. _pluginInfos.Where(delegate(MelonMod pluginInfo)
             {
                 List<string> _instanceMethods = AccessTools.GetMethodNames(pluginInfo.Instance);
                 return _instanceMethods.Contains("OnEnable") || _instanceMethods.Contains("OnDisable");
@@ -34,9 +33,10 @@ namespace GorillaInfoWatch.Screens
             mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods).OrderBy(pluginInfo => pluginInfo.Metadata.Name).OrderByDescending(pluginInfo => pluginInfo.Instance.Config is ConfigFile config ? config.Count : -1)).Where(pluginInfo => pluginInfo.Metadata.GUID != Constants.GUID)];
 
             // Set the active state of the necessary mods
-            mods.ToDictionary(mod => mod, Main.Instance.GetPersistentPluginState)
+            mods.ToDictionary(mod => mod, WatchManager.Instance.GetPersistentPluginState)
                 .Where(element => (element.Key.Instance?.enabled ?? true) != element.Value)
                 .ForEach(element => element.Key.Instance?.enabled = element.Value);
+            */
         }
 
         public override InfoContent GetContent()
@@ -45,7 +45,7 @@ namespace GorillaInfoWatch.Screens
 
             for (int i = 0; i < mods.Length; i++)
             {
-                PluginInfo pluginInfo = mods[i];
+                MelonMod pluginInfo = mods[i];
 
                 Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
                 {
@@ -53,33 +53,15 @@ namespace GorillaInfoWatch.Screens
                     Symbol = Content.Shared.Symbols["Info"]
                 };
 
-                if (stateSupportedMods.Contains(pluginInfo))
-                {
-                    bool isEnabled = pluginInfo.Instance.enabled;
-                    lines.Append(pluginInfo.Metadata.Name).Append(": ").AppendColour(isEnabled ? "Enabled" : "Disabled", isEnabled ? ColourPalette.Green.Evaluate(0) : ColourPalette.Red.Evaluate(0)).Add(new Widget_Switch(isEnabled, ToggleMod, pluginInfo), pushButton);
-                    continue;
-                }
-
-                lines.Add(pluginInfo.Metadata.Name, pushButton);
+                lines.Add(pluginInfo.Info.Name, pushButton);
             }
 
             return lines;
         }
 
-        private void ToggleMod(bool value, object[] args)
-        {
-            if (args.ElementAtOrDefault(0) is PluginInfo pluginInfo)
-            {
-                pluginInfo.Instance.enabled = value;
-                Main.Instance.SetPersistentPluginState(pluginInfo, value);
-
-                SetText();
-            }
-        }
-
         private void OpenModInfo(object[] args)
         {
-            if (args.ElementAtOrDefault(0) is PluginInfo info)
+            if (args.ElementAtOrDefault(0) is MelonMod info)
             {
                 ModInspectorScreen.Mod = info;
                 LoadScreen<ModInspectorScreen>();

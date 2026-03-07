@@ -4,6 +4,7 @@ using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Utilities;
+using GorillaLibrary.Extensions;
 using PlayFab.ClientModels;
 using System;
 using System.Linq;
@@ -32,9 +33,9 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnScreenLoad();
 
-            Events.OnRigNameUpdate += OnRigNameUpdate;
-            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
-            RoomSystem.LeftRoomEvent += OnRoomLeft;
+            GorillaLibrary.Events.Player.OnPlayerLeftRoom.Subscribe(OnPlayerLeft);
+            GorillaLibrary.Events.Player.OnPlayerNameChanged.Subscribe(OnPlayerNameChanged);
+            GorillaLibrary.Events.Room.OnRoomLeft.Subscribe(OnRoomLeft);
         }
 
         public override void OnScreenUnload()
@@ -43,28 +44,28 @@ namespace GorillaInfoWatch.Screens
 
             UserId = null;
 
-            Events.OnRigNameUpdate -= OnRigNameUpdate;
-            RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
-            RoomSystem.LeftRoomEvent -= OnRoomLeft;
+            GorillaLibrary.Events.Player.OnPlayerLeftRoom.Unsubscribe(OnPlayerLeft);
+            GorillaLibrary.Events.Player.OnPlayerNameChanged.Unsubscribe(OnPlayerNameChanged);
+            GorillaLibrary.Events.Room.OnRoomLeft.Unsubscribe(OnRoomLeft);
         }
 
         public override InfoContent GetContent()
         {
-            if (!NetworkSystem.Instance.InRoom || PlayerUtility.GetPlayer(UserId) is not NetPlayer player || !GorillaParent.instance.vrrigDict.TryGetValue(player, out VRRig rig))
+            if (!NetworkSystem.Instance.InRoom || PlayerUtility.GetPlayer(UserId) is not NetPlayer player || !GorillaLibrary.Utilities.RigUtility.TryGetRig(player, out RigContainer rigContainer))
             {
                 ReturnScreen();
                 return null;
             }
 
-            RigContainer rigContainer = rig.rigContainer ?? rig.GetComponent<RigContainer>();
+            VRRig rig = rigContainer.Rig;
             GetAccountInfoResult accountInfo = player.GetAccountInfo(result => SetContent());
 
             PageBuilder inspectorPage = new();
 
             LineBuilder lines = new();
 
-            string playerName = player.GetPlayerName(false);
-            string playerNameLimited = player.GetPlayerName(true);
+            string playerName = player.GetName(false);
+            string playerNameLimited = player.GetName(true);
 
             lines.AppendColour(playerNameLimited, rig.playerText1.color).Add(new Widget_Symbol()
             {
@@ -195,9 +196,8 @@ namespace GorillaInfoWatch.Screens
             }
         }
 
-        private void OnRigNameUpdate(VRRig targetRig)
+        private void OnPlayerNameChanged(NetPlayer player, string name)
         {
-            NetPlayer player = targetRig.Creator;
             if (player == null || player.IsNull || player.UserId != UserId) return;
             SetContent();
         }

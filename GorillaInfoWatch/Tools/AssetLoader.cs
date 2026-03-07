@@ -1,4 +1,5 @@
 ﻿using GorillaInfoWatch.Extensions;
+using GorillaLibrary.Extensions;
 using GorillaNetworking;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +26,7 @@ namespace GorillaInfoWatch.Tools
 
         private async Task LoadBundle()
         {
-            Stream stream = typeof(Plugin).Assembly.GetManifestResourceStream(_bundleResourceName);
+            Stream stream = typeof(InfoMelonMod).Assembly.GetManifestResourceStream(_bundleResourceName);
             var bundleLoadRequest = AssetBundle.LoadFromStreamAsync(stream);
 
             // AssetBundleCreateRequest is a YieldInstruction !!

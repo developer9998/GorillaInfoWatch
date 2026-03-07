@@ -3,6 +3,7 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
+using GorillaLibrary.Extensions;
 using GorillaNetworking;
 using System;
 using UnityEngine;

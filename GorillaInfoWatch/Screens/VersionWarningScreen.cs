@@ -1,4 +1,5 @@
 ﻿using GorillaInfoWatch.Models;
+using MelonLoader;
 using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
@@ -15,7 +16,7 @@ namespace GorillaInfoWatch.Screens
 
             lines.AppendLine("Your installation of GorillaInfoWatch is outdated:");
             lines.Append("Latest: ").AppendColour(LatestVersion, Color.green).AppendLine();
-            lines.Append("Installed: ").AppendColour(Constants.Version, Color.red).AppendLine().Skip();
+            lines.Append("Installed: ").AppendColour(Melon<InfoMelonMod>.Instance.Info.Version, Color.red).AppendLine().Skip();
 
             lines.Add("To continue using GorillaInfoWatch, follow these instructions:");
             lines.Add("1. Navigate to the \"Exclusive Content\" category in the \"Dev's Dungeon\" Discord server", LineOptions.Wrapping);
