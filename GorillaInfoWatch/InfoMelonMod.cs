@@ -7,7 +7,7 @@ using GorillaLibrary;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(InfoMelonMod), "GorillaInfoWatch", "1.1.3", "dev9998")]
+[assembly: MelonInfo(typeof(InfoMelonMod), "GorillaInfoWatch", "1.1.4", "dev9998")]
 [assembly: MelonGame("Another Axiom", "Gorilla Tag")]
 [assembly: MelonAdditionalDependencies("GorillaLibrary")]
 [assembly: MelonOptionalDependencies("GorillaFriends")]
