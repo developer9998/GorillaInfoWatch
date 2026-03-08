@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Extensions;
-using GorillaLibrary.Extensions;
+﻿using GorillaLibrary.Extensions;
 using GorillaNetworking;
 using System.Collections.Generic;
 using System.IO;

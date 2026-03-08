@@ -1,5 +1,4 @@
 using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;

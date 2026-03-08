@@ -2,7 +2,6 @@
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
-using Valve.VR.InteractionSystem;
 using EffectType = GorillaTag.Cosmetics.CosmeticEffectsOnPlayers.EFFECTTYPE;
 
 namespace GorillaInfoWatch.Patches

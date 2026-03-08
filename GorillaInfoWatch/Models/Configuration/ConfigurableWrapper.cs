@@ -1,5 +1,4 @@
-﻿using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models.Widgets;
+﻿using GorillaInfoWatch.Models.Widgets;
 using GorillaLibrary.Extensions;
 using HarmonyLib;
 using MelonLoader;
@@ -217,6 +216,8 @@ internal abstract class ConfigurableWrapper
         lines.Skip().Add($"Type: {typeName}");
     }
 }
+
+// formerly ConfigurableWrapper_Waow... i miss her.
 
 internal class ConfigurableWrapper_Custom<T>(string key, string description, Func<T> getter, Action<T> setter) : ConfigurableWrapper
 {

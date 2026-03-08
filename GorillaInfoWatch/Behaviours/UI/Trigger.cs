@@ -2,7 +2,6 @@
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Models.UserInput;
-using GorillaInfoWatch.Utilities;
 using GorillaLibrary.Utilities;
 using UnityEngine;
 using HandIndicator = GorillaTriggerColliderHandIndicator;

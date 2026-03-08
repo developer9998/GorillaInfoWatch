@@ -25,7 +25,7 @@ public static class FriendUtility
     {
         Logging.Message("FriendUtility: ScanPlugins");
 
-        foreach(var melonBase in loadedPlugins)
+        foreach (var melonBase in loadedPlugins)
         {
             if (melonBase is MelonMod mod && mod.Info.Name == "GorillaFriends")
             {

@@ -1,17 +1,16 @@
-﻿using GorillaInfoWatch.Extensions;
-using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
+using GorillaLibrary.Extensions;
+using GorillaLibrary.GameModes.Models;
+using GorillaLibrary.GameModes.Utilities;
+using GorillaLibrary.Utilities;
 using Photon.Pun;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using GorillaLibrary.GameModes.Utilities;
-using GorillaLibrary.GameModes.Models;
-using GorillaLibrary.Utilities;
-using GorillaLibrary.Extensions;
 
 namespace GorillaInfoWatch.Screens
 {

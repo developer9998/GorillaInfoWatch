@@ -1,5 +1,4 @@
 using GorillaInfoWatch.Behaviours.UI;
-using GorillaInfoWatch.Extensions;
 using GorillaLibrary.Extensions;
 using System;
 using System.Linq;

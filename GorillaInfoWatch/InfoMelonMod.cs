@@ -3,9 +3,8 @@ using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Tools;
 using GorillaInfoWatch.Utilities;
+using GorillaLibrary;
 using MelonLoader;
-using MelonLoader.Utils;
-using System.IO;
 using UnityEngine;
 
 [assembly: MelonInfo(typeof(InfoMelonMod), "GorillaInfoWatch", "1.1.3", "dev9998")]
@@ -15,7 +14,7 @@ using UnityEngine;
 
 namespace GorillaInfoWatch;
 
-internal class InfoMelonMod : MelonMod
+internal class InfoMelonMod : GorillaMod
 {
     internal static Logging Log;
     internal static Configuration Config;
@@ -24,10 +23,7 @@ internal class InfoMelonMod : MelonMod
     {
         Log = new Logging(LoggerInstance);
 
-        MelonPreferences_Category category = MelonPreferences.CreateCategory("GorillaInfoWatch");
-        category.SetFilePath(Path.Combine(MelonEnvironment.UserDataDirectory, "GorillaInfoWatch.cfg"));
-
-        Config = new Configuration(category);
+        Config = new Configuration(this);
 
         GorillaLibrary.Events.Game.OnGameInitialized.Subscribe(Initialize);
         GorillaLibrary.Events.Rig.OnRigAdded.Subscribe(RigAdded);

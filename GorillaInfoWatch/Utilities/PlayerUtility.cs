@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Networking;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;

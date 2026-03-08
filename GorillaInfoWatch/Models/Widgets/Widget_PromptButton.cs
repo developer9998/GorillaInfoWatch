@@ -1,6 +1,5 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Behaviours.UI.Widgets;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.UserInput;
 using GorillaLibrary.Extensions;
 using System;
