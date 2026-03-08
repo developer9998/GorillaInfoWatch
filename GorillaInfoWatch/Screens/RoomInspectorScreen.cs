@@ -134,10 +134,8 @@ namespace GorillaInfoWatch.Screens
                 lines.Append(queueTitle).Append(": ").AppendLine(isNativeQueue ? queueName.ToTitleCase() : queueName.ToUpper());
             }
 
-            /*
-            int participantCount = NetworkSystem.Instance.AllNetPlayers.Where(player => player != null && !player.IsNull).Count(GameMode.CanParticipate);
+            int participantCount = GameModeUtility.GetParticipants().Count();
             lines.Append("Participation: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.GetInitialColour() : ColourPalette.Red.GetInitialColour()).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
-            */
 
             return lines;
         }

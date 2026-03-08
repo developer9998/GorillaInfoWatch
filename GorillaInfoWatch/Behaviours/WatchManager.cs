@@ -818,25 +818,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
     #endregion
 
-    #region Plugin utilities
-
-    public string GetPluginStateKey(MelonMod plugin) => $"ModState_{plugin.Info.Name}";
-
-    public bool GetPersistentPluginState(MelonMod plugin)
-    {
-        string key = GetPluginStateKey(plugin);
-        return !DataManager.Instance.HasData(key) || DataManager.Instance.GetData(key, defaultValue: true, setDefaultValue: false);
-    }
-
-    public void SetPersistentPluginState(MelonMod plugin, bool state)
-    {
-        string key = GetPluginStateKey(plugin);
-        if (state && DataManager.Instance.HasData(key)) DataManager.Instance.RemoveData(key);
-        else DataManager.Instance.SetData(key, state);
-    }
-
-    #endregion
-
     #region Methods
 
     public async void CheckVersion(Action<(bool isOutdated, string latestVersion)> result)
@@ -887,21 +868,21 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
     public void PressButton(PushButton button, bool isLeftHand)
     {
-        if (button.Null()) return;
+        if (button.IsObjectNull()) return;
         AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
         handPlayer.PlayOneShot(button.TryGetComponent(out AudioSource component) ? component.clip : Sounds.widgetButton.AsAudioClip(), 0.2f);
     }
 
     public void PressSlider(SnapSlider slider, bool isLeftHand)
     {
-        if (slider.Null()) return;
+        if (slider.IsObjectNull()) return;
         AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
         handPlayer.PlayOneShot(Sounds.widgetSlider.AsAudioClip(), 0.2f);
     }
 
     public void PressSwitch(Switch button, bool isLeftHand)
     {
-        if (button.Null()) return;
+        if (button.IsObjectNull()) return;
         AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
         handPlayer.PlayOneShot(button.TryGetComponent(out AudioSource component) ? component.clip : Sounds.widgetSwitch.AsAudioClip(), 0.2f);
     }

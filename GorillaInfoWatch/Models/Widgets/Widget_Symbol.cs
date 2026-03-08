@@ -1,5 +1,6 @@
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Extensions;
+using GorillaLibrary.Extensions;
 using System;
 using System.Linq;
 using UnityEngine.UI;
@@ -29,7 +30,7 @@ public sealed class Widget_Symbol : Widget_Base
 
     public override void Initialize(PanelLine menuLine)
     {
-        if (Object.Null())
+        if (Object.IsObjectNull())
         {
             Object = UnityEngine.Object.Instantiate(menuLine.Symbol, menuLine.Symbol.transform.parent);
             Object.name = "Symbol";
@@ -41,7 +42,7 @@ public sealed class Widget_Symbol : Widget_Base
 
     public override void Modify()
     {
-        if (image.Null() && Object.Exists() && !Object.TryGetComponent(out image))
+        if (image.IsObjectNull() && Object.IsObjectExistent() && !Object.TryGetComponent(out image))
         {
             // Logging.Info("NO");
             return;

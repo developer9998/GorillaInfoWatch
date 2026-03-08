@@ -1,6 +1,7 @@
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Behaviours.UI.Widgets;
 using GorillaInfoWatch.Extensions;
+using GorillaLibrary.Extensions;
 using System;
 using UnityEngine;
 
@@ -25,7 +26,7 @@ public sealed class Widget_SnapSlider(int value, int start, int end, Action<int,
 
     public override void Initialize(PanelLine menuLine)
     {
-        if (Object.Null())
+        if (Object.IsObjectNull())
         {
             Object = UnityEngine.Object.Instantiate(menuLine.SnapSlider.gameObject, menuLine.SnapSlider.transform.parent);
             Object.name = "SnapSlider";
@@ -35,7 +36,7 @@ public sealed class Widget_SnapSlider(int value, int start, int end, Action<int,
 
     public override void Modify()
     {
-        if (Object.Exists() && Object.TryGetComponent(out SnapSlider component))
+        if (Object.IsObjectExistent() && Object.TryGetComponent(out SnapSlider component))
             component.ApplySlider(this);
     }
 

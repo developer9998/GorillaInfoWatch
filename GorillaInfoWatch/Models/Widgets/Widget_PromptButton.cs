@@ -2,6 +2,7 @@
 using GorillaInfoWatch.Behaviours.UI.Widgets;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.UserInput;
+using GorillaLibrary.Extensions;
 using System;
 
 namespace GorillaInfoWatch.Models.Widgets;
@@ -28,7 +29,7 @@ public sealed class Widget_PromptButton(string input, int limit, UserInputBoard 
 
     public override void Initialize(PanelLine menuLine)
     {
-        if (Object.Null())
+        if (Object.IsObjectNull())
         {
             Object = UnityEngine.Object.Instantiate(menuLine.PromptButton.gameObject, menuLine.PromptButton.transform.parent);
             Object.name = "Prompt Button";
@@ -38,7 +39,7 @@ public sealed class Widget_PromptButton(string input, int limit, UserInputBoard 
 
     public override void Modify()
     {
-        if (Object.Exists() && Object.TryGetComponent(out PromptButton component)) component.Widget = this;
+        if (Object.IsObjectExistent() && Object.TryGetComponent(out PromptButton component)) component.Widget = this;
     }
 
     public override bool Equals(Widget_Base widget) => true;

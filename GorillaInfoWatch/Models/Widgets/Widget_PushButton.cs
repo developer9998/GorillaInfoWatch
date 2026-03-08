@@ -1,6 +1,7 @@
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Behaviours.UI.Widgets;
 using GorillaInfoWatch.Extensions;
+using GorillaLibrary.Extensions;
 using System;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ public sealed class Widget_PushButton(Action<object[]> action, params object[] p
 
     public override void Initialize(PanelLine menuLine)
     {
-        if (Object.Null())
+        if (Object.IsObjectNull())
         {
             Object = UnityEngine.Object.Instantiate(menuLine.Button.gameObject, menuLine.Button.transform.parent);
             Object.name = "Button";
@@ -38,7 +39,7 @@ public sealed class Widget_PushButton(Action<object[]> action, params object[] p
 
     public override void Modify()
     {
-        if (Object.Exists() && Object.TryGetComponent(out PushButton component))
+        if (Object.IsObjectExistent() && Object.TryGetComponent(out PushButton component))
             component.AssignWidget(this);
     }
 

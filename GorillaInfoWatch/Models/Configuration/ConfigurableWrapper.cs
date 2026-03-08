@@ -1,11 +1,13 @@
 ﻿using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaLibrary.Extensions;
+using HarmonyLib;
 using MelonLoader;
 using MelonLoader.Preferences;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -20,7 +22,6 @@ internal abstract class ConfigurableWrapper
     public abstract ValueValidator AcceptableValues { get; }
 
     public abstract object BoxedValue { get; set; }
-    public abstract string SerializedValue { get; set; }
 
     public virtual string UnsupportedText => "This setting does not support editing here";
 
@@ -42,7 +43,7 @@ internal abstract class ConfigurableWrapper
             _ => settingType.Name
         };
 
-        string value = SerializedValue;
+        string value = BoxedValue.ToString();
 
         List<Widget_Base> widgets = [];
 
@@ -87,7 +88,7 @@ internal abstract class ConfigurableWrapper
 
             widgets.AddRange(CreateIncrementalButtons(increment =>
             {
-                short value = (short)shortRange.EnsureValid(/*(short)TomlMapper.ConvertToValue(SerializedValue, SettingType)*/ 0 + increment);
+                short value = (short)shortRange.EnsureValid(Convert.ToInt16(BoxedValue) + increment);
                 BoxedValue = value;
             }));
 
@@ -100,7 +101,7 @@ internal abstract class ConfigurableWrapper
 
             widgets.AddRange(CreateIncrementalButtons(increment =>
             {
-                int value = (int)intRange.EnsureValid(/*(short)TomlMapper.ConvertToValue(SerializedValue, SettingType)*/ 0 + increment);
+                int value = (int)intRange.EnsureValid(Convert.ToInt32(BoxedValue) + increment);
                 BoxedValue = value;
             }));
 
@@ -113,7 +114,7 @@ internal abstract class ConfigurableWrapper
 
             widgets.AddRange(CreateIncrementalButtons(increment =>
             {
-                long value = (long)longRange.EnsureValid(/*(short)TomlMapper.ConvertToValue(SerializedValue, SettingType)*/ 0 + increment);
+                long value = (long)longRange.EnsureValid(Convert.ToInt64(BoxedValue) + increment);
                 BoxedValue = value;
             }));
 
@@ -124,9 +125,9 @@ internal abstract class ConfigurableWrapper
         {
             value = value.ToTitleCase();
 
-            widgets.Add(new Widget_Switch(SerializedValue.ToLower() == "true", (bool value) =>
+            widgets.Add(new Widget_Switch(BoxedValue.ToString().ToLower() == "true", (bool value) =>
             {
-                SerializedValue = value.ToString();
+                BoxedValue = value;
                 InfoScreen.LoadedScreen?.SetText();
             }));
 
@@ -217,8 +218,7 @@ internal abstract class ConfigurableWrapper
     }
 }
 
-// woaw...
-internal class ConfigurableWrapper_Woaw<T>(string key, string description, Func<T> getter, Action<T> setter) : ConfigurableWrapper
+internal class ConfigurableWrapper_Custom<T>(string key, string description, Func<T> getter, Action<T> setter) : ConfigurableWrapper
 {
     public override Type SettingType => typeof(T);
     public override string Entry => key;
@@ -230,14 +230,9 @@ internal class ConfigurableWrapper_Woaw<T>(string key, string description, Func<
         get => getter();
         set => setter((T)value);
     }
-    public override string SerializedValue
-    {
-        get => throw new NotImplementedException();
-        set => throw new NotImplementedException();
-    }
 }
 
-internal class ConfigurableWrapper_BepInEntry(MelonPreferences_Entry entryBase) : ConfigurableWrapper
+internal class ConfigurableWrapper_ML(MelonPreferences_Entry entryBase) : ConfigurableWrapper
 {
     public MelonPreferences_Entry EntryBase = entryBase;
 
@@ -255,15 +250,14 @@ internal class ConfigurableWrapper_BepInEntry(MelonPreferences_Entry entryBase) 
         }
     }
 
-    public override string SerializedValue
+    public override string UnsupportedText
     {
-        get => EntryBase.GetValueAsString();
-        set
+        get
         {
-            EntryBase.BoxedValue = value.ToString();
-            // EntryBase.SetSerializedValue(value);
+            object file = AccessTools.Field(EntryBase.GetType(), "File").GetValue(EntryBase);
+            string path = (string)AccessTools.Field(file.GetType(), "FilePath").GetValue(file);
+            string name = Path.GetFileName(path);
+            return $"This preference may be edited at {name}";
         }
     }
-
-    public override string UnsupportedText => $"woaw";
 }

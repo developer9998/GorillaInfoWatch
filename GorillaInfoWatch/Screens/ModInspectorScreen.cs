@@ -1,8 +1,7 @@
-﻿using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Configuration;
 using GorillaInfoWatch.Models.Widgets;
-using HarmonyLib;
+using GorillaLibrary;
 using MelonLoader;
 using System;
 using System.Collections.Generic;
@@ -17,27 +16,26 @@ namespace GorillaInfoWatch.Screens
 
         public static MelonMod Mod;
 
+        private List<ConfigurableSection> _configurableList = null;
+
         public override void OnScreenLoad()
         {
-            /*
-            if (Mod.Instance.Config is not ConfigFile file || file.Count == 0)
-                return;
+            if (Mod is not GorillaMod gm || gm.Categories.Sum(category => category.Entries.Count) == 0) return;
 
-            var entries = file.GetEntries();
-            var sectionNames = entries.Select(entry => entry.Definition.Section).Distinct();
+            var entries = gm.Categories.SelectMany(category => category.Entries);
+            var sectionNames = entries.Select(entry => entry.Category.DisplayName).Distinct();
             var dictionary = sectionNames.ToDictionary(section => section, section => new ConfigurableSection()
             {
                 Title = section,
                 Entries = []
             });
-            entries.ForEach(entry => dictionary[entry.Definition.Section].Entries.Add(new ConfigurableWrapper_BepInEntry(entry)));
+            entries.ForEach(entry => dictionary[entry.Category.DisplayName].Entries.Add(new ConfigurableWrapper_ML(entry)));
             _configurableList = [.. dictionary.Values];
-            */
         }
 
         public override void OnScreenUnload()
         {
-            //_configurableList = null;
+            _configurableList = null;
         }
 
         public override InfoContent GetContent()
@@ -53,22 +51,16 @@ namespace GorillaInfoWatch.Screens
             lines.Add($"Name: {Mod.Info.Name}");
             lines.Add($"Version: {Mod.Info.Version}");
 
-            lines.Skip();
-
-            PageBuilder pages = new();
-            pages.Add(lines);
-
-            /*
-            lines.Add($"State: {(Mod.Instance.enabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>")}", new Widget_Switch(Mod.Instance.enabled, ToggleMod, Mod));
-
-            var methods = AccessTools.GetMethodNames(Mod.Instance);
-            if (!methods.Contains("OnEnable") && !methods.Contains("OnDisable"))
-                lines.Add("<color=red>This mod may not support the behaviour state!");
+            if (Mod is GorillaMod gm)
+            {
+                lines.Skip().Add($"State: {(gm.Enabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>")}", new Widget_Switch(gm.Enabled, ToggleMod, Mod));
+                if (!gm.IsStateSupported) lines.Add("<color=red>This mod does not implement enable states");
+            }
 
             if (_configurableList == null) return lines;
 
             PageBuilder pages = new();
-            pages.Add(Mod.Metadata.Name, lines);
+            pages.Add(Mod.Info.Name, lines);
 
             foreach (ConfigurableSection section in _configurableList)
             {
@@ -79,9 +71,18 @@ namespace GorillaInfoWatch.Screens
                     pages.Add(section.Title, lines);
                 }
             }
-            */
 
             return pages;
+        }
+
+        public void ToggleMod(bool value, object[] parameters)
+        {
+            if (Mod is GorillaMod gm)
+            {
+                gm.Enabled = value;
+
+                SetText();
+            }
         }
     }
 }
