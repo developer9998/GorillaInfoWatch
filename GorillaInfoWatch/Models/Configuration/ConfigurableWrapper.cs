@@ -248,6 +248,7 @@ internal class ConfigurableWrapper_ML(MelonPreferences_Entry entryBase) : Config
         set
         {
             EntryBase.BoxedValue = value;
+            EntryBase.Category.SaveToFile();
         }
     }
 
