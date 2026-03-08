@@ -256,7 +256,7 @@ internal class ConfigurableWrapper_ML(MelonPreferences_Entry entryBase) : Config
     {
         get
         {
-            object file = AccessTools.Field(EntryBase.GetType(), "File").GetValue(EntryBase);
+            object file = AccessTools.Field(EntryBase.Category.GetType(), "File").GetValue(EntryBase.Category);
             string path = (string)AccessTools.Field(file.GetType(), "FilePath").GetValue(file);
             string name = Path.GetFileName(path);
             return $"This preference may be edited at {name}";
