@@ -105,7 +105,8 @@ public class MediaManager : MonoBehaviour, IInitializeCallback
         string eventName = (string)obj.Property("EventName")?.Value ?? null;
         string sessionId = (string)obj.Property("SessionId")?.Value ?? null;
 
-        ThreadUtility.StartAsyncMethod(async () =>
+        // must be Sync (opposed to Async) as it may rely on Unity methods
+        ThreadUtility.StartSyncMethod(async () =>
         {
             Session session;
 
