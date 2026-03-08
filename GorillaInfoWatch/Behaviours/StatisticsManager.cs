@@ -19,8 +19,8 @@ public class StatisticsManager : MonoBehaviour, IInitializeCallback
 
     public void Awake()
     {
-        Events.OnPlayerTagged += OnPlayerTagged;
-        Events.OnRoundComplete += OnRoundCompleted;
+        GorillaLibrary.GameModes.Events.OnPlayerTagged.Subscribe(OnPlayerTagged);
+        GorillaLibrary.GameModes.Events.OnRoundCompleted.Subscribe(OnRoundCompleted);
     }
 
     public void Initialize()
