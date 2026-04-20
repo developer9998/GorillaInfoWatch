@@ -3,8 +3,7 @@ using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;
-using GorillaLibrary.GameModes.Models;
-using GorillaLibrary.GameModes.Utilities;
+using GorillaLibrary.Models;
 using GorillaLibrary.Utilities;
 using Photon.Pun;
 using System;
@@ -65,7 +64,7 @@ namespace GorillaInfoWatch.Screens
                 Symbol = Content.Shared.Symbols["Info"]
             });
 
-            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGamemode is Gamemode gamemode ? gamemode.DisplayName : "Error").AppendLine();
+            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGameMode is GameModeWrapper gamemode ? gamemode.DisplayName : "Error").AppendLine();
 
             NetPlayer[] players = NetworkSystem.Instance.AllNetPlayers;
             Array.Sort(players, (x, y) => x.ActorNumber.CompareTo(y.ActorNumber));

@@ -39,10 +39,7 @@
 			<HintPath>$(GameAssemblyPath)\Fusion.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="GorillaLibrary">
-			<HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Mods\GorillaLibrary.dll</HintPath>
-		</Reference>
-		<Reference Include="GorillaLibrary.GameModes">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Mods\GorillaLibrary.GameModes.dll</HintPath>
+			<HintPath>$(ModsPath)\GorillaLibrary.dll</HintPath>
 		</Reference>
 		<Reference Include="MelonLoader">
 			<HintPath>$(MelonLoaderAssemblyPath)\MelonLoader.dll</HintPath>
@@ -60,19 +57,19 @@
 			<HintPath>$(GameAssemblyPath)\PhotonUnityNetworking.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonUnityNetworking.Utilities">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PhotonUnityNetworking.Utilities.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\PhotonUnityNetworking.Utilities.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonVoice">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PhotonVoice.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\PhotonVoice.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonVoice.API">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PhotonVoice.API.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\PhotonVoice.API.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonVoice.Fusion">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PhotonVoice.Fusion.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\PhotonVoice.Fusion.dll</HintPath>
 		</Reference>
 		<Reference Include="PhotonVoice.PUN">
-		  <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Gorilla Tag\Gorilla Tag_Data\Managed\PhotonVoice.PUN.dll</HintPath>
+		  <HintPath>$(GameAssemblyPath)\PhotonVoice.PUN.dll</HintPath>
 		</Reference>
 		<Reference Include="PlayFab">
 			<HintPath>$(GameAssemblyPath)\PlayFab.dll</HintPath>

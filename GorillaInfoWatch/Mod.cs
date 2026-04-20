@@ -7,14 +7,14 @@ using GorillaLibrary;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(InfoMelonMod), "GorillaInfoWatch", "1.1.4", "dev9998")]
+[assembly: MelonInfo(typeof(Mod), "GorillaInfoWatch", "1.1.4", "dev9998")]
 [assembly: MelonGame("Another Axiom", "Gorilla Tag")]
 [assembly: MelonAdditionalDependencies("GorillaLibrary")]
 [assembly: MelonOptionalDependencies("GorillaFriends")]
 
 namespace GorillaInfoWatch;
 
-internal class InfoMelonMod : GorillaMod
+internal class Mod : GorillaMod
 {
     internal static Logging Log;
     internal static Configuration Config;
@@ -25,7 +25,7 @@ internal class InfoMelonMod : GorillaMod
 
         Config = new Configuration(this);
 
-        GorillaLibrary.Events.Game.OnGameInitialized.Subscribe(Initialize);
+        GorillaLibrary.Events.Core.OnGameInitialized.Subscribe(Initialize);
         GorillaLibrary.Events.Rig.OnRigAdded.Subscribe(RigAdded);
         GorillaLibrary.Events.Rig.OnRigRemoved.Subscribe(RigRemoved);
     }

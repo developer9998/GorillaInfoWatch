@@ -117,7 +117,7 @@ namespace GorillaInfoWatch.Screens
                 });
             }
 
-            #region Significance
+        #region Significance
 
         Significance:
 

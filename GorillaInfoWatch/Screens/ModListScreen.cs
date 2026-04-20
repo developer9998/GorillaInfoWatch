@@ -27,7 +27,7 @@ namespace GorillaInfoWatch.Screens
                 .Concat(melonMods.Except(stateSupportedMods))
                 .OrderBy(mod => mod.Info.Name)
                 .OrderByDescending(mod => mod is GorillaMod gm ? gm.Categories.Sum(category => category.Entries.Count) : -1)
-                .Where(mod => mod != Melon<InfoMelonMod>.Instance)];
+                .Where(mod => mod != Melon<Mod>.Instance)];
         }
 
         public override InfoContent GetContent()

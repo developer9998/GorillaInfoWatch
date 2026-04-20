@@ -15,7 +15,7 @@ public class HomeScreen : InfoScreen
     {
         get
         {
-            var info = Melon<InfoMelonMod>.Instance.Info;
+            var info = Melon<Mod>.Instance.Info;
             return $"{info.Name} {info.Version}";
         }
     }

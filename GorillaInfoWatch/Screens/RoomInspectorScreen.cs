@@ -4,8 +4,8 @@ using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Patches;
 using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;
-using GorillaLibrary.GameModes.Models;
-using GorillaLibrary.GameModes.Utilities;
+using GorillaLibrary.Models;
+using GorillaLibrary.Utilities;
 using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
@@ -121,7 +121,7 @@ namespace GorillaInfoWatch.Screens
 
             lines.Skip();
 
-            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGamemode is Gamemode gamemode ? gamemode.DisplayName : "Error");
+            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGameMode is GameModeWrapper gamemode ? gamemode.DisplayName : "Error");
 
             // "queueName" custom property is not set for ranked matches
             // Perhaps properties could be implemented here when they're set, they include "mmrTier" (Low/Medium/High) and "platform" (Quest/PC)

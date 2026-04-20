@@ -1,6 +1,6 @@
 ﻿using GorillaGameModes;
 using GorillaInfoWatch.Models.Interfaces;
-using GorillaLibrary.GameModes.Utilities;
+using GorillaLibrary.Utilities;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -19,8 +19,8 @@ public class StatisticsManager : MonoBehaviour, IInitializeCallback
 
     public void Awake()
     {
-        GorillaLibrary.GameModes.Events.OnPlayerTagged.Subscribe(OnPlayerTagged);
-        GorillaLibrary.GameModes.Events.OnRoundCompleted.Subscribe(OnRoundCompleted);
+        GorillaLibrary.Events.GameMode.OnPlayerTagged.Subscribe(OnPlayerTagged);
+        GorillaLibrary.Events.GameMode.OnRoundCompleted.Subscribe(OnRoundCompleted);
     }
 
     public void Initialize()

@@ -21,7 +21,7 @@ internal class SettingsListScreen : InfoScreen
 
     public void Awake()
     {
-        var entries = Melon<InfoMelonMod>.Instance.Categories.SelectMany(category => category.Entries);
+        var entries = Melon<Mod>.Instance.Categories.SelectMany(category => category.Entries);
         var sectionNames = entries.Select(entry => entry.Category.DisplayName).Distinct();
         var dictionary = sectionNames.ToDictionary(section => section, section => new ConfigurableSection()
         {

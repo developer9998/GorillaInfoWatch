@@ -33,7 +33,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
 
         PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
 
-        PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Constants.Networking_PropertyKey, Melon<InfoMelonMod>.Instance.Info.Version } });
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Constants.Networking_PropertyKey, Melon<Mod>.Instance.Info.Version } });
     }
 
     public void Update()

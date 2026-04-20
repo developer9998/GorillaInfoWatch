@@ -139,7 +139,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
             foreach (MelonBase pluginInfo in MelonBase.RegisteredMelons)
             {
-                if (pluginInfo is not MelonMod mod || mod == Melon<InfoMelonMod>.Instance) continue;
+                if (pluginInfo is not MelonMod mod || mod == Melon<Mod>.Instance) continue;
 
                 if (mod.GetType().Assembly is Assembly assembly)
                 {
@@ -155,7 +155,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
                     if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() is not InfoWatchCompatibleAttribute attribute) continue;
 
-                    if (attribute.MinimumVersion > Version.Parse(Melon<InfoMelonMod>.Instance.Info.Version))
+                    if (attribute.MinimumVersion > Version.Parse(Melon<Mod>.Instance.Info.Version))
                     {
                         Logging.Warning($"Assembly has minimum version of {attribute.MinimumVersion}");
                         continue;
@@ -828,7 +828,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
         if (request.result > UnityWebRequest.Result.Success) return;
 
-        Version installedVersion = new(Melon<InfoMelonMod>.Instance.Info.Version);
+        Version installedVersion = new(Melon<Mod>.Instance.Info.Version);
         string latestVersionString = request.downloadHandler.text.Trim();
         result?.Invoke((Version.TryParse(latestVersionString, out Version latestVersion) && latestVersion > installedVersion, latestVersionString));
     }
