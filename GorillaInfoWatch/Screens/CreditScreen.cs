@@ -98,6 +98,8 @@ internal class CreditScreen : InfoScreen
 
                 for (int i = 0; i < 5; i++)
                 {
+                    if (i >= basic.Length) break;
+
                     int realIndex = random.Next() % supporterIndicies.Count;
                     int index = supporterIndicies[realIndex];
                     Supporter supporter = basic[index];
@@ -119,6 +121,8 @@ internal class CreditScreen : InfoScreen
 
                 for (int i = 0; i < 5; i++)
                 {
+                    if (i >= dweller.Length) break;
+
                     int realIndex = random.Next() % supporterIndicies.Count;
                     int index = supporterIndicies[realIndex];
                     Supporter supporter = dweller[index];

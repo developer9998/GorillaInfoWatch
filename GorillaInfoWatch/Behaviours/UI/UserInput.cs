@@ -185,6 +185,8 @@ internal class UserInput : MonoBehaviour
         {
             if (key.Binding.IsFunctionKey()) return;
 
+            if (key.transform.parent.parent != _advancedBoardRoot) continue;
+
             if (key.Binding.IsLetterKey())
             {
                 key.Text.text = ((_board == UserInputBoard.Standard || useSpecialCharacters) ? char.ToUpper(key.Binding.ToChar()) : char.ToLower(key.Binding.ToChar())).ToString();
