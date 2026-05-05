@@ -6,11 +6,9 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Interfaces;
-using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
-using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;
 using GorillaNetworking;
@@ -71,15 +69,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         typeof(VersionWarningScreen)
     ];
 
-    // Shortcuts
-
-    private readonly Dictionary<Type, ShortcutRegistrar> _shortcutRegistars = [];
-
-    private readonly List<Type> includedShortcutsTypes =
-    [
-        typeof(ShortcutRegistrar_Rooms)
-    ];
-
     // Assets
 
     private AssetLoader _assetLoader;
@@ -127,11 +116,8 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         _screenRoot.transform.SetParent(transform);
 
         includedScreenTypes.ForEach(page => RegisterScreen(page));
-        includedShortcutsTypes.ForEach(funcReg => RegisterShortcuts(funcReg));
 
         Type screenType = typeof(InfoScreen);
-
-        Type shortcutRegType = typeof(ShortcutRegistrar);
 
         try
         {
@@ -151,8 +137,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
             {
                 try
                 {
-
-
                     if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() is not InfoWatchCompatibleAttribute attribute) continue;
 
                     if (attribute.MinimumVersion > Version.Parse(Melon<Mod>.Instance.Info.Version))
@@ -170,7 +154,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
                 string assemblyName = assembly.GetName().Name;
                 Logging.Message($"Assembly {assemblyName}");
 
-                List<Type> screenTypes = [], shortcutRegTypes = [];
+                List<Type> screenTypes = [];
 
                 try
                 {
@@ -185,11 +169,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
                             screenTypes.Add(type);
                             Logging.Info($"Screen {type.FullName}");
                         }
-                        else if (type.IsSubclassOf(shortcutRegType) && shortcutRegType.IsAssignableFrom(type))
-                        {
-                            shortcutRegTypes.Add(type);
-                            Logging.Info($"Shortcut {type.FullName}");
-                        }
                     }
                 }
                 catch (Exception ex)
@@ -200,7 +179,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
                 }
 
                 screenTypes.ForEach(type => RegisterScreen(type));
-                shortcutRegTypes.ForEach(type => RegisterShortcuts(type));
             }
         }
         catch (Exception ex)
@@ -372,8 +350,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         _userInputObject.SetActive(false);
 
         _screenRoot.SetActive(true);
-
-        GetScreen<ShortcutListScreen>().SetEntries([.. _shortcutRegistars.Values]);
 
         _homeScreen.SetEntries([.. _screens.Values]);
         LoadScreen(_homeScreen);
@@ -770,50 +746,6 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         PlayErrorSound();
 
         return false;
-    }
-
-    public bool RegisterShortcuts(Type type)
-    {
-        if (type == null) return false;
-
-        Logging.Message($"RegisterFunctionRegistrar: {type.FullName}");
-
-        if (_shortcutRegistars.ContainsKey(type))
-        {
-            Logging.Warning("Registry contains key");
-            return false;
-        }
-
-        Type registrarType = typeof(ShortcutRegistrar);
-
-        if (!type.IsSubclassOf(registrarType))
-        {
-            PlayErrorSound();
-            return false;
-        }
-
-        if (!registrarType.IsAssignableFrom(type))
-        {
-            PlayErrorSound();
-            return false;
-        }
-
-        try
-        {
-            ShortcutRegistrar registrar = (ShortcutRegistrar)Activator.CreateInstance(type);
-            Logging.Message("CreateInstance success");
-
-            _shortcutRegistars.TryAdd(type, registrar);
-        }
-        catch (Exception ex)
-        {
-            Logging.Fatal("CreateInstance exception");
-            Logging.Error(ex);
-
-            return false;
-        }
-
-        return true;
     }
 
     #endregion

@@ -37,7 +37,7 @@ internal class Mod : GorillaMod
 
     public void Initialize()
     {
-        GameObject root = new($"{Info.Name} - {Info.Version}", typeof(DataManager), typeof(SignificanceManager), typeof(MediaManager), typeof(ShortcutHandler), typeof(StatisticsManager), typeof(WatchManager), typeof(NetworkManager));
+        GameObject root = new($"{Info.Name} - {Info.Version}", typeof(DataManager), typeof(SignificanceManager), typeof(MediaManager), typeof(StatisticsManager), typeof(WatchManager), typeof(ShortcutHandler), typeof(NetworkManager));
         Object.DontDestroyOnLoad(root);
     }
 

@@ -1,13 +1,12 @@
 using System;
 
-namespace GorillaInfoWatch
+namespace GorillaInfoWatch;
+
+public class Events
 {
-    public class Events
-    {
-        internal static Action<VRRig> OnRigRecievedCosmetics;
+    internal static Action<VRRig> OnRigRecievedCosmetics;
 
-        internal static Action<VRRig, bool> OnRigSetInvisibleToLocal, OnRigUpdatedCosmetics;
+    internal static Action<VRRig, bool> OnRigSetInvisibleToLocal, OnRigUpdatedCosmetics;
 
-        internal static Action<RotatingQuest> OnQuestCompleted;
-    }
+    internal static Action<RotatingQuest> OnQuestCompleted;
 }
