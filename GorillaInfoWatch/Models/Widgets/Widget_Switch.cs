@@ -1,6 +1,6 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Behaviours.UI.Widgets;
-using GorillaLibrary.Extensions;
+using GorillaInfoWatch.Extensions;
 using System;
 using UnityEngine;
 
@@ -34,7 +34,7 @@ public sealed class Widget_Switch(bool value, Action<bool, object[]> action, par
 
     public override void Initialize(PanelLine menuLine)
     {
-        if (Object.IsObjectNull())
+        if (Object.Null())
         {
             Object = UnityEngine.Object.Instantiate(menuLine.Switch.gameObject, menuLine.Switch.transform.parent);
             Object.name = "Switch";
@@ -44,7 +44,7 @@ public sealed class Widget_Switch(bool value, Action<bool, object[]> action, par
 
     public override void Modify()
     {
-        if (Object.IsObjectExistent() && Object.TryGetComponent(out Switch component)) component.AssignWidget(this);
+        if (Object.Exists() && Object.TryGetComponent(out Switch component)) component.AssignWidget(this);
     }
 
     public override bool Equals(Widget_Base widget)

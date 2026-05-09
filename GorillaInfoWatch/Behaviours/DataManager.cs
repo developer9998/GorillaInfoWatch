@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using BepInEx;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -45,7 +46,7 @@ internal class DataManager : MonoBehaviour
 
         dataPerTypeDict = Enum.GetValues(typeof(DataLocation)).Cast<DataLocation>().ToDictionary(type => type, type => new Dictionary<string, object>());
 
-        dataLocation = Path.Combine(Application.persistentDataPath, "GorillaInfoWatch.json");
+        dataLocation = Path.Combine(Application.persistentDataPath, $"{Constants.Name}.json");
 
         ReadPersistentData();
     }
@@ -136,7 +137,12 @@ internal class DataManager : MonoBehaviour
         EnsureDataCollection(DataLocation.Persistent);
 
         string serialized = JsonConvert.SerializeObject(dataPerTypeDict[DataLocation.Persistent], serializeSettings);
-        File.WriteAllText(dataLocation, serialized);
+
+        ThreadingHelper.Instance.StartAsyncInvoke(() =>
+        {
+            File.WriteAllText(dataLocation, serialized);
+            return null;
+        });
     }
 
     private void EnsureDataCollection(DataLocation dataType)

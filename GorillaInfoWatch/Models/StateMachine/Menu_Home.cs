@@ -1,5 +1,4 @@
 ﻿using GorillaInfoWatch.Behaviours.UI;
-using HarmonyLib;
 using Photon.Pun;
 using Photon.Realtime;
 using Photon.Voice.PUN;
@@ -43,7 +42,7 @@ public class Menu_Home(Watch watch) : Menu_StateBase(watch)
         base.Initialize();
 
         isLocalWatch = Watch.LocalWatch == Watch;
-        targetRig = isLocalWatch ? VRRigCache.Instance.localRig : Watch.Rig.GetComponent<RigContainer>();
+        targetRig = isLocalWatch ? VRRigCache.Instance.localRig : (Watch.Rig.rigContainer ?? Watch.Rig.GetComponent<RigContainer>());
 
         fpsObject = Watch.homeMenu.transform.Find("BottomLeftCorner/FPS").gameObject;
         fpsText = fpsObject.transform.GetChild(0).GetComponent<TMP_Text>();
@@ -109,7 +108,7 @@ public class Menu_Home(Watch watch) : Menu_StateBase(watch)
 
             if (NetworkSystem.Instance.InRoom && _localRecorder == null) _localRecorder = NetworkSystem.Instance.LocalRecorder;
 
-            if (_speakerLoudness == null) _speakerLoudness = GorillaTagger.Instance.offlineVRRig.GetComponent<GorillaSpeakerLoudness>();
+            if (_speakerLoudness == null) _speakerLoudness = GorillaTagger.Instance.offlineVRRig.mySpeakerLoudness ?? GorillaTagger.Instance.offlineVRRig.GetComponent<GorillaSpeakerLoudness>();
 
             if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || (_localRecorder != null && !_localRecorder.TransmitEnabled) || !targetRig.Rig.shouldSendSpeakingLoudness)
             {
@@ -126,7 +125,7 @@ public class Menu_Home(Watch watch) : Menu_StateBase(watch)
         }
         else
         {
-            if (_speakerLoudness == null) _speakerLoudness = targetRig.Rig.GetComponent<GorillaSpeakerLoudness>();
+            if (_speakerLoudness == null) _speakerLoudness = targetRig.Rig.mySpeakerLoudness ?? targetRig.Rig.GetComponent<GorillaSpeakerLoudness>();
 
             if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || targetRig.Muted)
             {
@@ -175,7 +174,7 @@ public class Menu_Home(Watch watch) : Menu_StateBase(watch)
             Watch.timeText.text = string.Format("<cspace=0.1em>{0}</cspace><br><size=50%>{1}</size>", time, date);
         }
 
-        fpsText.text = (isLocalWatch ? Mathf.FloorToInt(frameCount / timeCount) : AccessTools.Field(typeof(VRRig), "fps").GetValue(Watch.Rig)).ToString();
+        fpsText.text = (isLocalWatch ? Mathf.FloorToInt(frameCount / timeCount) : Watch.Rig.fps).ToString();
 
         if (isLocalWatch)
         {

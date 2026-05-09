@@ -15,28 +15,25 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Shortcuts";
         public override string Description => "Choose a bind for the shortcut button and inspect shortcuts";
 
-        internal List<ShortcutCategory> _entries;
+        internal List<ShortcutRegistrar> _entries;
 
-        public override void OnScreenLoad()
+        internal void SetEntries(IList<ShortcutRegistrar> list)
         {
-            if (_entries == null)
-            {
-                Assembly nativeAssembly = Assembly.GetExecutingAssembly();
-                var list = ShortcutHandler.Instance.Categories;
-                IEnumerable<ShortcutCategory> nativeCategories = list.Where(category => category.assembly == nativeAssembly);
-                _entries = [.. nativeCategories, .. list.Except(nativeCategories)];
-            }
+            Assembly nativeAssembly = Assembly.GetExecutingAssembly();
+
+            IEnumerable<ShortcutRegistrar> nativeScreens = list.Where(screen => screen.GetType().Assembly == nativeAssembly);
+            _entries = [.. nativeScreens, .. list.Except(nativeScreens)];
         }
 
         public override InfoContent GetContent()
         {
             PageBuilder pages = new();
 
-            foreach (ShortcutCategory category in _entries)
+            foreach (ShortcutRegistrar registrar in _entries)
             {
                 LineBuilder lines = new();
 
-                foreach (Shortcut shortcut in category.shortcuts)
+                foreach (Shortcut shortcut in registrar.Shortcuts)
                 {
                     string shortcutText = string.Format("<line-height=45%>{0}<br><size=60%>{1}", shortcut.Name, shortcut.Description);
                     lines.Add(shortcutText, new Widget_PushButton(() =>
@@ -54,7 +51,7 @@ namespace GorillaInfoWatch.Screens
                     }));
                 }
 
-                pages.Add(category.Title, lines);
+                pages.Add(registrar.Title, lines);
             }
 
             return pages;

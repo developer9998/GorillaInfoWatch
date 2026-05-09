@@ -46,10 +46,10 @@ public class SignificanceManager : MonoBehaviour, IInitializeCallback
 
         Instance = this;
 
-        GorillaLibrary.Events.Room.OnRoomJoined.Subscribe(OnJoinedRoom);
-        GorillaLibrary.Events.Player.OnPlayerEnteredRoom.Subscribe(OnPlayerJoined);
-        GorillaLibrary.Events.Player.OnPlayerLeftRoom.Subscribe(OnPlayerLeft);
-        GorillaLibrary.Events.Room.OnRoomLeft.Subscribe(OnLeftRoom);
+        GorillaLibrary.Events.Room.OnRoomJoined += OnJoinedRoom;
+        GorillaLibrary.Events.Player.OnPlayerEnteredRoom += OnPlayerJoined;
+        GorillaLibrary.Events.Player.OnPlayerLeftRoom += OnPlayerLeft;
+        GorillaLibrary.Events.Room.OnRoomLeft += OnLeftRoom;
 
         Events.OnRigRecievedCosmetics += OnPlayerCosmeticsRecieved;
         Events.OnRigUpdatedCosmetics += OnPlayerCosmeticsUpdated;

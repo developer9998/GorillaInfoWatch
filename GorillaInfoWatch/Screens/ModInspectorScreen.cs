@@ -1,8 +1,11 @@
-﻿using GorillaInfoWatch.Models;
+﻿using BepInEx;
+using BepInEx.Configuration;
+using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Configuration;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaLibrary;
-using MelonLoader;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,22 +17,23 @@ namespace GorillaInfoWatch.Screens
         public override string Title => "Mod Inspector";
         public override Type ReturnType => typeof(ModListScreen);
 
-        public static MelonMod Mod;
+        public static PluginInfo Mod;
 
         private List<ConfigurableSection> _configurableList = null;
 
         public override void OnScreenLoad()
         {
-            if (Mod is not GorillaMod gm || gm.Categories.Sum(category => category.Entries.Count) == 0) return;
+            if (Mod.Instance.Config is not ConfigFile file || file.Count == 0)
+                return;
 
-            var entries = gm.Categories.SelectMany(category => category.Entries);
-            var sectionNames = entries.Select(entry => entry.Category.DisplayName).Distinct();
+            var entries = file.GetEntries();
+            var sectionNames = entries.Select(entry => entry.Definition.Section).Distinct();
             var dictionary = sectionNames.ToDictionary(section => section, section => new ConfigurableSection()
             {
                 Title = section,
                 Entries = []
             });
-            entries.ForEach(entry => dictionary[entry.Category.DisplayName].Entries.Add(new ConfigurableWrapper_ML(entry)));
+            entries.ForEach(entry => dictionary[entry.Definition.Section].Entries.Add(new ConfigurableWrapper_BepInEntry(entry)));
             _configurableList = [.. dictionary.Values];
         }
 
@@ -48,19 +52,22 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder lines = new();
 
-            lines.Add($"Name: {Mod.Info.Name}");
-            lines.Add($"Version: {Mod.Info.Version}");
+            lines.Add($"Name: {Mod.Metadata.Name}");
+            lines.Add($"Version: {Mod.Metadata.Version}");
+            lines.Add($"GUID: {Mod.Metadata.GUID}");
 
-            if (Mod is GorillaMod gm)
-            {
-                lines.Skip().Add($"State: {(gm.Enabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>")}", new Widget_Switch(gm.Enabled, ToggleMod, Mod));
-                if (!gm.IsStateSupported) lines.Add("<color=red>This mod does not implement enable states");
-            }
+            lines.Skip();
+
+            lines.Add($"State: {(Mod.Instance.enabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>")}", new Widget_Switch(Mod.Instance.enabled, ToggleMod, Mod));
+
+            var methods = AccessTools.GetMethodNames(Mod.Instance);
+            if (!methods.Contains("OnEnable") && !methods.Contains("OnDisable"))
+                lines.Add("<color=red>This mod may not support the behaviour state!");
 
             if (_configurableList == null) return lines;
 
             PageBuilder pages = new();
-            pages.Add(Mod.Info.Name, lines);
+            pages.Add(Mod.Metadata.Name, lines);
 
             foreach (ConfigurableSection section in _configurableList)
             {
@@ -77,9 +84,10 @@ namespace GorillaInfoWatch.Screens
 
         public void ToggleMod(bool value, object[] parameters)
         {
-            if (Mod is GorillaMod gm)
+            if (parameters.ElementAtOrDefault(0) is PluginInfo pluginInfo)
             {
-                gm.Enabled = value;
+                pluginInfo.Instance.enabled = value;
+                Main.Instance.SetPersistentPluginState(pluginInfo, value);
 
                 SetText();
             }

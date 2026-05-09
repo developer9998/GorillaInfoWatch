@@ -51,7 +51,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             if (_activated || _touching != null) return;
 
-            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Shortcut, 0.25f, false))
+            if (other.TryGetComponent(out HandIndicator handIndicator) && handIndicator.isLeftHand != Watch.LocalWatch.InLeftHand && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Widget, 0.25f, false))
             {
                 _touching = handIndicator;
                 _timer = 0f;
@@ -70,7 +70,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             _material.color = _buttonColour.Evaluate(0);
 
-            WatchManager.Instance.SetInteractionInterval(WatchInteractionSource.Shortcut);
+            Main.Instance.SetInteractionInterval(WatchInteractionSource.Widget);
         }
 
         public void Update()
@@ -112,7 +112,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
                 ShortcutHandler.Instance.ExcecuteShortcut(_shortcut);
 
-                if (_shortcut.HasState) _buttonColour = _shortcut.State ? ColourPalette.Green : ColourPalette.Red;
+                if (_shortcut.HasState) _buttonColour = _shortcut.GetState() ? ColourPalette.Green : ColourPalette.Red;
             }
             catch
             {
@@ -133,7 +133,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             if (_shortcut == null) return;
 
             buttonText.text = _shortcut.Name;
-            _buttonColour = _shortcut.HasState ? (_shortcut.State ? ColourPalette.Green : ColourPalette.Red) : ColourPalette.Button;
+            _buttonColour = _shortcut.HasState ? (_shortcut.GetState() ? ColourPalette.Green : ColourPalette.Red) : ColourPalette.Button;
         }
 
         public void SetActive(bool active)

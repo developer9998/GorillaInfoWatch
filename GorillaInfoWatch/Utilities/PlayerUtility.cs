@@ -1,18 +1,21 @@
 ﻿using GorillaInfoWatch.Behaviours;
 using GorillaInfoWatch.Behaviours.Networking;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
-using GorillaLibrary.Extensions;
-using GorillaLibrary.Utilities;
 using GorillaNetworking;
-using HarmonyLib;
+using PlayFab;
+using PlayFab.ClientModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace GorillaInfoWatch.Utilities
 {
     public static class PlayerUtility
     {
+        private static readonly Dictionary<string, (GetAccountInfoResult accountInfo, DateTime cacheTime)> accountInfoCache = [];
+
         public static NetPlayer GetPlayer(string userId) => GetPlayer(player => player.UserId == userId);
 
         public static NetPlayer GetPlayer(Func<NetPlayer, bool> predicate)
@@ -57,7 +60,7 @@ namespace GorillaInfoWatch.Utilities
 
             if (player.IsLocal) return localValue;
 
-            if (NetworkSystem.Instance.InRoom && RigUtility.Rigs.TryGetValue(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component))
+            if (NetworkSystem.Instance.InRoom && VRRigCache.rigsInUse.TryGetValue(player, out RigContainer playerRig) && playerRig.TryGetComponent(out NetworkedPlayer component))
                 return predicate(component);
 
             return defaultValue;
@@ -82,12 +85,12 @@ namespace GorillaInfoWatch.Utilities
                 return;
             }
 
-            Logging.Warning($"No scoreboard lines detected for player {player.GetName()}");
+            Logging.Warning($"No scoreboard lines detected for player {player.GetPlayerName()}");
         }
 
         public static bool HasActiveCosmetic(VRRig rig, string itemId)
         {
-            if (!(bool)AccessTools.Field(typeof(VRRig), "initializedCosmetics").GetValue(rig)) return false;
+            if (!rig.InitializedCosmetics) return false;
 
             CosmeticsController.CosmeticSet cosmeticSet = rig.cosmeticSet;
             return cosmeticSet.items is CosmeticsController.CosmeticItem[] items && items.Where(item => !item.isNullItem).Any(item => item.itemName == itemId);
@@ -113,6 +116,31 @@ namespace GorillaInfoWatch.Utilities
             bool isFriend = FriendUtility.IsFriend(player.UserId);
             if (!value && isFriend) FriendUtility.RemoveFriend(player.UserId);
             else if (value && !isFriend) FriendUtility.AddFriend(player.UserId);
+        }
+
+        public static GetAccountInfoResult GetAccountInfo(string userId, Action<GetAccountInfoResult> onAccountInfoRecieved, double maxCacheTime = double.MaxValue)
+        {
+            if (accountInfoCache.ContainsKey(userId) && (DateTime.Now - accountInfoCache[userId].cacheTime).TotalMinutes < maxCacheTime)
+                return accountInfoCache[userId].accountInfo;
+
+            if (!PlayFabClientAPI.IsClientLoggedIn())
+                throw new InvalidOperationException("PlayFab Client must be logged in to post the account info request");
+
+            PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest
+            {
+                PlayFabId = userId
+            }, accountInfo =>
+            {
+                if (accountInfoCache.ContainsKey(userId)) accountInfoCache[userId] = (accountInfo, DateTime.Now);
+                else accountInfoCache.Add(userId, (accountInfo, DateTime.Now));
+                onAccountInfoRecieved?.Invoke(accountInfo);
+            }, error =>
+            {
+                Logging.Fatal($"PlayFabClientAPI.GetAccountInfo for {userId}");
+                Logging.Error(error.GenerateErrorReport());
+            });
+
+            return null;
         }
     }
 }

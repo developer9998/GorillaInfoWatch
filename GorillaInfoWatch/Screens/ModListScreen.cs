@@ -1,8 +1,13 @@
-﻿using GorillaInfoWatch.Models;
+﻿using BepInEx;
+using BepInEx.Bootstrap;
+using BepInEx.Configuration;
+using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
-using GorillaLibrary;
-using MelonLoader;
+using HarmonyLib;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace GorillaInfoWatch.Screens
@@ -11,23 +16,27 @@ namespace GorillaInfoWatch.Screens
     internal class ModListScreen : InfoScreen
     {
         public override string Title => "Mods";
-        public override string Description => "View and inspect the list of your installed mods";
+        public override string Description => "View and inspect the list of your installed plugins";
 
-        private MelonMod[] stateSupportedMods, mods;
+        private PluginInfo[] stateSupportedMods, mods;
 
         public void Awake()
         {
-            var melons = MelonBase.RegisteredMelons.ToList();
+            Dictionary<string, PluginInfo> _loadedPlugins = Chainloader.PluginInfos;
+            PluginInfo[] _pluginInfos = [.. _loadedPlugins.Values];
 
-            var melonMods = melons.Where(melon => melon is MelonMod).Cast<MelonMod>();
+            stateSupportedMods = [.. _pluginInfos.Where(delegate(PluginInfo pluginInfo)
+            {
+                List<string> _instanceMethods = AccessTools.GetMethodNames(pluginInfo.Instance);
+                return _instanceMethods.Contains("OnEnable") || _instanceMethods.Contains("OnDisable");
+            }).OrderBy(pluginInfo => pluginInfo.Metadata.Name)];
 
-            stateSupportedMods = [.. melonMods.Where(melon => melon is GorillaMod gm && gm.IsStateSupported).OrderBy(melon => melon.Info.Name)];
+            mods = [.. stateSupportedMods.Concat(_pluginInfos.Except(stateSupportedMods).OrderBy(pluginInfo => pluginInfo.Metadata.Name).OrderByDescending(pluginInfo => pluginInfo.Instance.Config is ConfigFile config ? config.Count : -1)).Where(pluginInfo => pluginInfo.Metadata.GUID != Constants.GUID)];
 
-            mods = [.. stateSupportedMods
-                .Concat(melonMods.Except(stateSupportedMods))
-                .OrderBy(mod => mod.Info.Name)
-                .OrderByDescending(mod => mod is GorillaMod gm ? gm.Categories.Sum(category => category.Entries.Count) : -1)
-                .Where(mod => mod != Melon<Mod>.Instance)];
+            // Set the active state of the necessary mods
+            mods.ToDictionary(mod => mod, Main.Instance.GetPersistentPluginState)
+                .Where(element => (element.Key.Instance?.enabled ?? true) != element.Value)
+                .ForEach(element => element.Key.Instance?.enabled = element.Value);
         }
 
         public override InfoContent GetContent()
@@ -36,21 +45,22 @@ namespace GorillaInfoWatch.Screens
 
             for (int i = 0; i < mods.Length; i++)
             {
-                MelonMod melonMod = mods[i];
+                PluginInfo pluginInfo = mods[i];
 
-                Widget_PushButton pushButton = new(OpenModInfo, melonMod)
+                Widget_PushButton pushButton = new(OpenModInfo, pluginInfo)
                 {
                     Colour = ColourPalette.Blue,
                     Symbol = Content.Shared.Symbols["Info"]
                 };
 
-                if (stateSupportedMods.Contains(melonMod) && melonMod is GorillaMod gm)
+                if (stateSupportedMods.Contains(pluginInfo))
                 {
-                    lines.Append(melonMod.Info.Name).Append(": ").AppendColour(gm.Enabled ? "Enabled" : "Disabled", gm.Enabled ? ColourPalette.Green.Evaluate(0) : ColourPalette.Red.Evaluate(0)).Add(new Widget_Switch(gm.Enabled, ToggleMod, gm), pushButton);
+                    bool isEnabled = pluginInfo.Instance.enabled;
+                    lines.Append(pluginInfo.Metadata.Name).Append(": ").AppendColour(isEnabled ? "Enabled" : "Disabled", isEnabled ? ColourPalette.Green.Evaluate(0) : ColourPalette.Red.Evaluate(0)).Add(new Widget_Switch(isEnabled, ToggleMod, pluginInfo), pushButton);
                     continue;
                 }
 
-                lines.Add(melonMod.Info.Name, pushButton);
+                lines.Add(pluginInfo.Metadata.Name, pushButton);
             }
 
             return lines;
@@ -58,16 +68,18 @@ namespace GorillaInfoWatch.Screens
 
         private void ToggleMod(bool value, object[] args)
         {
-            if (args.ElementAtOrDefault(0) is GorillaMod gm)
+            if (args.ElementAtOrDefault(0) is PluginInfo pluginInfo)
             {
-                gm.Enabled = value;
+                pluginInfo.Instance.enabled = value;
+                Main.Instance.SetPersistentPluginState(pluginInfo, value);
+
                 SetText();
             }
         }
 
         private void OpenModInfo(object[] args)
         {
-            if (args.ElementAtOrDefault(0) is MelonMod info)
+            if (args.ElementAtOrDefault(0) is PluginInfo info)
             {
                 ModInspectorScreen.Mod = info;
                 LoadScreen<ModInspectorScreen>();

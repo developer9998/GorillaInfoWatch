@@ -1,4 +1,7 @@
-﻿using ExitGames.Client.Photon;
+﻿using BepInEx.Configuration;
+using ExitGames.Client.Photon;
+using GorillaGameModes;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Patches;
@@ -6,7 +9,6 @@ using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;
 using GorillaLibrary.Models;
 using GorillaLibrary.Utilities;
-using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -31,8 +33,8 @@ namespace GorillaInfoWatch.Screens
 
             refreshTime = RefreshRate;
 
-            GorillaLibrary.Events.Room.OnRoomJoined.Subscribe(OnRoomJoined);
-            GorillaLibrary.Events.Room.OnRoomLeft.Subscribe(OnRoomLeft);
+            RoomSystem.JoinedRoomEvent += OnRoomJoined;
+            RoomSystem.LeftRoomEvent += OnRoomLeft;
             PhotonNetwork.AddCallbackTarget(this);
         }
 
@@ -40,8 +42,8 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnScreenUnload();
 
-            GorillaLibrary.Events.Room.OnRoomJoined.Unsubscribe(OnRoomJoined);
-            GorillaLibrary.Events.Room.OnRoomLeft.Unsubscribe(OnRoomLeft);
+            RoomSystem.JoinedRoomEvent -= OnRoomJoined;
+            RoomSystem.LeftRoomEvent -= OnRoomLeft;
             PhotonNetwork.RemoveCallbackTarget(this);
         }
 
@@ -57,7 +59,7 @@ namespace GorillaInfoWatch.Screens
 
             bool roomPrivacy = NetworkSystem.Instance.SessionIsPrivate;
             string privacyString = roomPrivacy ? "Private" : "Public";
-            MelonPreferences_Entry<bool> privacyConfiguration = roomPrivacy ? Configuration.ShowPrivate : Configuration.ShowPublic;
+            ConfigEntry<bool> privacyConfiguration = roomPrivacy ? Configuration.ShowPrivate : Configuration.ShowPublic;
 
             string roomName = privacyConfiguration.Value ? NetworkSystem.Instance.RoomName : $"-{privacyString.ToUpper()}-";
             lines.Append("Room ID: ").Append(roomName).Add(new Widget_Switch(privacyConfiguration.Value, value =>
@@ -73,14 +75,14 @@ namespace GorillaInfoWatch.Screens
             lines.Append("Privacy: ").AppendLine(PhotonNetwork.CurrentRoom.IsOpen ? privacyString : "Closed");
 
             int playerCount = NetworkSystem.Instance.RoomPlayerCount;
-            int maxPlayers = PhotonNetwork.CurrentRoom.MaxPlayers;
+            int maxPlayers = RoomSystem.UseRoomSizeOverride ? RoomSystem.GetCurrentRoomExpectedSize() : PhotonNetwork.CurrentRoom.MaxPlayers;
             lines.Append("Capacity: ").BeginColour(playerCount == maxPlayers ? ColourPalette.Green.GetInitialColour() : Color.white).Append(playerCount).Append(" out of ").Append(maxPlayers).EndColour().AppendLine();
 
             lines.Skip();
 
             if (NetworkSystem.Instance.MasterClient is NetPlayer host)
             {
-                lines.Append("Host: ").Append(host.GetName()).Add(new Widget_PushButton(() =>
+                lines.Append("Host: ").Append(host.GetPlayerName()).Add(new Widget_PushButton(() =>
                 {
                     PlayerInspectorScreen.UserId = host.UserId;
                     LoadScreen<PlayerInspectorScreen>();
@@ -121,7 +123,7 @@ namespace GorillaInfoWatch.Screens
 
             lines.Skip();
 
-            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGameMode is GameModeWrapper gamemode ? gamemode.DisplayName : "Error");
+            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGameMode is GameModeWrapper gamemode ? gamemode.DisplayName : GorillaScoreBoard.error.ToTitleCase());
 
             // "queueName" custom property is not set for ranked matches
             // Perhaps properties could be implemented here when they're set, they include "mmrTier" (Low/Medium/High) and "platform" (Quest/PC)
@@ -132,7 +134,7 @@ namespace GorillaInfoWatch.Screens
                 lines.Append(queueTitle).Append(": ").AppendLine(isNativeQueue ? queueName.ToTitleCase() : queueName.ToUpper());
             }
 
-            int participantCount = GameModeUtility.GetParticipants().Count();
+            int participantCount = NetworkSystem.Instance.AllNetPlayers.Where(player => player != null && !player.IsNull).Count(GameMode.CanParticipate);
             lines.Append("Participation: ").BeginColour(participantCount == playerCount ? ColourPalette.Green.GetInitialColour() : ColourPalette.Red.GetInitialColour()).Append(participantCount).Append(" out of ").Append(playerCount).EndColour().AppendLine();
 
             return lines;

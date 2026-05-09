@@ -39,7 +39,7 @@ internal class UserInput : MonoBehaviour
 
     public void Awake()
     {
-        if (Instance.IsObjectExistent() && Instance != this)
+        if (Instance.Exists() && Instance != this)
         {
             Destroy(this);
             return;
@@ -55,7 +55,7 @@ internal class UserInput : MonoBehaviour
         foreach (UserInputBinding binding in Enum.GetValues(typeof(UserInputBinding)).Cast<UserInputBinding>())
         {
             Transform child = standardRoot?.Find(binding.ToString());
-            if (child.IsObjectExistent())
+            if (child.Exists())
             {
                 KeyboardButton key = child.GetComponentInChildren<Collider>().gameObject.AddComponent<KeyboardButton>();
                 key.Binding = binding;
@@ -64,7 +64,7 @@ internal class UserInput : MonoBehaviour
             }
 
             child = advancedRoot?.Find(binding.ToString());
-            if (child.IsObjectExistent())
+            if (child.Exists())
             {
                 if (binding == UserInputBinding.Shift)
                 {
@@ -184,8 +184,6 @@ internal class UserInput : MonoBehaviour
         foreach (var key in _keys)
         {
             if (key.Binding.IsFunctionKey()) return;
-
-            if (key.transform.parent.parent != _advancedBoardRoot) continue;
 
             if (key.Binding.IsLetterKey())
             {

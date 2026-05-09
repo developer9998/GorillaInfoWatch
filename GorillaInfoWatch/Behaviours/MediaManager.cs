@@ -1,9 +1,9 @@
-﻿using GorillaInfoWatch.Extensions;
+﻿using BepInEx;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Interfaces;
 using GorillaInfoWatch.Models.MediaControl;
 using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;
-using GorillaLibrary.Utilities;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -105,8 +105,7 @@ public class MediaManager : MonoBehaviour, IInitializeCallback
         string eventName = (string)obj.Property("EventName")?.Value ?? null;
         string sessionId = (string)obj.Property("SessionId")?.Value ?? null;
 
-        // must be Sync (opposed to Async) as it may rely on Unity methods
-        ThreadUtility.StartSyncMethod(async () =>
+        ThreadingHelper.Instance.StartSyncInvoke(async () =>
         {
             Session session;
 
@@ -287,7 +286,11 @@ public class MediaManager : MonoBehaviour, IInitializeCallback
 
     public void PushKey(MediaKeyCode keyCode)
     {
-        ThreadUtility.StartAsyncMethod(() => keybd_event((uint)keyCode, 0, 0, 0));
+        ThreadingHelper.Instance.StartAsyncInvoke(() =>
+        {
+            keybd_event((uint)keyCode, 0, 0, 0);
+            return null;
+        });
     }
 
     // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event

@@ -5,35 +5,36 @@ using GorillaInfoWatch.Tools;
 using System;
 using System.Reflection;
 
-namespace GorillaInfoWatch;
-
-public static class Notifications
+namespace GorillaInfoWatch
 {
-    internal static event Action<Notification> SendRequest;
-
-    internal static event Action<Notification, bool> OpenRequest;
-
-    public static void SendNotification(Notification notification)
+    public static class Notifications
     {
-        if (notification is null) throw new ArgumentNullException(nameof(notification));
+        internal static event Action<Notification> SendRequest;
 
-        Assembly assembly = Assembly.GetCallingAssembly();
+        internal static event Action<Notification, bool> OpenRequest;
 
-        if (assembly != Assembly.GetExecutingAssembly() && assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() == null)
+        public static void SendNotification(Notification notification)
         {
-            Logging.Warning($"Assembly {assembly.GetName().Name} is not permitted to send notifications");
-            return;
+            if (notification is null) throw new ArgumentNullException(nameof(notification));
+
+            Assembly assembly = Assembly.GetCallingAssembly();
+
+            if (assembly != Assembly.GetExecutingAssembly() && assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() == null)
+            {
+                Logging.Warning($"Assembly {assembly.GetName().Name} is not permitted to send notifications");
+                return;
+            }
+
+            Logging.Message($"Notification sending from {assembly.GetName().Name}:\n{notification.DisplayText}");
+
+            SendRequest?.SafeInvoke(notification);
         }
 
-        Logging.Message($"Notification sending from {assembly.GetName().Name}:\n{notification.DisplayText}");
+        public static void OpenNotification(Notification notification, bool process)
+        {
+            if (notification is null) throw new ArgumentNullException(nameof(notification));
 
-        SendRequest?.SafeInvoke(notification);
-    }
-
-    public static void OpenNotification(Notification notification, bool process)
-    {
-        if (notification is null) throw new ArgumentNullException(nameof(notification));
-
-        OpenRequest?.SafeInvoke(notification, process);
+            OpenRequest?.SafeInvoke(notification, process);
+        }
     }
 }

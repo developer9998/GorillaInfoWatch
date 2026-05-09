@@ -1,5 +1,4 @@
 ﻿using GorillaInfoWatch.Tools;
-using GorillaLibrary.Utilities;
 using GorillaNetworking;
 using Photon.Voice.Unity;
 using System;
@@ -31,7 +30,7 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
         _spriteMuteSpeaker ??= Content.Shared.Symbols["Speaker Muted"].Sprite;
         _spriteForceMuteSpeaker ??= Content.Shared.Symbols["Speaker ForceMuted"].Sprite;
 
-        if (RigUtility.TryGetRig(Player, out _rigContainer))
+        if (VRRigCache.Instance.TryGetVrrig(Player, out _rigContainer))
         {
             _isPlayerAutoMuted = PlayerPrefs.HasKey(Player.UserId);
             Image.enabled = false;

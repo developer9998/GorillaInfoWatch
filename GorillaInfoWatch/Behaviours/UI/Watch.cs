@@ -10,9 +10,8 @@ using System.Linq;
 using GorillaExtensions;
 using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.StateMachine;
-using HarmonyLib;
-using GorillaLibrary.Extensions;
 using GorillaInfoWatch.Behaviours.Networking;
+using GorillaLibrary.Extensions;
 #endif
 
 namespace GorillaInfoWatch.Behaviours.UI
@@ -131,7 +130,7 @@ namespace GorillaInfoWatch.Behaviours.UI
             LocalWatch = this;
 
             InLeftHand = Convert.ToBoolean(Configuration.Orientation.Value);
-            Configuration.Orientation.OnEntryValueChanged.Subscribe((_, _) => SetHand(Convert.ToBoolean(Configuration.Orientation.Value)));
+            Configuration.Orientation.SettingChanged += (_, _) => SetHand(Convert.ToBoolean(Configuration.Orientation.Value));
 
             CustomPushButton homeNavigationButton = homeMenu.transform.Find("MenuSelection/Options/Home").AddComponent<CustomPushButton>();
             homeNavigationButton.OnButtonPush += _ => SetTab(WatchTab.Standard);
@@ -151,7 +150,7 @@ namespace GorillaInfoWatch.Behaviours.UI
 
             SetHand(InLeftHand);
             SetTab(WatchTab.Standard);
-            SetVisibility(HideWatch || (bool)AccessTools.Field(typeof(VRRig), "IsInvisibleToLocalPlayer").GetValue(Rig));
+            SetVisibility(HideWatch || Rig.IsInvisibleToLocalPlayer);
             SetColour(Rig.playerColor);
         }
 
@@ -172,7 +171,7 @@ namespace GorillaInfoWatch.Behaviours.UI
         {
             InLeftHand = inLeftHand;
 
-            transform.SetParent(InLeftHand ? Rig.leftHandTransform.parent : Rig.rightHandTransform.parent, false);
+            transform.SetParent(Rig.GetBone(InLeftHand ? GorillaLibrary.Models.GorillaRigBone.LeftHand : GorillaLibrary.Models.GorillaRigBone.RightHand), false);
             transform.localPosition = InLeftHand ? Vector3.zero : new Vector3(0.01068962f, 0.040359f, -0.0006625927f);
             transform.localEulerAngles = InLeftHand ? Vector3.zero : new Vector3(-1.752f, 0.464f, 150.324f);
             transform.localScale = Vector3.one;

@@ -1,4 +1,5 @@
-﻿using GorillaInfoWatch.Models;
+﻿using GorillaInfoWatch.Extensions;
+using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
@@ -22,22 +23,24 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnScreenLoad();
 
-            GorillaLibrary.Events.Room.OnRoomJoined.Subscribe(OnRoomJoined);
-            GorillaLibrary.Events.Room.OnRoomLeft.Subscribe(OnRoomLeft);
-            GorillaLibrary.Events.Player.OnPlayerEnteredRoom.Subscribe(OnPlayerJoined);
-            GorillaLibrary.Events.Player.OnPlayerLeftRoom.Subscribe(OnPlayerLeft);
-            GorillaLibrary.Events.Player.OnPlayerNameChanged.Subscribe(OnPlayerNameChanged);
+            Events.OnRigNameUpdate += OnRigNameUpdate;
+
+            RoomSystem.JoinedRoomEvent += OnRoomJoined;
+            RoomSystem.PlayerJoinedEvent += OnPlayerJoined;
+            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+            RoomSystem.LeftRoomEvent += OnRoomLeft;
         }
 
         public override void OnScreenUnload()
         {
             base.OnScreenUnload();
 
-            GorillaLibrary.Events.Room.OnRoomJoined.Unsubscribe(OnRoomJoined);
-            GorillaLibrary.Events.Room.OnRoomLeft.Unsubscribe(OnRoomLeft);
-            GorillaLibrary.Events.Player.OnPlayerEnteredRoom.Unsubscribe(OnPlayerJoined);
-            GorillaLibrary.Events.Player.OnPlayerLeftRoom.Unsubscribe(OnPlayerLeft);
-            GorillaLibrary.Events.Player.OnPlayerNameChanged.Subscribe(OnPlayerNameChanged);
+            Events.OnRigNameUpdate -= OnRigNameUpdate;
+
+            RoomSystem.JoinedRoomEvent -= OnRoomJoined;
+            RoomSystem.PlayerJoinedEvent -= OnPlayerJoined;
+            RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
+            RoomSystem.LeftRoomEvent -= OnRoomLeft;
         }
 
         public override InfoContent GetContent()
@@ -57,14 +60,14 @@ namespace GorillaInfoWatch.Screens
             lines.Append("In ").Append(configuredPrivacy ? $"Room {NetworkSystem.Instance.RoomName}" : $"{(roomPrivacy ? "Private" : "Public")} Room").Append(": ");
 
             string gameModeString = NetworkSystem.Instance.GameModeString;
-            int maxPlayers = PhotonNetwork.CurrentRoom.MaxPlayers;
+            int maxPlayers = (RoomSystem.UseRoomSizeOverride || NetworkSystem.Instance is not NetworkSystemPUN) ? RoomSystem.GetCurrentRoomExpectedSize() : PhotonNetwork.CurrentRoom.MaxPlayers;
             lines.Append(NetworkSystem.Instance.RoomPlayerCount).Append("/").Append(maxPlayers).Append(" Players").Add(new Widget_PushButton(() => LoadScreen<RoomInspectorScreen>())
             {
                 Colour = ColourPalette.Blue,
                 Symbol = Content.Shared.Symbols["Info"]
             });
 
-            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGameMode is GameModeWrapper gamemode ? gamemode.DisplayName : "Error").AppendLine();
+            lines.Append("Game Mode: ").AppendLine(GameModeUtility.CurrentGameMode is GameModeWrapper gamemode ? gamemode.DisplayName : GorillaScoreBoard.error.ToTitleCase()).AppendLine();
 
             NetPlayer[] players = NetworkSystem.Instance.AllNetPlayers;
             Array.Sort(players, (x, y) => x.ActorNumber.CompareTo(y.ActorNumber));
@@ -97,7 +100,7 @@ namespace GorillaInfoWatch.Screens
                     Symbol = Content.Shared.Symbols["Info"]
                 }];
 
-                lines.AppendColour(player.GetName(), RigUtility.TryGetRig(player, out RigContainer rigContainer) ? rigContainer.Rig.playerText1.color : Color.white);
+                lines.AppendColour(player.GetPlayerName(), RigUtility.TryGetRig(player, out RigContainer rig) ? rig.Rig.playerText1.color : Color.white);
                 lines.Add(widgets);
             }
 
@@ -113,9 +116,13 @@ namespace GorillaInfoWatch.Screens
             }
         }
 
-        private void OnPlayerNameChanged(NetPlayer player, string name)
+        private void OnRigNameUpdate(VRRig rig)
         {
-            if (!player.IsLocal && (player == null || player.IsNull || player.InRoom)) return;
+            if (!rig.isLocal)
+            {
+                NetPlayer player = rig.Creator;
+                if (player == null || player.IsNull || player.InRoom) return;
+            }
 
             SetContent();
         }

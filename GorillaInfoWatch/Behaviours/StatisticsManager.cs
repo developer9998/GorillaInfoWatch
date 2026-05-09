@@ -1,6 +1,5 @@
 ﻿using GorillaGameModes;
 using GorillaInfoWatch.Models.Interfaces;
-using GorillaLibrary.Utilities;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using GorillaLibrary.Utilities;
 
 namespace GorillaInfoWatch.Behaviours;
 
@@ -19,16 +19,15 @@ public class StatisticsManager : MonoBehaviour, IInitializeCallback
 
     public void Awake()
     {
-        GorillaLibrary.Events.GameMode.OnPlayerTagged.Subscribe(OnPlayerTagged);
-        GorillaLibrary.Events.GameMode.OnRoundCompleted.Subscribe(OnRoundCompleted);
+        Events.OnPlayerTagged += OnPlayerTagged;
+        Events.OnRoundComplete += OnRoundCompleted;
     }
 
     public void Initialize()
     {
-        GameModeZoneMapping mapping = GameMode.GameModeZoneMapping;
-        AccessTools.Method(mapping.GetType(), "Init").Invoke(mapping, null);
+        GameMode.GameModeZoneMapping.Init();
 
-        IEnumerable<GorillaGameManager> activeGameManagers = ((ZoneGameModes[])AccessTools.Field(mapping.GetType(), "zoneGameModes").GetValue(mapping))
+        IEnumerable<GorillaGameManager> activeGameManagers = GameMode.GameModeZoneMapping.zoneGameModes
             .Where(element => !element.zone.Contains(GTZone.customMaps)).SelectMany(element => element.modes)
             .Distinct().Select(GameMode.GetGameModeInstance);
 

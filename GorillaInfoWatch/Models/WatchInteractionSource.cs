@@ -4,6 +4,5 @@ public enum WatchInteractionSource
 {
     Screen,
     Widget,
-    Shortcut,
     Keyboard
 }

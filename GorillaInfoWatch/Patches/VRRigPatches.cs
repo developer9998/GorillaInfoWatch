@@ -15,7 +15,7 @@ namespace GorillaInfoWatch.Patches
         public static void NetInitPatch(VRRig __instance) => initializedRigSet.Add(__instance);
 
         [HarmonyPatch(nameof(VRRig.OnDisable)), HarmonyPrefix]
-        private static void PreDisablePatch(VRRig __instance) => __instance.TemporaryCosmeticEffects.Where(effect => effect.Key == EffectType.Skin).ForEach(effect => AccessTools.Method(typeof(VRRig), "RemoveTemporaryCosmeticEffects").Invoke(__instance, [effect]));
+        private static void PreDisablePatch(VRRig __instance) => __instance.TemporaryCosmeticEffects.Where(effect => effect.Key == EffectType.Skin).ForEach(__instance.RemoveTemporaryCosmeticEffects);
 
         [HarmonyPatch(nameof(VRRig.OnDisable)), HarmonyPostfix, HarmonyPriority(650)]
         private static void PostDisablePatch(VRRig __instance)
@@ -36,6 +36,13 @@ namespace GorillaInfoWatch.Patches
         {
             if (!IsValid(__instance)) return;
             Events.OnRigUpdatedCosmetics?.SafeInvoke(__instance, requestedCosmeticRigSet.Add(__instance));
+        }
+
+        [HarmonyPatch(nameof(VRRig.UpdateName), typeof(bool)), HarmonyPostfix, HarmonyPriority(150)]
+        private static void UpdateNamePatch(VRRig __instance)
+        {
+            if (!IsValid(__instance)) return;
+            Events.OnRigNameUpdate?.SafeInvoke(__instance);
         }
 
         [HarmonyPatch(nameof(VRRig.SetInvisibleToLocalPlayer)), HarmonyPostfix]

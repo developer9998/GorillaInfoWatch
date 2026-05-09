@@ -1,7 +1,5 @@
 using ExitGames.Client.Photon;
 using GorillaInfoWatch.Tools;
-using GorillaLibrary.Utilities;
-using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -33,7 +31,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
 
         PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
 
-        PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Constants.Networking_PropertyKey, Melon<Mod>.Instance.Info.Version } });
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new() { { Constants.Networking_PropertyKey, Constants.Version } });
     }
 
     public void Update()
@@ -117,7 +115,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
         base.OnPlayerEnteredRoom(newPlayer);
         playerArray = PhotonNetwork.PlayerListOthers;
 
-        while (RigUtility.Rigs.All(player => player.Key.ActorNumber != newPlayer.ActorNumber)) await Task.Delay(PhotonNetwork.GetPing());
+        while (VRRigCache.rigsInUse.All(player => player.Key.ActorNumber != newPlayer.ActorNumber)) await Task.Delay(PhotonNetwork.GetPing());
 
         try
         {
@@ -149,7 +147,7 @@ internal class NetworkManager : MonoBehaviourPunCallbacks
 
         Player player = PhotonNetwork.CurrentRoom.GetPlayer(data.Sender);
         NetPlayer netPlayer = NetworkSystem.Instance.GetPlayer(data.Sender);
-        if (player.IsLocal || !RigUtility.TryGetRig(netPlayer, out RigContainer playerRig) || !playerRig.TryGetComponent(out NetworkedPlayer networkedPlayer)) return;
+        if (player.IsLocal || !VRRigCache.Instance.TryGetVrrig(netPlayer, out RigContainer playerRig) || !playerRig.TryGetComponent(out NetworkedPlayer networkedPlayer)) return;
 
         if (eventData[1] is Hashtable properties)
         {

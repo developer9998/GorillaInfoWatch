@@ -4,7 +4,6 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Tools;
-using GorillaLibrary.Extensions;
 using Photon.Realtime;
 using System;
 using UnityEngine;
@@ -30,14 +29,14 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
     public void OnDestroy()
     {
         HasInfoWatch = false;
-        if (Watch.IsObjectExistent()) Watch.gameObject.Obliterate();
+        if (Watch.Exists()) Watch.gameObject.Obliterate();
     }
 
     public void PreDisable()
     {
         enabled = false;
         HasInfoWatch = false;
-        if (Watch.IsObjectExistent()) Watch.gameObject.Obliterate();
+        if (Watch.Exists()) Watch.gameObject.Obliterate();
     }
 
     public void OnPlayerPropertyChanged(Hashtable properties)
@@ -48,11 +47,11 @@ public class NetworkedPlayer : MonoBehaviour, IPreDisable
         {
             HasInfoWatch = true;
 
-            Logging.Message($"{Player.GetName()} has GorillaInfoWatch");
+            Logging.Message($"{Player.GetPlayerName()} has GorillaInfoWatch");
             SignificanceManager.Instance.CheckPlayer(Player, SignificanceCheckScope.InfoWatch);
         }
 
-        if (Watch.IsObjectNull())
+        if (Watch.Null())
         {
             GameObject prefab = Instantiate(Content.Shared.WatchPrefab);
             Watch = prefab.GetComponent<Watch>();

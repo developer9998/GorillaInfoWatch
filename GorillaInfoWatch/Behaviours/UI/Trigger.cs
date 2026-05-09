@@ -2,7 +2,7 @@
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Models.UserInput;
-using GorillaLibrary.Utilities;
+using GorillaInfoWatch.Utilities;
 using UnityEngine;
 using HandIndicator = GorillaTriggerColliderHandIndicator;
 
@@ -25,7 +25,7 @@ public class Trigger : MonoBehaviour
 
     public void OnTriggerEnter(Collider other)
     {
-        if (panel.UprightVector.IsLongerThan(1.82f) && panel.InView && other.TryGetComponent(out HandIndicator handIndicator) && WatchManager.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, _debounce))
+        if (panel.UprightVector.IsLongerThan(1.82f) && panel.InView && other.TryGetComponent(out HandIndicator handIndicator) && Main.Instance.CheckInteractionInterval(WatchInteractionSource.Screen, _debounce))
         {
             GorillaTagger.Instance.StartVibration(handIndicator.isLeftHand, GorillaTagger.Instance.taggedHapticStrength, GorillaTagger.Instance.tapHapticDuration);
 

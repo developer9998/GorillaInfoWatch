@@ -1,17 +1,18 @@
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaInfoWatch.Tools;
+using GorillaInfoWatch.Utilities;
 using GorillaLibrary.Extensions;
-using GorillaLibrary.Utilities;
 using GorillaNetworking;
 using GorillaTagScripts.VirtualStumpCustomMaps;
-using HarmonyLib;
 using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace GorillaInfoWatch.Screens
 {
@@ -73,7 +74,7 @@ namespace GorillaInfoWatch.Screens
             lines.Add($"Privacy: {localPlayerPrivacy.GetName().Replace('_', ' ').ToTitleCase()}", new Widget_SnapSlider((int)localPlayerPrivacy, 0, 2, selection =>
             {
                 localPlayerPrivacy = (FriendBackendController.PrivacyState)selection;
-                AccessTools.Field(typeof(FriendBackendController), "lastPrivacyState").SetValue(FriendBackendController.Instance, localPlayerPrivacy);
+                FriendBackendController.Instance.lastPrivacyState = localPlayerPrivacy;
                 FriendBackendController.Instance.SetPrivacyState(localPlayerPrivacy);
                 SetContent();
             })
@@ -178,14 +179,12 @@ namespace GorillaInfoWatch.Screens
 
                     try
                     {
-                        /*
                         GameObject treeRoom = ZoneManagement.instance.allObjects.First(gameObject => gameObject.name == "TreeRoom");
                         VirtualStumpTeleporter teleporter = treeRoom.GetComponentInChildren<VirtualStumpTeleporter>(true);
                         CustomMapManager.TeleportToVirtualStump(teleporter, success =>
                         {
                             if (success) JoinFriend(args);
                         });
-                        */
                     }
                     catch (Exception ex)
                     {

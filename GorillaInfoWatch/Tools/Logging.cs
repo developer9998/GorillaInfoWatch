@@ -1,24 +1,31 @@
-﻿using MelonLoader;
+﻿using BepInEx.Logging;
 
 namespace GorillaInfoWatch.Tools
 {
     internal class Logging
     {
-        private static MelonLogger.Instance logSource;
+        private static ManualLogSource logSource;
 
-        public Logging(MelonLogger.Instance source)
+        public Logging(ManualLogSource source)
         {
             logSource = source;
         }
 
-        public static void Message(object data) => logSource.Msg(data);
+        public static void Fatal(object message) => Log(LogLevel.Fatal, message);
 
-        public static void Info(object data) => logSource.Msg(MelonLoader.Logging.ColorARGB.Gray, data);
+        public static void Error(object message) => Log(LogLevel.Error, message);
 
-        public static void Warning(object data) => logSource.Warning(data);
+        public static void Warning(object message) => Log(LogLevel.Warning, message);
 
-        public static void Error(object data) => logSource.Error(data);
+        public static void Message(object message) => Log(LogLevel.Message, message);
 
-        public static void Fatal(object data) => logSource.Error(data);
+        public static void Info(object message) => Log(LogLevel.Info, message);
+
+        private static void Log(LogLevel level, object message)
+        {
+#if DEBUG
+            logSource.Log(level, message);
+#endif
+        }
     }
 }

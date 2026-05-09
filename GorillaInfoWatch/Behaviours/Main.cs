@@ -1,4 +1,6 @@
-﻿using GorillaExtensions;
+﻿using BepInEx;
+using BepInEx.Bootstrap;
+using GorillaExtensions;
 using GorillaInfoWatch.Behaviours.Networking;
 using GorillaInfoWatch.Behaviours.UI;
 using GorillaInfoWatch.Behaviours.UI.Widgets;
@@ -6,14 +8,15 @@ using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Interfaces;
+using GorillaInfoWatch.Models.Shortcuts;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.StateMachine;
 using GorillaInfoWatch.Screens;
+using GorillaInfoWatch.Shortcuts;
 using GorillaInfoWatch.Tools;
 using GorillaLibrary.Extensions;
 using GorillaNetworking;
 using HarmonyLib;
-using MelonLoader;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
@@ -35,9 +38,9 @@ using SnapSlider = GorillaInfoWatch.Behaviours.UI.Widgets.SnapSlider;
 
 namespace GorillaInfoWatch.Behaviours;
 
-internal class WatchManager : MonoBehaviourPunCallbacks
+internal class Main : MonoBehaviourPunCallbacks
 {
-    public static WatchManager Instance { get; private set; }
+    public static Main Instance { get; private set; }
 
     // Screens
 
@@ -67,6 +70,15 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         typeof(SettingsInspectorScreen),
         typeof(CreditScreen),
         typeof(VersionWarningScreen)
+    ];
+
+    // Shortcuts
+
+    private readonly Dictionary<Type, ShortcutRegistrar> _shortcutRegistars = [];
+
+    private readonly List<Type> includedShortcutsTypes =
+    [
+        typeof(ShortcutRegistrar_Rooms)
     ];
 
     // Assets
@@ -116,18 +128,21 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         _screenRoot.transform.SetParent(transform);
 
         includedScreenTypes.ForEach(page => RegisterScreen(page));
+        includedShortcutsTypes.ForEach(funcReg => RegisterShortcuts(funcReg));
 
         Type screenType = typeof(InfoScreen);
+
+        Type shortcutRegType = typeof(ShortcutRegistrar);
 
         try
         {
             List<Assembly> assemblies = [];
 
-            foreach (MelonBase pluginInfo in MelonBase.RegisteredMelons)
+            foreach (PluginInfo pluginInfo in Chainloader.PluginInfos.Values)
             {
-                if (pluginInfo is not MelonMod mod || mod == Melon<Mod>.Instance) continue;
+                if (pluginInfo.Metadata?.GUID == Constants.GUID) continue;
 
-                if (mod.GetType().Assembly is Assembly assembly)
+                if (pluginInfo.Instance is BaseUnityPlugin plugin && plugin.GetType()?.Assembly is Assembly assembly)
                 {
                     assemblies.Add(assembly);
                 }
@@ -137,9 +152,11 @@ internal class WatchManager : MonoBehaviourPunCallbacks
             {
                 try
                 {
+
+
                     if (assembly.GetCustomAttribute<InfoWatchCompatibleAttribute>() is not InfoWatchCompatibleAttribute attribute) continue;
 
-                    if (attribute.MinimumVersion > Version.Parse(Melon<Mod>.Instance.Info.Version))
+                    if (attribute.MinimumVersion > Version.Parse(Constants.Version))
                     {
                         Logging.Warning($"Assembly has minimum version of {attribute.MinimumVersion}");
                         continue;
@@ -154,7 +171,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
                 string assemblyName = assembly.GetName().Name;
                 Logging.Message($"Assembly {assemblyName}");
 
-                List<Type> screenTypes = [];
+                List<Type> screenTypes = [], shortcutRegTypes = [];
 
                 try
                 {
@@ -169,6 +186,11 @@ internal class WatchManager : MonoBehaviourPunCallbacks
                             screenTypes.Add(type);
                             Logging.Info($"Screen {type.FullName}");
                         }
+                        else if (type.IsSubclassOf(shortcutRegType) && shortcutRegType.IsAssignableFrom(type))
+                        {
+                            shortcutRegTypes.Add(type);
+                            Logging.Info($"Shortcut {type.FullName}");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -179,6 +201,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
                 }
 
                 screenTypes.ForEach(type => RegisterScreen(type));
+                shortcutRegTypes.ForEach(type => RegisterShortcuts(type));
             }
         }
         catch (Exception ex)
@@ -351,6 +374,8 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
         _screenRoot.SetActive(true);
 
+        GetScreen<ShortcutListScreen>().SetEntries([.. _shortcutRegistars.Values]);
+
         _homeScreen.SetEntries([.. _screens.Values]);
         LoadScreen(_homeScreen);
 
@@ -445,14 +470,12 @@ internal class WatchManager : MonoBehaviourPunCallbacks
             {
                 if (notification.Screen.Task is Task task)
                 {
-                    async void Method()
+                    ThreadingHelper.Instance.StartSyncInvoke(async () =>
                     {
                         await task;
                         notification.Processing = false;
                         LoadScreen(screen);
-                    }
-
-                    Method();
+                    });
                 }
                 else LoadScreen(screen);
             }
@@ -748,6 +771,69 @@ internal class WatchManager : MonoBehaviourPunCallbacks
         return false;
     }
 
+    public bool RegisterShortcuts(Type type)
+    {
+        if (type == null) return false;
+
+        Logging.Message($"RegisterFunctionRegistrar: {type.FullName}");
+
+        if (_shortcutRegistars.ContainsKey(type))
+        {
+            Logging.Warning("Registry contains key");
+            return false;
+        }
+
+        Type registrarType = typeof(ShortcutRegistrar);
+
+        if (!type.IsSubclassOf(registrarType))
+        {
+            PlayErrorSound();
+            return false;
+        }
+
+        if (!registrarType.IsAssignableFrom(type))
+        {
+            PlayErrorSound();
+            return false;
+        }
+
+        try
+        {
+            ShortcutRegistrar registrar = (ShortcutRegistrar)Activator.CreateInstance(type);
+            Logging.Message("CreateInstance success");
+
+            _shortcutRegistars.TryAdd(type, registrar);
+        }
+        catch (Exception ex)
+        {
+            Logging.Fatal("CreateInstance exception");
+            Logging.Error(ex);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    #endregion
+
+    #region Plugin utilities
+
+    public string GetPluginStateKey(PluginInfo plugin) => $"ModState_{plugin.Metadata.GUID}";
+
+    public bool GetPersistentPluginState(PluginInfo plugin)
+    {
+        string key = GetPluginStateKey(plugin);
+        return !DataManager.Instance.HasData(key) || DataManager.Instance.GetData(key, defaultValue: true, setDefaultValue: false);
+    }
+
+    public void SetPersistentPluginState(PluginInfo plugin, bool state)
+    {
+        string key = GetPluginStateKey(plugin);
+        if (state && DataManager.Instance.HasData(key)) DataManager.Instance.RemoveData(key);
+        else DataManager.Instance.SetData(key, state);
+    }
+
     #endregion
 
     #region Methods
@@ -760,7 +846,7 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
         if (request.result > UnityWebRequest.Result.Success) return;
 
-        Version installedVersion = new(Melon<Mod>.Instance.Info.Version);
+        Version installedVersion = new(Constants.Version);
         string latestVersionString = request.downloadHandler.text.Trim();
         result?.Invoke((Version.TryParse(latestVersionString, out Version latestVersion) && latestVersion > installedVersion, latestVersionString));
     }
@@ -800,21 +886,21 @@ internal class WatchManager : MonoBehaviourPunCallbacks
 
     public void PressButton(PushButton button, bool isLeftHand)
     {
-        if (button.IsObjectNull()) return;
+        if (button.Null()) return;
         AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
         handPlayer.PlayOneShot(button.TryGetComponent(out AudioSource component) ? component.clip : Sounds.widgetButton.AsAudioClip(), 0.2f);
     }
 
     public void PressSlider(SnapSlider slider, bool isLeftHand)
     {
-        if (slider.IsObjectNull()) return;
+        if (slider.Null()) return;
         AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
         handPlayer.PlayOneShot(Sounds.widgetSlider.AsAudioClip(), 0.2f);
     }
 
     public void PressSwitch(Switch button, bool isLeftHand)
     {
-        if (button.IsObjectNull()) return;
+        if (button.Null()) return;
         AudioSource handPlayer = GorillaTagger.Instance.offlineVRRig.GetHandPlayer(isLeftHand);
         handPlayer.PlayOneShot(button.TryGetComponent(out AudioSource component) ? component.clip : Sounds.widgetSwitch.AsAudioClip(), 0.2f);
     }

@@ -1,4 +1,5 @@
 using GorillaInfoWatch.Behaviours;
+using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Significance;
 using GorillaInfoWatch.Models.Widgets;
@@ -32,9 +33,9 @@ namespace GorillaInfoWatch.Screens
         {
             base.OnScreenLoad();
 
-            GorillaLibrary.Events.Player.OnPlayerLeftRoom.Subscribe(OnPlayerLeft);
-            GorillaLibrary.Events.Player.OnPlayerNameChanged.Subscribe(OnPlayerNameChanged);
-            GorillaLibrary.Events.Room.OnRoomLeft.Subscribe(OnRoomLeft);
+            Events.OnRigNameUpdate += OnRigNameUpdate;
+            RoomSystem.PlayerLeftEvent += OnPlayerLeft;
+            RoomSystem.LeftRoomEvent += OnRoomLeft;
         }
 
         public override void OnScreenUnload()
@@ -43,9 +44,9 @@ namespace GorillaInfoWatch.Screens
 
             UserId = null;
 
-            GorillaLibrary.Events.Player.OnPlayerLeftRoom.Unsubscribe(OnPlayerLeft);
-            GorillaLibrary.Events.Player.OnPlayerNameChanged.Unsubscribe(OnPlayerNameChanged);
-            GorillaLibrary.Events.Room.OnRoomLeft.Unsubscribe(OnRoomLeft);
+            Events.OnRigNameUpdate -= OnRigNameUpdate;
+            RoomSystem.PlayerLeftEvent -= OnPlayerLeft;
+            RoomSystem.LeftRoomEvent -= OnRoomLeft;
         }
 
         public override InfoContent GetContent()
@@ -63,8 +64,8 @@ namespace GorillaInfoWatch.Screens
 
             LineBuilder lines = new();
 
-            string playerName = player.GetName(false);
-            string playerNameLimited = player.GetName(true);
+            string playerName = player.GetPlayerName(false);
+            string playerNameLimited = player.GetPlayerName(true);
 
             lines.AppendColour(playerNameLimited, rig.playerText1.color).Add(new Widget_Symbol()
             {
@@ -117,7 +118,7 @@ namespace GorillaInfoWatch.Screens
                 });
             }
 
-        #region Significance
+            #region Significance
 
         Significance:
 
@@ -195,8 +196,9 @@ namespace GorillaInfoWatch.Screens
             }
         }
 
-        private void OnPlayerNameChanged(NetPlayer player, string name)
+        private void OnRigNameUpdate(VRRig targetRig)
         {
+            NetPlayer player = targetRig.Creator;
             if (player == null || player.IsNull || player.UserId != UserId) return;
             SetContent();
         }
