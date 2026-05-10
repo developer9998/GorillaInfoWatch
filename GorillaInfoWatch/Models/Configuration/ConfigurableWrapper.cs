@@ -1,5 +1,4 @@
 ﻿using BepInEx.Configuration;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models.Widgets;
 using GorillaLibrary.Extensions;
 using System;

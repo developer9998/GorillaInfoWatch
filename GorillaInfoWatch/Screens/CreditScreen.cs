@@ -1,5 +1,4 @@
 using GorillaInfoWatch.Behaviours;
-using GorillaInfoWatch.Extensions;
 using GorillaInfoWatch.Models;
 using GorillaInfoWatch.Models.Attributes;
 using GorillaInfoWatch.Models.Significance;
@@ -86,7 +85,7 @@ internal class CreditScreen : InfoScreen
         {
             try
             {
-                Random random = new(DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year);
+                Random random = new(Mathf.FloorToInt((DateTime.UtcNow.DayOfYear + DateTime.UtcNow.Year) / (DateTime.UtcNow.Hour + 1)));
 
                 // Basic/Dweller tier
 
@@ -99,6 +98,8 @@ internal class CreditScreen : InfoScreen
 
                 for (int i = 0; i < 5; i++)
                 {
+                    if (i >= basic.Length) break;
+
                     int realIndex = random.Next() % supporterIndicies.Count;
                     int index = supporterIndicies[realIndex];
                     Supporter supporter = basic[index];
@@ -120,6 +121,8 @@ internal class CreditScreen : InfoScreen
 
                 for (int i = 0; i < 5; i++)
                 {
+                    if (i >= dweller.Length) break;
+
                     int realIndex = random.Next() % supporterIndicies.Count;
                     int index = supporterIndicies[realIndex];
                     Supporter supporter = dweller[index];

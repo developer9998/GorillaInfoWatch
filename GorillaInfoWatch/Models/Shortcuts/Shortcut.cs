@@ -1,55 +1,37 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Reflection;
 
 namespace GorillaInfoWatch.Models.Shortcuts;
 
-public class Shortcut
+public abstract class Shortcut
 {
-    public readonly string Name;
+    public abstract string Name { get; }
+    public abstract string Description { get; }
+    public virtual bool State { get; } = false;
 
-    public readonly string Description;
-
-    public readonly ShortcutRestrictions Restrictions;
-
-    public readonly bool HasState;
-
-    internal readonly Func<bool> StateGetter;
-
-    internal readonly Action<bool> Method;
-
-    internal Assembly CallingAssembly;
-
-    internal Shortcut(Assembly source, string name, string description, ShortcutRestrictions restrictions, Action method)
+    internal bool HasState
     {
-        CallingAssembly = source;
-
-        Name = name;
-        Description = description;
-        Restrictions = restrictions;
-
-        Method = _ => method();
+        get
+        {
+            Type type = GetType();
+            PropertyInfo property = type.GetProperty(nameof(State), AccessTools.all);
+            return property.DeclaringType == type;
+        }
     }
 
-    internal Shortcut(Assembly source, string name, string description, Func<bool> stateGetter, Action<bool> method)
-    {
-        CallingAssembly = source;
+    internal Assembly Assembly;
 
-        Name = name;
-        Description = description;
-
-        HasState = true;
-        StateGetter = stateGetter;
-        Method = method;
-    }
+    public abstract void Invoke(bool isStateEnabled);
 
     internal string GetShortcutId()
     {
-        if (CallingAssembly == null) return Name;
+        if (Assembly == null) return Name;
 
         try
         {
-            AssemblyName assemblyName = CallingAssembly.GetName();
-            return $"{assemblyName.Name}_{Name}_{(int)Restrictions}";
+            AssemblyName assemblyName = Assembly.GetName();
+            return $"{assemblyName.Name}_{Name}";
         }
         catch (Exception)
         {
@@ -57,22 +39,5 @@ public class Shortcut
         }
 
         return Name;
-    }
-
-    internal bool GetState()
-    {
-        if (!HasState || StateGetter == null) return false;
-
-        try
-        {
-            bool state = StateGetter.Invoke();
-            return state;
-        }
-        catch (Exception)
-        {
-
-        }
-
-        return false;
     }
 }

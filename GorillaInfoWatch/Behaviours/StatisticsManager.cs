@@ -1,5 +1,6 @@
 ﻿using GorillaGameModes;
 using GorillaInfoWatch.Models.Interfaces;
+using GorillaLibrary.Utilities;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using GorillaLibrary.Utilities;
 
 namespace GorillaInfoWatch.Behaviours;
 
