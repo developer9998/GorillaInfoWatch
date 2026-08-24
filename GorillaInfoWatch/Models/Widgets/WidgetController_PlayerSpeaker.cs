@@ -66,7 +66,7 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
             return;
         }
 
-        if (_rigContainer.Muted)
+        if (_rigContainer.IsMutedFor(~RigContainer.MuteReason.Auto))
         {
             if (!Image.enabled || Image.sprite != _spriteMuteSpeaker)
             {
@@ -78,7 +78,7 @@ public class WidgetController_PlayerSpeaker(NetPlayer player) : WidgetController
 
         if (_rigContainer.Rig.remoteUseReplacementVoice || _rigContainer.Rig.localUseReplacementVoice || GorillaComputer.instance.voiceChatOn == "FALSE")
         {
-            if (_rigContainer.Rig.SpeakingLoudness > _rigContainer.Rig.replacementVoiceLoudnessThreshold && !_rigContainer.ForceMute && !_rigContainer.Muted)
+            if (_rigContainer.Rig.SpeakingLoudness > _rigContainer.Rig.replacementVoiceLoudnessThreshold && _rigContainer.IsMutedFor(RigContainer.MuteReason.None))
             {
                 if (!Image.enabled || Image.sprite != _spriteOpenSpeaker)
                 {

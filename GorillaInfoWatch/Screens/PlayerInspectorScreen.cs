@@ -104,7 +104,8 @@ namespace GorillaInfoWatch.Screens
 
             lines.Skip();
 
-            lines.Add(rigContainer.Muted ? "Unmute Player" : "Mute Player", new Widget_Switch(rigContainer.Muted, OnMuteButtonClick, player)
+            bool muted = rigContainer.IsMutedFor(~RigContainer.MuteReason.Auto);
+            lines.Add(muted ? "Unmute Player" : "Mute Player", new Widget_Switch(muted, OnMuteButtonClick, player)
             {
                 Colour = _muteColour
             });

@@ -127,7 +127,7 @@ public class Menu_Home(Watch watch) : Menu_StateBase(watch)
         {
             if (_speakerLoudness == null) _speakerLoudness = targetRig.Rig.mySpeakerLoudness ?? targetRig.Rig.GetComponent<GorillaSpeakerLoudness>();
 
-            if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || targetRig.Muted)
+            if ((_speakerLoudness != null && !_speakerLoudness.IsMicEnabled) || targetRig.IsMutedFor(~RigContainer.MuteReason.Auto))
             {
                 iconState = targetRig.GetIsPlayerAutoMuted() ? MicIconState.MuteViaPunishment : MicIconState.MuteViaPreference;
                 goto CheckMicIcon;
